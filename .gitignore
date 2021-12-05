@@ -51,4 +51,5 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-__include\**
+__include/*
+compile_flags.txt
