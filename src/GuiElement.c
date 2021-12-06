@@ -1,4 +1,4 @@
-#include "z64scene.h"
+#include "Editor.h"
 
 static ElemFunc sElemDrawFuncList[1024];
 static Element* sElemInstList[1024];

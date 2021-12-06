@@ -45,7 +45,7 @@ void ElPanel_Draw(EditorContext* editorCtx, Element* elem) {
 	fontPos.y += 20;
 	
 	nvgFillColor(editorCtx->vg, Element_GetColor(GUICOL_BASE_WHITE));
-	nvgFontSize(editorCtx->vg, 20.0f);
+	nvgFontSize(editorCtx->vg, 17.5f);
 	nvgFontFace(editorCtx->vg, "sans");
 	nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 	nvgTextBox(editorCtx->vg, fontPos.x, fontPos.y, 150, elem->title, NULL);

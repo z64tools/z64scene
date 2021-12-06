@@ -1,4 +1,4 @@
-#include "../../src/z64scene.h"
+#include "../../src/Editor.h"
 
 typedef struct {
 	Element elem;

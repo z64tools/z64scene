@@ -1,17 +1,20 @@
-#include "z64scene.h"
+#include "Editor.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg_gl.h>
 
-void z64scene_Init(EditorContext* editorCtx) {
+void Editor_Init(EditorContext* editorCtx) {
 	printf_SetPrefix("");
 	printf_SetSuppressLevel(PSL_DEBUG);
 	MemFile_LoadFile(&editorCtx->objCtx.scene, "scene.zscene");
 	MemFile_LoadFile(&editorCtx->objCtx.room[0], "room_0.zmap");
 	
+	editorCtx->appInfo.mainCtx = editorCtx;
+	editorCtx->appInfo.drawCall = (CallDraw)Editor_Draw;
+	
 	editorCtx->appInfo.winScale.x = 1400;
 	editorCtx->appInfo.winScale.y = 700;
-	// editorCtx->appInfo.viewportScale.x = 800;
-	// editorCtx->appInfo.viewportScale.y = 600;
+	editorCtx->appInfo.viewportScale.x = 800;
+	editorCtx->appInfo.viewportScale.y = 600;
 	
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -57,7 +60,7 @@ void z64scene_Init(EditorContext* editorCtx) {
 	Element_Spawn(editorCtx, 0, 12, (Vec2f) { 0 }, "[Side Panel]");
 }
 
-void z64scene_DrawGUI(EditorContext* editorCtx) {
+void Editor_Draw_2DElements(EditorContext* editorCtx) {
 	// float pxRatio;
 	
 	// pxRatio = (float)editorCtx->appInfo.winScale.x / (float)editorCtx->appInfo.winScale.y;
@@ -69,7 +72,7 @@ void z64scene_DrawGUI(EditorContext* editorCtx) {
 	nvgEndFrame(editorCtx->vg);
 }
 
-void z64scene_Draw3DViewport(EditorContext* editorCtx) {
+void Editor_Draw_3DViewport(EditorContext* editorCtx) {
 	u8 setup[16] = {
 		0xfb, 0, 0, 0, 0x80, 0x80, 0x80, 0x80,
 		0xdf
@@ -80,4 +83,28 @@ void z64scene_Draw3DViewport(EditorContext* editorCtx) {
 	
 	n64_draw(setup);
 	zroom_draw(editorCtx->objCtx.room[0].data);
+}
+
+void Editor_Draw(EditorContext* editorCtx) {
+	AppInfo* appInfo = &editorCtx->appInfo;
+	InputContext* inputCtx = &editorCtx->inputCtx;
+	LightContext* lightCtx = &editorCtx->lightCtx;
+	ViewContext* viewCtx = &editorCtx->viewCtx;
+	
+	Input_Update(inputCtx, appInfo);
+	View_Update(viewCtx, inputCtx, &appInfo->winScale);
+	Input_End(inputCtx);
+	
+	glClearColor(
+		lightCtx->ambient.r,
+		lightCtx->ambient.g,
+		lightCtx->ambient.b,
+		1.0f
+	);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	
+	Editor_Draw_3DViewport(editorCtx);
+	Editor_Draw_2DElements(editorCtx);
+	
+	glfwSwapBuffers(appInfo->mainWindow);
 }

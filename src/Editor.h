@@ -29,8 +29,9 @@ typedef struct EditorContext {
 	ElementContext elemCtx;
 } EditorContext;
 
-void z64scene_Init(EditorContext* editorCtx);
-void z64scene_DrawGUI(EditorContext* editorCtx);
-void z64scene_Draw3DViewport(EditorContext* editorCtx);
+void Editor_Init(EditorContext* editorCtx);
+void Editor_Draw_2DElements(EditorContext* editorCtx);
+void Editor_Draw_3DViewport(EditorContext* editorCtx);
+void Editor_Draw(EditorContext* editorCtx);
 
 #endif
