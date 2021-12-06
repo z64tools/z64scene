@@ -12,18 +12,16 @@ typedef struct drawParams
 	MemFile zRoom;
 } DrawParams;
 
-static void draw(void *udata)
+static void gui(void *udata)
 {
 	int windowWidth;
 	int windowHeight;
+	float pxRatio;
 	
 	DrawParams *params = udata;
 	
-	z64viewer_scene(params->zScene.data);
-	z64viewer_room(params->zRoom.data);
-	
 	z64viewer_get_windowDimensions(&windowWidth, &windowHeight);
-	float pxRatio = (float)windowWidth / (float)windowHeight;
+	pxRatio = (float)windowWidth / (float)windowHeight;
 	nvgBeginFrame(vg, windowWidth, windowHeight, pxRatio);
 	
 	nvgBeginPath(vg);
@@ -39,12 +37,17 @@ static void draw(void *udata)
 		nvgTextBox(vg, 100,100, 150, "wow, hermosauhuts everywhere!", NULL);
 	}
 
-	//renderGraph(vg, 5,5, &fps);
-	//renderGraph(vg, 5+200+5,5, &cpuGraph);
-	//if (gpuTimer.supported)
-	//	renderGraph(vg, 5+200+5+200+5,5, &gpuGraph);
-
 	nvgEndFrame(vg);
+}
+
+static void draw(void *udata)
+{
+	DrawParams *params = udata;
+	
+	z64viewer_scene(params->zScene.data);
+	z64viewer_room(params->zRoom.data);
+	
+	gui(udata);
 }
 
 int main(void)
