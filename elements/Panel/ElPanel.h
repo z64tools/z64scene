@@ -2,5 +2,4 @@
 
 typedef struct {
 	Element elem;
-	u32 update;
 } ElPanel;

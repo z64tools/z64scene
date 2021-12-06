@@ -9,7 +9,8 @@ struct EditorContext;
 struct Element;
 
 typedef enum {
-	GUICOL_BASE,
+	GUICOL_BASE_DARK,
+	GUICOL_BASE_WHITE
 } GuiColorPalette;
 
 typedef void (* ElemFunc)(struct EditorContext*, struct Element*);
@@ -47,6 +48,7 @@ typedef struct {
 	ElementNode node[16];
 } ElementContext;
 
+NVGcolor Element_GetColor(GuiColorPalette pal);
 Element* Element_Spawn(
 	struct EditorContext* editorCtx,
 	u32 id,
@@ -55,7 +57,7 @@ Element* Element_Spawn(
 	char* title
 );
 void Element_UpdateElements(struct EditorContext* editorCtx, ElementContext* elemCtx);
-void Element_DrawElements(ElementContext* elemCtx);
+void Element_DrawElements(struct EditorContext* editorCtx, ElementContext* elemCtx);
 
 extern ElementInit gElPanelInit;
 

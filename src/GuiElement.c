@@ -1,11 +1,16 @@
 #include "z64scene.h"
 
+static ElemFunc sElemDrawFuncList[1024];
+static Element* sElemInstList[1024];
+static s32 sElemDrawListNum;
+
 ElementInit* gElemInitTable[] = {
 	&gElPanelInit
 };
 
 RGBA8 sGuiColorPalette[] = {
-	{ 0x12, 0x14, 0x18, 0xFF }
+	{ 0x12, 0x14, 0x18, 0xFF },
+	{ 0xF2, 0xE7, 0xC4, 0xFF }
 };
 
 NVGcolor Element_GetColor(GuiColorPalette pal) {
@@ -64,6 +69,8 @@ Element* Element_Spawn(EditorContext* editorCtx, u32 id, u32 priority, Vec2f pos
 }
 
 void Element_UpdateElements(EditorContext* editorCtx, ElementContext* elemCtx) {
+	sElemDrawListNum = 0;
+	
 	for (s32 i = 0; i < 16; i++) {
 		ElementNode* node = &elemCtx->node[i];
 		Element* elem = node->head;
@@ -82,6 +89,10 @@ void Element_UpdateElements(EditorContext* editorCtx, ElementContext* elemCtx) {
 		while (elem != NULL) {
 			if (elem->update) {
 				elem->update(editorCtx, elem);
+				if (elem->draw) {
+					sElemInstList[sElemDrawListNum] = elem;
+					sElemDrawFuncList[sElemDrawListNum++] = elem->draw;
+				}
 				elem = elem->next;
 				numChecker++;
 			} else {
@@ -111,5 +122,8 @@ void Element_UpdateElements(EditorContext* editorCtx, ElementContext* elemCtx) {
 	}
 }
 
-void Element_DrawElements(ElementContext* elemCtx) {
+void Element_DrawElements(EditorContext* editorCtx, ElementContext* elemCtx) {
+	for (s32 i = 0; i < sElemDrawListNum; i++) {
+		sElemDrawFuncList[i](editorCtx, sElemInstList[i]);
+	}
 }

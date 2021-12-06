@@ -54,17 +54,17 @@ void z64scene_Init(EditorContext* editorCtx) {
 		printf_error("Could not init nanovg.");
 	editorCtx->fontCtx.notoSansID = nvgCreateFont(editorCtx->vg, "sans", "NotoSans-Regular.ttf");
 	
-	Element_Spawn(editorCtx, 0, 12, (Vec2f) { 0 }, "Text");
+	Element_Spawn(editorCtx, 0, 12, (Vec2f) { 0 }, "[Side Panel]");
 }
 
 void z64scene_DrawGUI(EditorContext* editorCtx) {
-	float pxRatio;
+	// float pxRatio;
 	
-	pxRatio = (float)editorCtx->appInfo.winScale.x / (float)editorCtx->appInfo.winScale.y;
-	nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winScale.x, editorCtx->appInfo.winScale.y, pxRatio);
+	// pxRatio = (float)editorCtx->appInfo.winScale.x / (float)editorCtx->appInfo.winScale.y;
+	nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winScale.x, editorCtx->appInfo.winScale.y, 1.0f);
 	
 	Element_UpdateElements(editorCtx, &editorCtx->elemCtx);
-	Element_DrawElements(&editorCtx->elemCtx);
+	Element_DrawElements(editorCtx, &editorCtx->elemCtx);
 	
 	nvgEndFrame(editorCtx->vg);
 }

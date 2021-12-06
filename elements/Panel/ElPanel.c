@@ -16,8 +16,6 @@ ElementInit gElPanelInit = {
 
 void ElPanel_Init(EditorContext* editorCtx, Element* elem) {
 	ElPanel* this = (ElPanel*)elem;
-	
-	OsPrintfEx("Init OK");
 }
 
 void ElPanel_Destroy(EditorContext* editorCtx, Element* elem) {
@@ -27,12 +25,28 @@ void ElPanel_Destroy(EditorContext* editorCtx, Element* elem) {
 void ElPanel_Update(EditorContext* editorCtx, Element* elem) {
 	ElPanel* this = (ElPanel*)elem;
 	
-	if (this->update == 0) {
-		OsPrintfEx("Update OK");
-		this->update++;
-	}
+	elem->dim.x = 250;
+	elem->dim.y = editorCtx->appInfo.winScale.y;
+	
+	elem->pos.x = editorCtx->appInfo.winScale.x - elem->dim.x;
+	elem->pos.y = 0;
 }
 
 void ElPanel_Draw(EditorContext* editorCtx, Element* elem) {
 	ElPanel* this = (ElPanel*)elem;
+	Vec2f fontPos = elem->pos;
+	
+	nvgBeginPath(editorCtx->vg);
+	nvgRect(editorCtx->vg, elem->pos.x, elem->pos.y, elem->dim.x, elem->dim.y);
+	nvgFillColor(editorCtx->vg, Element_GetColor(GUICOL_BASE_DARK));
+	nvgFill(editorCtx->vg);
+	
+	fontPos.x += 20;
+	fontPos.y += 20;
+	
+	nvgFillColor(editorCtx->vg, Element_GetColor(GUICOL_BASE_WHITE));
+	nvgFontSize(editorCtx->vg, 20.0f);
+	nvgFontFace(editorCtx->vg, "sans");
+	nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+	nvgTextBox(editorCtx->vg, fontPos.x, fontPos.y, 150, elem->title, NULL);
 }
