@@ -1,17 +1,18 @@
 #include "z64scene.h"
 
-static Z64SceneContext* z64Ctx;
+static EditorContext* editorCtx;
 
 int main(void) {
-	z64Ctx = Lib_Malloc(0, sizeof(Z64SceneContext));
-	bzero(z64Ctx, sizeof(Z64SceneContext));
-	z64scene_Init(z64Ctx);
+	editorCtx = Lib_Malloc(0, sizeof(EditorContext));
+	bzero(editorCtx, sizeof(EditorContext));
+	z64scene_Init(editorCtx);
+	OsPrintfEx("Initialization OK");
 	
-	while (!glfwWindowShouldClose(z64Ctx->appInfo.mainWindow)) {
-		AppInfo* appInfo = &z64Ctx->appInfo;
-		InputContext* inputCtx = &z64Ctx->inputCtx;
-		LightContext* lightCtx = &z64Ctx->lightCtx;
-		ViewContext* viewCtx = &z64Ctx->viewCtx;
+	while (!glfwWindowShouldClose(editorCtx->appInfo.mainWindow)) {
+		AppInfo* appInfo = &editorCtx->appInfo;
+		InputContext* inputCtx = &editorCtx->inputCtx;
+		LightContext* lightCtx = &editorCtx->lightCtx;
+		ViewContext* viewCtx = &editorCtx->viewCtx;
 		
 		Input_Update(inputCtx, appInfo);
 		View_Update(viewCtx, inputCtx, &appInfo->winScale);
@@ -26,8 +27,8 @@ int main(void) {
 		);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		
-		z64scene_Draw3DViewport(z64Ctx);
-		z64scene_DrawGUI(z64Ctx);
+		z64scene_Draw3DViewport(editorCtx);
+		z64scene_DrawGUI(editorCtx);
 		
 		glfwSwapBuffers(appInfo->mainWindow);
 	}

@@ -12,25 +12,25 @@
 #include <Vector.h>
 #include <Light.h>
 #include <Object.h>
-#include "Gui.h"
+#include "GuiElement.h"
 
 typedef struct {
 	s32 notoSansID;
 } FontContext;
 
-typedef struct Z64SceneContext {
+typedef struct EditorContext {
 	struct NVGcontext* vg;
 	AppInfo appInfo;
-	InputContext  inputCtx;
-	ViewContext   viewCtx;
-	LightContext  lightCtx;
-	FontContext   fontCtx;
-	ObjectContext objCtx;
-	GuiContext    guiCtx;
-} Z64SceneContext;
+	InputContext   inputCtx;
+	ViewContext    viewCtx;
+	LightContext   lightCtx;
+	FontContext    fontCtx;
+	ObjectContext  objCtx;
+	ElementContext elemCtx;
+} EditorContext;
 
-void z64scene_Init(Z64SceneContext* z64Ctx);
-void z64scene_DrawGUI(Z64SceneContext* z64Ctx);
-void z64scene_Draw3DViewport(Z64SceneContext* z64Ctx);
+void z64scene_Init(EditorContext* editorCtx);
+void z64scene_DrawGUI(EditorContext* editorCtx);
+void z64scene_Draw3DViewport(EditorContext* editorCtx);
 
 #endif
