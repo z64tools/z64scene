@@ -11,10 +11,8 @@ void Editor_Init(EditorContext* editorCtx) {
 	editorCtx->appInfo.mainCtx = editorCtx;
 	editorCtx->appInfo.drawCall = (CallDraw)Editor_Draw;
 	
-	editorCtx->appInfo.winScale.x = 1400;
-	editorCtx->appInfo.winScale.y = 700;
-	editorCtx->appInfo.viewportScale.x = 800;
-	editorCtx->appInfo.viewportScale.y = 600;
+	editorCtx->appInfo.winScale.x = 1520;
+	editorCtx->appInfo.winScale.y = 740;
 	
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -68,6 +66,18 @@ void Editor_Draw_2DElements(EditorContext* editorCtx) {
 	
 	Element_UpdateElements(editorCtx, &editorCtx->elemCtx);
 	Element_DrawElements(editorCtx, &editorCtx->elemCtx);
+	
+	nvgFillColor(editorCtx->vg, Element_GetColor(GUICOL_BASE_WHITE));
+	nvgFontSize(editorCtx->vg, 17.5f);
+	nvgFontFace(editorCtx->vg, "sans");
+	nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+	
+	char txt[2048];
+	
+	sprintf(txt, "M: x%4d y%4d", editorCtx->inputCtx.mouse.pos.x, editorCtx->inputCtx.mouse.pos.y);
+	nvgTextBox(editorCtx->vg, 10.0f, 10.0f, 150, txt, NULL);
+	sprintf(txt, "W: x%4d y%4d", (s32)editorCtx->appInfo.winScale.x, (s32)editorCtx->appInfo.winScale.y);
+	nvgTextBox(editorCtx->vg, 10.0f, 10.0f + 17.5f, 150, txt, NULL);
 	
 	nvgEndFrame(editorCtx->vg);
 }

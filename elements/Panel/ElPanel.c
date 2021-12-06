@@ -35,10 +35,21 @@ void ElPanel_Update(EditorContext* editorCtx, Element* elem) {
 void ElPanel_Draw(EditorContext* editorCtx, Element* elem) {
 	ElPanel* this = (ElPanel*)elem;
 	Vec2f fontPos = elem->pos;
+	NVGpaint gradient;
+	
+	gradient = nvgLinearGradient(
+		editorCtx->vg,
+		elem->pos.x,
+		0,
+		elem->pos.x + 2,
+		0,
+		Element_GetColor(GUICOL_BASE_WHITE),
+		Element_GetColor(GUICOL_BASE_DARK)
+	);
 	
 	nvgBeginPath(editorCtx->vg);
 	nvgRect(editorCtx->vg, elem->pos.x, elem->pos.y, elem->dim.x, elem->dim.y);
-	nvgFillColor(editorCtx->vg, Element_GetColor(GUICOL_BASE_DARK));
+	nvgFillPaint(editorCtx->vg, gradient);
 	nvgFill(editorCtx->vg);
 	
 	fontPos.x += 20;

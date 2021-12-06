@@ -10,7 +10,8 @@ struct Element;
 
 typedef enum {
 	GUICOL_BASE_DARK,
-	GUICOL_BASE_WHITE
+	GUICOL_BASE_WHITE,
+	GUICOL_SPLITTER
 } GuiColorPalette;
 
 typedef void (* ElemFunc)(struct EditorContext*, struct Element*);
