@@ -26,9 +26,9 @@ void ElPanel_Update(EditorContext* editorCtx, Element* elem) {
 	ElPanel* this = (ElPanel*)elem;
 	
 	elem->dim.x = 250;
-	elem->dim.y = editorCtx->appInfo.winScale.y;
+	elem->dim.y = editorCtx->appInfo.winDim.y;
 	
-	elem->pos.x = editorCtx->appInfo.winScale.x - elem->dim.x;
+	elem->pos.x = editorCtx->appInfo.winDim.x - elem->dim.x;
 	elem->pos.y = 0;
 }
 
