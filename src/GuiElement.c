@@ -11,7 +11,7 @@ ElementInit* gElemInitTable[] = {
 RGBA8 sGuiColorPalette[] = {
 	{ 0x12, 0x14, 0x18, 0xFF }, // GUICOL_BASE_DARK
 	{ 0xF2, 0xE7, 0xC4, 0xFF }, // GUICOL_BASE_WHITE
-	{ 0x02, 0x04, 0x08, 0xFF }, // GUICOL_SPLITTER
+	{ 0x12 * 0.75f, 0x14 * 0.75f, 0x18 * 0.75f, 0xFF }, // GUICOL_SPLITTER
 };
 
 NVGcolor Element_GetColor(GuiColorPalette pal) {
