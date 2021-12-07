@@ -217,6 +217,12 @@ void Editor_Draw(EditorContext* editorCtx) {
 
 void Editor_Update(EditorContext* editorCtx) {
 	Vec2i projDim;
+	f64 x;
+	f64 y;
+	
+	glfwGetCursorPos(editorCtx->appInfo.mainWindow, &x, &y);
+	editorCtx->inputCtx.mouse.pos.x = x;
+	editorCtx->inputCtx.mouse.pos.y = y;
 	
 	Editor_Region_Update(editorCtx);
 	projDim = (Vec2i) {
