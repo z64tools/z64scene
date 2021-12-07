@@ -46,6 +46,111 @@ void Region_View(EditorContext* editorCtx, Region* panel) {
 	}
 }
 
+RegionFunc sRegionFuncs[] = {
+	NULL,
+	NULL,
+	Region_View
+};
+
+/* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
+
+void Editor_DrawRegion_ViewPanel(EditorContext* editorCtx, Region* panel) {
+	nvgBeginPath(editorCtx->vg);
+	nvgRect(
+		editorCtx->vg,
+		0,
+		0,
+		editorCtx->appInfo.winDim.x,
+		editorCtx->appInfo.winDim.y
+	);
+	nvgRoundedRect(
+		editorCtx->vg,
+		panel->rect.x + 3,
+		panel->rect.y + 3,
+		panel->rect.w - 6,
+		panel->rect.h - 6,
+		3.0f
+	);
+	nvgPathWinding(editorCtx->vg, NVG_HOLE);
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER));
+	nvgFill(editorCtx->vg);
+}
+
+void Editor_DrawRegion_SidePanel(EditorContext* editorCtx, Region* panel) {
+	Vec2i basePos = {
+		panel->rect.x + 10,
+		panel->rect.y + 10
+	};
+	Vec2i textPos = basePos;
+	
+	// BG
+	nvgBeginPath(editorCtx->vg);
+	nvgRect(
+		editorCtx->vg,
+		panel->rect.x,
+		panel->rect.y,
+		panel->rect.w,
+		panel->rect.h
+	);
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER));
+	nvgFill(editorCtx->vg);
+	
+	nvgBeginPath(editorCtx->vg);
+	nvgRoundedRect(
+		editorCtx->vg,
+		panel->rect.x + 3,
+		panel->rect.y + 3,
+		panel->rect.w - 6,
+		panel->rect.h - 6,
+		3.0f
+	);
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_DARK));
+	nvgFill(editorCtx->vg);
+	
+	// Text
+	// nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
+	// nvgFontSize(editorCtx->vg, 24.0f);
+	// nvgFontFace(editorCtx->vg, "sans");
+	// nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+	// nvgTextBox(editorCtx->vg, textPos.x, textPos.y, 150, "Z64SCENE", NULL);
+	// textPos.y += 24;
+	// nvgFontSize(editorCtx->vg, 16.0f);
+	// nvgTextBox(editorCtx->vg, textPos.x, textPos.y, 150, "Modular and skawoUHHUH", NULL);
+}
+
+const char* sBuild = {
+	"z64scene alpha commit[ " GIT_COMMIT_MSG " ]"
+};
+
+const char* sHash = {
+	GIT_COMMIT_HASH
+};
+
+void Editor_DrawRegion_BotPanel(EditorContext* editorCtx, Region* panel) {
+	nvgBeginPath(editorCtx->vg);
+	nvgRect(
+		editorCtx->vg,
+		panel->rect.x,
+		panel->rect.y,
+		panel->rect.w,
+		panel->rect.h
+	);
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER_DARKER));
+	nvgFill(editorCtx->vg);
+	
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
+	nvgFontSize(editorCtx->vg, panel->rect.h - 16);
+	nvgFontFace(editorCtx->vg, "sans");
+	nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+	nvgText(editorCtx->vg, panel->rect.x + 5, panel->rect.y + 8, sBuild, NULL);
+	
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
+	nvgFontSize(editorCtx->vg, panel->rect.h - 16);
+	nvgFontFace(editorCtx->vg, "sans");
+	nvgTextAlign(editorCtx->vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
+	nvgText(editorCtx->vg, panel->rect.w - 5, panel->rect.y + 8, sHash, NULL);
+}
+
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 void Editor_Region_UpdateSplitter(AppInfo* appInfo, RegionContext* regionCtx) {
@@ -94,7 +199,7 @@ void Editor_Region_SetCursorState(InputContext* inputCtx, RegionContext* regionC
 			    inputCtx->mouse.clickR.press ||
 			    inputCtx->mouse.scrollY) {
 				regionCtx->actionRegion = panel;
-				regionCtx->actionFunc = Region_View;
+				regionCtx->actionFunc = sRegionFuncs[panel->id];
 			}
 			
 			return;
@@ -117,57 +222,17 @@ void Editor_Region_Update(EditorContext* editorCtx) {
 		return;
 	}
 	
-	if (!regionCtx->actionFunc) {
-		// Editor_Region_SetCursorState(&editorCtx->inputCtx, regionCtx, &regionCtx->side);
-		// Editor_Region_SetCursorState(&editorCtx->inputCtx, regionCtx, &regionCtx->bot);
-		Editor_Region_SetCursorState(&editorCtx->inputCtx, regionCtx, &regionCtx->view);
-	}
-	
 	if (regionCtx->actionFunc) {
 		regionCtx->actionFunc(editorCtx, regionCtx->actionRegion);
 	}
 	
-	Editor_Region_UpdateSplitter(&editorCtx->appInfo, &editorCtx->regionCtx);
-}
-
-void Editor_Region_Draw(EditorContext* editorCtx, Region* panel) {
-	nvgBeginPath(editorCtx->vg);
-	nvgRect(
-		editorCtx->vg,
-		panel->rect.x,
-		panel->rect.y,
-		panel->rect.w,
-		panel->rect.h
-	);
-	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER));
-	nvgFill(editorCtx->vg);
-	
-	nvgBeginPath(editorCtx->vg);
-	nvgRoundedRect(
-		editorCtx->vg,
-		panel->rect.x + 3,
-		panel->rect.y + 3,
-		panel->rect.w - 6,
-		panel->rect.h - 6,
-		4.0f
-	);
-	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_DARK));
-	nvgFill(editorCtx->vg);
-	
-	if (panel->state.cursorInRange) {
-		nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
-		nvgFontSize(editorCtx->vg, 17.5f);
-		nvgFontFace(editorCtx->vg, "sans");
-		nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-		nvgTextBox(
-			editorCtx->vg,
-			panel->rect.x + 2.0f,
-			panel->rect.y + 2.0f,
-			550,
-			"Focus",
-			NULL
-		);
+	if (!regionCtx->actionFunc) {
+		Editor_Region_SetCursorState(&editorCtx->inputCtx, regionCtx, &regionCtx->side);
+		Editor_Region_SetCursorState(&editorCtx->inputCtx, regionCtx, &regionCtx->bot);
+		Editor_Region_SetCursorState(&editorCtx->inputCtx, regionCtx, &regionCtx->view);
 	}
+	
+	Editor_Region_UpdateSplitter(&editorCtx->appInfo, &editorCtx->regionCtx);
 }
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
@@ -175,20 +240,9 @@ void Editor_Region_Draw(EditorContext* editorCtx, Region* panel) {
 void Editor_Draw_2DElements(EditorContext* editorCtx) {
 	nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y, 1.0f);
 	
-	Editor_Region_Draw(editorCtx, &editorCtx->regionCtx.side);
-	Editor_Region_Draw(editorCtx, &editorCtx->regionCtx.bot);
-	
-	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
-	nvgFontSize(editorCtx->vg, 17.5f);
-	nvgFontFace(editorCtx->vg, "sans");
-	nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-	
-	char txt[2048];
-	
-	sprintf(txt, "M: x%4d y%4d", editorCtx->inputCtx.mouse.pos.x, editorCtx->inputCtx.mouse.pos.y);
-	nvgTextBox(editorCtx->vg, 10.0f, 10.0f, 150, txt, NULL);
-	sprintf(txt, "W: x%4d y%4d", (s32)editorCtx->appInfo.winDim.x, (s32)editorCtx->appInfo.winDim.y);
-	nvgTextBox(editorCtx->vg, 10.0f, 10.0f + 17.5f, 150, txt, NULL);
+	Editor_DrawRegion_ViewPanel(editorCtx, &editorCtx->regionCtx.view);
+	Editor_DrawRegion_SidePanel(editorCtx, &editorCtx->regionCtx.side);
+	Editor_DrawRegion_BotPanel(editorCtx, &editorCtx->regionCtx.bot);
 	
 	nvgEndFrame(editorCtx->vg);
 }
@@ -241,4 +295,7 @@ void Editor_Init(EditorContext* editorCtx) {
 	Editor_Region_SetSplitter(&editorCtx->appInfo, &editorCtx->regionCtx, editorCtx->appInfo.winDim.x * 0.25f, 0.0f);
 	
 	editorCtx->viewCtx.cameraControl = false;
+	editorCtx->regionCtx.side.id = 0;
+	editorCtx->regionCtx.bot.id = 1;
+	editorCtx->regionCtx.view.id = 2;
 }

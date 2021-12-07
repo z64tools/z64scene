@@ -13,6 +13,7 @@ typedef enum {
 	THEME_BASE_WHITE,
 	THEME_BOX,
 	THEME_SPLITTER,
+	THEME_SPLITTER_DARKER
 } ThemeColor;
 
 NVGcolor Theme_GetColor(ThemeColor pal);

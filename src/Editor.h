@@ -16,6 +16,7 @@ typedef struct {
 } RegionState;
 
 typedef struct Region {
+	s32   id;
 	RegionState state;
 	Recti rect;
 } Region;
