@@ -7,15 +7,43 @@
 void Region_View(EditorContext* editorCtx, Region* panel) {
 	MouseInput* mouse = &editorCtx->inputCtx.mouse;
 	InputContext* inputCtx = &editorCtx->inputCtx;
-	
-	View_Camera_OrbitMode(&editorCtx->viewCtx, inputCtx);
-	View_Camera_FlyMode(&editorCtx->viewCtx, inputCtx);
+	bool mouseMove = false;
 	
 	if (inputCtx->mouse.clickL.hold == false &&
 	    inputCtx->mouse.clickR.hold == false &&
 	    inputCtx->mouse.clickMid.hold == false &&
-	    inputCtx->mouse.scrollY == 0)
+	    inputCtx->mouse.scrollY == 0) {
 		editorCtx->regionCtx.actionFunc = NULL;
+		
+		return;
+	}
+	
+	View_Camera_OrbitMode(&editorCtx->viewCtx, inputCtx);
+	View_Camera_FlyMode(&editorCtx->viewCtx, inputCtx);
+	
+	if (mouse->pos.x < 0) {
+		mouse->jumpVelComp.x = -panel->rect.w - 1;
+		glfwSetCursorPos(editorCtx->appInfo.mainWindow, panel->rect.w, mouse->pos.y);
+		mouse->pos.x = panel->rect.w;
+	}
+	
+	if (mouse->pos.x > panel->rect.w) {
+		mouse->jumpVelComp.x = panel->rect.w + 1;
+		glfwSetCursorPos(editorCtx->appInfo.mainWindow, 0, mouse->pos.y);
+		mouse->pos.x = 0;
+	}
+	
+	if (mouse->pos.y < 0) {
+		mouse->jumpVelComp.y = -panel->rect.h - 1;
+		glfwSetCursorPos(editorCtx->appInfo.mainWindow, mouse->pos.x, panel->rect.h);
+		mouse->pos.y = panel->rect.h;
+	}
+	
+	if (mouse->pos.y > panel->rect.h) {
+		mouse->jumpVelComp.y = panel->rect.h + 1;
+		glfwSetCursorPos(editorCtx->appInfo.mainWindow, mouse->pos.x, 0);
+		mouse->pos.y = 0;
+	}
 }
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
@@ -25,26 +53,26 @@ void Editor_Region_UpdateSplitter(AppInfo* appInfo, RegionContext* regionCtx) {
 	Region* sideRegion = &regionCtx->side;
 	Region* viewRegion = &regionCtx->view;
 	
-	botRegion->pos.x = 0;
-	botRegion->pos.y = appInfo->winDim.y - 32;
-	botRegion->dim.x = appInfo->winDim.x;
-	botRegion->dim.y = 32;
+	botRegion->rect.x = 0;
+	botRegion->rect.y = appInfo->winDim.y - 32;
+	botRegion->rect.w = appInfo->winDim.x;
+	botRegion->rect.h = 32;
 	
-	sideRegion->dim.y = appInfo->winDim.y - botRegion->dim.y;
-	sideRegion->pos.x = appInfo->winDim.x - sideRegion->dim.x;
-	sideRegion->pos.y = 0;
+	sideRegion->rect.h = appInfo->winDim.y - botRegion->rect.h;
+	sideRegion->rect.x = appInfo->winDim.x - sideRegion->rect.w;
+	sideRegion->rect.y = 0;
 	
-	viewRegion->pos.x = 0;
-	viewRegion->pos.y = botRegion->dim.y;
-	viewRegion->dim.x = sideRegion->pos.x;
-	viewRegion->dim.y = appInfo->winDim.y - botRegion->dim.y;
+	viewRegion->rect.x = 0;
+	viewRegion->rect.y = 0;
+	viewRegion->rect.w = appInfo->winDim.x - sideRegion->rect.w;
+	viewRegion->rect.h = appInfo->winDim.y - botRegion->rect.h;
 }
 
 void Editor_Region_SetSplitter(AppInfo* appInfo, RegionContext* regionCtx, f32 x, f32 y) {
 	Region* sideRegion = &regionCtx->side;
 	Region* viewRegion = &regionCtx->view;
 	
-	sideRegion->dim.x = CLAMP(
+	sideRegion->rect.w = CLAMP(
 		x,
 		200,
 		floorf(appInfo->winDim.x * 0.5)
@@ -59,8 +87,8 @@ void Editor_Region_SetCursorState(InputContext* inputCtx, RegionContext* regionC
 		return;
 	}
 	
-	if (mouse->pos.x >= panel->pos.x && mouse->pos.x < (panel->pos.x + panel->dim.x)) {
-		if (mouse->pos.y >= panel->pos.y && mouse->pos.y < (panel->pos.y + panel->dim.y)) {
+	if (mouse->pos.x >= panel->rect.x && mouse->pos.x < (panel->rect.x + panel->rect.w)) {
+		if (mouse->pos.y >= panel->rect.y && mouse->pos.y < (panel->rect.y + panel->rect.h)) {
 			if (inputCtx->mouse.clickL.press ||
 			    inputCtx->mouse.clickMid.press ||
 			    inputCtx->mouse.clickR.press ||
@@ -82,7 +110,7 @@ void Editor_Region_Update(EditorContext* editorCtx) {
 		Editor_Region_SetSplitter(
 			&editorCtx->appInfo,
 			&editorCtx->regionCtx,
-			editorCtx->regionCtx.side.dim.x,
+			editorCtx->regionCtx.side.rect.w,
 			0
 		);
 		
@@ -106,10 +134,10 @@ void Editor_Region_Draw(EditorContext* editorCtx, Region* panel) {
 	nvgBeginPath(editorCtx->vg);
 	nvgRect(
 		editorCtx->vg,
-		panel->pos.x,
-		panel->pos.y,
-		panel->dim.x,
-		panel->dim.y
+		panel->rect.x,
+		panel->rect.y,
+		panel->rect.w,
+		panel->rect.h
 	);
 	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER));
 	nvgFill(editorCtx->vg);
@@ -117,10 +145,10 @@ void Editor_Region_Draw(EditorContext* editorCtx, Region* panel) {
 	nvgBeginPath(editorCtx->vg);
 	nvgRoundedRect(
 		editorCtx->vg,
-		panel->pos.x + 3,
-		panel->pos.y + 3,
-		panel->dim.x - 6,
-		panel->dim.y - 6,
+		panel->rect.x + 3,
+		panel->rect.y + 3,
+		panel->rect.w - 6,
+		panel->rect.h - 6,
 		4.0f
 	);
 	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_DARK));
@@ -133,8 +161,8 @@ void Editor_Region_Draw(EditorContext* editorCtx, Region* panel) {
 		nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 		nvgTextBox(
 			editorCtx->vg,
-			panel->pos.x + 2.0f,
-			panel->pos.y + 2.0f,
+			panel->rect.x + 2.0f,
+			panel->rect.y + 2.0f,
 			550,
 			"Focus",
 			NULL
@@ -172,10 +200,10 @@ void Editor_Draw_3DViewport(EditorContext* editorCtx) {
 
 void Editor_Draw(EditorContext* editorCtx) {
 	glViewport(
-		editorCtx->regionCtx.view.pos.x,
-		editorCtx->regionCtx.view.pos.y,
-		editorCtx->regionCtx.view.dim.x,
-		editorCtx->regionCtx.view.dim.y
+		editorCtx->regionCtx.view.rect.x,
+		-editorCtx->regionCtx.view.rect.y + editorCtx->appInfo.winDim.y - editorCtx->regionCtx.view.rect.h,
+		editorCtx->regionCtx.view.rect.w,
+		editorCtx->regionCtx.view.rect.h
 	);
 	Editor_Draw_3DViewport(editorCtx);
 	glViewport(
@@ -188,8 +216,14 @@ void Editor_Draw(EditorContext* editorCtx) {
 }
 
 void Editor_Update(EditorContext* editorCtx) {
+	Vec2i projDim;
+	
 	Editor_Region_Update(editorCtx);
-	View_SetProjectionDimensions(&editorCtx->viewCtx, &editorCtx->regionCtx.view.dim);
+	projDim = (Vec2i) {
+		editorCtx->regionCtx.view.rect.w,
+		editorCtx->regionCtx.view.rect.h
+	};
+	View_SetProjectionDimensions(&editorCtx->viewCtx, &projDim);
 }
 
 void Editor_Init(EditorContext* editorCtx) {

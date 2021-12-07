@@ -17,8 +17,7 @@ typedef struct {
 
 typedef struct Region {
 	RegionState state;
-	Vec2i pos;
-	Vec2i dim;
+	Recti rect;
 } Region;
 
 typedef struct {

@@ -11,6 +11,7 @@ struct Subscreen;
 typedef enum {
 	THEME_BASE_DARK,
 	THEME_BASE_WHITE,
+	THEME_BOX,
 	THEME_SPLITTER,
 } ThemeColor;
 
