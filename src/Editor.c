@@ -2,6 +2,8 @@
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg_gl.h>
 
+/* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
+
 void Editor_Subscreen_UpdateSplitter(AppInfo* appInfo) {
 	PosDim* sidePanel = &appInfo->subscreen.sidePanel;
 	PosDim* view3D = &appInfo->subscreen.view3D;
@@ -106,9 +108,9 @@ void Editor_Draw_SidePanel(EditorContext* editorCtx) {
 	static f32 width = 80.0f;
 	
 	if (ABS(mouse->pos.x - sidePanel->pos.x) < 5 && !mouse->clickL.hold) {
-		Math_SmoothStepToF(&width, sidePanel->dim.x * 0.15, 0.25f, 300.0f, 0.001f);
+		Math_SmoothStepToF(&width, sidePanel->dim.x * 0.15f, 0.25f, 300.0f, 0.001f);
 	} else {
-		Math_SmoothStepToF(&width, sidePanel->dim.x, 0.25f, 300.0f, 0.001f);
+		Math_SmoothStepToF(&width, sidePanel->dim.x * 0.25f, 0.25f, 300.0f, 0.001f);
 	}
 	
 	gradient = nvgLinearGradient(
@@ -127,7 +129,7 @@ void Editor_Draw_SidePanel(EditorContext* editorCtx) {
 	nvgFill(editorCtx->vg);
 }
 
-/* / / / / / */
+/* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 void Editor_Draw_2DElements(EditorContext* editorCtx) {
 	nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y, 1.0f);
