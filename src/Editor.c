@@ -4,129 +4,142 @@
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
-void Editor_Subscreen_UpdateSplitter(AppInfo* appInfo) {
-	PosDim* sidePanel = &appInfo->subscreen.sidePanel;
-	PosDim* view3D = &appInfo->subscreen.view3D;
+void Region_View(EditorContext* editorCtx, Region* panel) {
+	MouseInput* mouse = &editorCtx->inputCtx.mouse;
+	InputContext* inputCtx = &editorCtx->inputCtx;
 	
-	sidePanel->dim.y = appInfo->winDim.y;
-	sidePanel->pos.x = appInfo->winDim.x - sidePanel->dim.x;
-	sidePanel->pos.y = 0;
-	view3D->pos.x = 0;
-	view3D->pos.y = 0;
-	view3D->dim.x = sidePanel->pos.x;
-	view3D->dim.y = appInfo->winDim.y;
+	View_Camera_OrbitMode(&editorCtx->viewCtx, inputCtx);
+	View_Camera_FlyMode(&editorCtx->viewCtx, inputCtx);
+	
+	if (inputCtx->mouse.clickL.hold == false &&
+	    inputCtx->mouse.clickR.hold == false &&
+	    inputCtx->mouse.clickMid.hold == false &&
+	    inputCtx->mouse.scrollY == 0)
+		editorCtx->regionCtx.actionFunc = NULL;
 }
 
-void Editor_Subscreen_SetSplitter(AppInfo* appInfo, f32 x, f32 y) {
-	PosDim* sidePanel = &appInfo->subscreen.sidePanel;
-	PosDim* view3D = &appInfo->subscreen.view3D;
+/* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
+
+void Editor_Region_UpdateSplitter(AppInfo* appInfo, RegionContext* regionCtx) {
+	Region* botRegion = &regionCtx->bot;
+	Region* sideRegion = &regionCtx->side;
+	Region* viewRegion = &regionCtx->view;
 	
-	sidePanel->dim.x = CLAMP(
+	botRegion->pos.x = 0;
+	botRegion->pos.y = appInfo->winDim.y - 32;
+	botRegion->dim.x = appInfo->winDim.x;
+	botRegion->dim.y = 32;
+	
+	sideRegion->dim.y = appInfo->winDim.y - botRegion->dim.y;
+	sideRegion->pos.x = appInfo->winDim.x - sideRegion->dim.x;
+	sideRegion->pos.y = 0;
+	
+	viewRegion->pos.x = 0;
+	viewRegion->pos.y = botRegion->dim.y;
+	viewRegion->dim.x = sideRegion->pos.x;
+	viewRegion->dim.y = appInfo->winDim.y - botRegion->dim.y;
+}
+
+void Editor_Region_SetSplitter(AppInfo* appInfo, RegionContext* regionCtx, f32 x, f32 y) {
+	Region* sideRegion = &regionCtx->side;
+	Region* viewRegion = &regionCtx->view;
+	
+	sideRegion->dim.x = CLAMP(
 		x,
 		200,
 		floorf(appInfo->winDim.x * 0.5)
 	);
-	Editor_Subscreen_UpdateSplitter(appInfo);
+	Editor_Region_UpdateSplitter(appInfo, regionCtx);
 }
 
-void Editor_Subscreen_Update(EditorContext* editorCtx) {
-#define GRAB_WIDTH 8
-	PosDim* sidePanel = &editorCtx->appInfo.subscreen.sidePanel;
-	PosDim* view3D = &editorCtx->appInfo.subscreen.view3D;
-	MouseInput* mouse = &editorCtx->inputCtx.mouse;
-	s32 winDimDiff = editorCtx->appInfo.winDim.x - editorCtx->appInfo.prevWinDim.x;
-	bool controlHold = (editorCtx->inputCtx.mouse.clickL.hold || editorCtx->inputCtx.mouse.clickMid.hold);
-	bool controlPress = (editorCtx->inputCtx.mouse.clickL.press || editorCtx->inputCtx.mouse.clickMid.press);
-	static bool lockResizeState;
-	static bool lockWrapState;
+void Editor_Region_SetCursorState(InputContext* inputCtx, RegionContext* regionCtx, Region* panel) {
+	MouseInput* mouse = &inputCtx->mouse;
 	
-	if (editorCtx->appInfo.isCallback == true) {
-		Editor_Subscreen_SetSplitter(
+	if (regionCtx->actionFunc != NULL) {
+		return;
+	}
+	
+	if (mouse->pos.x >= panel->pos.x && mouse->pos.x < (panel->pos.x + panel->dim.x)) {
+		if (mouse->pos.y >= panel->pos.y && mouse->pos.y < (panel->pos.y + panel->dim.y)) {
+			if (inputCtx->mouse.clickL.press ||
+			    inputCtx->mouse.clickMid.press ||
+			    inputCtx->mouse.clickR.press ||
+			    inputCtx->mouse.scrollY) {
+				regionCtx->actionRegion = panel;
+				regionCtx->actionFunc = Region_View;
+			}
+			
+			return;
+		}
+	}
+}
+
+void Editor_Region_Update(EditorContext* editorCtx) {
+	MouseInput* mouse = &editorCtx->inputCtx.mouse;
+	RegionContext* regionCtx = &editorCtx->regionCtx;
+	
+	if (editorCtx->appInfo.isResizeCallback == true) {
+		Editor_Region_SetSplitter(
 			&editorCtx->appInfo,
-			sidePanel->dim.x,
+			&editorCtx->regionCtx,
+			editorCtx->regionCtx.side.dim.x,
 			0
 		);
 		
 		return;
 	}
 	
-	if (!controlHold) {
-		lockResizeState = false;
-		lockWrapState = false;
+	if (!regionCtx->actionFunc) {
+		// Editor_Region_SetCursorState(&editorCtx->inputCtx, regionCtx, &regionCtx->side);
+		// Editor_Region_SetCursorState(&editorCtx->inputCtx, regionCtx, &regionCtx->bot);
+		Editor_Region_SetCursorState(&editorCtx->inputCtx, regionCtx, &regionCtx->view);
 	}
 	
-	if (ABS(mouse->pos.x - sidePanel->pos.x) < GRAB_WIDTH || lockResizeState == true) {
-		if (editorCtx->inputCtx.mouse.clickL.press || lockResizeState == true) {
-			Editor_Subscreen_SetSplitter(
-				&editorCtx->appInfo,
-				editorCtx->appInfo.winDim.x - mouse->pos.x,
-				0
-			);
-			lockResizeState = true;
-		}
+	if (regionCtx->actionFunc) {
+		regionCtx->actionFunc(editorCtx, regionCtx->actionRegion);
 	}
 	
-	if (lockResizeState == false) {
-		if (mouse->pos.x <= view3D->dim.x && mouse->pos.x >= 0) {
-			editorCtx->viewCtx.cameraControl = true;
-			if (controlPress) {
-				lockWrapState = true;
-			}
-		} else {
-			if (lockWrapState == true) {
-				if (mouse->pos.x > (view3D->dim.x * 0.5)) {
-					mouse->jumpVelComp.x = mouse->pos.x;
-					glfwSetCursorPos(
-						editorCtx->appInfo.mainWindow,
-						0,
-						mouse->pos.y
-					);
-				} else {
-					mouse->jumpVelComp.x = mouse->pos.x - view3D->dim.x;
-					glfwSetCursorPos(
-						editorCtx->appInfo.mainWindow,
-						view3D->dim.x,
-						mouse->pos.y
-					);
-				}
-			} else {
-				editorCtx->viewCtx.cameraControl = false;
-			}
-		}
-	} else {
-		editorCtx->viewCtx.cameraControl = false;
-	}
-	
-	Editor_Subscreen_UpdateSplitter(&editorCtx->appInfo);
+	Editor_Region_UpdateSplitter(&editorCtx->appInfo, &editorCtx->regionCtx);
 }
 
-void Editor_Draw_SidePanel(EditorContext* editorCtx) {
-	NVGpaint gradient;
-	PosDim* sidePanel = &editorCtx->appInfo.subscreen.sidePanel;
-	PosDim* view3D = &editorCtx->appInfo.subscreen.view3D;
-	MouseInput* mouse = &editorCtx->inputCtx.mouse;
-	static f32 width = 80.0f;
-	
-	if (ABS(mouse->pos.x - sidePanel->pos.x) < 5 && !mouse->clickL.hold) {
-		Math_SmoothStepToF(&width, sidePanel->dim.x * 0.15f, 0.25f, 300.0f, 0.001f);
-	} else {
-		Math_SmoothStepToF(&width, sidePanel->dim.x * 0.25f, 0.25f, 300.0f, 0.001f);
-	}
-	
-	gradient = nvgLinearGradient(
+void Editor_Region_Draw(EditorContext* editorCtx, Region* panel) {
+	nvgBeginPath(editorCtx->vg);
+	nvgRect(
 		editorCtx->vg,
-		sidePanel->pos.x,
-		0,
-		sidePanel->pos.x + width,
-		0,
-		Element_GetColor(GUICOL_BASE_DARK),
-		Element_GetColor(GUICOL_SPLITTER)
+		panel->pos.x,
+		panel->pos.y,
+		panel->dim.x,
+		panel->dim.y
 	);
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER));
+	nvgFill(editorCtx->vg);
 	
 	nvgBeginPath(editorCtx->vg);
-	nvgRect(editorCtx->vg, sidePanel->pos.x, sidePanel->pos.y, sidePanel->dim.x, sidePanel->dim.y);
-	nvgFillPaint(editorCtx->vg, gradient);
+	nvgRoundedRect(
+		editorCtx->vg,
+		panel->pos.x + 3,
+		panel->pos.y + 3,
+		panel->dim.x - 6,
+		panel->dim.y - 6,
+		4.0f
+	);
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_DARK));
 	nvgFill(editorCtx->vg);
+	
+	if (panel->state.cursorInRange) {
+		nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
+		nvgFontSize(editorCtx->vg, 17.5f);
+		nvgFontFace(editorCtx->vg, "sans");
+		nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+		nvgTextBox(
+			editorCtx->vg,
+			panel->pos.x + 2.0f,
+			panel->pos.y + 2.0f,
+			550,
+			"Focus",
+			NULL
+		);
+	}
 }
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
@@ -134,12 +147,10 @@ void Editor_Draw_SidePanel(EditorContext* editorCtx) {
 void Editor_Draw_2DElements(EditorContext* editorCtx) {
 	nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y, 1.0f);
 	
-	Editor_Draw_SidePanel(editorCtx);
+	Editor_Region_Draw(editorCtx, &editorCtx->regionCtx.side);
+	Editor_Region_Draw(editorCtx, &editorCtx->regionCtx.bot);
 	
-	Element_UpdateElements(editorCtx, &editorCtx->elemCtx);
-	Element_DrawElements(editorCtx, &editorCtx->elemCtx);
-	
-	nvgFillColor(editorCtx->vg, Element_GetColor(GUICOL_BASE_WHITE));
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
 	nvgFontSize(editorCtx->vg, 17.5f);
 	nvgFontFace(editorCtx->vg, "sans");
 	nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
@@ -159,8 +170,26 @@ void Editor_Draw_3DViewport(EditorContext* editorCtx) {
 	z64_Draw_Room(&editorCtx->objCtx.room[0]);
 }
 
+void Editor_Draw(EditorContext* editorCtx) {
+	glViewport(
+		editorCtx->regionCtx.view.pos.x,
+		editorCtx->regionCtx.view.pos.y,
+		editorCtx->regionCtx.view.dim.x,
+		editorCtx->regionCtx.view.dim.y
+	);
+	Editor_Draw_3DViewport(editorCtx);
+	glViewport(
+		0,
+		0,
+		editorCtx->appInfo.winDim.x,
+		editorCtx->appInfo.winDim.y
+	);
+	Editor_Draw_2DElements(editorCtx);
+}
+
 void Editor_Update(EditorContext* editorCtx) {
-	Editor_Subscreen_Update(editorCtx);
+	Editor_Region_Update(editorCtx);
+	View_SetProjectionDimensions(&editorCtx->viewCtx, &editorCtx->regionCtx.view.dim);
 }
 
 void Editor_Init(EditorContext* editorCtx) {
@@ -169,5 +198,7 @@ void Editor_Init(EditorContext* editorCtx) {
 		printf_error("Could not init nanovg.");
 	editorCtx->fontCtx.notoSansID = nvgCreateFont(editorCtx->vg, "sans", "NotoSans-Regular.ttf");
 	
-	Editor_Subscreen_SetSplitter(&editorCtx->appInfo, editorCtx->appInfo.winDim.x * 0.35f, 0.0f);
+	Editor_Region_SetSplitter(&editorCtx->appInfo, &editorCtx->regionCtx, editorCtx->appInfo.winDim.x * 0.25f, 0.0f);
+	
+	editorCtx->viewCtx.cameraControl = false;
 }

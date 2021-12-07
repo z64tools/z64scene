@@ -4,7 +4,7 @@ static EditorContext* editorCtx;
 
 int main(void) {
 	editorCtx = Lib_Malloc(0, sizeof(EditorContext));
-	bzero(editorCtx, sizeof(EditorContext));
+	memset(editorCtx, 0, sizeof(EditorContext));
 	z64_Init(
 		"z64scene",
 		&editorCtx->appInfo,
@@ -14,8 +14,7 @@ int main(void) {
 		&editorCtx->lightCtx,
 		editorCtx,
 		(CallbackFunc)Editor_Update,
-		(CallbackFunc)Editor_Draw_3DViewport,
-		(CallbackFunc)Editor_Draw_2DElements
+		(CallbackFunc)Editor_Draw
 	);
 	Editor_Init(editorCtx);
 	
