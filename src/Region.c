@@ -106,6 +106,10 @@ bool Region_IsCursorInRegion(Region* region) {
 }
 
 static
+void Region_SetSplit(Region* region) {
+}
+
+static
 void Region_UnsetActionRegion(RegionContext* regCtx) {
 	if (regCtx->actionLockedRegion == NULL)
 		return;
@@ -122,7 +126,7 @@ void Region_UnsetActionRegion(RegionContext* regCtx) {
 static
 void Region_ActionReg_Update(RegionContext* regCtx) {
 	Region* reg = regCtx->actionLockedRegion;
-	RegionState splitState = (
+	RegStateFlag splitState = (
 		REG_STATE_SPLIT_TL |
 		REG_STATE_SPLIT_TR |
 		REG_STATE_SPLIT_BL |
@@ -145,6 +149,42 @@ void Region_ActionReg_Update(RegionContext* regCtx) {
 	}
 }
 
+static
+char* Region_Debug_GetStates(Region* reg) {
+	static char buffer[1024];
+	char* states[] = {
+		"NONE",
+		"SPLIT_TL",
+		"SPLIT_TR",
+		"SPLIT_BL",
+		"SPLIT_BR",
+		"RESIZE_L",
+		"RESIZE_R",
+		"RESIZE_T",
+		"RESIZE_B",
+		"BLOCK_L",
+		"BLOCK_R",
+		"BLOCK_T",
+		"BLOCK_B",
+	};
+	
+	String_Copy(buffer, states[0]);
+	
+	for (s32 s = 1, t = 0; (1 << s) <= REG_STATE_BLOCK_B; s++) {
+		if (reg->stateFlag & (1 << s)) {
+			if (t == 0) {
+				String_Copy(buffer, states[s + 1]);
+				t++;
+			} else {
+				String_Merge(buffer, "|");
+				String_Merge(buffer, states[s + 1]);
+			}
+		}
+	}
+	
+	return buffer;
+}
+
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 void Region_Init(EditorContext* editorCtx) {
@@ -154,6 +194,8 @@ void Region_Init(EditorContext* editorCtx) {
 	regCtx->nodeHead = Lib_Calloc(0, sizeof(Region));
 	Region_SetTopBarHeight(editorCtx, 30);
 	Region_SetBotBarHeight(editorCtx, 30);
+	
+	regCtx->nodeHead->stateFlag = (REG_STATE_BLOCK_ALL);
 }
 
 void Region_Update(EditorContext* editorCtx) {
@@ -287,34 +329,15 @@ void Region_Draw(EditorContext* editorCtx) {
 			nvgFill(editorCtx->vg);
 			
 			if (i == 1) {
-				char* txt[] = {
-					"REG_STATE_NONE",
-					"REG_STATE_SPLIT_TL",
-					"REG_STATE_SPLIT_TR",
-					"REG_STATE_SPLIT_BL",
-					"REG_STATE_SPLIT_BR"
-				};
-				s32 i = 0;
-				
-				if (reg->stateFlag & REG_STATE_SPLIT_TL) {
-					i = 1;
-				} else if (reg->stateFlag & REG_STATE_SPLIT_TR) {
-					i = 2;
-				} else if (reg->stateFlag & REG_STATE_SPLIT_BL) {
-					i = 3;
-				} else if (reg->stateFlag & REG_STATE_SPLIT_BR) {
-					i = 4;
-				}
-				
 				nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
-				nvgFontSize(editorCtx->vg, 30 - 14);
+				nvgFontSize(editorCtx->vg, 30 - 16);
 				nvgFontFace(editorCtx->vg, "sans");
 				nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 				nvgText(
 					editorCtx->vg,
-					7,
-					7,
-					txt[i],
+					8,
+					8,
+					Region_Debug_GetStates(regCtx->nodeHead),
 					NULL
 				);
 			}
