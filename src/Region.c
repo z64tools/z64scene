@@ -62,84 +62,87 @@ void Region_DrawRegionBorders(NVGcontext* vg, Recti* rect) {
 
 static
 s32 Region_GetDistTo(RegionPointFlag flag, Region* reg) {
-	Vec2i a;
-	Vec2i b;
+	Vec2i mouse[] = {
+		{ reg->mousePos.x, reg->mousePos.y }, /* REG_POINT_TL */
+		{ reg->mousePos.x, reg->mousePos.y }, /* REG_POINT_TR */
+		{ reg->mousePos.x, reg->mousePos.y }, /* REG_POINT_BL */
+		{ reg->mousePos.x, reg->mousePos.y }, /* REG_POINT_BR */
+		{ reg->mousePos.x, 0               }, /* REG_SIDE_L */
+		{ reg->mousePos.x, 0               }, /* REG_SIDE_R */
+		{ 0,               reg->mousePos.y }, /* REG_SIDE_T */
+		{ 0,               reg->mousePos.y }, /* REG_SIDE_B */
+	};
+	Vec2i pos[] = {
+		{ 0,           0,           }, /* REG_POINT_TL */
+		{ reg->rect.w, 0,           }, /* REG_POINT_TR */
+		{ 0,           reg->rect.h, }, /* REG_POINT_BL */
+		{ reg->rect.w, reg->rect.h, }, /* REG_POINT_BR */
+		{ 0,           0,           }, /* REG_SIDE_L */
+		{ reg->rect.w, 0,           }, /* REG_SIDE_R */
+		{ 0,           0,           }, /* REG_SIDE_T */
+		{ 0,           reg->rect.h, }, /* REG_SIDE_B */
+	};
+	s32 i, f;
 	
-	if (flag & REG_CORNER_TL) {
-		a = (Vec2i) {
-			reg->mousePos.x,
-			reg->mousePos.y
-		};
-		b = (Vec2i) {
-			0,
-			0
-		};
-	} else if (flag & REG_CORNER_TR) {
-		a = (Vec2i) {
-			reg->mousePos.x,
-			reg->mousePos.y
-		};
-		b = (Vec2i) {
-			reg->rect.w,
-			0
-		};
-	} else if (flag & REG_CORNER_BL) {
-		a = (Vec2i) {
-			reg->mousePos.x,
-			reg->mousePos.y
-		};
-		b = (Vec2i) {
-			0,
-			reg->rect.h
-		};
-	} else if (flag & REG_CORNER_BR) {
-		a = (Vec2i) {
-			reg->mousePos.x,
-			reg->mousePos.y
-		};
-		b = (Vec2i) {
-			reg->rect.w,
-			reg->rect.h
-		};
-	} else if (flag & REG_SIDE_T) {
-		a = (Vec2i) {
-			0,
-			reg->mousePos.y
-		};
-		b = (Vec2i) {
-			0,
-			0
-		};
-	} else if (flag & REG_SIDE_L) {
-		a = (Vec2i) {
-			reg->mousePos.x,
-			0
-		};
-		b = (Vec2i) {
-			0,
-			0
-		};
-	} else if (flag & REG_SIDE_B) {
-		a = (Vec2i) {
-			0,
-			reg->mousePos.y
-		};
-		b = (Vec2i) {
-			0,
-			reg->rect.h
-		};
-	} else if (flag & REG_SIDE_R) {
-		a = (Vec2i) {
-			reg->mousePos.x,
-			0
-		};
-		b = (Vec2i) {
-			reg->rect.w,
-			0
-		};
+	for (i = 0, f = REG_POINT_TL; f <= REG_SIDE_B; i++, f = f << 1) {
+		if (flag & f) {
+			break;
+		}
 	}
 	
-	return Vec_Vec2i_DistXZ(&a, &b);
+	return Vec_Vec2i_DistXZ(&mouse[i], &pos[i]);
+}
+
+static
+bool Region_IsCursorInRegion(Region* region) {
+	f32 resX = (f32)region->mousePos.x / region->rect.w;
+	f32 resY = (f32)region->mousePos.y / region->rect.h;
+	
+	if (resX >= 0 && resX <= 1.0f && resY >= 0 && resY <= 1.0f) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+static
+void Region_UnsetActionRegion(RegionContext* regCtx) {
+	if (regCtx->actionLockedRegion == NULL)
+		return;
+	regCtx->actionLockedRegion->stateFlag &= ~(
+		REG_STATE_SPLIT_TL |
+		REG_STATE_SPLIT_TR |
+		REG_STATE_SPLIT_BL |
+		REG_STATE_SPLIT_BR
+	);
+	
+	regCtx->actionLockedRegion = NULL;
+}
+
+static
+void Region_ActionReg_Update(RegionContext* regCtx) {
+	Region* reg = regCtx->actionLockedRegion;
+	RegionState splitState = (
+		REG_STATE_SPLIT_TL |
+		REG_STATE_SPLIT_TR |
+		REG_STATE_SPLIT_BL |
+		REG_STATE_SPLIT_BR
+	);
+	
+	if (reg->mousePress) {
+		for (s32 i = REG_POINT_TL; i <= REG_POINT_BR; i = i << 1) {
+			if (Region_GetDistTo(i, reg) < 20) {
+				reg->stateFlag |= i;
+				break;
+			}
+		}
+	}
+	
+	if (reg->stateFlag & splitState) {
+		if (Region_GetDistTo(reg->stateFlag & splitState, reg) > 20) {
+			Region_UnsetActionRegion(regCtx);
+		}
+	}
 }
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
@@ -160,6 +163,7 @@ void Region_Update(EditorContext* editorCtx) {
 	MouseInput* mouse = &editorCtx->inputCtx.mouse;
 	Vec2i* winDim = &editorCtx->appInfo.winDim;
 	
+	Region_SetTopBarHeight(editorCtx, regCtx->bar[REG_BAR_BOT].rect.h);
 	Region_SetBotBarHeight(editorCtx, regCtx->bar[REG_BAR_BOT].rect.h);
 	
 	regCtx->nodeHead->rect = (Recti) {
@@ -169,8 +173,13 @@ void Region_Update(EditorContext* editorCtx) {
 		regCtx->workRegion.h
 	};
 	
+	if (regCtx->actionLockedRegion && mouse->cursorAction == false) {
+		Region_UnsetActionRegion(regCtx);
+	}
+	
 	while (reg) {
 		if (reg->update || reg == regCtx->nodeHead) {
+			// Update Region Instance
 			Vec2i rectPos = {
 				reg->rect.x,
 				reg->rect.y
@@ -181,9 +190,28 @@ void Region_Update(EditorContext* editorCtx) {
 				(Vec2i*)&rectPos
 			);
 			
-			if (reg != regCtx->nodeHead)
+			if (regCtx->actionLockedRegion == NULL &&
+			    Region_IsCursorInRegion(reg) &&
+			    mouse->cursorAction) {
+				if (mouse->click.press) {
+					reg->mousePressPos = reg->mousePos;
+					reg->mousePress = true;
+				}
+				regCtx->actionLockedRegion = reg;
+			}
+			
+			if (regCtx->actionLockedRegion)
+				Region_ActionReg_Update(regCtx);
+			
+			if (reg != regCtx->nodeHead &&
+			    ((regCtx->actionLockedRegion && regCtx->actionLockedRegion == reg) ||
+			    regCtx->actionLockedRegion == NULL)) {
 				reg->update(editorCtx, reg);
+			}
+			
+			reg->mousePress = false;
 		} else {
+			// Kill Region Instance
 			if (reg->next) {
 				reg->next->prev = reg->prev;
 			}
@@ -259,16 +287,25 @@ void Region_Draw(EditorContext* editorCtx) {
 			nvgFill(editorCtx->vg);
 			
 			if (i == 1) {
-				char txt[128];
-				sprintf(
-					txt,
-					"%04d %04d - %04d %04d - %4d",
-					mouse->pos.x,
-					mouse->pos.y,
-					regCtx->nodeHead->mousePos.x,
-					regCtx->nodeHead->mousePos.y,
-					Region_GetDistTo(REG_CORNER_TL, regCtx->nodeHead)
-				);
+				char* txt[] = {
+					"REG_STATE_NONE",
+					"REG_STATE_SPLIT_TL",
+					"REG_STATE_SPLIT_TR",
+					"REG_STATE_SPLIT_BL",
+					"REG_STATE_SPLIT_BR"
+				};
+				s32 i = 0;
+				
+				if (reg->stateFlag & REG_STATE_SPLIT_TL) {
+					i = 1;
+				} else if (reg->stateFlag & REG_STATE_SPLIT_TR) {
+					i = 2;
+				} else if (reg->stateFlag & REG_STATE_SPLIT_BL) {
+					i = 3;
+				} else if (reg->stateFlag & REG_STATE_SPLIT_BR) {
+					i = 4;
+				}
+				
 				nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
 				nvgFontSize(editorCtx->vg, 30 - 14);
 				nvgFontFace(editorCtx->vg, "sans");
@@ -277,7 +314,7 @@ void Region_Draw(EditorContext* editorCtx) {
 					editorCtx->vg,
 					7,
 					7,
-					txt,
+					txt[i],
 					NULL
 				);
 			}
