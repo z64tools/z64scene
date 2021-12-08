@@ -1,8 +1,7 @@
 #ifndef __Z64SCENE_H__
 #define __Z64SCENE_H__
-#include <z64.h>
-#include <nanovg.h>
 #include "Theme.h"
+#include "Region.h"
 
 struct Region;
 typedef void (* RegionFunc)(struct EditorContext*, struct Region*);
@@ -10,24 +9,6 @@ typedef void (* RegionFunc)(struct EditorContext*, struct Region*);
 typedef struct {
 	s32 notoSansID;
 } FontContext;
-
-typedef struct {
-	u8 cursorInRange : 1;
-} RegionState;
-
-typedef struct Region {
-	s32   id;
-	RegionState state;
-	Recti rect;
-} Region;
-
-typedef struct {
-	Region     side;
-	Region     bot;
-	Region     view;
-	RegionFunc actionFunc;
-	Region*    actionRegion;
-} RegionContext;
 
 typedef struct EditorContext {
 	struct NVGcontext* vg;
