@@ -56,11 +56,19 @@ typedef struct Region {
 	struct Region* next;
 	RegStateFlag   stateFlag;
 	Recti rect;
+	Vec2i center;
 	Vec2i mousePos; // relative
 	Vec2i mousePressPos;
-	bool  mousePress;
+	u8    mousePress   : 1;
+	u8    mouseInRegion : 1;
 	RegionFunc update;
 	RegionFunc draw;
+	struct {
+		struct Region* l;
+		struct Region* r;
+		struct Region* t;
+		struct Region* b;
+	} sibling;
 } Region;
 
 typedef struct {
@@ -68,12 +76,13 @@ typedef struct {
 } StatusBar;
 
 typedef struct RegionContext {
-	struct Region* actionLockedRegion;
+	struct Region* actionRegion;
 	struct Region* nodeHead;
 	StatusBar bar[2];
 	Recti workRegion;
 } RegionContext;
 
+void Region_KillRegion(RegionContext* regCtx, Region** reg);
 void Region_Init(struct EditorContext* editorCtx);
 void Region_Update(struct EditorContext* editorCtx);
 void Region_Draw(struct EditorContext* editorCtx);

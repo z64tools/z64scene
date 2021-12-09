@@ -1,7 +1,8 @@
 #include "Editor.h"
 
-static
-void Region_UpdateWorkRegion(EditorContext* editorCtx) {
+/* / / / / / / / / / / / / / / / / / / / / / / / / / / */
+
+static void Region_UpdateWorkRegion(EditorContext* editorCtx) {
 	RegionContext* regCtx = &editorCtx->regionCtx;
 	Vec2i* winDim = &editorCtx->appInfo.winDim;
 	
@@ -13,8 +14,7 @@ void Region_UpdateWorkRegion(EditorContext* editorCtx) {
 	};
 }
 
-static
-void Region_SetTopBarHeight(EditorContext* editorCtx, s32 h) {
+static void Region_SetTopBarHeight(EditorContext* editorCtx, s32 h) {
 	RegionContext* regCtx = &editorCtx->regionCtx;
 	Vec2i* winDim = &editorCtx->appInfo.winDim;
 	
@@ -25,8 +25,7 @@ void Region_SetTopBarHeight(EditorContext* editorCtx, s32 h) {
 	Region_UpdateWorkRegion(editorCtx);
 }
 
-static
-void Region_SetBotBarHeight(EditorContext* editorCtx, s32 h) {
+static void Region_SetBotBarHeight(EditorContext* editorCtx, s32 h) {
 	RegionContext* regCtx = &editorCtx->regionCtx;
 	Vec2i* winDim = &editorCtx->appInfo.winDim;
 	
@@ -37,8 +36,9 @@ void Region_SetBotBarHeight(EditorContext* editorCtx, s32 h) {
 	Region_UpdateWorkRegion(editorCtx);
 }
 
-static
-void Region_DrawRegionBorders(NVGcontext* vg, Recti* rect) {
+/* / / / / / / / / / / / / / / / / / / / / / / / / / / */
+
+static void Region_Draw_RegionBorders(NVGcontext* vg, Recti* rect) {
 	nvgBeginPath(vg);
 	nvgRect(
 		vg,
@@ -60,8 +60,7 @@ void Region_DrawRegionBorders(NVGcontext* vg, Recti* rect) {
 	nvgFill(vg);
 }
 
-static
-s32 Region_GetDistTo(RegionPointFlag flag, Region* reg) {
+static s32 Region_Cursor_DistTo(RegionPointFlag flag, Region* reg) {
 	Vec2i mouse[] = {
 		{ reg->mousePos.x, reg->mousePos.y }, /* REG_POINT_TL */
 		{ reg->mousePos.x, reg->mousePos.y }, /* REG_POINT_TR */
@@ -93,64 +92,24 @@ s32 Region_GetDistTo(RegionPointFlag flag, Region* reg) {
 	return Vec_Vec2i_DistXZ(&mouse[i], &pos[i]);
 }
 
-static
-bool Region_IsCursorInRegion(Region* region) {
-	f32 resX = (f32)region->mousePos.x / region->rect.w;
-	f32 resY = (f32)region->mousePos.y / region->rect.h;
+static s32 Region_Cursor_InRegion(Region* region) {
+	s32 resX = (region->mousePos.x < region->rect.w && region->mousePos.x >= 0);
+	s32 resY = (region->mousePos.y < region->rect.h && region->mousePos.y >= 0);
 	
-	if (resX >= 0 && resX <= 1.0f && resY >= 0 && resY <= 1.0f) {
-		return true;
-	} else {
-		return false;
-	}
+	return (resX && resY);
 }
 
-static
-void Region_SetSplit(Region* region) {
-}
-
-static
-void Region_UnsetActionRegion(RegionContext* regCtx) {
-	if (regCtx->actionLockedRegion == NULL)
-		return;
-	regCtx->actionLockedRegion->stateFlag &= ~(
-		REG_STATE_SPLIT_TL |
-		REG_STATE_SPLIT_TR |
-		REG_STATE_SPLIT_BL |
-		REG_STATE_SPLIT_BR
-	);
-	
-	regCtx->actionLockedRegion = NULL;
-}
-
-static
-void Region_ActionReg_Update(RegionContext* regCtx) {
-	Region* reg = regCtx->actionLockedRegion;
-	RegStateFlag splitState = (
-		REG_STATE_SPLIT_TL |
-		REG_STATE_SPLIT_TR |
-		REG_STATE_SPLIT_BL |
-		REG_STATE_SPLIT_BR
-	);
-	
-	if (reg->mousePress) {
-		for (s32 i = REG_POINT_TL; i <= REG_POINT_BR; i = i << 1) {
-			if (Region_GetDistTo(i, reg) < 20) {
-				reg->stateFlag |= i;
-				break;
-			}
+static u32 Region_Cursor_GetStateInRange(Region* reg, s32 range) {
+	for (s32 i = REG_POINT_TL; i <= REG_POINT_BR; i = i << 1) {
+		if (Region_Cursor_DistTo(i, reg) <= range) {
+			return i;
 		}
 	}
 	
-	if (reg->stateFlag & splitState) {
-		if (Region_GetDistTo(reg->stateFlag & splitState, reg) > 20) {
-			Region_UnsetActionRegion(regCtx);
-		}
-	}
+	return false;
 }
 
-static
-char* Region_Debug_GetStates(Region* reg) {
+static char* Region_Debug_GetStates(Region* reg) {
 	static char buffer[1024];
 	char* states[] = {
 		"NONE",
@@ -185,7 +144,52 @@ char* Region_Debug_GetStates(Region* reg) {
 	return buffer;
 }
 
+static void Region_ActionReg_Reset(RegionContext* regCtx) {
+	if (regCtx->actionRegion == NULL)
+		return;
+	regCtx->actionRegion->stateFlag &= ~(
+		REG_STATE_SPLIT_TL |
+		REG_STATE_SPLIT_TR |
+		REG_STATE_SPLIT_BL |
+		REG_STATE_SPLIT_BR
+	);
+	
+	regCtx->actionRegion = NULL;
+}
+
+static void Region_ActionReg_Update(RegionContext* regCtx) {
+	Region* reg = regCtx->actionRegion;
+	RegStateFlag splitState = (
+		REG_STATE_SPLIT_TL |
+		REG_STATE_SPLIT_TR |
+		REG_STATE_SPLIT_BL |
+		REG_STATE_SPLIT_BR
+	);
+	
+	if (reg->mousePress) {
+		reg->stateFlag |= Region_Cursor_GetStateInRange(reg, 20);
+	}
+}
+
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
+
+void Region_KillRegion(RegionContext* regCtx, Region** regg) {
+	Region* reg = *regg;
+	
+	if (reg->next) {
+		reg->next->prev = reg->prev;
+	}
+	
+	if (reg->prev) {
+		reg->prev->next = reg->next;
+	} else {
+		regCtx->nodeHead = reg->next;
+	}
+	
+	free(reg);
+	
+	regg = NULL;
+}
 
 void Region_Init(EditorContext* editorCtx) {
 	RegionContext* regCtx = &editorCtx->regionCtx;
@@ -205,7 +209,7 @@ void Region_Update(EditorContext* editorCtx) {
 	MouseInput* mouse = &editorCtx->inputCtx.mouse;
 	Vec2i* winDim = &editorCtx->appInfo.winDim;
 	
-	Region_SetTopBarHeight(editorCtx, regCtx->bar[REG_BAR_BOT].rect.h);
+	Region_SetTopBarHeight(editorCtx, regCtx->bar[REG_BAR_TOP].rect.h);
 	Region_SetBotBarHeight(editorCtx, regCtx->bar[REG_BAR_BOT].rect.h);
 	
 	regCtx->nodeHead->rect = (Recti) {
@@ -215,67 +219,59 @@ void Region_Update(EditorContext* editorCtx) {
 		regCtx->workRegion.h
 	};
 	
-	if (regCtx->actionLockedRegion && mouse->cursorAction == false) {
-		Region_UnsetActionRegion(regCtx);
+	if (regCtx->actionRegion && mouse->cursorAction == false) {
+		Region_ActionReg_Reset(regCtx);
 	}
 	
 	while (reg) {
-		if (reg->update || reg == regCtx->nodeHead) {
-			// Update Region Instance
-			Vec2i rectPos = {
-				reg->rect.x,
-				reg->rect.y
-			};
-			Vec_Vec2i_Substract(
-				&reg->mousePos,
-				&mouse->pos,
-				(Vec2i*)&rectPos
-			);
-			
-			if (regCtx->actionLockedRegion == NULL &&
-			    Region_IsCursorInRegion(reg) &&
-			    mouse->cursorAction) {
-				if (mouse->click.press) {
-					reg->mousePressPos = reg->mousePos;
-					reg->mousePress = true;
-				}
-				regCtx->actionLockedRegion = reg;
+		Vec2i rectPos = {
+			reg->rect.x,
+			reg->rect.y
+		};
+		Vec_Vec2i_Substract(
+			&reg->mousePos,
+			&mouse->pos,
+			(Vec2i*)&rectPos
+		);
+		
+		reg->mouseInRegion = Region_Cursor_InRegion(reg);
+		reg->center.x = reg->rect.x + reg->rect.w * 0.5f;
+		reg->center.y = reg->rect.y + reg->rect.h * 0.5f;
+		
+		if (regCtx->actionRegion == NULL &&
+		    reg->mouseInRegion &&
+		    mouse->cursorAction) {
+			if (mouse->click.press) {
+				reg->mousePressPos = reg->mousePos;
+				reg->mousePress = true;
 			}
-			
-			if (regCtx->actionLockedRegion)
-				Region_ActionReg_Update(regCtx);
-			
-			if (reg != regCtx->nodeHead &&
-			    ((regCtx->actionLockedRegion && regCtx->actionLockedRegion == reg) ||
-			    regCtx->actionLockedRegion == NULL)) {
-				reg->update(editorCtx, reg);
-			}
-			
-			reg->mousePress = false;
-		} else {
-			// Kill Region Instance
-			if (reg->next) {
-				reg->next->prev = reg->prev;
-			}
-			
-			if (reg->prev) {
-				reg->prev->next = reg->next;
-			} else {
-				regCtx->nodeHead = reg->next;
-			}
-			
-			killReg = reg;
-			
-			free(killReg);
+			regCtx->actionRegion = reg;
 		}
 		
+		if (regCtx->actionRegion) {
+			Region_ActionReg_Update(regCtx);
+		} else {
+			if (Region_Cursor_GetStateInRange(reg, 20)) {
+				editorCtx->inputCtx.mouse.cursorIcon = CURSOR_CROSSHAIRR;
+			}
+		}
+		
+		if (reg->update) {
+			if (reg != regCtx->nodeHead &&
+			    ((regCtx->actionRegion && regCtx->actionRegion == reg) ||
+			    regCtx->actionRegion == NULL)) {
+				reg->update(editorCtx, reg);
+			}
+		}
+		
+		reg->mousePress = false;
 		reg = reg->next;
 	}
 }
 
 void Region_Draw(EditorContext* editorCtx) {
 	RegionContext* regCtx = &editorCtx->regionCtx;
-	Region* reg = regCtx->nodeHead->next;
+	Region* reg = regCtx->nodeHead;
 	Region* killReg;
 	MouseInput* mouse = &editorCtx->inputCtx.mouse;
 	Vec2i* winDim = &editorCtx->appInfo.winDim;
@@ -291,22 +287,25 @@ void Region_Draw(EditorContext* editorCtx) {
 		nvgBeginFrame(editorCtx->vg, reg->rect.w, reg->rect.h, 1.0f); {
 			if (reg->draw)
 				reg->draw(editorCtx, reg);
-			Region_DrawRegionBorders(editorCtx->vg, &reg->rect);
+			
+			if (reg->mouseInRegion) {
+				nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
+				nvgFontSize(editorCtx->vg, 30 - 16);
+				nvgFontFace(editorCtx->vg, "sans");
+				nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+				nvgText(
+					editorCtx->vg,
+					8,
+					8,
+					":hello mouse:",
+					NULL
+				);
+			}
+			
+			Region_Draw_RegionBorders(editorCtx->vg, &reg->rect);
 		} nvgEndFrame(editorCtx->vg);
 		
 		reg = reg->next;
-	}
-	// Draw NodeHead Borders
-	if ((reg = regCtx->nodeHead) != NULL) {
-		glViewport(
-			reg->rect.x,
-			winDim->y - reg->rect.y - reg->rect.h,
-			reg->rect.w,
-			reg->rect.h
-		);
-		nvgBeginFrame(editorCtx->vg, reg->rect.w, reg->rect.h, 1.0f); {
-			Region_DrawRegionBorders(editorCtx->vg, &reg->rect);
-		} nvgEndFrame(editorCtx->vg);
 	}
 	// Draw Bars
 	for (s32 i = 0; i < 2; i++) {
