@@ -1,6 +1,6 @@
 .PHONY = z64viewer.exe clean
 
-FLAGS = -s -flto -Os -DNDEBUG
+FLAGS = -s -flto -Os #-DNDEBUG
 
 GIT_COMMIT_HASH := $(shell git log -1 --pretty=%h | tr -d '\n')
 GIT_COMMIT_MSG := $(shell git log -1 --pretty=%B | tr -d '\n')

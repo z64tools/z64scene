@@ -20,7 +20,7 @@ const char* sHash = {
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 #if 0
-void Region_View(EditorContext* editorCtx, Region* panel) {
+void Area_View(EditorContext* editorCtx, Area* panel) {
 	MouseInput* mouse = &editorCtx->inputCtx.mouse;
 	InputContext* inputCtx = &editorCtx->inputCtx;
 	bool mouseMove = false;
@@ -62,17 +62,17 @@ void Region_View(EditorContext* editorCtx, Region* panel) {
 	}
 }
 
-RegionFunc sRegionFuncs[] = {
+AreaFunc sRegionFuncs[] = {
 	/* left  */ NULL,
 	/* right */ NULL,
 	/* top   */ NULL,
 	/* bot   */ NULL,
-	/* view  */ Region_View,
+	/* view  */ Area_View,
 };
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
-void Editor_DrawRegion_ViewPanel(EditorContext* editorCtx, Region* panel) {
+void Editor_DrawArea_ViewPanel(EditorContext* editorCtx, Area* panel) {
 	nvgBeginPath(editorCtx->vg);
 	nvgRect(
 		editorCtx->vg,
@@ -94,12 +94,12 @@ void Editor_DrawRegion_ViewPanel(EditorContext* editorCtx, Region* panel) {
 	nvgFill(editorCtx->vg);
 }
 
-void Editor_DrawRegion_LeftPanel(EditorContext* editorCtx, Region* panel) {
-	Vec2i basePos = {
+void Editor_DrawArea_LeftPanel(EditorContext* editorCtx, Area* panel) {
+	Vec2s basePos = {
 		panel->rect.x + 10,
 		panel->rect.y + 10
 	};
-	Vec2i textPos = basePos;
+	Vec2s textPos = basePos;
 	
 	// BG
 	nvgBeginPath(editorCtx->vg);
@@ -136,7 +136,7 @@ void Editor_DrawRegion_LeftPanel(EditorContext* editorCtx, Region* panel) {
 	// nvgTextBox(editorCtx->vg, textPos.x, textPos.y, 150, "Modular and skawoUHHUH", NULL);
 }
 
-void Editor_DrawRegion_BotPanel(EditorContext* editorCtx, Region* panel) {
+void Editor_DrawArea_BotPanel(EditorContext* editorCtx, Area* panel) {
 	nvgBeginPath(editorCtx->vg);
 	nvgRect(
 		editorCtx->vg,
@@ -165,23 +165,32 @@ void Editor_DrawRegion_BotPanel(EditorContext* editorCtx, Region* panel) {
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 void Editor_Draw(EditorContext* editorCtx) {
-	Region_Draw(editorCtx);
+	static s32 o;
+	
+	Gui_Draw(editorCtx);
 }
 
 void Editor_Update(EditorContext* editorCtx) {
-	Region_Update(editorCtx);
+	Gui_Update(editorCtx);
 }
 
 void Editor_Init(EditorContext* editorCtx) {
-	RegionContext* regionCtx = &editorCtx->regionCtx;
+	GuiContext* regionCtx = &editorCtx->guiCtx;
 	
+	#ifndef NDEBUG
 	editorCtx->vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+	#else
+	editorCtx->vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+	#endif
 	if (editorCtx->vg == NULL)
 		printf_error("Could not init nanovg.");
-	editorCtx->fontCtx.notoSansID = nvgCreateFont(editorCtx->vg, "sans", "NotoSans-Regular.ttf");
+	editorCtx->fontCtx.notoSansID = nvgCreateFont(editorCtx->vg, "sans", "Menlo-Regular.ttf");
+	if (editorCtx->fontCtx.notoSansID < 0) {
+		OsPrintfEx("Could not load Font");
+	}
 	
 	editorCtx->viewCtx.cameraControl = false;
-	Region_Init(editorCtx);
+	Gui_Init(editorCtx);
 	
 	glfwSetWindowSizeLimits(
 		editorCtx->appInfo.mainWindow,

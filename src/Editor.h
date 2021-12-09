@@ -1,10 +1,10 @@
 #ifndef __Z64SCENE_H__
 #define __Z64SCENE_H__
 #include "Theme.h"
-#include "Region.h"
+#include "GUI.h"
 
-struct Region;
-typedef void (* RegionFunc)(struct EditorContext*, struct Region*);
+struct Area;
+typedef void (* AreaFunc)(struct EditorContext*, struct Area*);
 
 typedef struct {
 	s32 notoSansID;
@@ -18,7 +18,7 @@ typedef struct EditorContext {
 	LightContext  lightCtx;
 	FontContext   fontCtx;
 	ObjectContext objCtx;
-	RegionContext regionCtx;
+	GuiContext    guiCtx;
 } EditorContext;
 
 void Editor_Draw(EditorContext* editorCtx);

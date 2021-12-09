@@ -1,6 +1,6 @@
 #include "Editor.h"
 
-void Interface_ListBox(NVGcontext* vg, Recti rect, s32 count, char* item[]) {
+void Interface_ListBox(NVGcontext* vg, Rect rect, s32 count, char* item[]) {
 	nvgBeginPath(vg);
 	nvgRoundedRect(
 		vg,
