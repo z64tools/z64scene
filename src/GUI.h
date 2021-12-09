@@ -17,6 +17,13 @@ typedef enum {
 } GuiBarIndex;
 
 typedef enum {
+	SVTX_LB = 0,
+	SVTX_LT,
+	SVTX_RT,
+	SVTX_RB
+} SVtx;
+
+typedef enum {
 	SPLIT_POINT_NONE = 0,
 	SPLIT_POINT_TL   = (1 << 0),
 	SPLIT_POINT_TR   = (1 << 1),

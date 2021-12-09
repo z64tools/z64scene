@@ -53,22 +53,22 @@ SplitEdge* Split_AddEdge(GuiContext* guiCtx, SplitVtx* v1, SplitVtx* v2) {
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 void Split_InitRect(GuiContext* guiCtx, Split* split, Rect* rect) {
-	split->vtx[0] = Split_AddVertex(
+	split->vtx[SVTX_LB] = Split_AddVertex(
 		guiCtx,
 		rect->x,
 		rect->y + rect->h
 	);
-	split->vtx[1] = Split_AddVertex(
+	split->vtx[SVTX_LT] = Split_AddVertex(
 		guiCtx,
 		rect->x,
 		rect->y
 	);
-	split->vtx[2] = Split_AddVertex(
+	split->vtx[SVTX_RT] = Split_AddVertex(
 		guiCtx,
 		rect->x + rect->w,
 		rect->y
 	);
-	split->vtx[3] = Split_AddVertex(
+	split->vtx[SVTX_RB] = Split_AddVertex(
 		guiCtx,
 		rect->x + rect->w,
 		rect->y + rect->h
@@ -171,7 +171,9 @@ SplitEdge* Split_GetSharedEdge(GuiContext* guiCtx, Split* a, Split* b) {
 	SplitEdge* edge = guiCtx->splitEdgeHead;
 	s32 k = 0;
 	
-	OsAssert(a != NULL && b != NULL);
+	if (b == NULL) {
+		return NULL;
+	}
 	OsAssert(guiCtx->splitEdgeHead != NULL);
 	
 	// Find Vertesies
@@ -215,7 +217,44 @@ Split* Split_GetNeighbourByState(GuiContext* guiCtx, Split* split) {
 	
 	if (split->stateFlag & SPLIT_STATE_DRAG_R) {
 		while (nei) {
-			if (nei->vtx[1] == split->vtx[2] && nei->vtx[0] == split->vtx[3]) {
+			if (nei->vtx[SVTX_LT] == split->vtx[SVTX_RT] &&
+			    nei->vtx[SVTX_LB] == split->vtx[SVTX_RB]) {
+				return nei;
+			}
+			nei = nei->next;
+		}
+		
+		return NULL;
+	}
+	
+	if (split->stateFlag & SPLIT_STATE_DRAG_L) {
+		while (nei) {
+			if (nei->vtx[SVTX_RT] == split->vtx[SVTX_LT] &&
+			    nei->vtx[SVTX_RB] == split->vtx[SVTX_LB]) {
+				return nei;
+			}
+			nei = nei->next;
+		}
+		
+		return NULL;
+	}
+	
+	if (split->stateFlag & SPLIT_STATE_DRAG_T) {
+		while (nei) {
+			if (nei->vtx[SVTX_LB] == split->vtx[SVTX_LT] &&
+			    nei->vtx[SVTX_RB] == split->vtx[SVTX_RT]) {
+				return nei;
+			}
+			nei = nei->next;
+		}
+		
+		return NULL;
+	}
+	
+	if (split->stateFlag & SPLIT_STATE_DRAG_B) {
+		while (nei) {
+			if (nei->vtx[SVTX_LT] == split->vtx[SVTX_LB] &&
+			    nei->vtx[SVTX_RT] == split->vtx[SVTX_RB]) {
 				return nei;
 			}
 			nei = nei->next;
@@ -399,6 +438,8 @@ void Gui_SplitVtx_UpdateAll(GuiContext* guiCtx) {
 		vtx->pos.y -= guiCtx->bar[GUI_BAR_TOP].rect.h;
 		vtx->pos.x *= x;
 		vtx->pos.y *= y;
+		vtx->pos.x = floor(vtx->pos.x * 0.1) * 10.0;
+		vtx->pos.y = floor(vtx->pos.y * 0.1) * 10.0;
 		vtx->pos.y += guiCtx->bar[GUI_BAR_TOP].rect.h;
 		vtx = vtx->next;
 	}
@@ -473,7 +514,7 @@ void Gui_Update(EditorContext* editorCtx) {
 		SplitVtx* a = guiCtx->resizeEdge->vtx[0];
 		SplitVtx* b = guiCtx->resizeEdge->vtx[1];
 		
-		a->pos.x = b->pos.x = __inputCtx->mouse.pos.x;
+		a->pos.x = b->pos.x = __inputCtx->mouse.pos.x + 5;
 	}
 	
 	Gui_SetTopBarHeight(editorCtx, guiCtx->bar[GUI_BAR_TOP].rect.h);
@@ -509,6 +550,16 @@ void Gui_Draw(EditorContext* editorCtx) {
 			nvgFill(editorCtx->vg);
 			
 			if (i == 1) {
+				static Split* lastActive;
+				
+				if (lastActive == NULL) {
+					lastActive = guiCtx->splitHead;
+				}
+				
+				if (guiCtx->actionSplit) {
+					lastActive = guiCtx->actionSplit;
+				}
+				
 				nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
 				nvgFontSize(editorCtx->vg, 30 - 16);
 				nvgFontFace(editorCtx->vg, "sans");
@@ -517,7 +568,7 @@ void Gui_Draw(EditorContext* editorCtx) {
 					editorCtx->vg,
 					8,
 					8,
-					Split_Debug_GetStates(guiCtx->splitHead),
+					Split_Debug_GetStates(lastActive),
 					NULL
 				);
 			}
