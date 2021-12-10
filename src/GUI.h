@@ -17,11 +17,18 @@ typedef enum {
 } GuiBarIndex;
 
 typedef enum {
-	SVTX_LB = 0,
-	SVTX_LT,
-	SVTX_RT,
-	SVTX_RB
+	VTX_BOT_L = 0,
+	VTX_TOP_L,
+	VTX_TOP_R,
+	VTX_BOT_R
 } SVtx;
+
+typedef enum {
+	DIR_T = 1,
+	DIR_B,
+	DIR_L,
+	DIR_R,
+} SplitDir;
 
 typedef enum {
 	SPLIT_POINT_NONE = 0,
@@ -39,6 +46,7 @@ typedef enum {
 	
 	SPLIT_SIDE_H     = (SPLIT_SIDE_L | SPLIT_SIDE_R),
 	SPLIT_SIDE_V     = (SPLIT_SIDE_T | SPLIT_SIDE_B),
+	SPLIT_SIDES      = (SPLIT_SIDE_H | SPLIT_SIDE_V),
 } SplitPointIndex;
 
 typedef enum {
@@ -71,17 +79,40 @@ typedef struct {
 	Rect rect;
 } StatusBar;
 
+typedef enum {
+	VTX_STICK_T = (1 << 0),
+	VTX_STICK_B = (1 << 1),
+	VTX_STICK_L = (1 << 2),
+	VTX_STICK_R = (1 << 3),
+	
+	VTX_STICK   = (VTX_STICK_T | VTX_STICK_B | VTX_STICK_L | VTX_STICK_R),
+} VtxState;
+
 typedef struct SplitVtx {
 	struct SplitVtx* prev;
 	struct SplitVtx* next;
-	Vec2d pos;
-	u8    borderPoint;
+	Vec2d    pos;
+	VtxState state;
 } SplitVtx;
+
+typedef enum {
+	EDGE_STATE_NONE = 0,
+	EDGE_HORIZONTAL = (1 << 0),
+	EDGE_VERTICAL   = (1 << 1),
+	
+	EDGE_ALIGN      = (EDGE_HORIZONTAL | EDGE_VERTICAL),
+	
+	EDGE_HEADER_T   = (1 << 2),
+	EDGE_HEADER_B   = (1 << 3),
+	EDGE_HEADER_L   = (1 << 4),
+	EDGE_HEADER_R   = (1 << 5),
+} EdgeState;
 
 typedef struct SplitEdge {
 	struct SplitEdge* prev;
 	struct SplitEdge* next;
 	SplitVtx* vtx[2];
+	EdgeState state;
 } SplitEdge;
 
 typedef struct Split {
@@ -102,8 +133,8 @@ typedef struct Split {
 typedef struct GuiContext {
 	Split*     actionSplit;
 	Split*     splitHead;
-	SplitVtx*  splitVtxHead;
-	SplitEdge* splitEdgeHead;
+	SplitVtx*  vtxHead;
+	SplitEdge* edgeHead;
 	StatusBar  bar[2];
 	Rect prevWorkRect;
 	Rect workRect;

@@ -2,8 +2,45 @@
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
+char* Debug_Split_GetStateStrings(Split* split) {
+	static char buffer[1024];
+	s32 t = 0;
+	char* states[] = {
+		"NONE",
+		"DRAG_TL",
+		"DRAG_TR",
+		"DRAG_BL",
+		"DRAG_BR",
+		"DRAG_T",
+		"DRAG_B",
+		"DRAG_L",
+		"DRAG_R",
+		"SPLIT_T",
+		"SPLIT_B",
+		"SPLIT_L",
+		"SPLIT_R",
+	};
+	
+	String_Copy(buffer, states[0]);
+	
+	for (s32 i = 0; (1 << i) <= 0xFFFF; i++) {
+		if (split->stateFlag & (1 << i)) {
+			if (t++ == 0) {
+				String_Copy(buffer, states[i + 1]);
+			} else {
+				String_Merge(buffer, "|");
+				String_Merge(buffer, states[i + 1]);
+			}
+		}
+	}
+	
+	return buffer;
+}
+
+/* / / / / / / / / / / / / / / / / / / / / / / / / / / */
+
 SplitVtx* Split_AddVertex(GuiContext* guiCtx, s16 x, s16 y) {
-	SplitVtx* head = guiCtx->splitVtxHead;
+	SplitVtx* head = guiCtx->vtxHead;
 	
 	while (head) {
 		if (head->pos.x == x && head->pos.y == y) {
@@ -18,13 +55,16 @@ SplitVtx* Split_AddVertex(GuiContext* guiCtx, s16 x, s16 y) {
 	
 	vtx->pos.x = x;
 	vtx->pos.y = y;
-	Node_Add(SplitVtx, guiCtx->splitVtxHead, vtx);
+	Node_Add(SplitVtx, guiCtx->vtxHead, vtx);
 	
 	return vtx;
 }
 
 SplitEdge* Split_AddEdge(GuiContext* guiCtx, SplitVtx* v1, SplitVtx* v2) {
-	SplitEdge* head = guiCtx->splitEdgeHead;
+	SplitEdge* head = guiCtx->edgeHead;
+	SplitEdge* edge = NULL;
+	
+	OsAssert(v1 != NULL && v2 != NULL);
 	
 	if ((intptr_t)v1 > (intptr_t)v2) {
 		SplitVtx* temp = v1;
@@ -36,16 +76,25 @@ SplitEdge* Split_AddEdge(GuiContext* guiCtx, SplitVtx* v1, SplitVtx* v2) {
 		if (head->vtx[0] == v1 && head->vtx[1] == v2) {
 			OsPrintfEx("EdgeConnect");
 			
-			return head;
+			edge = head;
+			break;
 		}
 		head = head->next;
 	}
 	
-	SplitEdge* edge = Lib_Calloc(0, sizeof(SplitEdge));
+	if (edge == NULL) {
+		edge = Lib_Calloc(0, sizeof(SplitEdge));
+		
+		edge->vtx[0] = v1;
+		edge->vtx[1] = v2;
+		Node_Add(SplitEdge, guiCtx->edgeHead, edge);
+	}
 	
-	edge->vtx[0] = v1;
-	edge->vtx[1] = v2;
-	Node_Add(SplitEdge, guiCtx->splitEdgeHead, edge);
+	if (edge->vtx[0]->pos.y == edge->vtx[1]->pos.y) {
+		edge->state |= EDGE_VERTICAL;
+	} else {
+		edge->state |= EDGE_HORIZONTAL;
+	}
 	
 	return edge;
 }
@@ -53,31 +102,33 @@ SplitEdge* Split_AddEdge(GuiContext* guiCtx, SplitVtx* v1, SplitVtx* v2) {
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 void Split_InitRect(GuiContext* guiCtx, Split* split, Rect* rect) {
-	split->vtx[SVTX_LB] = Split_AddVertex(
+	split->vtx[VTX_BOT_L] = Split_AddVertex(
 		guiCtx,
 		rect->x,
 		rect->y + rect->h
 	);
-	split->vtx[SVTX_LT] = Split_AddVertex(
+	split->vtx[VTX_TOP_L] = Split_AddVertex(
 		guiCtx,
 		rect->x,
 		rect->y
 	);
-	split->vtx[SVTX_RT] = Split_AddVertex(
+	split->vtx[VTX_TOP_R] = Split_AddVertex(
 		guiCtx,
 		rect->x + rect->w,
 		rect->y
 	);
-	split->vtx[SVTX_RB] = Split_AddVertex(
+	split->vtx[VTX_BOT_R] = Split_AddVertex(
 		guiCtx,
 		rect->x + rect->w,
 		rect->y + rect->h
 	);
 	
-	Split_AddEdge(guiCtx, split->vtx[0], split->vtx[1]);
-	Split_AddEdge(guiCtx, split->vtx[1], split->vtx[2]);
-	Split_AddEdge(guiCtx, split->vtx[2], split->vtx[3]);
-	Split_AddEdge(guiCtx, split->vtx[3], split->vtx[0]);
+	Split_AddEdge(guiCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_TOP_L]);
+	Split_AddEdge(guiCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
+	Split_AddEdge(guiCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
+	Split_AddEdge(guiCtx, split->vtx[VTX_BOT_R], split->vtx[VTX_BOT_L]);
+	
+	OsPrintfEx("Init OK");
 }
 
 void Split_SetRect(Split* split) {
@@ -118,24 +169,24 @@ void Split_Draw_RegionBorders(NVGcontext* vg, Rect* rect) {
 
 s32 Split_Cursor_DistTo(SplitPointIndex flag, Split* split) {
 	Vec2s mouse[] = {
-		{ split->mousePos.x, split->mousePos.y }, /* SPLIT_POINT_TL */
-		{ split->mousePos.x, split->mousePos.y }, /* SPLIT_POINT_TR */
-		{ split->mousePos.x, split->mousePos.y }, /* SPLIT_POINT_BL */
-		{ split->mousePos.x, split->mousePos.y }, /* SPLIT_POINT_BR */
-		{ 0,                 split->mousePos.y }, /* SPLIT_SIDE_T */
-		{ 0,                 split->mousePos.y }, /* SPLIT_SIDE_B */
-		{ split->mousePos.x, 0               }, /* SPLIT_SIDE_L */
-		{ split->mousePos.x, 0               }, /* SPLIT_SIDE_R */
+		{ split->mousePos.x, split->mousePos.y },
+		{ split->mousePos.x, split->mousePos.y },
+		{ split->mousePos.x, split->mousePos.y },
+		{ split->mousePos.x, split->mousePos.y },
+		{ 0,                 split->mousePos.y },
+		{ 0,                 split->mousePos.y },
+		{ split->mousePos.x, 0               },
+		{ split->mousePos.x, 0               },
 	};
 	Vec2s pos[] = {
-		{ 0,             0,           }, /* SPLIT_POINT_TL */
-		{ split->rect.w, 0,           }, /* SPLIT_POINT_TR */
-		{ 0,             split->rect.h, }, /* SPLIT_POINT_BL */
-		{ split->rect.w, split->rect.h, }, /* SPLIT_POINT_BR */
-		{ 0,             0,           }, /* SPLIT_SIDE_T */
-		{ 0,             split->rect.h, }, /* SPLIT_SIDE_B */
-		{ 0,             0,           }, /* SPLIT_SIDE_L */
-		{ split->rect.w, 0,           }, /* SPLIT_SIDE_R */
+		{ 0,             0,           },
+		{ split->rect.w, 0,           },
+		{ 0,             split->rect.h, },
+		{ split->rect.w, split->rect.h, },
+		{ 0,             0,           },
+		{ 0,             split->rect.h, },
+		{ 0,             0,           },
+		{ split->rect.w, 0,           },
 	};
 	s32 i;
 	
@@ -148,14 +199,14 @@ s32 Split_Cursor_DistTo(SplitPointIndex flag, Split* split) {
 	return Vec_Vec2s_DistXZ(&mouse[i], &pos[i]);
 }
 
-s32 Split_Cursor_InRegion(Split* region) {
-	s32 resX = (region->mousePos.x < region->rect.w && region->mousePos.x >= 0);
-	s32 resY = (region->mousePos.y < region->rect.h && region->mousePos.y >= 0);
+s32 Split_Cursor_InSplit(Split* split) {
+	s32 resX = (split->mousePos.x < split->rect.w && split->mousePos.x >= 0);
+	s32 resY = (split->mousePos.y < split->rect.h && split->mousePos.y >= 0);
 	
 	return (resX && resY);
 }
 
-u32 Split_Cursor_GetStateInRange(Split* split, s32 range) {
+u32 Split_Cursor_InRangeOfStatePoint(Split* split, s32 range) {
 	for (s32 i = 0; (1 << i) <= SPLIT_SIDE_R; i++) {
 		if (Split_Cursor_DistTo((1 << i), split) <= range) {
 			return (1 << i);
@@ -164,17 +215,24 @@ u32 Split_Cursor_GetStateInRange(Split* split, s32 range) {
 	
 	return false;
 }
-
-SplitEdge* Split_GetSharedEdge(GuiContext* guiCtx, Split* a, Split* b) {
+/*
+ * +─────────+─────────+
+ * |         |         |
+ * |    Y    Z    X    |
+ * |         |         |
+ * +─────────+─────────+
+ * Get Edge [Z] using Split [Y] and Split [X]
+ */
+SplitEdge* Split_GetEdge_SharedBySplits(GuiContext* guiCtx, Split* a, Split* b) {
 	SplitVtx* vtx[2] = { NULL };
 	SplitVtx* temp;
-	SplitEdge* edge = guiCtx->splitEdgeHead;
+	SplitEdge* edge = guiCtx->edgeHead;
 	s32 k = 0;
 	
 	if (b == NULL) {
 		return NULL;
 	}
-	OsAssert(guiCtx->splitEdgeHead != NULL);
+	OsAssert(guiCtx->edgeHead != NULL);
 	
 	// Find Vertesies
 	for (s32 i = 0; i < 4; i++) {
@@ -209,98 +267,185 @@ SplitEdge* Split_GetSharedEdge(GuiContext* guiCtx, Split* a, Split* b) {
 	
 	return NULL;
 }
-
-Split* Split_GetNeighbourByState(GuiContext* guiCtx, Split* split) {
-	Split* nei = guiCtx->splitHead;
+/*
+ * +─────────+─────────+
+ * |         |         |
+ * |         |         |
+ * |         |         |
+ * +────Z────X────Y────+
+ * Get Edge [Z] using Edge [Y] and Vtx [X]
+ */
+SplitEdge* Split_GetEdge_Sibling(GuiContext* guiCtx, SplitEdge* edge, SplitVtx* vtx) {
+	SplitEdge* ret = guiCtx->edgeHead;
 	
-	OsAssert(split != NULL);
-	
-	if (split->stateFlag & SPLIT_STATE_DRAG_R) {
-		while (nei) {
-			if (nei->vtx[SVTX_LT] == split->vtx[SVTX_RT] &&
-			    nei->vtx[SVTX_LB] == split->vtx[SVTX_RB]) {
-				return nei;
-			}
-			nei = nei->next;
+	while (ret) {
+		if (ret == edge) {
+			ret = ret->next;
+			continue;
 		}
 		
-		return NULL;
+		if ((ret->state & EDGE_ALIGN) & (edge->state & EDGE_ALIGN)) {
+			if (ret->vtx[0] == vtx || ret->vtx[1] == vtx) {
+				return ret;
+			}
+		}
+		
+		ret = ret->next;
 	}
 	
-	if (split->stateFlag & SPLIT_STATE_DRAG_L) {
-		while (nei) {
-			if (nei->vtx[SVTX_RT] == split->vtx[SVTX_LT] &&
-			    nei->vtx[SVTX_RB] == split->vtx[SVTX_LB]) {
-				return nei;
-			}
-			nei = nei->next;
-		}
-		
-		return NULL;
+	return NULL;
+}
+/*
+ * +─────────X─────────+
+ * |         |         |
+ * |         Z         |
+ * |         |         |
+ * +─────────Y─────────+
+ * Get Edge [Z] using Vtx [X] and Vtx [Y]
+ */
+SplitEdge* Split_GetEdge_VtxVtx(GuiContext* guiCtx, SplitVtx* v1, SplitVtx* v2) {
+	SplitEdge* edge = guiCtx->edgeHead;
+	
+	if ((intptr_t)v1 > (intptr_t)v2) {
+		SplitVtx* temp = v1;
+		v1 = v2;
+		v2 = temp;
 	}
 	
-	if (split->stateFlag & SPLIT_STATE_DRAG_T) {
-		while (nei) {
-			if (nei->vtx[SVTX_LB] == split->vtx[SVTX_LT] &&
-			    nei->vtx[SVTX_RB] == split->vtx[SVTX_RT]) {
-				return nei;
-			}
-			nei = nei->next;
+	while (edge) {
+		if (edge->vtx[0] == v1 && edge->vtx[1] == v2) {
+			return edge;
 		}
 		
-		return NULL;
-	}
-	
-	if (split->stateFlag & SPLIT_STATE_DRAG_B) {
-		while (nei) {
-			if (nei->vtx[SVTX_LT] == split->vtx[SVTX_LB] &&
-			    nei->vtx[SVTX_RT] == split->vtx[SVTX_RB]) {
-				return nei;
-			}
-			nei = nei->next;
-		}
-		
-		return NULL;
+		edge = edge->next;
 	}
 	
 	return NULL;
 }
 
-/* / / / / / / / / / / / / / / / / / / / / / / / / / / */
-
-char* Split_Debug_GetStates(Split* split) {
-	static char buffer[1024];
-	s32 t = 0;
-	char* states[] = {
-		"NONE",
-		"DRAG_TL",
-		"DRAG_TR",
-		"DRAG_BL",
-		"DRAG_BR",
-		"DRAG_T",
-		"DRAG_B",
-		"DRAG_L",
-		"DRAG_R",
-		"SPLIT_T",
-		"SPLIT_B",
-		"SPLIT_L",
-		"SPLIT_R",
-	};
+Split* Split_GetSplit_Neighbour(GuiContext* guiCtx, Split* split, SplitDir dir) {
+	Split* ret = guiCtx->splitHead;
+	SplitVtx* a;
+	SplitVtx* b;
+	SVtx compA;
+	SVtx compB;
 	
-	String_Copy(buffer, states[0]);
+	OsAssert(dir >= DIR_T && dir <= DIR_R);
 	
-	for (s32 i = 0; (1 << i) <= 0xFFFF; i++) {
-		if (split->stateFlag & (1 << i)) {
-			if (t++ == 0) {
-				String_Copy(buffer, states[i + 1]);
-			} else {
-				String_Merge(buffer, "|");
-				String_Merge(buffer, states[i + 1]);
-			}
-		}
+	switch (dir) {
+	    case DIR_T:
+		    a = split->vtx[VTX_TOP_L];
+		    b = split->vtx[VTX_TOP_R];
+		    compA = VTX_BOT_L;
+		    compB = VTX_BOT_R;
+		    break;
+	    case DIR_B:
+		    a = split->vtx[VTX_BOT_L];
+		    b = split->vtx[VTX_BOT_R];
+		    compA = VTX_TOP_L;
+		    compB = VTX_TOP_R;
+		    break;
+	    case DIR_L:
+		    a = split->vtx[VTX_TOP_L];
+		    b = split->vtx[VTX_BOT_L];
+		    compA = VTX_TOP_R;
+		    compB = VTX_BOT_R;
+		    break;
+	    case DIR_R:
+		    a = split->vtx[VTX_TOP_R];
+		    b = split->vtx[VTX_BOT_R];
+		    compA = VTX_TOP_L;
+		    compB = VTX_BOT_L;
+		    break;
 	}
 	
-	return buffer;
+	while (ret) {
+		if (ret->vtx[compA] == a && ret->vtx[compB] == b) {
+			return ret;
+		}
+		
+		ret = ret->next;
+	}
+	
+	return NULL;
+}
+
+Split* Split_GetSplit_NeighbourByState(GuiContext* guiCtx, Split* split) {
+	Split* nei = guiCtx->splitHead;
+	
+	OsAssert(split != NULL);
+	
+	if (split->stateFlag & SPLIT_SIDES) {
+		for (s32 i = 1; i <= 4; i++) {
+			if (split->stateFlag & (1 << (3 + i))) {
+				return Split_GetSplit_Neighbour(guiCtx, split, i);
+			}
+		}
+	} else if (split->stateFlag & SPLIT_SIDES) {
+	}
+	
+	return NULL;
+}
+
+SplitVtx* Split_GetVtx_Neighbour(GuiContext* guiCtx, SplitVtx* vtx, SplitDir dir) {
+	SplitEdge* edge = guiCtx->edgeHead;
+	
+	switch (dir) {
+	    case DIR_T:
+		    while (edge) {
+			    if (edge->state & EDGE_VERTICAL) {
+				    for (s32 i = 0; i <= 1; i++) {
+					    s32 j = 1 - i;
+					    if (edge->vtx[i] == vtx) {
+						    if (edge->vtx[j]->pos.y < vtx->pos.y) {
+							    return edge->vtx[j];
+						    }
+					    }
+				    }
+			    }
+			    
+			    edge = edge->next;
+		    }
+		    break;
+	    case DIR_B:
+		    if (edge->state & EDGE_VERTICAL) {
+			    for (s32 i = 0; i <= 1; i++) {
+				    s32 j = 1 - i;
+				    if (edge->vtx[i] == vtx) {
+					    if (edge->vtx[j]->pos.y > vtx->pos.y) {
+						    return edge->vtx[j];
+					    }
+				    }
+			    }
+		    }
+		    break;
+	    case DIR_L:
+		    if (edge->state & EDGE_HORIZONTAL) {
+			    for (s32 i = 0; i <= 1; i++) {
+				    s32 j = 1 - i;
+				    if (edge->vtx[i] == vtx) {
+					    if (edge->vtx[j]->pos.x < vtx->pos.x) {
+						    return edge->vtx[j];
+					    }
+				    }
+			    }
+		    }
+		    break;
+	    case DIR_R:
+		    if (edge->state & EDGE_HORIZONTAL) {
+			    for (s32 i = 0; i <= 1; i++) {
+				    s32 j = 1 - i;
+				    if (edge->vtx[i] == vtx) {
+					    if (edge->vtx[j]->pos.x > vtx->pos.x) {
+						    return edge->vtx[j];
+					    }
+				    }
+			    }
+		    }
+		    break;
+	}
+	
+	return NULL;
 }
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
@@ -326,9 +471,9 @@ void Split_Action_Update(GuiContext* guiCtx) {
 	);
 	
 	if (split->mousePress) {
-		split->stateFlag |= Split_Cursor_GetStateInRange(split, 20);
-		Split* nei = Split_GetNeighbourByState(guiCtx, split);
-		guiCtx->resizeEdge = Split_GetSharedEdge(guiCtx, split, nei);
+		split->stateFlag |= Split_Cursor_InRangeOfStatePoint(split, 20);
+		Split* nei = Split_GetSplit_NeighbourByState(guiCtx, split);
+		guiCtx->resizeEdge = Split_GetEdge_SharedBySplits(guiCtx, split, nei);
 	}
 }
 
@@ -364,7 +509,7 @@ void Gui_Split_UpdateAll(EditorContext* editorCtx) {
 			(Vec2s*)&rectPos
 		);
 		
-		split->mouseInRegion = Split_Cursor_InRegion(split);
+		split->mouseInRegion = Split_Cursor_InSplit(split);
 		split->center.x = split->rect.x + split->rect.w * 0.5f;
 		split->center.y = split->rect.y + split->rect.h * 0.5f;
 		
@@ -381,11 +526,11 @@ void Gui_Split_UpdateAll(EditorContext* editorCtx) {
 		if (guiCtx->actionSplit) {
 			Split_Action_Update(guiCtx);
 		} else {
-			if (Split_Cursor_GetStateInRange(split, 20) & SPLIT_POINTS) {
+			if (Split_Cursor_InRangeOfStatePoint(split, 20) & SPLIT_POINTS) {
 				editorCtx->inputCtx.mouse.cursorIcon = CURSOR_CROSSHAIR;
-			} else if (Split_Cursor_GetStateInRange(split, 10) & SPLIT_SIDE_H) {
+			} else if (Split_Cursor_InRangeOfStatePoint(split, 10) & SPLIT_SIDE_H) {
 				editorCtx->inputCtx.mouse.cursorIcon = CURSOR_HRESIZE;
-			} else if (Split_Cursor_GetStateInRange(split, 10) & SPLIT_SIDE_V) {
+			} else if (Split_Cursor_InRangeOfStatePoint(split, 10) & SPLIT_SIDE_V) {
 				editorCtx->inputCtx.mouse.cursorIcon = CURSOR_VRESIZE;
 			}
 		}
@@ -429,7 +574,7 @@ void Gui_Split_DrawAll(EditorContext* editorCtx) {
 }
 
 void Gui_SplitVtx_UpdateAll(GuiContext* guiCtx) {
-	SplitVtx* vtx = guiCtx->splitVtxHead;
+	SplitVtx* vtx = guiCtx->vtxHead;
 	Rect* rect = &guiCtx->workRect;
 	f64 x = (f64)guiCtx->workRect.w / (f64)guiCtx->prevWorkRect.w;
 	f64 y = (f64)guiCtx->workRect.h / (f64)guiCtx->prevWorkRect.h;
@@ -438,9 +583,35 @@ void Gui_SplitVtx_UpdateAll(GuiContext* guiCtx) {
 		vtx->pos.y -= guiCtx->bar[GUI_BAR_TOP].rect.h;
 		vtx->pos.x *= x;
 		vtx->pos.y *= y;
-		vtx->pos.x = floor(vtx->pos.x * 0.1) * 10.0;
-		vtx->pos.y = floor(vtx->pos.y * 0.1) * 10.0;
 		vtx->pos.y += guiCtx->bar[GUI_BAR_TOP].rect.h;
+		
+		if (vtx->state & VTX_STICK_L) {
+			vtx->pos.x = guiCtx->workRect.x;
+		}
+		if (vtx->state & VTX_STICK_R) {
+			vtx->pos.x = guiCtx->workRect.x + guiCtx->workRect.w;
+		}
+		if (vtx->state & VTX_STICK_T) {
+			vtx->pos.y = guiCtx->workRect.y;
+		}
+		if (vtx->state & VTX_STICK_B) {
+			vtx->pos.y = guiCtx->workRect.y + guiCtx->workRect.h;
+		}
+		
+		if (guiCtx->resizeEdge || __appInfo->isResizeCallback) {
+			f64 clampXmin = 100.0f;
+			f64 clampYmin = 100.0f;
+			f64 clampXmax = guiCtx->workRect.x + guiCtx->workRect.w - 100.0f;
+			f64 clampYmax = guiCtx->workRect.y + guiCtx->workRect.h - 100.0f;
+			
+			if (!(vtx->state & (VTX_STICK_L | VTX_STICK_R))) {
+				vtx->pos.x = CLAMP(vtx->pos.x, clampXmin, clampXmax);
+			}
+			if (!(vtx->state & (VTX_STICK_T | VTX_STICK_B))) {
+				vtx->pos.y = CLAMP(vtx->pos.y, clampYmin, clampYmax);
+			}
+		}
+		
 		vtx = vtx->next;
 	}
 }
@@ -504,6 +675,16 @@ void Gui_Init(EditorContext* editorCtx) {
 	Split_InitRect(guiCtx, guiCtx->splitHead, &lHalf);
 	Split_InitRect(guiCtx, guiCtx->splitHead->next, &rHalf);
 	
+	guiCtx->splitHead->vtx[0]->state |= (VTX_STICK_L | VTX_STICK_B);
+	guiCtx->splitHead->vtx[1]->state |= (VTX_STICK_L | VTX_STICK_T);
+	guiCtx->splitHead->vtx[2]->state |= (VTX_STICK_T);
+	guiCtx->splitHead->vtx[3]->state |= (VTX_STICK_B);
+	
+	guiCtx->splitHead->next->vtx[0]->state |= (VTX_STICK_B);
+	guiCtx->splitHead->next->vtx[1]->state |= (VTX_STICK_T);
+	guiCtx->splitHead->next->vtx[2]->state |= (VTX_STICK_R | VTX_STICK_T);
+	guiCtx->splitHead->next->vtx[3]->state |= (VTX_STICK_R | VTX_STICK_B);
+	
 	guiCtx->prevWorkRect = guiCtx->workRect;
 }
 
@@ -514,7 +695,7 @@ void Gui_Update(EditorContext* editorCtx) {
 		SplitVtx* a = guiCtx->resizeEdge->vtx[0];
 		SplitVtx* b = guiCtx->resizeEdge->vtx[1];
 		
-		a->pos.x = b->pos.x = __inputCtx->mouse.pos.x + 5;
+		a->pos.x = b->pos.x = (s32)((f64)__inputCtx->mouse.pos.x * 0.25) * 4.0 + 2;
 	}
 	
 	Gui_SetTopBarHeight(editorCtx, guiCtx->bar[GUI_BAR_TOP].rect.h);
@@ -568,7 +749,7 @@ void Gui_Draw(EditorContext* editorCtx) {
 					editorCtx->vg,
 					8,
 					8,
-					Split_Debug_GetStates(lastActive),
+					Debug_Split_GetStateStrings(lastActive),
 					NULL
 				);
 			}
