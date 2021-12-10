@@ -165,12 +165,16 @@ void Editor_DrawArea_BotPanel(EditorContext* editorCtx, Area* panel) {
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 void Editor_Draw(EditorContext* editorCtx) {
-	static s32 o;
+	if (glfwGetWindowAttrib(editorCtx->appInfo.mainWindow, GLFW_ICONIFIED))
+		return;
 	
 	Gui_Draw(editorCtx);
 }
 
 void Editor_Update(EditorContext* editorCtx) {
+	if (glfwGetWindowAttrib(editorCtx->appInfo.mainWindow, GLFW_ICONIFIED))
+		return;
+	
 	Gui_Update(editorCtx);
 }
 
