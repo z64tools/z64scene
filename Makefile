@@ -25,7 +25,7 @@ $(shell mkdir -p bin/ $(foreach dir,$(dir $(SrcO_z64scene)) $(dir $(SrcO_z64view
 default: sourcefiles z64scene.exe
 
 win32: sourcefiles z64scene.exe
-linux: sourcefiles z64scene.exe
+linux: sourcefiles z64scene
 
 sourcefiles: $(SrcO_z64scene) $(SrcO_z64viewer) $(SrcO_nanoVG)
 
