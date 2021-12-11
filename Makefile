@@ -2,7 +2,7 @@
 
 FLAGS = -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable \
 				-I z64viewer/include -I nanovg/src \
-				-s -flto -Os #-DNDEBUG
+				-s -Os #-DNDEBUG -flto
 
 GIT_COMMIT_HASH := $(shell git log -1 --pretty=%h | tr -d '\n')
 GIT_COMMIT_MSG  := $(shell git log -1 --pretty=%B | tr -d '\n')
@@ -53,19 +53,19 @@ src_linux: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG)
 	
 bin/linux/z64viewer/src/%.o: z64viewer/src/%.c z64viewer/include/%.h
 	@echo "Linux: [" $< "]"
-	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
 	
 bin/linux/%.o: %.c %.h
 	@echo "Linux: [" $< "]"
-	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
 	
 bin/linux/%.o: %.c
 	@echo "Linux: [" $< "]"
-	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
 	
 bin/linux/src/main.o: src/main.c
 	@echo "Linux: [" $< "]"
-	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
 
 z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG)
 	@echo "win32: [" $< "]"
