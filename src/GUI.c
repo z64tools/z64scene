@@ -510,7 +510,7 @@ void Gui_Init(EditorContext* editorCtx) {
 void Gui_Update(EditorContext* editorCtx) {
 	GuiContext* guiCtx = &editorCtx->guiCtx;
 	
-	// glfwSetCursor(__appInfo->mainWindow, editorCtx->cursorCtx.arrowU->glfwCur);
+	glfwSetCursor(__appInfo->mainWindow, editorCtx->cursorCtx.arrowU->glfwCur);
 	
 	Gui_SetTopBarHeight(editorCtx, guiCtx->bar[GUI_BAR_TOP].rect.h);
 	Gui_SetBotBarHeight(editorCtx, guiCtx->bar[GUI_BAR_BOT].rect.h);

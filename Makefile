@@ -31,6 +31,8 @@ default: win32
 win32: src_win32 z64scene.exe
 linux: src_linux z64scene
 
+# WIN32
+
 src_win32: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG)
 	
 bin/win32/z64viewer/src/%.o: z64viewer/src/%.c z64viewer/include/%.h
@@ -48,7 +50,13 @@ bin/win32/%.o: %.c
 bin/win32/src/main.o: src/main.c
 	@echo "Win32: [" $< "]"
 	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
-	
+
+z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG)
+	@echo "win32: [" $@ "]"
+	@i686-w64-mingw32.static-gcc $^ -o z64scene.exe -lm -flto `i686-w64-mingw32.static-pkg-config --cflags --libs glfw3` $(FLAGS)
+
+# LINUX
+
 src_linux: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG)
 	
 bin/linux/z64viewer/src/%.o: z64viewer/src/%.c z64viewer/include/%.h
@@ -67,13 +75,9 @@ bin/linux/src/main.o: src/main.c
 	@echo "Linux: [" $< "]"
 	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
 
-z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG)
-	@echo "win32: [" $< "]"
-	@i686-w64-mingw32.static-gcc $^ -o z64scene.exe -lm `i686-w64-mingw32.static-pkg-config --cflags --libs glfw3` $(FLAGS)
-
 z64scene: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG)
-	@echo "Linux: [" $< "]"
-	@gcc -lm -lglfw -ldl $(FLAGS)
+	@echo "Linux: [" $@ "]"
+	@gcc $^ -o z64scene -lm -lglfw -ldl -flto $(FLAGS)
 
 clean:
 	rm -f z64scene.exe z64scene
