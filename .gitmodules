@@ -4,3 +4,6 @@
 [submodule "nanovg"]
 	path = nanovg
 	url = https://github.com/memononen/nanovg
+[submodule "incbin"]
+	path = incbin
+	url = https://github.com/graphitemaster/incbin.git
