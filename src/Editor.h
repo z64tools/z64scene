@@ -2,6 +2,7 @@
 #define __Z64SCENE_H__
 #include "Theme.h"
 #include "GUI.h"
+#include "Cursor.h"
 
 struct Area;
 typedef void (* AreaFunc)(struct EditorContext*, struct Area*);
@@ -19,6 +20,7 @@ typedef struct EditorContext {
 	FontContext   fontCtx;
 	ObjectContext objCtx;
 	GuiContext    guiCtx;
+	CursorContext cursorCtx;
 } EditorContext;
 
 void Editor_Draw(EditorContext* editorCtx);

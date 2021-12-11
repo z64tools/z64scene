@@ -122,11 +122,11 @@ void Editor_DrawArea_LeftPanel(EditorContext* editorCtx, Area* panel) {
 		panel->rect.h - 6,
 		3.0f
 	);
-	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_DARK));
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE));
 	nvgFill(editorCtx->vg);
 	
 	// Text
-	// nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
+	// nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_CONT));
 	// nvgFontSize(editorCtx->vg, 24.0f);
 	// nvgFontFace(editorCtx->vg, "sans");
 	// nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
@@ -148,13 +148,13 @@ void Editor_DrawArea_BotPanel(EditorContext* editorCtx, Area* panel) {
 	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER_DARKER));
 	nvgFill(editorCtx->vg);
 	
-	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_CONT));
 	nvgFontSize(editorCtx->vg, panel->rect.h - 16);
 	nvgFontFace(editorCtx->vg, "sans");
 	nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 	nvgText(editorCtx->vg, panel->rect.x + 5, panel->rect.y + 8, sBuild, NULL);
 	
-	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_WHITE));
+	nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_CONT));
 	nvgFontSize(editorCtx->vg, panel->rect.h - 16);
 	nvgFontFace(editorCtx->vg, "sans");
 	nvgTextAlign(editorCtx->vg, NVG_ALIGN_RIGHT | NVG_ALIGN_TOP);
@@ -195,6 +195,7 @@ void Editor_Init(EditorContext* editorCtx) {
 	
 	editorCtx->viewCtx.cameraControl = false;
 	Gui_Init(editorCtx);
+	Cursor_Init(&editorCtx->cursorCtx);
 	
 	glfwSetWindowSizeLimits(
 		editorCtx->appInfo.mainWindow,
