@@ -344,6 +344,8 @@ void Split_Update_Splits(EditorContext* editorCtx) {
 	Split* split = guiCtx->splitHead;
 	MouseInput* mouse = &editorCtx->inputCtx.mouse;
 	
+	Cursor_SetCursor(CURSOR_DEFAULT);
+	
 	if (guiCtx->actionSplit != NULL && mouse->cursorAction == false) {
 		Split_Reset(guiCtx);
 	}
@@ -377,13 +379,13 @@ void Split_Update_Splits(EditorContext* editorCtx) {
 		if (guiCtx->actionSplit) {
 			Split_Update_ActionSplit(guiCtx);
 		} else {
-			// if (Split_GetState_CursorPos(split, 20) & SPLIT_POINTS && split->mouseInRegion) {
-			// 	editorCtx->inputCtx.mouse.cursorIcon = CURSOR_CROSSHAIR;
-			// } else if (Split_GetState_CursorPos(split, 10) & SPLIT_SIDE_H && split->mouseInRegion) {
-			// 	editorCtx->inputCtx.mouse.cursorIcon = CURSOR_HRESIZE;
-			// } else if (Split_GetState_CursorPos(split, 10) & SPLIT_SIDE_V && split->mouseInRegion) {
-			// 	editorCtx->inputCtx.mouse.cursorIcon = CURSOR_VRESIZE;
-			// }
+			if (Split_GetState_CursorPos(split, 20) & SPLIT_POINTS && split->mouseInRegion) {
+				// editorCtx->inputCtx.mouse.cursorIcon = CURSOR_CROSSHAIR;
+			} else if (Split_GetState_CursorPos(split, 10) & SPLIT_SIDE_H && split->mouseInRegion) {
+				Cursor_SetCursor(CURSOR_ARROW_H);
+			} else if (Split_GetState_CursorPos(split, 10) & SPLIT_SIDE_V && split->mouseInRegion) {
+				Cursor_SetCursor(CURSOR_ARROW_V);
+			}
 		}
 		
 		if (split->update) {
@@ -509,8 +511,6 @@ void Gui_Init(EditorContext* editorCtx) {
 
 void Gui_Update(EditorContext* editorCtx) {
 	GuiContext* guiCtx = &editorCtx->guiCtx;
-	
-	glfwSetCursor(__appInfo->mainWindow, editorCtx->cursorCtx.arrowU->glfwCur);
 	
 	Gui_SetTopBarHeight(editorCtx, guiCtx->bar[GUI_BAR_TOP].rect.h);
 	Gui_SetBotBarHeight(editorCtx, guiCtx->bar[GUI_BAR_BOT].rect.h);
