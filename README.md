@@ -36,3 +36,14 @@ HLE Zelda 64 scene editor in modern OpenGL
 - **Automation**
   - Object ID's automatic sorting
     - If neighbour rooms have same objects, set them accordingly to prevent reloading those
+
+## Building
+Currently, Windows binaries are produced by cross-compiling from Linux or WSL using MXE ([setup guide](https://mxe.cc/)). When building MXE, you need only run `make gcc glfw3` to acquire `z64scene`'s dependencies.
+
+Use the following commands to clone and build the repository:
+```
+git clone https://github.com/HermosauhuTeam/z64scene.git
+cd z64scene
+git submodule update --init
+make all
+```
