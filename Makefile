@@ -30,19 +30,24 @@ linux: sourcefiles z64scene
 sourcefiles: $(SrcO_z64scene) $(SrcO_z64viewer) $(SrcO_nanoVG)
 
 bin/%.o: %.c %.h
-	i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@echo $<
+	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
 	
 bin/%.o: %.c
-	i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@echo $<
+	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
 
 bin/src/main.o: src/main.c
-	i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@echo $<
+	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
 
 z64scene.exe: $(SrcO_z64scene) $(SrcO_z64viewer) $(SrcO_nanoVG)
-	i686-w64-mingw32.static-gcc $^ -o z64scene.exe -lm `i686-w64-mingw32.static-pkg-config --cflags --libs glfw3` $(FLAGS)
+	@echo $<
+	@i686-w64-mingw32.static-gcc $^ -o z64scene.exe -lm `i686-w64-mingw32.static-pkg-config --cflags --libs glfw3` $(FLAGS)
 
 z64scene: $(SrcO_z64scene) $(SrcO_z64viewer) $(SrcO_nanoVG)
-	gcc -lm -lglfw -ldl $(FLAGS)
+	@echo $<
+	@gcc -lm -lglfw -ldl $(FLAGS)
 
 clean:
 	rm -f z64scene.exe z64scene
