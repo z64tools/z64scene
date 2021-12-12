@@ -3,8 +3,6 @@
 static EditorContext* editorCtx;
 
 int main(void) {
-	printf_SetSuppressLevel(PSL_DEBUG);
-	printf_SetPrefix("");
 	editorCtx = Lib_Calloc(0, sizeof(EditorContext));
 	z64_Init(
 		"z64scene",

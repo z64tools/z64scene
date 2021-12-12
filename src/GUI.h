@@ -74,6 +74,7 @@ typedef struct SplitVtx {
 	struct SplitVtx* prev;
 	struct SplitVtx* next;
 	Vec2d pos;
+	u8    killFlag;
 } SplitVtx;
 
 typedef struct SplitEdge {
