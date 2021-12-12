@@ -836,5 +836,28 @@ void Gui_Draw(EditorContext* editorCtx) {
 		guiCtx->debug.vtx2[0] = NULL;
 		guiCtx->debug.vtx2[1] = NULL;
 	}
+	
+	SplitVtx* vtx = guiCtx->vtxHead;
+	s32 num = 0;
+	glViewport(0, 0, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y);
+	nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y, 1.0f);
+	while (vtx) {
+		char buf[128];
+		Vec2f pos = {
+			vtx->pos.x + CLAMP(editorCtx->appInfo.winDim.x * 0.5 - vtx->pos.x, -150.0f, 150.0f) * 0.1f,
+			vtx->pos.y + CLAMP(editorCtx->appInfo.winDim.y * 0.5 - vtx->pos.y, -150.0f, 150.0f) * 0.1f
+		};
+		
+		sprintf(buf, "%d", num);
+		nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_CONT));
+		nvgFontSize(editorCtx->vg, 16);
+		nvgFontFace(editorCtx->vg, "sans");
+		nvgTextAlign(editorCtx->vg, NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER);
+		nvgText(editorCtx->vg, pos.x, pos.y, buf, 0);
+		
+		vtx = vtx->next;
+		num++;
+	}
+	nvgEndFrame(editorCtx->vg);
 	#endif
 }
