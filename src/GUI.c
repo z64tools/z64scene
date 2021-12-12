@@ -168,6 +168,22 @@ SplitEdge* Split_GetEdge_FromDir(GuiContext* guiCtx, SplitEdge* srcEdge, SplitDi
 		}
 	}
 	
+	if (dir == DIR_T) {
+		while (split) {
+			if (split->edge[EDGE_B] == srcEdge)
+				return split->edge[EDGE_T];
+			split = split->next;
+		}
+	}
+	
+	if (dir == DIR_B) {
+		while (split) {
+			if (split->edge[EDGE_T] == srcEdge)
+				return split->edge[EDGE_B];
+			split = split->next;
+		}
+	}
+	
 	return NULL;
 }
 
@@ -407,7 +423,8 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 			}
 			if (dist > 50) {
 				Split_Reset(guiCtx);
-				Split_Split(guiCtx, split, Split_GerDir_MouseToPressPos(split));
+				if (split->mouseInRegion)
+					Split_Split(guiCtx, split, Split_GerDir_MouseToPressPos(split));
 			}
 		}
 		if (split->stateFlag & SPLIT_SIDE_H) {
@@ -438,10 +455,10 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 	
 	if (guiCtx->actionEdge) {
 		if (guiCtx->actionEdge->state & EDGE_HORIZONTAL) {
-			guiCtx->actionEdge->pos = __inputCtx->mouse.pos.y;
+			guiCtx->actionEdge->pos = __inputCtx->mouse.pos.y + 4;
 		}
 		if (guiCtx->actionEdge->state & EDGE_VERTICAL) {
-			guiCtx->actionEdge->pos = __inputCtx->mouse.pos.x;
+			guiCtx->actionEdge->pos = __inputCtx->mouse.pos.x + 4;
 		}
 	}
 	
@@ -478,35 +495,36 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 			}
 		}
 		
-		if (edge->state & EDGE_HORIZONTAL) {
-			edge->vtx[0]->pos.y = edge->pos;
-			edge->vtx[1]->pos.y = edge->pos;
+		u32 isHor = ((edge->state & EDGE_VERTICAL) == 0);
+		SplitEdge* l = Split_GetEdge_FromDir(guiCtx, edge, DIR_L + isHor);
+		SplitEdge* r = Split_GetEdge_FromDir(guiCtx, edge, DIR_R + isHor);
+		
+		#ifndef NDEBUG
+		if (edge == guiCtx->actionEdge) {
+			if (l) {
+				guiCtx->debug.vtx1[0] = guiCtx->actionEdge->vtx[0];
+				guiCtx->debug.vtx1[1] = l->vtx[1];
+			}
+			if (r) {
+				guiCtx->debug.vtx2[0] = guiCtx->actionEdge->vtx[0];
+				guiCtx->debug.vtx2[1] = r->vtx[1];
+			}
 		}
-		if (edge->state & EDGE_VERTICAL) {
-			SplitEdge* l = Split_GetEdge_FromDir(guiCtx, edge, DIR_L);
-			SplitEdge* r = Split_GetEdge_FromDir(guiCtx, edge, DIR_R);
-			#ifndef NDEBUG
-			if (edge == guiCtx->actionEdge) {
-				if (l) {
-					guiCtx->debug.vtx1[0] = l->vtx[0];
-					guiCtx->debug.vtx1[1] = l->vtx[1];
-				}
-				if (r) {
-					guiCtx->debug.vtx2[0] = r->vtx[0];
-					guiCtx->debug.vtx2[1] = r->vtx[1];
-				}
-			}
-			#endif
-			
-			if (!(edge->state & EDGE_STICK)) {
-				if (l)
-					edge->pos = CLAMP_MIN(edge->pos, l->pos + 100);
-				if (r)
-					edge->pos = CLAMP_MAX(edge->pos, r->pos - 100);
-			}
-			
-			edge->vtx[0]->pos.x = edge->pos;
-			edge->vtx[1]->pos.x = edge->pos;
+		#endif
+		
+		if (!(edge->state & EDGE_STICK) && edge == guiCtx->actionEdge) {
+			if (l)
+				edge->pos = CLAMP_MIN(edge->pos, l->pos + 53);
+			if (r)
+				edge->pos = CLAMP_MAX(edge->pos, r->pos - 53);
+		}
+		
+		if (edge->state & EDGE_STICK) {
+			edge->vtx[0]->pos.s[isHor] = edge->pos;
+			edge->vtx[1]->pos.s[isHor] = edge->pos;
+		} else {
+			edge->vtx[0]->pos.s[isHor] = floor(edge->pos * 0.125f) * 8.0f;
+			edge->vtx[1]->pos.s[isHor] = floor(edge->pos * 0.125f) * 8.0f;
 		}
 		
 		edge->killFlag++;
