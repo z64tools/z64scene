@@ -210,31 +210,11 @@ Split* Split_GerSplit_SharedEdge(GuiContext* guiCtx, Split* srcSplit, SplitEdge*
 }
 
 void Split_SetEdgeMoveClamps(GuiContext* guiCtx) {
-	SplitEdge* edge = guiCtx->edgeHead;
+	SplitEdge* a = guiCtx->actionEdge;
+	s32 align = Lib_Wrap(a->state & EDGE_ALIGN, 0, 1);
 	
-	guiCtx->edgeMovement.clampMin = 0;
-	guiCtx->edgeMovement.clampMax = guiCtx->workRect.w * 2;
-	
-	while (edge) {
-		if (edge != guiCtx->actionEdge) {
-			if ((edge->state & EDGE_ALIGN) == (guiCtx->actionEdge->state & EDGE_ALIGN)) {
-				s32 align = (edge->state & EDGE_ALIGN) - 1;
-				f64 medianAction = (guiCtx->actionEdge->vtx[0]->pos.s[align] + guiCtx->actionEdge->vtx[1]->pos.s[align]) * 0.5;
-				f64 medianEdge = (edge->vtx[0]->pos.s[align] + edge->vtx[1]->pos.s[align]) * 0.5;
-				
-				if (medianAction == medianEdge) {
-					if (edge->pos < guiCtx->actionEdge->pos && edge->pos > guiCtx->edgeMovement.clampMin) {
-						guiCtx->edgeMovement.clampMin = edge->pos;
-					}
-					if (edge->pos > guiCtx->actionEdge->pos && edge->pos < guiCtx->edgeMovement.clampMax) {
-						guiCtx->edgeMovement.clampMax = edge->pos;
-					}
-				}
-			}
-		}
-		
-		edge = edge->next;
-	}
+	guiCtx->edgeMovement.clampMin = guiCtx->workRect.y;
+	guiCtx->edgeMovement.clampMax = guiCtx->workRect.w;
 }
 // TODO: find a way to do this process without if?
 void Split_Split(GuiContext* guiCtx, Split* split, SplitDir dir) {
@@ -246,6 +226,8 @@ void Split_Split(GuiContext* guiCtx, Split* split, SplitDir dir) {
 	newSplit = Lib_Calloc(0, sizeof(Split));
 	
 	Node_Add(guiCtx->splitHead, newSplit);
+	
+	OsPrintfEx("SplitDir: %d", dir);
 	
 	if (dir == DIR_L) {
 		newSplit->vtx[0] = Split_AddVertex(guiCtx, splitPos, split->vtx[0]->pos.y);
@@ -468,6 +450,63 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 
 void Split_Update_Vtx(GuiContext* guiCtx) {
 	SplitVtx* vtx = guiCtx->vtxHead;
+	static s32 clean;
+	
+	if (guiCtx->actionEdge != NULL) {
+		clean = true;
+		
+		return;
+	}
+	
+	if (clean == false) {
+		return;
+	}
+	
+redo:
+	OsPrintfEx("Round!");
+	while (vtx) {
+		SplitVtx* vtx2 = guiCtx->vtxHead;
+		while (vtx2) {
+			if (vtx2 == vtx) {
+				vtx2 = vtx2->next;
+				continue;
+			}
+			
+			if (Vec2_Equal(&vtx->pos, &vtx2->pos)) {
+				Split* s = guiCtx->splitHead;
+				SplitEdge* e = guiCtx->edgeHead;
+				
+				while (s) {
+					for (s32 i = 0; i < 4; i++) {
+						if (s->vtx[i] == vtx2) {
+							s->vtx[i] = vtx;
+						}
+					}
+					s = s->next;
+				}
+				
+				while (e) {
+					for (s32 i = 0; i < 2; i++) {
+						if (e->vtx[i] == vtx2) {
+							e->vtx[i] = vtx;
+						}
+					}
+					e = e->next;
+				}
+				
+				OsPrintfEx("Kill!");
+				Node_Kill(guiCtx->vtxHead, vtx2);
+				vtx = guiCtx->vtxHead;
+				goto redo;
+			}
+			
+			vtx2 = vtx2->next;
+		}
+		
+		vtx = vtx->next;
+	}
+	
+	clean = false;
 }
 
 void Split_Update_Edges(GuiContext* guiCtx) {
@@ -480,6 +519,10 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 	}
 	
 	while (edge) {
+		if (guiCtx->actionEdge == NULL) {
+			edge->state &= ~EDGE_EDIT;
+		}
+		
 		if (edge->killFlag >= 5) {
 			SplitEdge* temp = edge->next;
 			OsPrintfEx("Node_Kill: Edge %08X", edge);
@@ -513,12 +556,12 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 		}
 		
 		u32 isHor = ((edge->state & EDGE_VERTICAL) == 0);
-		if (edge == guiCtx->actionEdge && !(edge->state & EDGE_STICK)) {
-			if (guiCtx->actionEdge->state & EDGE_HORIZONTAL) {
-				guiCtx->actionEdge->pos = __inputCtx->mouse.pos.y + 4;
+		if ((edge == guiCtx->actionEdge || edge->state & EDGE_EDIT) && !(edge->state & EDGE_STICK)) {
+			if (edge->state & EDGE_HORIZONTAL) {
+				edge->pos = __inputCtx->mouse.pos.y + 4;
 			}
-			if (guiCtx->actionEdge->state & EDGE_VERTICAL) {
-				guiCtx->actionEdge->pos = __inputCtx->mouse.pos.x + 4;
+			if (edge->state & EDGE_VERTICAL) {
+				edge->pos = __inputCtx->mouse.pos.x + 4;
 			}
 			edge->pos = CLAMP_MIN(edge->pos, guiCtx->edgeMovement.clampMin + 40);
 			edge->pos = CLAMP_MAX(edge->pos, guiCtx->edgeMovement.clampMax - 40);
@@ -529,8 +572,22 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 			edge->vtx[0]->pos.s[isHor] = edge->pos;
 			edge->vtx[1]->pos.s[isHor] = edge->pos;
 		} else {
-			edge->vtx[0]->pos.s[isHor] = floor(edge->pos * 0.125f) * 8.0f;
-			edge->vtx[1]->pos.s[isHor] = floor(edge->pos * 0.125f) * 8.0f;
+			if (edge != guiCtx->actionEdge && guiCtx->actionEdge && (edge->state & EDGE_ALIGN) == (guiCtx->actionEdge->state & EDGE_ALIGN)) {
+				if (edge->vtx[0]->pos.s[isHor] != edge->pos) {
+					edge->state |= EDGE_EDIT;
+				} else if (edge->vtx[1]->pos.s[isHor] != edge->pos) {
+					edge->state |= EDGE_EDIT;
+				}
+			}
+			
+			if ((edge == guiCtx->actionEdge || edge->state & EDGE_EDIT) && !(edge->state & EDGE_STICK)) {
+				edge->vtx[0]->pos.s[isHor] = floor(edge->pos * 0.125f) * 8.0f;
+				edge->vtx[1]->pos.s[isHor] = floor(edge->pos * 0.125f) * 8.0f;
+				edge->pos = floor(edge->pos * 0.125f) * 8.0f;
+			} else {
+				edge->vtx[0]->pos.s[isHor] = edge->pos;
+				edge->vtx[1]->pos.s[isHor] = edge->pos;
+			}
 		}
 		
 		edge->killFlag++;
@@ -734,6 +791,10 @@ void Gui_Update(EditorContext* editorCtx) {
 	Gui_SetBotBarHeight(editorCtx, guiCtx->bar[GUI_BAR_BOT].rect.h);
 	Split_Update_Vtx(guiCtx);
 	Split_Update_Edges(guiCtx);
+	// For now
+	if (guiCtx->actionEdge) {
+		Split_Update_Edges(guiCtx);
+	}
 	Split_Update_Splits(editorCtx);
 	
 	guiCtx->prevWorkRect = guiCtx->workRect;

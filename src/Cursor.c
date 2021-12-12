@@ -49,6 +49,13 @@ void Cursor_Init(CursorContext* cursorCtx) {
 	__cursorCtx = cursorCtx;
 }
 
+void Cursor_Update(CursorContext* cursorCtx) {
+	if (cursorCtx->cursorSet != cursorCtx->cursorNow) {
+		glfwSetCursor(__appInfo->mainWindow, __cursorCtx->cursor[cursorCtx->cursorSet].glfwCur);
+		cursorCtx->cursorNow = cursorCtx->cursorSet;
+	}
+}
+
 void Cursor_SetCursor(CursorIndex cursorId) {
-	glfwSetCursor(__appInfo->mainWindow, __cursorCtx->cursor[cursorId].glfwCur);
+	__cursorCtx->cursorSet = cursorId;
 }

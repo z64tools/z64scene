@@ -2,7 +2,7 @@
 
 FLAGS = -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable \
 				-I z64viewer/include -I nanovg/src \
-				-s -Os #-DNDEBUG
+				-s -Os -DNDEBUG
 
 GIT_COMMIT_HASH := $(shell git log -1 --pretty=%h | tr -d '\n')
 GIT_COMMIT_MSG  := $(shell git log -1 --pretty=%B | tr -d '\n')

@@ -9,11 +9,6 @@ typedef struct {
 	void* glfwCur;
 } CursorBitmap;
 
-typedef struct {
-	CursorBitmap cursor[64];
-	void* _p;
-} CursorContext;
-
 typedef enum {
 	CURSOR_DEFAULT,
 	CURSOR_ARROW_L = 1,
@@ -28,7 +23,15 @@ typedef enum {
 	CURSOR_MAX
 } CursorIndex;
 
+typedef struct {
+	CursorBitmap cursor[64];
+	void* _p;
+	CursorIndex  cursorNow;
+	CursorIndex  cursorSet;
+} CursorContext;
+
 void Cursor_Init(CursorContext* cursorCtx);
+void Cursor_Update(CursorContext* cursorCtx);
 void Cursor_SetCursor(CursorIndex cursorId);
 
 #endif

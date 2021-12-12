@@ -66,6 +66,8 @@ typedef enum {
 	EDGE_STICK_B    = (1 << 5),
 	
 	EDGE_STICK      = (EDGE_STICK_L | EDGE_STICK_T | EDGE_STICK_R | EDGE_STICK_B),
+	
+	EDGE_EDIT       = (1 << 6),
 } EdgeState;
 
 typedef struct SplitVtx {
