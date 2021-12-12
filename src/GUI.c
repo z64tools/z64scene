@@ -220,12 +220,49 @@ void Split_AddSplit(GuiContext* guiCtx, Rect* rect) {
 	Node_Add(guiCtx->splitHead, split);
 }
 
-void Split_SetEdgeMoveClamps(GuiContext* guiCtx) {
+void Split_Edge_SetSlideClamp(GuiContext* guiCtx) {
 	SplitEdge* a = guiCtx->actionEdge;
 	s32 align = Lib_Wrap(a->state & EDGE_ALIGN, 0, 1);
+	SplitEdge* editEdges[64];
+	u32 editEdgesCount = 0;
+	SplitEdge* temp = guiCtx->edgeHead;
 	
 	guiCtx->edgeMovement.clampMin = guiCtx->workRect.y;
 	guiCtx->edgeMovement.clampMax = guiCtx->workRect.w;
+	
+	while (temp) {
+		if ((temp->state & EDGE_ALIGN) == (a->state & EDGE_ALIGN) && temp->pos == a->pos) {
+			editEdges[editEdgesCount++] = temp;
+			OsAssert(editEdgesCount < 64);
+		}
+		
+		temp = temp->next;
+	}
+	
+	for (s32 j = 0; j < editEdgesCount; j++) {
+		temp = guiCtx->edgeHead;
+		while (temp) {
+			for (s32 i = 0; i < 2; i++) {
+				if (((temp->state & EDGE_ALIGN) != (editEdges[j]->state & EDGE_ALIGN)) && temp->vtx[1] == editEdges[j]->vtx[i]) {
+					if (temp->vtx[0]->pos.s[align] > guiCtx->edgeMovement.clampMin) {
+						guiCtx->edgeMovement.clampMin = temp->vtx[0]->pos.s[align];
+						OsPrintfEx("foundMin %.2f", temp->vtx[0]->pos.s[align]);
+					}
+				}
+			}
+			
+			for (s32 i = 0; i < 2; i++) {
+				if (((temp->state & EDGE_ALIGN) != (editEdges[j]->state & EDGE_ALIGN)) && temp->vtx[0] == editEdges[j]->vtx[i]) {
+					if (temp->vtx[1]->pos.s[align] < guiCtx->edgeMovement.clampMax) {
+						guiCtx->edgeMovement.clampMax = temp->vtx[1]->pos.s[align];
+						OsPrintfEx("foundMax %.2f", temp->vtx[1]->pos.s[align]);
+					}
+				}
+			}
+			
+			temp = temp->next;
+		}
+	}
 }
 
 void Split_Reset(GuiContext* guiCtx) {
@@ -311,7 +348,7 @@ void Split_Split(GuiContext* guiCtx, Split* split, SplitDir dir) {
 	    Split_AddEdge(guiCtx, newSplit->vtx[VTX_BOT_R], newSplit->vtx[VTX_BOT_L]);
 	
 	guiCtx->actionEdge = newSplit->edge[dir];
-	Split_SetEdgeMoveClamps(guiCtx);
+	Split_Edge_SetSlideClamp(guiCtx);
 }
 
 void Split_KillSplit(GuiContext* guiCtx, Split* split, SplitDir dir) {
@@ -644,7 +681,7 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 			OsAssert(split->edge[i] != NULL);
 			
 			guiCtx->actionEdge = split->edge[i];
-			Split_SetEdgeMoveClamps(guiCtx);
+			Split_Edge_SetSlideClamp(guiCtx);
 		}
 	}
 	
