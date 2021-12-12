@@ -35,6 +35,10 @@ char* Debug_Split_GetStateStrings(Split* split) {
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
+SplitDir Split_MirrorDir(SplitDir dir) {
+	return Lib_Wrap(dir + 2, DIR_L, DIR_B);
+}
+
 SplitVtx* Split_AddVertex(GuiContext* guiCtx, s16 x, s16 y) {
 	SplitVtx* head = guiCtx->vtxHead;
 	
@@ -145,7 +149,130 @@ void Split_AddSplit(GuiContext* guiCtx, Rect* rect) {
 	Node_Add(guiCtx->splitHead, split);
 }
 
+SplitEdge* Split_GetEdge_FromDir(GuiContext* guiCtx, SplitEdge* srcEdge, SplitDir dir) {
+	Split* split = guiCtx->splitHead;
+	
+	if (dir == DIR_L) {
+		while (split) {
+			if (split->edge[EDGE_R] == srcEdge)
+				return split->edge[EDGE_L];
+			split = split->next;
+		}
+	}
+	
+	if (dir == DIR_R) {
+		while (split) {
+			if (split->edge[EDGE_L] == srcEdge)
+				return split->edge[EDGE_R];
+			split = split->next;
+		}
+	}
+	
+	return NULL;
+}
+
+Split* Split_GerSplit_SharedEdge(GuiContext* guiCtx, Split* srcSplit, SplitEdge* edge) {
+	Split* split = guiCtx->splitHead;
+	SplitDir dir = 0;
+	
+	for (dir = 0; dir < 4; dir++) {
+		if (srcSplit->edge[dir] == edge)
+			break;
+	}
+	
+	dir = Split_MirrorDir(dir);
+	
+	while (split) {
+		if (split->edge[dir] == edge) {
+			return split;
+		}
+		
+		split = split->next;
+	}
+	
+	return NULL;
+}
+// TODO: find a way to do this process without if?
+void Split_Split(GuiContext* guiCtx, Split* split, SplitDir dir) {
+	Split* partner;
+	Split* newSplit;
+	SplitDir mirDir = Split_MirrorDir(dir);
+	s16 splitPos = (dir == DIR_L || dir == DIR_R) ? __inputCtx->mouse.pos.x : __inputCtx->mouse.pos.y;
+	
+	newSplit = Lib_Calloc(0, sizeof(Split));
+	
+	Node_Add(guiCtx->splitHead, newSplit);
+	
+	if (dir == DIR_L) {
+		newSplit->vtx[0] = Split_AddVertex(guiCtx, splitPos, split->vtx[0]->pos.y);
+		newSplit->vtx[1] = Split_AddVertex(guiCtx, splitPos, split->vtx[1]->pos.y);
+		newSplit->vtx[2] = Split_AddVertex(guiCtx, split->vtx[2]->pos.x, split->vtx[2]->pos.y);
+		newSplit->vtx[3] = Split_AddVertex(guiCtx, split->vtx[3]->pos.x, split->vtx[3]->pos.y);
+		split->vtx[2] = Split_AddVertex(guiCtx, splitPos, split->vtx[2]->pos.y);
+		split->vtx[3] = Split_AddVertex(guiCtx, splitPos, split->vtx[3]->pos.y);
+	}
+	
+	if (dir == DIR_R) {
+		newSplit->vtx[0] = Split_AddVertex(guiCtx, split->vtx[0]->pos.x, split->vtx[0]->pos.y);
+		newSplit->vtx[1] = Split_AddVertex(guiCtx, split->vtx[1]->pos.x, split->vtx[1]->pos.y);
+		newSplit->vtx[2] = Split_AddVertex(guiCtx, splitPos, split->vtx[2]->pos.y);
+		newSplit->vtx[3] = Split_AddVertex(guiCtx, splitPos, split->vtx[3]->pos.y);
+		split->vtx[0] = Split_AddVertex(guiCtx, splitPos, split->vtx[0]->pos.y);
+		split->vtx[1] = Split_AddVertex(guiCtx, splitPos, split->vtx[1]->pos.y);
+	}
+	
+	if (dir == DIR_T) {
+		newSplit->vtx[0] = Split_AddVertex(guiCtx, split->vtx[0]->pos.x, split->vtx[0]->pos.y);
+		newSplit->vtx[1] = Split_AddVertex(guiCtx, split->vtx[1]->pos.x, splitPos);
+		newSplit->vtx[2] = Split_AddVertex(guiCtx, split->vtx[2]->pos.x, splitPos);
+		newSplit->vtx[3] = Split_AddVertex(guiCtx, split->vtx[3]->pos.x, split->vtx[3]->pos.y);
+		split->vtx[3] = Split_AddVertex(guiCtx, split->vtx[3]->pos.x, splitPos);
+		split->vtx[0] = Split_AddVertex(guiCtx, split->vtx[0]->pos.x, splitPos);
+	}
+	
+	if (dir == DIR_B) {
+		newSplit->vtx[0] = Split_AddVertex(guiCtx, split->vtx[0]->pos.x, splitPos);
+		newSplit->vtx[1] = Split_AddVertex(guiCtx, split->vtx[1]->pos.x, split->vtx[1]->pos.y);
+		newSplit->vtx[2] = Split_AddVertex(guiCtx, split->vtx[2]->pos.x, split->vtx[2]->pos.y);
+		newSplit->vtx[3] = Split_AddVertex(guiCtx, split->vtx[3]->pos.x, splitPos);
+		split->vtx[1] = Split_AddVertex(guiCtx, split->vtx[1]->pos.x, splitPos);
+		split->vtx[2] = Split_AddVertex(guiCtx, split->vtx[2]->pos.x, splitPos);
+	}
+	
+	split->edge[EDGE_L] = Split_AddEdge(guiCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_TOP_L]);
+	split->edge[EDGE_T] = Split_AddEdge(guiCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
+	split->edge[EDGE_R] = Split_AddEdge(guiCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
+	split->edge[EDGE_B] = Split_AddEdge(guiCtx, split->vtx[VTX_BOT_R], split->vtx[VTX_BOT_L]);
+	
+	newSplit->edge[EDGE_L] = Split_AddEdge(guiCtx, newSplit->vtx[VTX_BOT_L], newSplit->vtx[VTX_TOP_L]);
+	newSplit->edge[EDGE_T] = Split_AddEdge(guiCtx, newSplit->vtx[VTX_TOP_L], newSplit->vtx[VTX_TOP_R]);
+	newSplit->edge[EDGE_R] = Split_AddEdge(guiCtx, newSplit->vtx[VTX_TOP_R], newSplit->vtx[VTX_BOT_R]);
+	newSplit->edge[EDGE_B] = Split_AddEdge(guiCtx, newSplit->vtx[VTX_BOT_R], newSplit->vtx[VTX_BOT_L]);
+	
+	guiCtx->actionEdge = newSplit->edge[dir];
+}
+
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
+
+SplitDir Split_GerDir_MouseToPressPos(Split* split) {
+	Vec2s pos;
+	
+	Vec2_Substract(&pos, &split->mousePos, &split->mousePressPos);
+	
+	if (ABS(pos.x) > ABS(pos.y)) {
+		if (pos.x < 0) {
+			return DIR_L;
+		}
+		
+		return DIR_R;
+	} else {
+		if (pos.y < 0) {
+			return DIR_T;
+		}
+		
+		return DIR_B;
+	}
+}
 
 s32 Split_Cursor_GetDistTo(SplitState flag, Split* split) {
 	Vec2s mouse[] = {
@@ -271,6 +398,23 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 	
 	if (__inputCtx->mouse.click.hold) {
 		if (split->stateFlag & SPLIT_POINTS) {
+			s32 splitDist = Split_Cursor_GetDistTo(split->stateFlag & SPLIT_POINTS, split);
+			s32 dist = Vec_Vec2s_DistXZ(&split->mousePos, &split->mousePressPos);
+			
+			if (dist > 1) {
+				CursorIndex cid = Split_GerDir_MouseToPressPos(split) + 1;
+				Cursor_SetCursor(cid);
+			}
+			if (dist > 50) {
+				Split_Reset(guiCtx);
+				Split_Split(guiCtx, split, Split_GerDir_MouseToPressPos(split));
+			}
+		}
+		if (split->stateFlag & SPLIT_SIDE_H) {
+			Cursor_SetCursor(CURSOR_ARROW_H);
+		}
+		if (split->stateFlag & SPLIT_SIDE_V) {
+			Cursor_SetCursor(CURSOR_ARROW_V);
 		}
 	}
 }
@@ -302,6 +446,14 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 	}
 	
 	while (edge) {
+		if (edge->killFlag >= 5) {
+			SplitEdge* temp = edge->next;
+			OsPrintfEx("Node_Kill: Edge %08X", edge);
+			Node_Kill(guiCtx->edgeHead, edge);
+			edge = temp;
+			continue;
+		}
+		
 		OsAssert(!(edge->state & EDGE_HORIZONTAL && edge->state & EDGE_VERTICAL));
 		
 		if (edge->state & EDGE_STICK) {
@@ -331,10 +483,33 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 			edge->vtx[1]->pos.y = edge->pos;
 		}
 		if (edge->state & EDGE_VERTICAL) {
+			SplitEdge* l = Split_GetEdge_FromDir(guiCtx, edge, DIR_L);
+			SplitEdge* r = Split_GetEdge_FromDir(guiCtx, edge, DIR_R);
+			#ifndef NDEBUG
+			if (edge == guiCtx->actionEdge) {
+				if (l) {
+					guiCtx->debug.vtx1[0] = l->vtx[0];
+					guiCtx->debug.vtx1[1] = l->vtx[1];
+				}
+				if (r) {
+					guiCtx->debug.vtx2[0] = r->vtx[0];
+					guiCtx->debug.vtx2[1] = r->vtx[1];
+				}
+			}
+			#endif
+			
+			if (!(edge->state & EDGE_STICK)) {
+				if (l)
+					edge->pos = CLAMP_MIN(edge->pos, l->pos + 100);
+				if (r)
+					edge->pos = CLAMP_MAX(edge->pos, r->pos - 100);
+			}
+			
 			edge->vtx[0]->pos.x = edge->pos;
 			edge->vtx[1]->pos.x = edge->pos;
 		}
 		
+		edge->killFlag++;
 		edge = edge->next;
 	}
 }
@@ -372,19 +547,21 @@ void Split_Update_Splits(EditorContext* editorCtx) {
 			if (mouse->click.press) {
 				split->mousePressPos = split->mousePos;
 				split->mousePress = true;
+				guiCtx->actionSplit = split;
 			}
-			guiCtx->actionSplit = split;
 		}
 		
-		if (guiCtx->actionSplit) {
+		if (guiCtx->actionSplit != NULL) {
 			Split_Update_ActionSplit(guiCtx);
 		} else {
-			if (Split_GetState_CursorPos(split, 20) & SPLIT_POINTS && split->mouseInRegion) {
-				// editorCtx->inputCtx.mouse.cursorIcon = CURSOR_CROSSHAIR;
-			} else if (Split_GetState_CursorPos(split, 10) & SPLIT_SIDE_H && split->mouseInRegion) {
-				Cursor_SetCursor(CURSOR_ARROW_H);
-			} else if (Split_GetState_CursorPos(split, 10) & SPLIT_SIDE_V && split->mouseInRegion) {
-				Cursor_SetCursor(CURSOR_ARROW_V);
+			if (__inputCtx->mouse.click.hold == 0) {
+				if (Split_GetState_CursorPos(split, 20) & SPLIT_POINTS && split->mouseInRegion) {
+					Cursor_SetCursor(CURSOR_CROSSHAIR);
+				} else if (Split_GetState_CursorPos(split, 10) & SPLIT_SIDE_H && split->mouseInRegion) {
+					Cursor_SetCursor(CURSOR_ARROW_H);
+				} else if (Split_GetState_CursorPos(split, 10) & SPLIT_SIDE_V && split->mouseInRegion) {
+					Cursor_SetCursor(CURSOR_ARROW_V);
+				}
 			}
 		}
 		
@@ -397,13 +574,17 @@ void Split_Update_Splits(EditorContext* editorCtx) {
 		}
 		
 		split->mousePress = false;
+		for (s32 i = 0; i < 4; i++) {
+			OsAssert(split->edge[i] != NULL);
+			split->edge[i]->killFlag = false;
+		}
 		split = split->next;
 	}
 }
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
-void Split_Draw_SplitBorder(NVGcontext* vg, Rect* rect) {
+void Split_Draw_SplitBorder(NVGcontext* vg, Rect* rect, s32 iter) {
 	nvgBeginPath(vg);
 	nvgRect(
 		vg,
@@ -421,8 +602,19 @@ void Split_Draw_SplitBorder(NVGcontext* vg, Rect* rect) {
 		SPLIT_ROUND_R
 	);
 	nvgPathWinding(vg, NVG_HOLE);
-	nvgFillColor(vg, Theme_GetColor(THEME_SPLITTER));
+	// nvgFillColor(vg, Theme_GetColor(THEME_SPLITTER));
+	nvgCircle(vg, rect->w * 0.5, rect->h * 0.5, 25.0f);
+	char buf[16] = { 0 };
+	
+	sprintf(buf, "%d", iter + 1);
+	nvgFillColor(vg, nvgHSLA((f32)iter * 0.111f, 1.0f, 0.50f, 125));
 	nvgFill(vg);
+	
+	nvgFillColor(vg, Theme_GetColor(THEME_BASE_CONT));
+	nvgFontSize(vg, 30 - 16);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER);
+	nvgText(vg, rect->w * 0.5, rect->h * 0.5, buf, 0);
 }
 
 void Split_Draw_Splits(EditorContext* editorCtx) {
@@ -430,6 +622,7 @@ void Split_Draw_Splits(EditorContext* editorCtx) {
 	Split* split = guiCtx->splitHead;
 	MouseInput* mouse = &editorCtx->inputCtx.mouse;
 	Vec2s* winDim = &editorCtx->appInfo.winDim;
+	s32 iter = 0;
 	
 	while (split != NULL) {
 		glViewport(
@@ -442,10 +635,11 @@ void Split_Draw_Splits(EditorContext* editorCtx) {
 			if (split->draw)
 				split->draw(editorCtx, split);
 			
-			Split_Draw_SplitBorder(editorCtx->vg, &split->rect);
+			Split_Draw_SplitBorder(editorCtx->vg, &split->rect, iter);
 		} nvgEndFrame(editorCtx->vg);
 		
 		split = split->next;
+		iter++;
 	}
 }
 
@@ -581,12 +775,48 @@ void Gui_Draw(EditorContext* editorCtx) {
 		nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y, 1.0f); {
 			nvgBeginPath(editorCtx->vg);
 			nvgLineCap(editorCtx->vg, NVG_ROUND);
-			nvgStrokeWidth(editorCtx->vg, 1.5f);
+			nvgStrokeWidth(editorCtx->vg, 2.36f);
 			nvgMoveTo(editorCtx->vg, edge->vtx[0]->pos.x, edge->vtx[0]->pos.y);
 			nvgLineTo(editorCtx->vg, edge->vtx[1]->pos.x, edge->vtx[1]->pos.y);
-			nvgStrokeColor(editorCtx->vg, nvgRGBA(255, 0, 0, 255));
+			nvgStrokeColor(editorCtx->vg, nvgRGBA(255, 0, 0, 125));
 			nvgStroke(editorCtx->vg);
 		} nvgEndFrame(editorCtx->vg);
+	}
+	
+	if (guiCtx->debug.vtx1[0] && guiCtx->debug.vtx1[1]) {
+		SplitEdge* edge = guiCtx->actionEdge;
+		glViewport(0, 0, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y);
+		
+		nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y, 1.0f); {
+			nvgBeginPath(editorCtx->vg);
+			nvgLineCap(editorCtx->vg, NVG_ROUND);
+			nvgStrokeWidth(editorCtx->vg, 2.36f);
+			nvgMoveTo(editorCtx->vg, guiCtx->debug.vtx1[0]->pos.x, guiCtx->debug.vtx1[0]->pos.y);
+			nvgLineTo(editorCtx->vg, guiCtx->debug.vtx1[1]->pos.x, guiCtx->debug.vtx1[1]->pos.y);
+			nvgStrokeColor(editorCtx->vg, nvgRGBA(0, 255, 0, 125));
+			nvgStroke(editorCtx->vg);
+		} nvgEndFrame(editorCtx->vg);
+		
+		guiCtx->debug.vtx1[0] = NULL;
+		guiCtx->debug.vtx1[1] = NULL;
+	}
+	
+	if (guiCtx->debug.vtx2[0] && guiCtx->debug.vtx2[1]) {
+		SplitEdge* edge = guiCtx->actionEdge;
+		glViewport(0, 0, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y);
+		
+		nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y, 1.0f); {
+			nvgBeginPath(editorCtx->vg);
+			nvgLineCap(editorCtx->vg, NVG_ROUND);
+			nvgStrokeWidth(editorCtx->vg, 2.36f);
+			nvgMoveTo(editorCtx->vg, guiCtx->debug.vtx2[0]->pos.x, guiCtx->debug.vtx2[0]->pos.y);
+			nvgLineTo(editorCtx->vg, guiCtx->debug.vtx2[1]->pos.x, guiCtx->debug.vtx2[1]->pos.y);
+			nvgStrokeColor(editorCtx->vg, nvgRGBA(0, 0, 255, 125));
+			nvgStroke(editorCtx->vg);
+		} nvgEndFrame(editorCtx->vg);
+		
+		guiCtx->debug.vtx2[0] = NULL;
+		guiCtx->debug.vtx2[1] = NULL;
 	}
 	#endif
 }

@@ -80,6 +80,7 @@ typedef struct SplitEdge {
 	SplitVtx* vtx[2];
 	f64 pos;
 	EdgeState state;
+	u8 killFlag;
 } SplitEdge;
 
 typedef struct Split {
@@ -111,6 +112,12 @@ typedef struct GuiContext {
 	Rect prevWorkRect;
 	Rect workRect;
 	SplitEdge* actionEdge;
+	#ifndef NDEBUG
+	struct {
+		SplitVtx* vtx1[2];
+		SplitVtx* vtx2[2];
+	} debug;
+	#endif
 } GuiContext;
 
 void Gui_Init(struct EditorContext* editorCtx);

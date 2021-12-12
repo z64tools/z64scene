@@ -1,13 +1,15 @@
 #include "Editor.h"
-#define INCBIN_PREFIX g
+#define INCBIN_STYLE  INCBIN_STYLE_SNAKE
+#define INCBIN_PREFIX gCursor
 #include "../incbin/incbin.h"
 
-INCBIN(CursorArrowU_, "cursor/arrow_up.ia16");
-INCBIN(CursorArrowL_, "cursor/arrow_left.ia16");
-INCBIN(CursorArrowD_, "cursor/arrow_down.ia16");
-INCBIN(CursorArrowR_, "cursor/arrow_right.ia16");
-INCBIN(CursorArrowH_, "cursor/arrow_horizontal.ia16");
-INCBIN(CursorArrowV_, "cursor/arrow_vertical.ia16");
+INCBIN(ArrowU, "cursor/arrow_up.ia16");
+INCBIN(ArrowL, "cursor/arrow_left.ia16");
+INCBIN(ArrowD, "cursor/arrow_down.ia16");
+INCBIN(ArrowR, "cursor/arrow_right.ia16");
+INCBIN(ArrowH, "cursor/arrow_horizontal.ia16");
+INCBIN(ArrowV, "cursor/arrow_vertical.ia16");
+INCBIN(Crosshair, "cursor/crosshair.ia16");
 
 static CursorContext* __cursorCtx;
 
@@ -33,12 +35,13 @@ void Cursor_CreateBitmap(CursorContext* cursorCtx, CursorIndex id,  const u8* da
 
 void Cursor_CreateCursors(CursorContext* cursorCtx) {
 	cursorCtx->cursor[CURSOR_DEFAULT].glfwCur = glfwCreateStandardCursor(0);
-	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_U, gCursorArrowU_Data, 24, 12, 12);
-	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_D, gCursorArrowD_Data, 24, 12, 12);
-	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_L, gCursorArrowL_Data, 24, 12, 12);
-	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_R, gCursorArrowR_Data, 24, 12, 12);
-	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_H, gCursorArrowH_Data, 32, 16, 16);
-	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_V, gCursorArrowV_Data, 32, 16, 16);
+	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_U, gCursorArrowU_data, 24, 12, 12);
+	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_D, gCursorArrowD_data, 24, 12, 12);
+	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_L, gCursorArrowL_data, 24, 12, 12);
+	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_R, gCursorArrowR_data, 24, 12, 12);
+	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_H, gCursorArrowH_data, 32, 16, 16);
+	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_V, gCursorArrowV_data, 32, 16, 16);
+	Cursor_CreateBitmap(cursorCtx, CURSOR_CROSSHAIR, gCursorCrosshair_data, 40, 19, 20);
 }
 
 void Cursor_Init(CursorContext* cursorCtx) {
