@@ -17,12 +17,12 @@ char* Debug_Split_GetStateStrings(Split* split) {
 		"SIDE_B",
 	};
 	
-	String_Copy(buffer, states[0]);
+	sprintf(buffer, "%5d %5d  ", __appInfo->winDim.x, __appInfo->winDim.y);
 	
 	for (s32 i = 0; (1 << i) <= 0xFFFF; i++) {
 		if (split->stateFlag & (1 << i)) {
 			if (t++ == 0) {
-				String_Copy(buffer, states[i + 1]);
+				String_Merge(buffer, states[i + 1]);
 			} else {
 				String_Merge(buffer, "|");
 				String_Merge(buffer, states[i + 1]);
@@ -39,12 +39,12 @@ SplitDir Split_MirrorDir(SplitDir dir) {
 	return Lib_Wrap(dir + 2, DIR_L, DIR_B);
 }
 
-SplitVtx* Split_AddVertex(GuiContext* guiCtx, s16 x, s16 y) {
+SplitVtx* Split_AddVertex(GuiContext* guiCtx, f64 x, f64 y) {
 	SplitVtx* head = guiCtx->vtxHead;
 	
 	while (head) {
-		if (head->pos.x == x && head->pos.y == y) {
-			OsPrintfEx("VtxConnect %d %d", x, y);
+		if (ABS(head->pos.x - x) <= 1.0 && ABS(head->pos.y - y) <= 1.0) {
+			OsPrintfEx("VtxConnect %.2f %.2f", x, y);
 			
 			return head;
 		}
@@ -792,10 +792,9 @@ void Gui_Update(EditorContext* editorCtx) {
 	Gui_SetBotBarHeight(editorCtx, guiCtx->bar[GUI_BAR_BOT].rect.h);
 	Split_Update_Vtx(guiCtx);
 	Split_Update_Edges(guiCtx);
-	// // For now
-	// if (guiCtx->actionEdge) {
-	// 	Split_Update_Edges(guiCtx);
-	// }
+	if (guiCtx->actionEdge) {
+		Split_Update_Edges(guiCtx);
+	}
 	Split_Update_Splits(editorCtx);
 	
 	guiCtx->prevWorkRect = guiCtx->workRect;
