@@ -433,10 +433,11 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 				CursorIndex cid = Split_GerDir_MouseToPressPos(split) + 1;
 				Cursor_SetCursor(cid);
 			}
-			if (dist > 50) {
+			if (dist > 40) {
 				Split_Reset(guiCtx);
-				if (split->mouseInRegion)
+				if (split->mouseInRegion) {
 					Split_Split(guiCtx, split, Split_GerDir_MouseToPressPos(split));
+				}
 			}
 		}
 		if (split->stateFlag & SPLIT_SIDE_H) {
@@ -667,28 +668,28 @@ void Split_Update_Splits(EditorContext* editorCtx) {
 
 void Split_Draw_SplitBorder(NVGcontext* vg, Rect* rect, s32 iter) {
 	nvgBeginPath(vg);
-	nvgRect(
-		vg,
-		0,
-		0,
-		rect->w,
-		rect->h
-	);
-	nvgRoundedRect(
-		vg,
-		0 + SPLIT_SPLIT_W,
-		0 + SPLIT_SPLIT_W,
-		rect->w - SPLIT_SPLIT_W * 2,
-		rect->h - SPLIT_SPLIT_W * 2,
-		SPLIT_ROUND_R
-	);
-	nvgPathWinding(vg, NVG_HOLE);
+	// nvgRect(
+	// 	vg,
+	// 	0,
+	// 	0,
+	// 	rect->w,
+	// 	rect->h
+	// );
+	// nvgRoundedRect(
+	// 	vg,
+	// 	0 + SPLIT_SPLIT_W,
+	// 	0 + SPLIT_SPLIT_W,
+	// 	rect->w - SPLIT_SPLIT_W * 2,
+	// 	rect->h - SPLIT_SPLIT_W * 2,
+	// 	SPLIT_ROUND_R
+	// );
+	// nvgPathWinding(vg, NVG_HOLE);
 	// nvgFillColor(vg, Theme_GetColor(THEME_SPLITTER));
 	nvgCircle(vg, rect->w * 0.5, rect->h * 0.5, 25.0f);
 	char buf[16] = { 0 };
 	
 	sprintf(buf, "%d", iter + 1);
-	nvgFillColor(vg, nvgHSLA((f32)iter * 0.111f, 1.0f, 0.40f, 255));
+	nvgFillColor(vg, nvgHSLA((f32)iter * 0.111f, 1.0f, 0.40f, 50));
 	nvgFill(vg);
 	
 	nvgFillColor(vg, Theme_GetColor(THEME_BASE_CONT));
@@ -791,10 +792,10 @@ void Gui_Update(EditorContext* editorCtx) {
 	Gui_SetBotBarHeight(editorCtx, guiCtx->bar[GUI_BAR_BOT].rect.h);
 	Split_Update_Vtx(guiCtx);
 	Split_Update_Edges(guiCtx);
-	// For now
-	if (guiCtx->actionEdge) {
-		Split_Update_Edges(guiCtx);
-	}
+	// // For now
+	// if (guiCtx->actionEdge) {
+	// 	Split_Update_Edges(guiCtx);
+	// }
 	Split_Update_Splits(editorCtx);
 	
 	guiCtx->prevWorkRect = guiCtx->workRect;
@@ -877,12 +878,12 @@ void Gui_Draw(EditorContext* editorCtx) {
 	while (split) {
 		nvgBeginPath(editorCtx->vg);
 		nvgLineCap(editorCtx->vg, NVG_ROUND);
-		nvgStrokeWidth(editorCtx->vg, 1.5f);
-		nvgMoveTo(editorCtx->vg, split->vtx[0]->pos.x, split->vtx[0]->pos.y);
-		nvgLineTo(editorCtx->vg, split->vtx[1]->pos.x, split->vtx[1]->pos.y);
-		nvgLineTo(editorCtx->vg, split->vtx[2]->pos.x, split->vtx[2]->pos.y);
-		nvgLineTo(editorCtx->vg, split->vtx[3]->pos.x, split->vtx[3]->pos.y);
-		nvgLineTo(editorCtx->vg, split->vtx[0]->pos.x, split->vtx[0]->pos.y);
+		nvgStrokeWidth(editorCtx->vg, 2.5f);
+		nvgMoveTo(editorCtx->vg, split->vtx[0]->pos.x + 4, split->vtx[0]->pos.y - 4);
+		nvgLineTo(editorCtx->vg, split->vtx[1]->pos.x + 4, split->vtx[1]->pos.y + 4);
+		nvgLineTo(editorCtx->vg, split->vtx[2]->pos.x - 4, split->vtx[2]->pos.y + 4);
+		nvgLineTo(editorCtx->vg, split->vtx[3]->pos.x - 4, split->vtx[3]->pos.y - 4);
+		nvgLineTo(editorCtx->vg, split->vtx[0]->pos.x + 4, split->vtx[0]->pos.y - 4);
 		nvgStrokeColor(editorCtx->vg, nvgHSLA(0.111 * num, 1.0f, 0.4f, 255));
 		nvgStroke(editorCtx->vg);
 		
