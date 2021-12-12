@@ -112,12 +112,10 @@ typedef struct GuiContext {
 	Rect prevWorkRect;
 	Rect workRect;
 	SplitEdge* actionEdge;
-	#ifndef NDEBUG
 	struct {
-		SplitVtx* vtx1[2];
-		SplitVtx* vtx2[2];
-	} debug;
-	#endif
+		f64 clampMax;
+		f64 clampMin;
+	} edgeMovement;
 } GuiContext;
 
 void Gui_Init(struct EditorContext* editorCtx);

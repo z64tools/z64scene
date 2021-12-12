@@ -208,6 +208,34 @@ Split* Split_GerSplit_SharedEdge(GuiContext* guiCtx, Split* srcSplit, SplitEdge*
 	
 	return NULL;
 }
+
+void Split_SetEdgeMoveClamps(GuiContext* guiCtx) {
+	SplitEdge* edge = guiCtx->edgeHead;
+	
+	guiCtx->edgeMovement.clampMin = 0;
+	guiCtx->edgeMovement.clampMax = guiCtx->workRect.w * 2;
+	
+	while (edge) {
+		if (edge != guiCtx->actionEdge) {
+			if ((edge->state & EDGE_ALIGN) == (guiCtx->actionEdge->state & EDGE_ALIGN)) {
+				s32 align = (edge->state & EDGE_ALIGN) - 1;
+				f64 medianAction = (guiCtx->actionEdge->vtx[0]->pos.s[align] + guiCtx->actionEdge->vtx[1]->pos.s[align]) * 0.5;
+				f64 medianEdge = (edge->vtx[0]->pos.s[align] + edge->vtx[1]->pos.s[align]) * 0.5;
+				
+				if (medianAction == medianEdge) {
+					if (edge->pos < guiCtx->actionEdge->pos && edge->pos > guiCtx->edgeMovement.clampMin) {
+						guiCtx->edgeMovement.clampMin = edge->pos;
+					}
+					if (edge->pos > guiCtx->actionEdge->pos && edge->pos < guiCtx->edgeMovement.clampMax) {
+						guiCtx->edgeMovement.clampMax = edge->pos;
+					}
+				}
+			}
+		}
+		
+		edge = edge->next;
+	}
+}
 // TODO: find a way to do this process without if?
 void Split_Split(GuiContext* guiCtx, Split* split, SplitDir dir) {
 	Split* partner;
@@ -266,6 +294,7 @@ void Split_Split(GuiContext* guiCtx, Split* split, SplitDir dir) {
 	newSplit->edge[EDGE_B] = Split_AddEdge(guiCtx, newSplit->vtx[VTX_BOT_R], newSplit->vtx[VTX_BOT_L]);
 	
 	guiCtx->actionEdge = newSplit->edge[dir];
+	Split_SetEdgeMoveClamps(guiCtx);
 }
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / */
@@ -409,6 +438,7 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 			OsAssert(split->edge[i] != NULL);
 			
 			guiCtx->actionEdge = split->edge[i];
+			Split_SetEdgeMoveClamps(guiCtx);
 		}
 	}
 	
@@ -438,10 +468,6 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 
 void Split_Update_Vtx(GuiContext* guiCtx) {
 	SplitVtx* vtx = guiCtx->vtxHead;
-	
-	while (vtx) {
-		vtx = vtx->next;
-	}
 }
 
 void Split_Update_Edges(GuiContext* guiCtx) {
@@ -451,15 +477,6 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 	
 	if (!__inputCtx->mouse.cursorAction) {
 		guiCtx->actionEdge = NULL;
-	}
-	
-	if (guiCtx->actionEdge) {
-		if (guiCtx->actionEdge->state & EDGE_HORIZONTAL) {
-			guiCtx->actionEdge->pos = __inputCtx->mouse.pos.y + 4;
-		}
-		if (guiCtx->actionEdge->state & EDGE_VERTICAL) {
-			guiCtx->actionEdge->pos = __inputCtx->mouse.pos.x + 4;
-		}
 	}
 	
 	while (edge) {
@@ -496,30 +513,19 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 		}
 		
 		u32 isHor = ((edge->state & EDGE_VERTICAL) == 0);
-		SplitEdge* l = Split_GetEdge_FromDir(guiCtx, edge, DIR_L + isHor);
-		SplitEdge* r = Split_GetEdge_FromDir(guiCtx, edge, DIR_R + isHor);
-		
-		#ifndef NDEBUG
-		if (edge == guiCtx->actionEdge) {
-			if (l) {
-				guiCtx->debug.vtx1[0] = guiCtx->actionEdge->vtx[0];
-				guiCtx->debug.vtx1[1] = l->vtx[1];
+		if (edge == guiCtx->actionEdge && !(edge->state & EDGE_STICK)) {
+			if (guiCtx->actionEdge->state & EDGE_HORIZONTAL) {
+				guiCtx->actionEdge->pos = __inputCtx->mouse.pos.y + 4;
 			}
-			if (r) {
-				guiCtx->debug.vtx2[0] = guiCtx->actionEdge->vtx[0];
-				guiCtx->debug.vtx2[1] = r->vtx[1];
+			if (guiCtx->actionEdge->state & EDGE_VERTICAL) {
+				guiCtx->actionEdge->pos = __inputCtx->mouse.pos.x + 4;
 			}
-		}
-		#endif
-		
-		if (!(edge->state & EDGE_STICK) && edge == guiCtx->actionEdge) {
-			if (l)
-				edge->pos = CLAMP_MIN(edge->pos, l->pos + 53);
-			if (r)
-				edge->pos = CLAMP_MAX(edge->pos, r->pos - 53);
+			edge->pos = CLAMP_MIN(edge->pos, guiCtx->edgeMovement.clampMin + 40);
+			edge->pos = CLAMP_MAX(edge->pos, guiCtx->edgeMovement.clampMax - 40);
 		}
 		
 		if (edge->state & EDGE_STICK) {
+			s32 revAlign = Lib_Wrap(isHor + 1, 0, 1);
 			edge->vtx[0]->pos.s[isHor] = edge->pos;
 			edge->vtx[1]->pos.s[isHor] = edge->pos;
 		} else {
@@ -625,7 +631,7 @@ void Split_Draw_SplitBorder(NVGcontext* vg, Rect* rect, s32 iter) {
 	char buf[16] = { 0 };
 	
 	sprintf(buf, "%d", iter + 1);
-	nvgFillColor(vg, nvgHSLA((f32)iter * 0.111f, 1.0f, 0.50f, 125));
+	nvgFillColor(vg, nvgHSLA((f32)iter * 0.111f, 1.0f, 0.40f, 255));
 	nvgFill(vg);
 	
 	nvgFillColor(vg, Theme_GetColor(THEME_BASE_CONT));
@@ -801,46 +807,30 @@ void Gui_Draw(EditorContext* editorCtx) {
 		} nvgEndFrame(editorCtx->vg);
 	}
 	
-	if (guiCtx->debug.vtx1[0] && guiCtx->debug.vtx1[1]) {
-		SplitEdge* edge = guiCtx->actionEdge;
-		glViewport(0, 0, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y);
-		
-		nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y, 1.0f); {
-			nvgBeginPath(editorCtx->vg);
-			nvgLineCap(editorCtx->vg, NVG_ROUND);
-			nvgStrokeWidth(editorCtx->vg, 2.36f);
-			nvgMoveTo(editorCtx->vg, guiCtx->debug.vtx1[0]->pos.x, guiCtx->debug.vtx1[0]->pos.y);
-			nvgLineTo(editorCtx->vg, guiCtx->debug.vtx1[1]->pos.x, guiCtx->debug.vtx1[1]->pos.y);
-			nvgStrokeColor(editorCtx->vg, nvgRGBA(0, 255, 0, 125));
-			nvgStroke(editorCtx->vg);
-		} nvgEndFrame(editorCtx->vg);
-		
-		guiCtx->debug.vtx1[0] = NULL;
-		guiCtx->debug.vtx1[1] = NULL;
-	}
-	
-	if (guiCtx->debug.vtx2[0] && guiCtx->debug.vtx2[1]) {
-		SplitEdge* edge = guiCtx->actionEdge;
-		glViewport(0, 0, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y);
-		
-		nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y, 1.0f); {
-			nvgBeginPath(editorCtx->vg);
-			nvgLineCap(editorCtx->vg, NVG_ROUND);
-			nvgStrokeWidth(editorCtx->vg, 2.36f);
-			nvgMoveTo(editorCtx->vg, guiCtx->debug.vtx2[0]->pos.x, guiCtx->debug.vtx2[0]->pos.y);
-			nvgLineTo(editorCtx->vg, guiCtx->debug.vtx2[1]->pos.x, guiCtx->debug.vtx2[1]->pos.y);
-			nvgStrokeColor(editorCtx->vg, nvgRGBA(0, 0, 255, 125));
-			nvgStroke(editorCtx->vg);
-		} nvgEndFrame(editorCtx->vg);
-		
-		guiCtx->debug.vtx2[0] = NULL;
-		guiCtx->debug.vtx2[1] = NULL;
-	}
-	
 	SplitVtx* vtx = guiCtx->vtxHead;
+	Split* split = guiCtx->splitHead;
 	s32 num = 0;
 	glViewport(0, 0, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y);
 	nvgBeginFrame(editorCtx->vg, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y, 1.0f);
+	
+	while (split) {
+		nvgBeginPath(editorCtx->vg);
+		nvgLineCap(editorCtx->vg, NVG_ROUND);
+		nvgStrokeWidth(editorCtx->vg, 1.5f);
+		nvgMoveTo(editorCtx->vg, split->vtx[0]->pos.x, split->vtx[0]->pos.y);
+		nvgLineTo(editorCtx->vg, split->vtx[1]->pos.x, split->vtx[1]->pos.y);
+		nvgLineTo(editorCtx->vg, split->vtx[2]->pos.x, split->vtx[2]->pos.y);
+		nvgLineTo(editorCtx->vg, split->vtx[3]->pos.x, split->vtx[3]->pos.y);
+		nvgLineTo(editorCtx->vg, split->vtx[0]->pos.x, split->vtx[0]->pos.y);
+		nvgStrokeColor(editorCtx->vg, nvgHSLA(0.111 * num, 1.0f, 0.4f, 255));
+		nvgStroke(editorCtx->vg);
+		
+		split = split->next;
+		num++;
+	}
+	
+	num = 0;
+	
 	while (vtx) {
 		char buf[128];
 		Vec2f pos = {
@@ -849,15 +839,20 @@ void Gui_Draw(EditorContext* editorCtx) {
 		};
 		
 		sprintf(buf, "%d", num);
-		nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_CONT));
 		nvgFontSize(editorCtx->vg, 16);
 		nvgFontFace(editorCtx->vg, "sans");
 		nvgTextAlign(editorCtx->vg, NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER);
+		nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER_DARKER));
+		nvgFontBlur(editorCtx->vg, 1.5f);
+		nvgText(editorCtx->vg, pos.x, pos.y, buf, 0);
+		nvgFontBlur(editorCtx->vg, 0);
+		nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_CONT));
 		nvgText(editorCtx->vg, pos.x, pos.y, buf, 0);
 		
 		vtx = vtx->next;
 		num++;
 	}
+	
 	nvgEndFrame(editorCtx->vg);
 	#endif
 }
