@@ -21,7 +21,6 @@ typedef struct EditorContext {
 	ObjectContext objCtx;
 	GuiContext    guiCtx;
 	CursorContext cursorCtx;
-	f64 frameRate;
 } EditorContext;
 
 void Editor_Draw(EditorContext* editorCtx);
