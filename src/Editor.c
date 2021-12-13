@@ -35,7 +35,7 @@ void Editor_Update(EditorContext* editorCtx) {
 }
 
 void Editor_Init(EditorContext* editorCtx) {
-	GeoUIContext* regionCtx = &editorCtx->geoCtx;
+	GeoGuiContext* regionCtx = &editorCtx->geoCtx;
 	
 	#if 0
 	editorCtx->vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
