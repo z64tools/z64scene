@@ -1,18 +1,14 @@
 #include "Editor.h"
 
-RGBA8 sDarkTheme[] = {
-	{ 0x22, 0x24, 0x28, 0xFF }, // THEME_BASE
-	{ 0xF2, 0xE7, 0xC4, 0xFF }, // THEME_BASE_CONT
-	{ 0x22 * 1.25f, 0x24 * 1.25f, 0x28 * 1.25f, 0xFF }, // THEME_BOX
-	{ 0x22 * 0.88f, 0x24 * 0.88f, 0x28 * 0.88f, 0xFF }, // THEME_SPLITTER
-	{ 0x22 * 0.75f, 0x24 * 0.75f, 0x28 * 0.75f, 0xFF }, // THEME_SPLITTER_DARKER
-};
+NVGcolor sDarkTheme[THEME_MAX] = { 0 };
 
 NVGcolor Theme_GetColor(ThemeColor pal) {
-	return nvgRGBA(
-		sDarkTheme[pal].r,
-		sDarkTheme[pal].g,
-		sDarkTheme[pal].b,
-		sDarkTheme[pal].a
-	);
+	return sDarkTheme[pal];
+}
+
+void Theme_Init() {
+	sDarkTheme[THEME_BASE] = nvgHSLA(199.0 / 360, 0.1, 0.090, 255);
+	sDarkTheme[THEME_BAS2] = nvgHSLA(199.0 / 360, 0.1, 0.120, 255);
+	sDarkTheme[THEME_TEXT] = nvgHSLA(042.0 / 360, 0.1, 0.800, 255);
+	sDarkTheme[THEME_DARK] = nvgHSLA(199.0 / 360, 0.1, 0.100, 255);
 }

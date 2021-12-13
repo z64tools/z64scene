@@ -23,20 +23,18 @@ void Editor_Draw(EditorContext* editorCtx) {
 	if (glfwGetWindowAttrib(editorCtx->appInfo.mainWindow, GLFW_ICONIFIED))
 		return;
 	
-	GeoGui_Draw(&editorCtx->geoCtx);
+	FlexUI_Draw(&editorCtx->flexCtx);
 }
 
 void Editor_Update(EditorContext* editorCtx) {
 	if (glfwGetWindowAttrib(editorCtx->appInfo.mainWindow, GLFW_ICONIFIED))
 		return;
 	
-	GeoGui_Update(&editorCtx->geoCtx);
+	FlexUI_Update(&editorCtx->flexCtx);
 	Cursor_Update(&editorCtx->cursorCtx);
 }
 
 void Editor_Init(EditorContext* editorCtx) {
-	GeoGuiContext* regionCtx = &editorCtx->geoCtx;
-	
 	#if 0
 	editorCtx->vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
 	#else
@@ -50,8 +48,9 @@ void Editor_Init(EditorContext* editorCtx) {
 	}
 	
 	editorCtx->viewCtx.cameraControl = false;
-	GeoGui_Init(
-		&editorCtx->geoCtx,
+	Theme_Init();
+	FlexUI_Init(
+		&editorCtx->flexCtx,
 		&editorCtx->appInfo.winDim,
 		&editorCtx->inputCtx.mouse,
 		editorCtx->vg

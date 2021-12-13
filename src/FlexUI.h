@@ -5,21 +5,21 @@
 #include <nanovg.h>
 #include "Theme.h"
 
-#define SPLIT_CLAMP 40
+#define SPLIT_CLAMP 50
 
-#define SPLIT_SPLIT_W 4
-#define SPLIT_ROUND_R 4
+#define SPLIT_SPLIT_W 6
+#define SPLIT_ROUND_R 6
 
-struct GeoGuiContext;
-struct GeoSplit;
+struct FlexUIContext;
+struct FlexSplit;
 typedef void (* SplitFunc)(
 	void*,
-	struct GeoSplit*
+	struct FlexSplit*
 );
 
 typedef enum {
-	GUI_BAR_TOP,
-	GUI_BAR_BOT
+	BAR_TOP,
+	BAR_BOT
 } GuiBarIndex;
 
 typedef enum {
@@ -31,14 +31,14 @@ typedef enum {
 	EDGE_T,
 	EDGE_R,
 	EDGE_B
-} GeoPos;
+} FlexPos;
 
 typedef enum {
 	DIR_L = 0,
 	DIR_T,
 	DIR_R,
 	DIR_B,
-} GeoDir;
+} FlexDir;
 
 typedef enum {
 	SPLIT_POINT_NONE = 0,
@@ -76,53 +76,52 @@ typedef enum {
 	EDGE_EDIT       = (1 << 6),
 } EdgeState;
 
-typedef struct GeoVtx {
-	struct GeoVtx* prev;
-	struct GeoVtx* next;
+typedef struct FlexVtx {
+	struct FlexVtx* prev;
+	struct FlexVtx* next;
 	Vec2d pos;
 	u8    killFlag;
-} GeoVtx;
+} FlexVtx;
 
-typedef struct GeoEdge {
-	struct GeoEdge* prev;
-	struct GeoEdge* next;
-	GeoVtx*   vtx[2];
+typedef struct FlexEdge {
+	struct FlexEdge* prev;
+	struct FlexEdge* next;
+	FlexVtx*  vtx[2];
 	f64 pos;
 	EdgeState state;
 	u8 killFlag;
-} GeoEdge;
+} FlexEdge;
 
-typedef struct GeoSplit {
-	struct GeoSplit* prev;
-	struct GeoSplit* next;
+typedef struct FlexSplit {
+	struct FlexSplit* prev;
+	struct FlexSplit* next;
 	SplitState stateFlag;
-	GeoEdge*   edge[4];
-	GeoVtx*    vtx[4];
+	FlexEdge*  edge[4];
+	FlexVtx*   vtx[4];
 	Rect  rect; // Absolute XY, relative WH
 	Vec2s center;
 	Vec2s mousePos; // relative
 	Vec2s mousePressPos;
-	u8    mouseInRegion : 1;
+	u8    mouseInSplit : 1;
 	SplitFunc init;
 	SplitFunc destroy;
 	SplitFunc update;
-	SplitFunc draw;
 	void* passArg;
-} GeoSplit;
+} FlexSplit;
 
 typedef struct {
 	Rect rect;
 } StatusBar;
 
-typedef struct GeoGuiContext {
-	GeoSplit* actionSplit;
-	GeoSplit* splitHead;
-	GeoVtx*   vtxHead;
-	GeoEdge*  edgeHead;
-	StatusBar bar[2];
+typedef struct FlexUIContext {
+	FlexSplit* actionSplit;
+	FlexSplit* splitHead;
+	FlexVtx*   vtxHead;
+	FlexEdge*  edgeHead;
+	StatusBar  bar[2];
 	Rect prevWorkRect;
 	Rect workRect;
-	GeoEdge* actionEdge;
+	FlexEdge* actionEdge;
 	struct {
 		f64 clampMax;
 		f64 clampMin;
@@ -130,10 +129,14 @@ typedef struct GeoGuiContext {
 	MouseInput* mouse;
 	Vec2s* winDim;
 	void*  vg;
-} GeoGuiContext;
+} FlexUIContext;
 
-void GeoGui_Init(GeoGuiContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void* vg);
-void GeoGui_Update(GeoGuiContext* geoCtx);
-void GeoGui_Draw(GeoGuiContext* geoCtx);
+void FlexUI_RemoveDublicates(FlexUIContext* flexCtx);
+
+void FlexUI_Init(FlexUIContext* flexCtx, Vec2s* winDim, MouseInput* mouse, void* vg);
+void FlexUI_Update(FlexUIContext* flexCtx);
+void FlexUI_Draw(FlexUIContext* flexCtx);
+
+#define FlexEdgeAlign_Equal(x, y) (((x)->state & EDGE_ALIGN) == ((y)->state & EDGE_ALIGN))
 
 #endif
