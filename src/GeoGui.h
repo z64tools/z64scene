@@ -6,11 +6,11 @@
 
 #define SPLIT_CLAMP 40
 
-struct GuiContext;
-struct Split;
+struct GeoGuiContext;
+struct GeoSplit;
 typedef void (* SplitFunc)(
 	struct EditorContext*,
-	struct Split*
+	struct GeoSplit*
 );
 
 typedef enum {
@@ -27,14 +27,14 @@ typedef enum {
 	EDGE_T,
 	EDGE_R,
 	EDGE_B
-} SplitPos;
+} GeoPos;
 
 typedef enum {
 	DIR_L = 0,
 	DIR_T,
 	DIR_R,
 	DIR_B,
-} SplitDir;
+} GeoDir;
 
 typedef enum {
 	SPLIT_POINT_NONE = 0,
@@ -72,28 +72,28 @@ typedef enum {
 	EDGE_EDIT       = (1 << 6),
 } EdgeState;
 
-typedef struct SplitVtx {
-	struct SplitVtx* prev;
-	struct SplitVtx* next;
+typedef struct GeoVtx {
+	struct GeoVtx* prev;
+	struct GeoVtx* next;
 	Vec2d pos;
 	u8    killFlag;
-} SplitVtx;
+} GeoVtx;
 
-typedef struct SplitEdge {
-	struct SplitEdge* prev;
-	struct SplitEdge* next;
-	SplitVtx* vtx[2];
+typedef struct GeoEdge {
+	struct GeoEdge* prev;
+	struct GeoEdge* next;
+	GeoVtx*   vtx[2];
 	f64 pos;
 	EdgeState state;
 	u8 killFlag;
-} SplitEdge;
+} GeoEdge;
 
-typedef struct Split {
-	struct Split* prev;
-	struct Split* next;
-	SplitState    stateFlag;
-	SplitEdge*    edge[4];
-	SplitVtx* vtx[4];
+typedef struct GeoSplit {
+	struct GeoSplit* prev;
+	struct GeoSplit* next;
+	SplitState stateFlag;
+	GeoEdge*   edge[4];
+	GeoVtx*    vtx[4];
 	Rect  rect; // Absolute XY, relative WH
 	Vec2s center;
 	Vec2s mousePos; // relative
@@ -101,30 +101,30 @@ typedef struct Split {
 	u8    mouseInRegion : 1;
 	SplitFunc update;
 	SplitFunc draw;
-} Split;
+} GeoSplit;
 
 typedef struct {
 	Rect rect;
 } StatusBar;
 
-typedef struct GuiContext {
-	Split*     actionSplit;
-	Split*     splitHead;
-	SplitVtx*  vtxHead;
-	SplitEdge* edgeHead;
-	StatusBar  bar[2];
+typedef struct GeoGuiContext {
+	GeoSplit* actionSplit;
+	GeoSplit* splitHead;
+	GeoVtx*   vtxHead;
+	GeoEdge*  edgeHead;
+	StatusBar bar[2];
 	Rect prevWorkRect;
 	Rect workRect;
-	SplitEdge* actionEdge;
+	GeoEdge* actionEdge;
 	struct {
 		f64 clampMax;
 		f64 clampMin;
 	} edgeMovement;
-} GuiContext;
+} GeoGuiContext;
 
-void Gui_Init(struct EditorContext* editorCtx);
-void Gui_Update(struct EditorContext* editorCtx);
-void Gui_Draw(struct EditorContext* editorCtx);
+void GeoGui_Init(struct EditorContext* editorCtx);
+void GeoGui_Update(struct EditorContext* editorCtx);
+void GeoGui_Draw(struct EditorContext* editorCtx);
 
 #define SPLIT_SPLIT_W 4
 #define SPLIT_ROUND_R 4

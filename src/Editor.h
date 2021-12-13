@@ -1,7 +1,7 @@
 #ifndef __Z64SCENE_H__
 #define __Z64SCENE_H__
 #include "Theme.h"
-#include "GUI.h"
+#include "GeoGui.h"
 #include "Cursor.h"
 
 struct Area;
@@ -19,7 +19,7 @@ typedef struct EditorContext {
 	LightContext  lightCtx;
 	FontContext   fontCtx;
 	ObjectContext objCtx;
-	GuiContext    guiCtx;
+	GeoGuiContext geoCtx;
 	CursorContext cursorCtx;
 } EditorContext;
 

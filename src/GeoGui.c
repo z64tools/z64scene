@@ -1,6 +1,6 @@
 #include "Editor.h"
 
-char* Debug_Split_GetStateStrings(Split* split) {
+char* Debug_GeoGui_GetStateStrings(GeoSplit* split) {
 	static char buffer[1024];
 	s32 t = 0;
 	char* states[] = {
@@ -27,12 +27,32 @@ char* Debug_Split_GetStateStrings(Split* split) {
 	return buffer;
 }
 
-SplitDir Split_GetDir_Opposite(SplitDir dir) {
+GeoDir GeoGui_GetDir_Opposite(GeoDir dir) {
 	return Lib_Wrap(dir + 2, DIR_L, DIR_B);
 }
 
-SplitVtx* Split_AddVertex(GuiContext* guiCtx, f64 x, f64 y) {
-	SplitVtx* head = guiCtx->vtxHead;
+GeoDir GeoGui_GerDir_MouseToPressPos(GeoSplit* split) {
+	Vec2s pos;
+	
+	Vec2_Substract(&pos, &split->mousePos, &split->mousePressPos);
+	
+	if (ABS(pos.x) > ABS(pos.y)) {
+		if (pos.x < 0) {
+			return DIR_L;
+		}
+		
+		return DIR_R;
+	} else {
+		if (pos.y < 0) {
+			return DIR_T;
+		}
+		
+		return DIR_B;
+	}
+}
+
+GeoVtx* GeoGui_AddVtx(GeoGuiContext* geoCtx, f64 x, f64 y) {
+	GeoVtx* head = geoCtx->vtxHead;
 	
 	while (head) {
 		if (ABS(head->pos.x - x) <= 1.0 && ABS(head->pos.y - y) <= 1.0) {
@@ -43,18 +63,18 @@ SplitVtx* Split_AddVertex(GuiContext* guiCtx, f64 x, f64 y) {
 		head = head->next;
 	}
 	
-	SplitVtx* vtx = Lib_Calloc(0, sizeof(SplitVtx));
+	GeoVtx* vtx = Lib_Calloc(0, sizeof(GeoVtx));
 	
 	vtx->pos.x = x;
 	vtx->pos.y = y;
-	Node_Add(guiCtx->vtxHead, vtx);
+	Node_Add(geoCtx->vtxHead, vtx);
 	
 	return vtx;
 }
 
-SplitEdge* Split_AddEdge(GuiContext* guiCtx, SplitVtx* v1, SplitVtx* v2) {
-	SplitEdge* head = guiCtx->edgeHead;
-	SplitEdge* edge = NULL;
+GeoEdge* GeoGui_AddEdge(GeoGuiContext* geoCtx, GeoVtx* v1, GeoVtx* v2) {
+	GeoEdge* head = geoCtx->edgeHead;
+	GeoEdge* edge = NULL;
 	
 	OsAssert(v1 != NULL && v2 != NULL);
 	
@@ -79,29 +99,29 @@ SplitEdge* Split_AddEdge(GuiContext* guiCtx, SplitVtx* v1, SplitVtx* v2) {
 	}
 	
 	if (edge == NULL) {
-		edge = Lib_Calloc(0, sizeof(SplitEdge));
+		edge = Lib_Calloc(0, sizeof(GeoEdge));
 		
 		edge->vtx[0] = v1;
 		edge->vtx[1] = v2;
-		Node_Add(guiCtx->edgeHead, edge);
+		Node_Add(geoCtx->edgeHead, edge);
 	}
 	
 	if (edge->vtx[0]->pos.y == edge->vtx[1]->pos.y) {
 		edge->state |= EDGE_HORIZONTAL;
 		edge->pos = edge->vtx[0]->pos.y;
-		if (edge->pos < guiCtx->workRect.y + 1) {
+		if (edge->pos < geoCtx->workRect.y + 1) {
 			edge->state |= EDGE_STICK_T;
 		}
-		if (edge->pos > guiCtx->workRect.y + guiCtx->workRect.h - 1) {
+		if (edge->pos > geoCtx->workRect.y + geoCtx->workRect.h - 1) {
 			edge->state |= EDGE_STICK_B;
 		}
 	} else {
 		edge->state |= EDGE_VERTICAL;
 		edge->pos = edge->vtx[0]->pos.x;
-		if (edge->pos < guiCtx->workRect.x + 1) {
+		if (edge->pos < geoCtx->workRect.x + 1) {
 			edge->state |= EDGE_STICK_L;
 		}
-		if (edge->pos > guiCtx->workRect.x + guiCtx->workRect.w - 1) {
+		if (edge->pos > geoCtx->workRect.x + geoCtx->workRect.w - 1) {
 			edge->state |= EDGE_STICK_R;
 		}
 	}
@@ -109,27 +129,7 @@ SplitEdge* Split_AddEdge(GuiContext* guiCtx, SplitVtx* v1, SplitVtx* v2) {
 	return edge;
 }
 
-SplitDir Split_GerDir_MouseToPressPos(Split* split) {
-	Vec2s pos;
-	
-	Vec2_Substract(&pos, &split->mousePos, &split->mousePressPos);
-	
-	if (ABS(pos.x) > ABS(pos.y)) {
-		if (pos.x < 0) {
-			return DIR_L;
-		}
-		
-		return DIR_R;
-	} else {
-		if (pos.y < 0) {
-			return DIR_T;
-		}
-		
-		return DIR_B;
-	}
-}
-
-s32 Split_Cursor_GetDistTo(SplitState flag, Split* split) {
+s32 GeoGui_Cursor_GetDistTo(SplitState flag, GeoSplit* split) {
 	Vec2s mouse[] = {
 		{ split->mousePos.x, split->mousePos.y },
 		{ split->mousePos.x, split->mousePos.y },
@@ -161,9 +161,9 @@ s32 Split_Cursor_GetDistTo(SplitState flag, Split* split) {
 	return Vec_Vec2s_DistXZ(&mouse[i], &pos[i]);
 }
 
-SplitState Split_GetState_CursorPos(Split* split, s32 range) {
+SplitState GeoGui_GetState_CursorPos(GeoSplit* split, s32 range) {
 	for (s32 i = 0; (1 << i) <= SPLIT_SIDE_B; i++) {
-		if (Split_Cursor_GetDistTo((1 << i), split) <= range) {
+		if (GeoGui_Cursor_GetDistTo((1 << i), split) <= range) {
 			return (1 << i);
 		}
 	}
@@ -171,38 +171,38 @@ SplitState Split_GetState_CursorPos(Split* split, s32 range) {
 	return SPLIT_POINT_NONE;
 }
 
-bool Split_Cursor_InSplit(Split* split) {
+bool GeoGui_Cursor_InSplit(GeoSplit* split) {
 	s32 resX = (split->mousePos.x < split->rect.w && split->mousePos.x >= 0);
 	s32 resY = (split->mousePos.y < split->rect.h && split->mousePos.y >= 0);
 	
 	return (resX && resY);
 }
 
-void Split_AddSplit(GuiContext* guiCtx, Rect* rect) {
-	Split* split = Lib_Calloc(0, sizeof(Split));
+void GeoGui_AddSplit(GeoGuiContext* geoCtx, Rect* rect) {
+	GeoSplit* split = Lib_Calloc(0, sizeof(GeoSplit));
 	
-	split->vtx[VTX_BOT_L] = Split_AddVertex(guiCtx, rect->x, rect->y + rect->h);
-	split->vtx[VTX_TOP_L] = Split_AddVertex(guiCtx, rect->x, rect->y);
-	split->vtx[VTX_TOP_R] = Split_AddVertex(guiCtx, rect->x + rect->w, rect->y);
+	split->vtx[VTX_BOT_L] = GeoGui_AddVtx(geoCtx, rect->x, rect->y + rect->h);
+	split->vtx[VTX_TOP_L] = GeoGui_AddVtx(geoCtx, rect->x, rect->y);
+	split->vtx[VTX_TOP_R] = GeoGui_AddVtx(geoCtx, rect->x + rect->w, rect->y);
 	split->vtx[VTX_BOT_R] =
-	    Split_AddVertex(guiCtx, rect->x + rect->w, rect->y + rect->h);
+	    GeoGui_AddVtx(geoCtx, rect->x + rect->w, rect->y + rect->h);
 	
 	split->edge[EDGE_L] =
-	    Split_AddEdge(guiCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_TOP_L]);
+	    GeoGui_AddEdge(geoCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_TOP_L]);
 	split->edge[EDGE_T] =
-	    Split_AddEdge(guiCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
+	    GeoGui_AddEdge(geoCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
 	split->edge[EDGE_R] =
-	    Split_AddEdge(guiCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
+	    GeoGui_AddEdge(geoCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
 	split->edge[EDGE_B] =
-	    Split_AddEdge(guiCtx, split->vtx[VTX_BOT_R], split->vtx[VTX_BOT_L]);
+	    GeoGui_AddEdge(geoCtx, split->vtx[VTX_BOT_R], split->vtx[VTX_BOT_L]);
 	
-	Node_Add(guiCtx->splitHead, split);
+	Node_Add(geoCtx->splitHead, split);
 }
 
-void Split_Edge_SetSlideClamp(GuiContext* guiCtx) {
-	SplitEdge* tempEdge = guiCtx->edgeHead;
-	SplitEdge* setEdgeA = guiCtx->actionEdge;
-	SplitEdge* setEdgeB = guiCtx->edgeHead;
+void GeoGui_Edge_SetSlideClamp(GeoGuiContext* geoCtx) {
+	GeoEdge* tempEdge = geoCtx->edgeHead;
+	GeoEdge* setEdgeA = geoCtx->actionEdge;
+	GeoEdge* setEdgeB = geoCtx->edgeHead;
 	
 	setEdgeA->state |= EDGE_EDIT;
 	
@@ -212,7 +212,7 @@ void Split_Edge_SetSlideClamp(GuiContext* guiCtx) {
 			if (tempEdge->vtx[1] == setEdgeA->vtx[0]) {
 				setEdgeA = tempEdge;
 				tempEdge->state |= EDGE_EDIT;
-				tempEdge = guiCtx->edgeHead;
+				tempEdge = geoCtx->edgeHead;
 				continue;
 			}
 		}
@@ -232,7 +232,7 @@ void Split_Edge_SetSlideClamp(GuiContext* guiCtx) {
 		setEdgeB = setEdgeB->next;
 	}
 	
-	tempEdge = guiCtx->edgeHead;
+	tempEdge = geoCtx->edgeHead;
 	
 	// Set all below setEdgeA
 	while (tempEdge) {
@@ -240,7 +240,7 @@ void Split_Edge_SetSlideClamp(GuiContext* guiCtx) {
 			if (tempEdge->vtx[0] == setEdgeA->vtx[1]) {
 				tempEdge->state |= EDGE_EDIT;
 				setEdgeA = tempEdge;
-				tempEdge = guiCtx->edgeHead;
+				tempEdge = geoCtx->edgeHead;
 				continue;
 			}
 		}
@@ -248,7 +248,7 @@ void Split_Edge_SetSlideClamp(GuiContext* guiCtx) {
 		tempEdge = tempEdge->next;
 	}
 	
-	tempEdge = guiCtx->edgeHead;
+	tempEdge = geoCtx->edgeHead;
 	
 	// Set all below setEdgeB
 	if (setEdgeB) {
@@ -257,7 +257,7 @@ void Split_Edge_SetSlideClamp(GuiContext* guiCtx) {
 				if (tempEdge->vtx[0] == setEdgeB->vtx[1]) {
 					tempEdge->state |= EDGE_EDIT;
 					setEdgeB = tempEdge;
-					tempEdge = guiCtx->edgeHead;
+					tempEdge = geoCtx->edgeHead;
 					continue;
 				}
 			}
@@ -266,102 +266,102 @@ void Split_Edge_SetSlideClamp(GuiContext* guiCtx) {
 		}
 	}
 	
-	guiCtx->edgeMovement.clampMin = guiCtx->workRect.y;
-	guiCtx->edgeMovement.clampMax = guiCtx->workRect.w;
+	geoCtx->edgeMovement.clampMin = geoCtx->workRect.y;
+	geoCtx->edgeMovement.clampMax = geoCtx->workRect.w;
 }
 
-void Split_Reset(GuiContext* guiCtx) {
-	OsAssert(guiCtx->actionSplit);
-	guiCtx->actionSplit->stateFlag &= ~(SPLIT_POINTS | SPLIT_SIDES);
+void GeoGui_Reset(GeoGuiContext* geoCtx) {
+	OsAssert(geoCtx->actionSplit);
+	geoCtx->actionSplit->stateFlag &= ~(SPLIT_POINTS | SPLIT_SIDES);
 	
-	guiCtx->actionSplit = NULL;
+	geoCtx->actionSplit = NULL;
 }
 
-void Split_Split(GuiContext* guiCtx, Split* split, SplitDir dir) {
-	Split* partner;
-	Split* newSplit;
-	SplitDir mirDir = Split_GetDir_Opposite(dir);
+void GeoGui_Split(GeoGuiContext* geoCtx, GeoSplit* split, GeoDir dir) {
+	GeoSplit* partner;
+	GeoSplit* newSplit;
+	GeoDir mirDir = GeoGui_GetDir_Opposite(dir);
 	s16 splitPos = (dir == DIR_L || dir == DIR_R) ? __inputCtx->mouse.pos.x : __inputCtx->mouse.pos.y;
 	
 	splitPos = CLAMP(splitPos - split->edge[mirDir]->pos, -SPLIT_CLAMP * 0.90f, SPLIT_CLAMP * 0.90f);
 	splitPos += split->edge[mirDir]->pos;
 	
-	newSplit = Lib_Calloc(0, sizeof(Split));
+	newSplit = Lib_Calloc(0, sizeof(GeoSplit));
 	
-	Node_Add(guiCtx->splitHead, newSplit);
+	Node_Add(geoCtx->splitHead, newSplit);
 	
-	OsPrintfEx("SplitDir: %d", dir);
+	OsPrintfEx("GeoDir: %d", dir);
 	
 	if (dir == DIR_L) {
-		newSplit->vtx[0] = Split_AddVertex(guiCtx, splitPos, split->vtx[0]->pos.y);
-		newSplit->vtx[1] = Split_AddVertex(guiCtx, splitPos, split->vtx[1]->pos.y);
+		newSplit->vtx[0] = GeoGui_AddVtx(geoCtx, splitPos, split->vtx[0]->pos.y);
+		newSplit->vtx[1] = GeoGui_AddVtx(geoCtx, splitPos, split->vtx[1]->pos.y);
 		newSplit->vtx[2] =
-		    Split_AddVertex(guiCtx, split->vtx[2]->pos.x, split->vtx[2]->pos.y);
+		    GeoGui_AddVtx(geoCtx, split->vtx[2]->pos.x, split->vtx[2]->pos.y);
 		newSplit->vtx[3] =
-		    Split_AddVertex(guiCtx, split->vtx[3]->pos.x, split->vtx[3]->pos.y);
-		split->vtx[2] = Split_AddVertex(guiCtx, splitPos, split->vtx[2]->pos.y);
-		split->vtx[3] = Split_AddVertex(guiCtx, splitPos, split->vtx[3]->pos.y);
+		    GeoGui_AddVtx(geoCtx, split->vtx[3]->pos.x, split->vtx[3]->pos.y);
+		split->vtx[2] = GeoGui_AddVtx(geoCtx, splitPos, split->vtx[2]->pos.y);
+		split->vtx[3] = GeoGui_AddVtx(geoCtx, splitPos, split->vtx[3]->pos.y);
 	}
 	
 	if (dir == DIR_R) {
 		newSplit->vtx[0] =
-		    Split_AddVertex(guiCtx, split->vtx[0]->pos.x, split->vtx[0]->pos.y);
+		    GeoGui_AddVtx(geoCtx, split->vtx[0]->pos.x, split->vtx[0]->pos.y);
 		newSplit->vtx[1] =
-		    Split_AddVertex(guiCtx, split->vtx[1]->pos.x, split->vtx[1]->pos.y);
-		newSplit->vtx[2] = Split_AddVertex(guiCtx, splitPos, split->vtx[2]->pos.y);
-		newSplit->vtx[3] = Split_AddVertex(guiCtx, splitPos, split->vtx[3]->pos.y);
-		split->vtx[0] = Split_AddVertex(guiCtx, splitPos, split->vtx[0]->pos.y);
-		split->vtx[1] = Split_AddVertex(guiCtx, splitPos, split->vtx[1]->pos.y);
+		    GeoGui_AddVtx(geoCtx, split->vtx[1]->pos.x, split->vtx[1]->pos.y);
+		newSplit->vtx[2] = GeoGui_AddVtx(geoCtx, splitPos, split->vtx[2]->pos.y);
+		newSplit->vtx[3] = GeoGui_AddVtx(geoCtx, splitPos, split->vtx[3]->pos.y);
+		split->vtx[0] = GeoGui_AddVtx(geoCtx, splitPos, split->vtx[0]->pos.y);
+		split->vtx[1] = GeoGui_AddVtx(geoCtx, splitPos, split->vtx[1]->pos.y);
 	}
 	
 	if (dir == DIR_T) {
 		newSplit->vtx[0] =
-		    Split_AddVertex(guiCtx, split->vtx[0]->pos.x, split->vtx[0]->pos.y);
-		newSplit->vtx[1] = Split_AddVertex(guiCtx, split->vtx[1]->pos.x, splitPos);
-		newSplit->vtx[2] = Split_AddVertex(guiCtx, split->vtx[2]->pos.x, splitPos);
+		    GeoGui_AddVtx(geoCtx, split->vtx[0]->pos.x, split->vtx[0]->pos.y);
+		newSplit->vtx[1] = GeoGui_AddVtx(geoCtx, split->vtx[1]->pos.x, splitPos);
+		newSplit->vtx[2] = GeoGui_AddVtx(geoCtx, split->vtx[2]->pos.x, splitPos);
 		newSplit->vtx[3] =
-		    Split_AddVertex(guiCtx, split->vtx[3]->pos.x, split->vtx[3]->pos.y);
-		split->vtx[3] = Split_AddVertex(guiCtx, split->vtx[3]->pos.x, splitPos);
-		split->vtx[0] = Split_AddVertex(guiCtx, split->vtx[0]->pos.x, splitPos);
+		    GeoGui_AddVtx(geoCtx, split->vtx[3]->pos.x, split->vtx[3]->pos.y);
+		split->vtx[3] = GeoGui_AddVtx(geoCtx, split->vtx[3]->pos.x, splitPos);
+		split->vtx[0] = GeoGui_AddVtx(geoCtx, split->vtx[0]->pos.x, splitPos);
 	}
 	
 	if (dir == DIR_B) {
-		newSplit->vtx[0] = Split_AddVertex(guiCtx, split->vtx[0]->pos.x, splitPos);
+		newSplit->vtx[0] = GeoGui_AddVtx(geoCtx, split->vtx[0]->pos.x, splitPos);
 		newSplit->vtx[1] =
-		    Split_AddVertex(guiCtx, split->vtx[1]->pos.x, split->vtx[1]->pos.y);
+		    GeoGui_AddVtx(geoCtx, split->vtx[1]->pos.x, split->vtx[1]->pos.y);
 		newSplit->vtx[2] =
-		    Split_AddVertex(guiCtx, split->vtx[2]->pos.x, split->vtx[2]->pos.y);
-		newSplit->vtx[3] = Split_AddVertex(guiCtx, split->vtx[3]->pos.x, splitPos);
-		split->vtx[1] = Split_AddVertex(guiCtx, split->vtx[1]->pos.x, splitPos);
-		split->vtx[2] = Split_AddVertex(guiCtx, split->vtx[2]->pos.x, splitPos);
+		    GeoGui_AddVtx(geoCtx, split->vtx[2]->pos.x, split->vtx[2]->pos.y);
+		newSplit->vtx[3] = GeoGui_AddVtx(geoCtx, split->vtx[3]->pos.x, splitPos);
+		split->vtx[1] = GeoGui_AddVtx(geoCtx, split->vtx[1]->pos.x, splitPos);
+		split->vtx[2] = GeoGui_AddVtx(geoCtx, split->vtx[2]->pos.x, splitPos);
 	}
 	
 	split->edge[EDGE_L] =
-	    Split_AddEdge(guiCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_TOP_L]);
+	    GeoGui_AddEdge(geoCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_TOP_L]);
 	split->edge[EDGE_T] =
-	    Split_AddEdge(guiCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
+	    GeoGui_AddEdge(geoCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
 	split->edge[EDGE_R] =
-	    Split_AddEdge(guiCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
+	    GeoGui_AddEdge(geoCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
 	split->edge[EDGE_B] =
-	    Split_AddEdge(guiCtx, split->vtx[VTX_BOT_R], split->vtx[VTX_BOT_L]);
+	    GeoGui_AddEdge(geoCtx, split->vtx[VTX_BOT_R], split->vtx[VTX_BOT_L]);
 	
 	newSplit->edge[EDGE_L] =
-	    Split_AddEdge(guiCtx, newSplit->vtx[VTX_BOT_L], newSplit->vtx[VTX_TOP_L]);
+	    GeoGui_AddEdge(geoCtx, newSplit->vtx[VTX_BOT_L], newSplit->vtx[VTX_TOP_L]);
 	newSplit->edge[EDGE_T] =
-	    Split_AddEdge(guiCtx, newSplit->vtx[VTX_TOP_L], newSplit->vtx[VTX_TOP_R]);
+	    GeoGui_AddEdge(geoCtx, newSplit->vtx[VTX_TOP_L], newSplit->vtx[VTX_TOP_R]);
 	newSplit->edge[EDGE_R] =
-	    Split_AddEdge(guiCtx, newSplit->vtx[VTX_TOP_R], newSplit->vtx[VTX_BOT_R]);
+	    GeoGui_AddEdge(geoCtx, newSplit->vtx[VTX_TOP_R], newSplit->vtx[VTX_BOT_R]);
 	newSplit->edge[EDGE_B] =
-	    Split_AddEdge(guiCtx, newSplit->vtx[VTX_BOT_R], newSplit->vtx[VTX_BOT_L]);
+	    GeoGui_AddEdge(geoCtx, newSplit->vtx[VTX_BOT_R], newSplit->vtx[VTX_BOT_L]);
 	
-	guiCtx->actionEdge = newSplit->edge[dir];
-	Split_Edge_SetSlideClamp(guiCtx);
+	geoCtx->actionEdge = newSplit->edge[dir];
+	GeoGui_Edge_SetSlideClamp(geoCtx);
 }
 
-void Split_KillSplit(GuiContext* guiCtx, Split* split, SplitDir dir) {
-	SplitEdge* sharedEdge = split->edge[dir];
-	Split* killSplit = guiCtx->splitHead;
-	SplitDir oppositeDir = Split_GetDir_Opposite(dir);
+void GeoGui_KillSplit(GeoGuiContext* geoCtx, GeoSplit* split, GeoDir dir) {
+	GeoEdge* sharedEdge = split->edge[dir];
+	GeoSplit* killSplit = geoCtx->splitHead;
+	GeoDir oppositeDir = GeoGui_GetDir_Opposite(dir);
 	
 	while (killSplit) {
 		if (killSplit->edge[oppositeDir] == sharedEdge) {
@@ -382,47 +382,47 @@ void Split_KillSplit(GuiContext* guiCtx, Split* split, SplitDir dir) {
 		split->vtx[VTX_BOT_L] = killSplit->vtx[VTX_BOT_L];
 		split->vtx[VTX_TOP_L] = killSplit->vtx[VTX_TOP_L];
 		split->edge[EDGE_T] =
-		    Split_AddEdge(guiCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
+		    GeoGui_AddEdge(geoCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
 		split->edge[EDGE_B] =
-		    Split_AddEdge(guiCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_BOT_R]);
+		    GeoGui_AddEdge(geoCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_BOT_R]);
 	}
 	
 	if (dir == DIR_T) {
 		split->vtx[VTX_TOP_L] = killSplit->vtx[VTX_TOP_L];
 		split->vtx[VTX_TOP_R] = killSplit->vtx[VTX_TOP_R];
 		split->edge[EDGE_L] =
-		    Split_AddEdge(guiCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_BOT_L]);
+		    GeoGui_AddEdge(geoCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_BOT_L]);
 		split->edge[EDGE_R] =
-		    Split_AddEdge(guiCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
+		    GeoGui_AddEdge(geoCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
 	}
 	
 	if (dir == DIR_R) {
 		split->vtx[VTX_BOT_R] = killSplit->vtx[VTX_BOT_R];
 		split->vtx[VTX_TOP_R] = killSplit->vtx[VTX_TOP_R];
 		split->edge[EDGE_T] =
-		    Split_AddEdge(guiCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
+		    GeoGui_AddEdge(geoCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
 		split->edge[EDGE_B] =
-		    Split_AddEdge(guiCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_BOT_R]);
+		    GeoGui_AddEdge(geoCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_BOT_R]);
 	}
 	
 	if (dir == DIR_B) {
 		split->vtx[VTX_BOT_L] = killSplit->vtx[VTX_BOT_L];
 		split->vtx[VTX_BOT_R] = killSplit->vtx[VTX_BOT_R];
 		split->edge[EDGE_L] =
-		    Split_AddEdge(guiCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_BOT_L]);
+		    GeoGui_AddEdge(geoCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_BOT_L]);
 		split->edge[EDGE_R] =
-		    Split_AddEdge(guiCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
+		    GeoGui_AddEdge(geoCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
 	}
 	
 	split->edge[dir] = killSplit->edge[dir];
 	
-	Node_Kill(guiCtx->splitHead, killSplit);
+	Node_Kill(geoCtx->splitHead, killSplit);
 }
 
-/* 𝗦𝗽𝗹𝗶𝘁𝗩𝘁𝘅 𝗨𝗽𝗱𝗮𝘁𝗲 */
+/* ───────────────────────────────────────────────────────────────────────── */
 
-void Split_Update_Vtx_RemoveDublicates(GuiContext* guiCtx, SplitVtx* vtx) {
-	SplitVtx* vtx2 = guiCtx->vtxHead;
+void GeoGui_Update_Vtx_RemoveDublicates(GeoGuiContext* geoCtx, GeoVtx* vtx) {
+	GeoVtx* vtx2 = geoCtx->vtxHead;
 	
 	while (vtx2) {
 		if (vtx2 == vtx) {
@@ -431,9 +431,9 @@ void Split_Update_Vtx_RemoveDublicates(GuiContext* guiCtx, SplitVtx* vtx) {
 		}
 		
 		if (Vec2_Equal(&vtx->pos, &vtx2->pos)) {
-			SplitVtx* kill = vtx2;
-			Split* s = guiCtx->splitHead;
-			SplitEdge* e = guiCtx->edgeHead;
+			GeoVtx* kill = vtx2;
+			GeoSplit* s = geoCtx->splitHead;
+			GeoEdge* e = geoCtx->edgeHead;
 			
 			while (s) {
 				for (s32 i = 0; i < 4; i++) {
@@ -454,7 +454,7 @@ void Split_Update_Vtx_RemoveDublicates(GuiContext* guiCtx, SplitVtx* vtx) {
 			}
 			
 			vtx2 = vtx2->next;
-			Node_Kill(guiCtx->vtxHead, kill);
+			Node_Kill(geoCtx->vtxHead, kill);
 			OsPrintfEx("" PRNT_YELW "\aKill Dublicate Vtx!");
 			continue;
 		}
@@ -463,21 +463,21 @@ void Split_Update_Vtx_RemoveDublicates(GuiContext* guiCtx, SplitVtx* vtx) {
 	}
 }
 
-void Split_Update_Vtx(GuiContext* guiCtx) {
-	SplitVtx* vtx = guiCtx->vtxHead;
+void GeoGui_Update_Vtx(GeoGuiContext* geoCtx) {
+	GeoVtx* vtx = geoCtx->vtxHead;
 	static s32 clean;
 	
-	if (guiCtx->actionEdge != NULL) {
+	if (geoCtx->actionEdge != NULL) {
 		clean = true;
 	}
 	
 	while (vtx) {
-		if (clean == true && guiCtx->actionEdge == NULL) {
-			Split_Update_Vtx_RemoveDublicates(guiCtx, vtx);
+		if (clean == true && geoCtx->actionEdge == NULL) {
+			GeoGui_Update_Vtx_RemoveDublicates(geoCtx, vtx);
 		}
 		
 		if (vtx->killFlag == true) {
-			Split* s = guiCtx->splitHead;
+			GeoSplit* s = geoCtx->splitHead;
 			
 			while (s) {
 				for (s32 i = 0; i < 4; i++) {
@@ -489,25 +489,25 @@ void Split_Update_Vtx(GuiContext* guiCtx) {
 			}
 			
 			if (vtx->killFlag == true) {
-				SplitVtx* killVtx = vtx;
+				GeoVtx* killVtx = vtx;
 				vtx = vtx->prev;
 				OsPrintfEx("" PRNT_YELW "\aKill Tagged Vtx!");
-				Node_Kill(guiCtx->vtxHead, killVtx);
+				Node_Kill(geoCtx->vtxHead, killVtx);
 				continue;
 			}
 		}
 		
 		vtx = vtx->next;
-		if (vtx == NULL && guiCtx->actionEdge == NULL) {
+		if (vtx == NULL && geoCtx->actionEdge == NULL) {
 			clean = false;
 		}
 	}
 }
 
-/* 𝗦𝗽𝗹𝗶𝘁𝗘𝗱𝗴𝗲 𝗨𝗽𝗱𝗮𝘁𝗲 */
+/* ───────────────────────────────────────────────────────────────────────── */
 
-void Split_Update_Edge_RemoveDublicates(GuiContext* guiCtx, SplitEdge* edge) {
-	SplitEdge* edge2 = guiCtx->edgeHead;
+void GeoGui_Update_Edge_RemoveDublicates(GeoGuiContext* geoCtx, GeoEdge* edge) {
+	GeoEdge* edge2 = geoCtx->edgeHead;
 	
 	while (edge2) {
 		if (edge2 == edge) {
@@ -516,11 +516,11 @@ void Split_Update_Edge_RemoveDublicates(GuiContext* guiCtx, SplitEdge* edge) {
 		}
 		
 		if (edge2->vtx[0] == edge->vtx[0] && edge2->vtx[1] == edge->vtx[1]) {
-			SplitEdge* kill = edge2;
-			Split* s = guiCtx->splitHead;
+			GeoEdge* kill = edge2;
+			GeoSplit* s = geoCtx->splitHead;
 			
-			if (guiCtx->actionEdge == edge2) {
-				guiCtx->actionEdge = edge;
+			if (geoCtx->actionEdge == edge2) {
+				geoCtx->actionEdge = edge;
 			}
 			
 			while (s) {
@@ -533,7 +533,7 @@ void Split_Update_Edge_RemoveDublicates(GuiContext* guiCtx, SplitEdge* edge) {
 			}
 			
 			edge2 = edge2->next;
-			Node_Kill(guiCtx->edgeHead, kill);
+			Node_Kill(geoCtx->edgeHead, kill);
 			OsPrintfEx("" PRNT_YELW "\aKill Dublicate Edge!");
 			continue;
 		}
@@ -542,55 +542,55 @@ void Split_Update_Edge_RemoveDublicates(GuiContext* guiCtx, SplitEdge* edge) {
 	}
 }
 
-void Split_Update_Edges(GuiContext* guiCtx) {
-	SplitEdge* edge = guiCtx->edgeHead;
-	f64 diffCentX = (f64)guiCtx->workRect.w / guiCtx->prevWorkRect.w;
-	f64 diffCentY = (f64)guiCtx->workRect.h / guiCtx->prevWorkRect.h;
+void GeoGui_Update_Edges(GeoGuiContext* geoCtx) {
+	GeoEdge* edge = geoCtx->edgeHead;
+	f64 diffCentX = (f64)geoCtx->workRect.w / geoCtx->prevWorkRect.w;
+	f64 diffCentY = (f64)geoCtx->workRect.h / geoCtx->prevWorkRect.h;
 	
 	if (!__inputCtx->mouse.click.hold) {
-		guiCtx->actionEdge = NULL;
+		geoCtx->actionEdge = NULL;
 	}
 	
 	while (edge) {
 		if (edge->killFlag == true) {
-			SplitEdge* temp = edge->next;
+			GeoEdge* temp = edge->next;
 			OsPrintfEx("" PRNT_YELW "\aKill Tagged Edge!");
-			Node_Kill(guiCtx->edgeHead, edge);
+			Node_Kill(geoCtx->edgeHead, edge);
 			edge = temp;
 			continue;
 		}
 		edge->killFlag = true;
 		
-		if (guiCtx->actionEdge == NULL) {
+		if (geoCtx->actionEdge == NULL) {
 			edge->state &= ~EDGE_EDIT;
 		}
 		
-		Split_Update_Edge_RemoveDublicates(guiCtx, edge);
+		GeoGui_Update_Edge_RemoveDublicates(geoCtx, edge);
 		edge = edge->next;
 	}
 	
-	edge = guiCtx->edgeHead;
+	edge = geoCtx->edgeHead;
 	
 	while (edge) {
-		bool isEditEdge = (edge == guiCtx->actionEdge || edge->state & EDGE_EDIT);
+		bool isEditEdge = (edge == geoCtx->actionEdge || edge->state & EDGE_EDIT);
 		bool isCornerEdge = ((edge->state & EDGE_STICK) != 0);
 		bool isHor = ((edge->state & EDGE_VERTICAL) == 0);
-		bool matchesActionAlign = (guiCtx->actionEdge && ((edge->state & EDGE_ALIGN) == (guiCtx->actionEdge->state & EDGE_ALIGN)));
+		bool matchesActionAlign = (geoCtx->actionEdge && ((edge->state & EDGE_ALIGN) == (geoCtx->actionEdge->state & EDGE_ALIGN)));
 		
 		OsAssert(!(edge->state & EDGE_HORIZONTAL && edge->state & EDGE_VERTICAL));
 		
 		if (isCornerEdge) {
 			if (edge->state & EDGE_STICK_L) {
-				edge->pos = guiCtx->workRect.x;
+				edge->pos = geoCtx->workRect.x;
 			}
 			if (edge->state & EDGE_STICK_T) {
-				edge->pos = guiCtx->workRect.y;
+				edge->pos = geoCtx->workRect.y;
 			}
 			if (edge->state & EDGE_STICK_R) {
-				edge->pos = guiCtx->workRect.x + guiCtx->workRect.w;
+				edge->pos = geoCtx->workRect.x + geoCtx->workRect.w;
 			}
 			if (edge->state & EDGE_STICK_B) {
-				edge->pos = guiCtx->workRect.y + guiCtx->workRect.h;
+				edge->pos = geoCtx->workRect.y + geoCtx->workRect.h;
 			}
 		} else {
 			if (edge->state & EDGE_HORIZONTAL) {
@@ -602,14 +602,14 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 		}
 		
 		if (isEditEdge && !isCornerEdge) {
-			SplitEdge* temp = guiCtx->edgeHead;
+			GeoEdge* temp = geoCtx->edgeHead;
 			s32 align = Lib_Wrap(edge->state & EDGE_ALIGN, 0, 1);
 			
 			while (temp) {
 				for (s32 i = 0; i < 2; i++) {
 					if (((temp->state & EDGE_ALIGN) != (edge->state & EDGE_ALIGN)) && temp->vtx[1] == edge->vtx[i]) {
-						if (temp->vtx[0]->pos.s[align] > guiCtx->edgeMovement.clampMin) {
-							guiCtx->edgeMovement.clampMin = temp->vtx[0]->pos.s[align];
+						if (temp->vtx[0]->pos.s[align] > geoCtx->edgeMovement.clampMin) {
+							geoCtx->edgeMovement.clampMin = temp->vtx[0]->pos.s[align];
 							OsPrintfEx("foundMin %.2f", temp->vtx[0]->pos.s[align]);
 						}
 					}
@@ -617,8 +617,8 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 				
 				for (s32 i = 0; i < 2; i++) {
 					if (((temp->state & EDGE_ALIGN) != (edge->state & EDGE_ALIGN)) && temp->vtx[0] == edge->vtx[i]) {
-						if (temp->vtx[1]->pos.s[align] < guiCtx->edgeMovement.clampMax) {
-							guiCtx->edgeMovement.clampMax = temp->vtx[1]->pos.s[align];
+						if (temp->vtx[1]->pos.s[align] < geoCtx->edgeMovement.clampMax) {
+							geoCtx->edgeMovement.clampMax = temp->vtx[1]->pos.s[align];
 							OsPrintfEx("foundMax %.2f", temp->vtx[1]->pos.s[align]);
 						}
 					}
@@ -633,8 +633,8 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 			if (edge->state & EDGE_VERTICAL) {
 				edge->pos = __inputCtx->mouse.pos.x + 4;
 			}
-			edge->pos = CLAMP_MIN(edge->pos, guiCtx->edgeMovement.clampMin + SPLIT_CLAMP);
-			edge->pos = CLAMP_MAX(edge->pos, guiCtx->edgeMovement.clampMax - SPLIT_CLAMP);
+			edge->pos = CLAMP_MIN(edge->pos, geoCtx->edgeMovement.clampMin + SPLIT_CLAMP);
+			edge->pos = CLAMP_MAX(edge->pos, geoCtx->edgeMovement.clampMax - SPLIT_CLAMP);
 		}
 		
 		if (isCornerEdge) {
@@ -656,9 +656,9 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 	}
 }
 
-/* 𝗦𝗽𝗹𝗶𝘁 𝗨𝗽𝗱𝗮𝘁𝗲 */
+/* ───────────────────────────────────────────────────────────────────────── */
 
-void Split_Update_ActionSplit(GuiContext* guiCtx) {
+void GeoGui_Update_ActionSplit(GeoGuiContext* geoCtx) {
 	const char* stringDirection[] = {
 		"EDGE_L",
 		"EDGE_T",
@@ -669,10 +669,10 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 		"EDGE_HORIZONTAL", "EDGE_VERTICAL",   "EDGE_STICK_L",
 		"EDGE_STICK_T",    "EDGE_STICK_R",    "EDGE_STICK_B",
 	};
-	Split* split = guiCtx->actionSplit;
+	GeoSplit* split = geoCtx->actionSplit;
 	
 	if (__inputCtx->mouse.click.press) {
-		split->stateFlag |= Split_GetState_CursorPos(split, 20);
+		split->stateFlag |= GeoGui_GetState_CursorPos(split, 20);
 		if (split->stateFlag & SPLIT_SIDES) {
 			s32 i;
 			
@@ -685,7 +685,7 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 			#ifndef NDEBUG
 			char buffer[1024] = "None";
 			s32 t = 0;
-			OsPrintfEx("Split: %s", stringDirection[i]);
+			OsPrintfEx("GeoSplit: %s", stringDirection[i]);
 			
 			for (s32 j = 0; (1 << j) <= EDGE_STICK_B; j++) {
 				if (split->edge[i]->state & (1 << j)) {
@@ -704,28 +704,28 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 			
 			OsAssert(split->edge[i] != NULL);
 			
-			guiCtx->actionEdge = split->edge[i];
-			Split_Edge_SetSlideClamp(guiCtx);
-			Split_Reset(guiCtx);
+			geoCtx->actionEdge = split->edge[i];
+			GeoGui_Edge_SetSlideClamp(geoCtx);
+			GeoGui_Reset(geoCtx);
 		}
 	}
 	
 	if (__inputCtx->mouse.click.hold) {
 		if (split->stateFlag & SPLIT_POINTS) {
 			s32 splitDist =
-			    Split_Cursor_GetDistTo(split->stateFlag & SPLIT_POINTS, split);
+			    GeoGui_Cursor_GetDistTo(split->stateFlag & SPLIT_POINTS, split);
 			s32 dist = Vec_Vec2s_DistXZ(&split->mousePos, &split->mousePressPos);
 			
 			if (dist > 1) {
-				CursorIndex cid = Split_GerDir_MouseToPressPos(split) + 1;
+				CursorIndex cid = GeoGui_GerDir_MouseToPressPos(split) + 1;
 				Cursor_SetCursor(cid);
 			}
 			if (dist > SPLIT_CLAMP * 1.25) {
-				Split_Reset(guiCtx);
+				GeoGui_Reset(geoCtx);
 				if (split->mouseInRegion) {
-					Split_Split(guiCtx, split, Split_GerDir_MouseToPressPos(split));
+					GeoGui_Split(geoCtx, split, GeoGui_GerDir_MouseToPressPos(split));
 				} else {
-					Split_KillSplit(guiCtx, split, Split_GerDir_MouseToPressPos(split));
+					GeoGui_KillSplit(geoCtx, split, GeoGui_GerDir_MouseToPressPos(split));
 				}
 			}
 		}
@@ -738,7 +738,7 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 	}
 }
 
-void Split_Update_Split_SetRect(Split* split) {
+void GeoGui_Update_SplitRect(GeoSplit* split) {
 	split->rect = (Rect) {
 		floor(split->vtx[1]->pos.x),
 		floor(split->vtx[1]->pos.y),
@@ -747,46 +747,46 @@ void Split_Update_Split_SetRect(Split* split) {
 	};
 }
 
-void Split_Update_Split(EditorContext* editorCtx) {
-	GuiContext* guiCtx = &editorCtx->guiCtx;
-	Split* split = guiCtx->splitHead;
+void GeoGui_Update_Split(EditorContext* editorCtx) {
+	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
+	GeoSplit* split = geoCtx->splitHead;
 	MouseInput* mouse = &editorCtx->inputCtx.mouse;
 	
 	Cursor_SetCursor(CURSOR_DEFAULT);
 	
-	if (guiCtx->actionSplit != NULL && mouse->cursorAction == false) {
-		Split_Reset(guiCtx);
+	if (geoCtx->actionSplit != NULL && mouse->cursorAction == false) {
+		GeoGui_Reset(geoCtx);
 	}
 	
 	while (split) {
-		Split_Update_Split_SetRect(split);
+		GeoGui_Update_SplitRect(split);
 		Vec2s rectPos = { split->rect.x, split->rect.y };
 		Vec_Vec2s_Substract(&split->mousePos, &mouse->pos, (Vec2s*)&rectPos);
 		
-		split->mouseInRegion = Split_Cursor_InSplit(split);
+		split->mouseInRegion = GeoGui_Cursor_InSplit(split);
 		split->center.x = split->rect.x + split->rect.w * 0.5f;
 		split->center.y = split->rect.y + split->rect.h * 0.5f;
 		
-		if (guiCtx->actionSplit == NULL && split->mouseInRegion &&
+		if (geoCtx->actionSplit == NULL && split->mouseInRegion &&
 		    mouse->cursorAction) {
 			if (mouse->click.press) {
 				split->mousePressPos = split->mousePos;
-				guiCtx->actionSplit = split;
+				geoCtx->actionSplit = split;
 			}
 		}
 		
-		if (guiCtx->actionSplit != NULL) {
-			if (guiCtx->actionSplit == split)
-				Split_Update_ActionSplit(guiCtx);
+		if (geoCtx->actionSplit != NULL) {
+			if (geoCtx->actionSplit == split)
+				GeoGui_Update_ActionSplit(geoCtx);
 		} else {
 			if (__inputCtx->mouse.click.hold == 0) {
-				if (Split_GetState_CursorPos(split, 20) & SPLIT_POINTS &&
+				if (GeoGui_GetState_CursorPos(split, 20) & SPLIT_POINTS &&
 				    split->mouseInRegion) {
 					Cursor_SetCursor(CURSOR_CROSSHAIR);
-				} else if (Split_GetState_CursorPos(split, 10) & SPLIT_SIDE_H &&
+				} else if (GeoGui_GetState_CursorPos(split, 10) & SPLIT_SIDE_H &&
 				    split->mouseInRegion) {
 					Cursor_SetCursor(CURSOR_ARROW_H);
-				} else if (Split_GetState_CursorPos(split, 10) & SPLIT_SIDE_V &&
+				} else if (GeoGui_GetState_CursorPos(split, 10) & SPLIT_SIDE_V &&
 				    split->mouseInRegion) {
 					Cursor_SetCursor(CURSOR_ARROW_V);
 				}
@@ -794,9 +794,9 @@ void Split_Update_Split(EditorContext* editorCtx) {
 		}
 		
 		if (split->update) {
-			if (split != guiCtx->splitHead &&
-			    ((guiCtx->actionSplit && guiCtx->actionSplit == split) ||
-			    guiCtx->actionSplit == NULL)) {
+			if (split != geoCtx->splitHead &&
+			    ((geoCtx->actionSplit && geoCtx->actionSplit == split) ||
+			    geoCtx->actionSplit == NULL)) {
 				split->update(editorCtx, split);
 			}
 		}
@@ -809,9 +809,9 @@ void Split_Update_Split(EditorContext* editorCtx) {
 	}
 }
 
-/* 𝗦𝗽𝗹𝗶𝘁 𝗗𝗿𝗮𝘄 */
+/* ───────────────────────────────────────────────────────────────────────── */
 
-void Split_Draw_SplitBorder(NVGcontext* vg, Rect* rect, s32 iter) {
+void GeoGui_Draw_SplitBorder(NVGcontext* vg, Rect* rect, s32 iter) {
 	nvgBeginPath(vg);
 	nvgRect(vg, 0, 0, rect->w, rect->h);
 	nvgRoundedRect(
@@ -843,9 +843,9 @@ void Split_Draw_SplitBorder(NVGcontext* vg, Rect* rect, s32 iter) {
 	#endif
 }
 
-void Split_Draw_Splits(EditorContext* editorCtx) {
-	GuiContext* guiCtx = &editorCtx->guiCtx;
-	Split* split = guiCtx->splitHead;
+void GeoGui_Draw_Splits(EditorContext* editorCtx) {
+	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
+	GeoSplit* split = geoCtx->splitHead;
 	Vec2s* winDim = &editorCtx->appInfo.winDim;
 	s32 iter = 0;
 	
@@ -861,7 +861,7 @@ void Split_Draw_Splits(EditorContext* editorCtx) {
 			if (split->draw)
 				split->draw(editorCtx, split);
 			
-			Split_Draw_SplitBorder(editorCtx->vg, &split->rect, iter);
+			GeoGui_Draw_SplitBorder(editorCtx->vg, &split->rect, iter);
 		}
 		nvgEndFrame(editorCtx->vg);
 		
@@ -870,85 +870,85 @@ void Split_Draw_Splits(EditorContext* editorCtx) {
 	}
 }
 
-/* 𝗚𝘂𝗶 𝗠𝗮𝗶𝗻 𝗙𝘂𝗻𝗰𝘁𝗶𝗼𝗻𝘀 */
+/* ───────────────────────────────────────────────────────────────────────── */
 
-void Gui_UpdateWorkRegion(EditorContext* editorCtx) {
-	GuiContext* guiCtx = &editorCtx->guiCtx;
+void GeoGui_UpdateWorkRegion(EditorContext* editorCtx) {
+	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
 	Vec2s* winDim = &editorCtx->appInfo.winDim;
 	
-	guiCtx->workRect = (Rect) { 0, 0 + guiCtx->bar[GUI_BAR_TOP].rect.h, winDim->x,
-				    winDim->y - guiCtx->bar[GUI_BAR_BOT].rect.h -
-				    guiCtx->bar[GUI_BAR_TOP].rect.h };
+	geoCtx->workRect = (Rect) { 0, 0 + geoCtx->bar[GUI_BAR_TOP].rect.h, winDim->x,
+				    winDim->y - geoCtx->bar[GUI_BAR_BOT].rect.h -
+				    geoCtx->bar[GUI_BAR_TOP].rect.h };
 }
 
-void Gui_SetTopBarHeight(EditorContext* editorCtx, s32 h) {
-	GuiContext* guiCtx = &editorCtx->guiCtx;
+void GeoGui_SetTopBarHeight(EditorContext* editorCtx, s32 h) {
+	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
 	Vec2s* winDim = &editorCtx->appInfo.winDim;
 	
-	guiCtx->bar[GUI_BAR_TOP].rect.x = 0;
-	guiCtx->bar[GUI_BAR_TOP].rect.y = 0;
-	guiCtx->bar[GUI_BAR_TOP].rect.w = winDim->x;
-	guiCtx->bar[GUI_BAR_TOP].rect.h = h;
-	Gui_UpdateWorkRegion(editorCtx);
+	geoCtx->bar[GUI_BAR_TOP].rect.x = 0;
+	geoCtx->bar[GUI_BAR_TOP].rect.y = 0;
+	geoCtx->bar[GUI_BAR_TOP].rect.w = winDim->x;
+	geoCtx->bar[GUI_BAR_TOP].rect.h = h;
+	GeoGui_UpdateWorkRegion(editorCtx);
 }
 
-void Gui_SetBotBarHeight(EditorContext* editorCtx, s32 h) {
-	GuiContext* guiCtx = &editorCtx->guiCtx;
+void GeoGui_SetBotBarHeight(EditorContext* editorCtx, s32 h) {
+	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
 	Vec2s* winDim = &editorCtx->appInfo.winDim;
 	
-	guiCtx->bar[GUI_BAR_BOT].rect.x = 0;
-	guiCtx->bar[GUI_BAR_BOT].rect.y = winDim->y - h;
-	guiCtx->bar[GUI_BAR_BOT].rect.w = winDim->x;
-	guiCtx->bar[GUI_BAR_BOT].rect.h = h;
-	Gui_UpdateWorkRegion(editorCtx);
+	geoCtx->bar[GUI_BAR_BOT].rect.x = 0;
+	geoCtx->bar[GUI_BAR_BOT].rect.y = winDim->y - h;
+	geoCtx->bar[GUI_BAR_BOT].rect.w = winDim->x;
+	geoCtx->bar[GUI_BAR_BOT].rect.h = h;
+	GeoGui_UpdateWorkRegion(editorCtx);
 }
 
-void Gui_Init(EditorContext* editorCtx) {
-	GuiContext* guiCtx = &editorCtx->guiCtx;
+void GeoGui_Init(EditorContext* editorCtx) {
+	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
 	Vec2s* winDim = &editorCtx->appInfo.winDim;
 	
-	Gui_SetTopBarHeight(editorCtx, 30);
-	Gui_SetBotBarHeight(editorCtx, 30);
+	GeoGui_SetTopBarHeight(editorCtx, 30);
+	GeoGui_SetBotBarHeight(editorCtx, 30);
 	
-	Rect lHalf = { guiCtx->workRect.x, guiCtx->workRect.y, guiCtx->workRect.w / 2,
-		       guiCtx->workRect.h };
-	Rect rHalf = { guiCtx->workRect.x + guiCtx->workRect.w / 2, guiCtx->workRect.y,
-		       guiCtx->workRect.w / 2,                      guiCtx->workRect.h };
+	Rect lHalf = { geoCtx->workRect.x, geoCtx->workRect.y, geoCtx->workRect.w / 2,
+		       geoCtx->workRect.h };
+	Rect rHalf = { geoCtx->workRect.x + geoCtx->workRect.w / 2, geoCtx->workRect.y,
+		       geoCtx->workRect.w / 2,                      geoCtx->workRect.h };
 	
-	Split_AddSplit(guiCtx, &lHalf);
-	Split_AddSplit(guiCtx, &rHalf);
+	GeoGui_AddSplit(geoCtx, &lHalf);
+	GeoGui_AddSplit(geoCtx, &rHalf);
 	
-	guiCtx->prevWorkRect = guiCtx->workRect;
+	geoCtx->prevWorkRect = geoCtx->workRect;
 }
 
-void Gui_Update(EditorContext* editorCtx) {
-	GuiContext* guiCtx = &editorCtx->guiCtx;
+void GeoGui_Update(EditorContext* editorCtx) {
+	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
 	
-	Gui_SetTopBarHeight(editorCtx, guiCtx->bar[GUI_BAR_TOP].rect.h);
-	Gui_SetBotBarHeight(editorCtx, guiCtx->bar[GUI_BAR_BOT].rect.h);
-	Split_Update_Vtx(guiCtx);
-	Split_Update_Edges(guiCtx);
-	Split_Update_Split(editorCtx);
+	GeoGui_SetTopBarHeight(editorCtx, geoCtx->bar[GUI_BAR_TOP].rect.h);
+	GeoGui_SetBotBarHeight(editorCtx, geoCtx->bar[GUI_BAR_BOT].rect.h);
+	GeoGui_Update_Vtx(geoCtx);
+	GeoGui_Update_Edges(geoCtx);
+	GeoGui_Update_Split(editorCtx);
 	
-	guiCtx->prevWorkRect = guiCtx->workRect;
+	geoCtx->prevWorkRect = geoCtx->workRect;
 }
 
-void Gui_Draw(EditorContext* editorCtx) {
-	GuiContext* guiCtx = &editorCtx->guiCtx;
+void GeoGui_Draw(EditorContext* editorCtx) {
+	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
 	Vec2s* winDim = &editorCtx->appInfo.winDim;
 	
 	// Draw Bars
 	for (s32 i = 0; i < 2; i++) {
 		glViewport(
-			guiCtx->bar[i].rect.x,
-			winDim->y - guiCtx->bar[i].rect.y - guiCtx->bar[i].rect.h,
-			guiCtx->bar[i].rect.w,
-			guiCtx->bar[i].rect.h
+			geoCtx->bar[i].rect.x,
+			winDim->y - geoCtx->bar[i].rect.y - geoCtx->bar[i].rect.h,
+			geoCtx->bar[i].rect.w,
+			geoCtx->bar[i].rect.h
 		);
 		nvgBeginFrame(
 			editorCtx->vg,
-			guiCtx->bar[i].rect.w,
-			guiCtx->bar[i].rect.h,
+			geoCtx->bar[i].rect.w,
+			geoCtx->bar[i].rect.h,
 			1.0f
 		);
 		{
@@ -957,21 +957,21 @@ void Gui_Draw(EditorContext* editorCtx) {
 				editorCtx->vg,
 				0,
 				0,
-				guiCtx->bar[i].rect.w,
-				guiCtx->bar[i].rect.h
+				geoCtx->bar[i].rect.w,
+				geoCtx->bar[i].rect.h
 			);
 			nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER_DARKER));
 			nvgFill(editorCtx->vg);
 			
 			if (i == 1) {
-				static Split* lastActive;
+				static GeoSplit* lastActive;
 				
 				if (lastActive == NULL) {
-					lastActive = guiCtx->splitHead;
+					lastActive = geoCtx->splitHead;
 				}
 				
-				if (guiCtx->actionSplit) {
-					lastActive = guiCtx->actionSplit;
+				if (geoCtx->actionSplit) {
+					lastActive = geoCtx->actionSplit;
 				}
 				
 				nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_CONT));
@@ -982,7 +982,7 @@ void Gui_Draw(EditorContext* editorCtx) {
 					editorCtx->vg,
 					8,
 					8,
-					Debug_Split_GetStateStrings(lastActive),
+					Debug_GeoGui_GetStateStrings(lastActive),
 					NULL
 				);
 			}
@@ -990,11 +990,11 @@ void Gui_Draw(EditorContext* editorCtx) {
 		nvgEndFrame(editorCtx->vg);
 	}
 	
-	Split_Draw_Splits(editorCtx);
+	GeoGui_Draw_Splits(editorCtx);
 	
 	#ifndef NDEBUG
-	if (guiCtx->actionEdge != NULL) {
-		SplitEdge* edge = guiCtx->actionEdge;
+	if (geoCtx->actionEdge != NULL) {
+		GeoEdge* edge = geoCtx->actionEdge;
 		glViewport(0, 0, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y);
 		
 		nvgBeginFrame(
@@ -1015,8 +1015,8 @@ void Gui_Draw(EditorContext* editorCtx) {
 		nvgEndFrame(editorCtx->vg);
 	}
 	
-	SplitVtx* vtx = guiCtx->vtxHead;
-	Split* split = guiCtx->splitHead;
+	GeoVtx* vtx = geoCtx->vtxHead;
+	GeoSplit* split = geoCtx->splitHead;
 	s32 num = 0;
 	glViewport(0, 0, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y);
 	nvgBeginFrame(
