@@ -4,8 +4,11 @@ char* Debug_Split_GetStateStrings(Split* split) {
 	static char buffer[1024];
 	s32 t = 0;
 	char* states[] = {
-		"NONE",   "POINT_BL", "POINT_TL", "POINT_TR", "POINT_BR",
-		"SIDE_L", "SIDE_T",   "SIDE_R",   "SIDE_B",
+		"NONE", "POINT_BL",
+		"POINT_TL", "POINT_TR",
+		"POINT_BR", "SIDE_L",
+		"SIDE_T", "SIDE_R",
+		"SIDE_B",
 	};
 	
 	sprintf(buffer, "%5d %5d  ", __appInfo->winDim.x, __appInfo->winDim.y);
@@ -229,40 +232,6 @@ void Split_Edge_SetSlideClamp(GuiContext* guiCtx) {
 	
 	guiCtx->edgeMovement.clampMin = guiCtx->workRect.y;
 	guiCtx->edgeMovement.clampMax = guiCtx->workRect.w;
-	
-	while (temp) {
-		if ((temp->state & EDGE_ALIGN) == (a->state & EDGE_ALIGN) && temp->pos == a->pos) {
-			editEdges[editEdgesCount++] = temp;
-			OsAssert(editEdgesCount < 64);
-		}
-		
-		temp = temp->next;
-	}
-	
-	for (s32 j = 0; j < editEdgesCount; j++) {
-		temp = guiCtx->edgeHead;
-		while (temp) {
-			for (s32 i = 0; i < 2; i++) {
-				if (((temp->state & EDGE_ALIGN) != (editEdges[j]->state & EDGE_ALIGN)) && temp->vtx[1] == editEdges[j]->vtx[i]) {
-					if (temp->vtx[0]->pos.s[align] > guiCtx->edgeMovement.clampMin) {
-						guiCtx->edgeMovement.clampMin = temp->vtx[0]->pos.s[align];
-						OsPrintfEx("foundMin %.2f", temp->vtx[0]->pos.s[align]);
-					}
-				}
-			}
-			
-			for (s32 i = 0; i < 2; i++) {
-				if (((temp->state & EDGE_ALIGN) != (editEdges[j]->state & EDGE_ALIGN)) && temp->vtx[0] == editEdges[j]->vtx[i]) {
-					if (temp->vtx[1]->pos.s[align] < guiCtx->edgeMovement.clampMax) {
-						guiCtx->edgeMovement.clampMax = temp->vtx[1]->pos.s[align];
-						OsPrintfEx("foundMax %.2f", temp->vtx[1]->pos.s[align]);
-					}
-				}
-			}
-			
-			temp = temp->next;
-		}
-	}
 }
 
 void Split_Reset(GuiContext* guiCtx) {
@@ -276,8 +245,10 @@ void Split_Split(GuiContext* guiCtx, Split* split, SplitDir dir) {
 	Split* partner;
 	Split* newSplit;
 	SplitDir mirDir = Split_GetDir_Opposite(dir);
-	s16 splitPos = (dir == DIR_L || dir == DIR_R) ? __inputCtx->mouse.pos.x
-						: __inputCtx->mouse.pos.y;
+	s16 splitPos = (dir == DIR_L || dir == DIR_R) ? __inputCtx->mouse.pos.x : __inputCtx->mouse.pos.y;
+	
+	splitPos = CLAMP(splitPos - split->edge[mirDir]->pos, -SPLIT_CLAMP * 0.90f, SPLIT_CLAMP * 0.90f);
+	splitPos += split->edge[mirDir]->pos;
 	
 	newSplit = Lib_Calloc(0, sizeof(Split));
 	
@@ -594,14 +565,39 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 		}
 		
 		if (isEditEdge && !isCornerEdge) {
+			SplitEdge* temp = guiCtx->edgeHead;
+			s32 align = Lib_Wrap(edge->state & EDGE_ALIGN, 0, 1);
+			
+			while (temp) {
+				for (s32 i = 0; i < 2; i++) {
+					if (((temp->state & EDGE_ALIGN) != (edge->state & EDGE_ALIGN)) && temp->vtx[1] == edge->vtx[i]) {
+						if (temp->vtx[0]->pos.s[align] > guiCtx->edgeMovement.clampMin) {
+							guiCtx->edgeMovement.clampMin = temp->vtx[0]->pos.s[align];
+							OsPrintfEx("foundMin %.2f", temp->vtx[0]->pos.s[align]);
+						}
+					}
+				}
+				
+				for (s32 i = 0; i < 2; i++) {
+					if (((temp->state & EDGE_ALIGN) != (edge->state & EDGE_ALIGN)) && temp->vtx[0] == edge->vtx[i]) {
+						if (temp->vtx[1]->pos.s[align] < guiCtx->edgeMovement.clampMax) {
+							guiCtx->edgeMovement.clampMax = temp->vtx[1]->pos.s[align];
+							OsPrintfEx("foundMax %.2f", temp->vtx[1]->pos.s[align]);
+						}
+					}
+				}
+				
+				temp = temp->next;
+			}
+			
 			if (edge->state & EDGE_HORIZONTAL) {
 				edge->pos = __inputCtx->mouse.pos.y + 4;
 			}
 			if (edge->state & EDGE_VERTICAL) {
 				edge->pos = __inputCtx->mouse.pos.x + 4;
 			}
-			edge->pos = CLAMP_MIN(edge->pos, guiCtx->edgeMovement.clampMin + 40);
-			edge->pos = CLAMP_MAX(edge->pos, guiCtx->edgeMovement.clampMax - 40);
+			edge->pos = CLAMP_MIN(edge->pos, guiCtx->edgeMovement.clampMin + SPLIT_CLAMP);
+			edge->pos = CLAMP_MAX(edge->pos, guiCtx->edgeMovement.clampMax - SPLIT_CLAMP);
 		}
 		
 		if (isCornerEdge) {
@@ -695,7 +691,7 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 				CursorIndex cid = Split_GerDir_MouseToPressPos(split) + 1;
 				Cursor_SetCursor(cid);
 			}
-			if (dist > 40) {
+			if (dist > SPLIT_CLAMP * 1.25) {
 				Split_Reset(guiCtx);
 				if (split->mouseInRegion) {
 					Split_Split(guiCtx, split, Split_GerDir_MouseToPressPos(split));

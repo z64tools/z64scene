@@ -4,6 +4,8 @@
 #include <nanovg.h>
 #include "Theme.h"
 
+#define SPLIT_CLAMP 40
+
 struct GuiContext;
 struct Split;
 typedef void (* SplitFunc)(
