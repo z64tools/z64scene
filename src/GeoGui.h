@@ -1,15 +1,19 @@
-#ifndef __Z64REGION_H__
-#define __Z64REGION_H__
+#ifndef __Z64GEOGUI_H__
+#define __Z64GEOGUI_H__
+#include <Global.h>
 #include <z64.h>
 #include <nanovg.h>
 #include "Theme.h"
 
 #define SPLIT_CLAMP 40
 
+#define SPLIT_SPLIT_W 4
+#define SPLIT_ROUND_R 4
+
 struct GeoGuiContext;
 struct GeoSplit;
 typedef void (* SplitFunc)(
-	struct EditorContext*,
+	void*,
 	struct GeoSplit*
 );
 
@@ -99,8 +103,11 @@ typedef struct GeoSplit {
 	Vec2s mousePos; // relative
 	Vec2s mousePressPos;
 	u8    mouseInRegion : 1;
+	SplitFunc init;
+	SplitFunc destroy;
 	SplitFunc update;
 	SplitFunc draw;
+	void* passArg;
 } GeoSplit;
 
 typedef struct {
@@ -120,13 +127,13 @@ typedef struct GeoGuiContext {
 		f64 clampMax;
 		f64 clampMin;
 	} edgeMovement;
+	MouseInput* mouse;
+	Vec2s* winDim;
+	void*  vg;
 } GeoGuiContext;
 
-void GeoGui_Init(struct EditorContext* editorCtx);
-void GeoGui_Update(struct EditorContext* editorCtx);
-void GeoGui_Draw(struct EditorContext* editorCtx);
-
-#define SPLIT_SPLIT_W 4
-#define SPLIT_ROUND_R 4
+void GeoGui_Init(GeoGuiContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void* vg);
+void GeoGui_Update(GeoGuiContext* geoCtx);
+void GeoGui_Draw(GeoGuiContext* geoCtx);
 
 #endif

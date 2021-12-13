@@ -2,10 +2,8 @@
 #define __Z64SCENE_H__
 #include "Theme.h"
 #include "GeoGui.h"
+#include "GeoGui_Elements.h"
 #include "Cursor.h"
-
-struct Area;
-typedef void (* AreaFunc)(struct EditorContext*, struct Area*);
 
 typedef struct {
 	s32 notoSansID;

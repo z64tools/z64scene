@@ -281,7 +281,7 @@ void GeoGui_Split(GeoGuiContext* geoCtx, GeoSplit* split, GeoDir dir) {
 	GeoSplit* partner;
 	GeoSplit* newSplit;
 	GeoDir mirDir = GeoGui_GetDir_Opposite(dir);
-	s16 splitPos = (dir == DIR_L || dir == DIR_R) ? __inputCtx->mouse.pos.x : __inputCtx->mouse.pos.y;
+	s16 splitPos = (dir == DIR_L || dir == DIR_R) ? geoCtx->mouse->pos.x : geoCtx->mouse->pos.y;
 	
 	splitPos = CLAMP(splitPos - split->edge[mirDir]->pos, -SPLIT_CLAMP * 0.90f, SPLIT_CLAMP * 0.90f);
 	splitPos += split->edge[mirDir]->pos;
@@ -547,7 +547,7 @@ void GeoGui_Update_Edges(GeoGuiContext* geoCtx) {
 	f64 diffCentX = (f64)geoCtx->workRect.w / geoCtx->prevWorkRect.w;
 	f64 diffCentY = (f64)geoCtx->workRect.h / geoCtx->prevWorkRect.h;
 	
-	if (!__inputCtx->mouse.click.hold) {
+	if (!geoCtx->mouse->click.hold) {
 		geoCtx->actionEdge = NULL;
 	}
 	
@@ -671,7 +671,7 @@ void GeoGui_Update_ActionSplit(GeoGuiContext* geoCtx) {
 	};
 	GeoSplit* split = geoCtx->actionSplit;
 	
-	if (__inputCtx->mouse.click.press) {
+	if (geoCtx->mouse->click.press) {
 		split->stateFlag |= GeoGui_GetState_CursorPos(split, 20);
 		if (split->stateFlag & SPLIT_SIDES) {
 			s32 i;
@@ -710,7 +710,7 @@ void GeoGui_Update_ActionSplit(GeoGuiContext* geoCtx) {
 		}
 	}
 	
-	if (__inputCtx->mouse.click.hold) {
+	if (geoCtx->mouse->click.hold) {
 		if (split->stateFlag & SPLIT_POINTS) {
 			s32 splitDist =
 			    GeoGui_Cursor_GetDistTo(split->stateFlag & SPLIT_POINTS, split);
@@ -747,10 +747,9 @@ void GeoGui_Update_SplitRect(GeoSplit* split) {
 	};
 }
 
-void GeoGui_Update_Split(EditorContext* editorCtx) {
-	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
+void GeoGui_Update_Split(GeoGuiContext* geoCtx) {
 	GeoSplit* split = geoCtx->splitHead;
-	MouseInput* mouse = &editorCtx->inputCtx.mouse;
+	MouseInput* mouse = geoCtx->mouse;
 	
 	Cursor_SetCursor(CURSOR_DEFAULT);
 	
@@ -779,7 +778,7 @@ void GeoGui_Update_Split(EditorContext* editorCtx) {
 			if (geoCtx->actionSplit == split)
 				GeoGui_Update_ActionSplit(geoCtx);
 		} else {
-			if (__inputCtx->mouse.click.hold == 0) {
+			if (geoCtx->mouse->click.hold == 0) {
 				if (GeoGui_GetState_CursorPos(split, 20) & SPLIT_POINTS &&
 				    split->mouseInRegion) {
 					Cursor_SetCursor(CURSOR_CROSSHAIR);
@@ -797,7 +796,7 @@ void GeoGui_Update_Split(EditorContext* editorCtx) {
 			if (split != geoCtx->splitHead &&
 			    ((geoCtx->actionSplit && geoCtx->actionSplit == split) ||
 			    geoCtx->actionSplit == NULL)) {
-				split->update(editorCtx, split);
+				split->update(split->passArg, split);
 			}
 		}
 		
@@ -843,10 +842,9 @@ void GeoGui_Draw_SplitBorder(NVGcontext* vg, Rect* rect, s32 iter) {
 	#endif
 }
 
-void GeoGui_Draw_Splits(EditorContext* editorCtx) {
-	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
+void GeoGui_Draw_Splits(GeoGuiContext* geoCtx) {
 	GeoSplit* split = geoCtx->splitHead;
-	Vec2s* winDim = &editorCtx->appInfo.winDim;
+	Vec2s* winDim = geoCtx->winDim;
 	s32 iter = 0;
 	
 	while (split != NULL) {
@@ -856,14 +854,14 @@ void GeoGui_Draw_Splits(EditorContext* editorCtx) {
 			split->rect.w,
 			split->rect.h
 		);
-		nvgBeginFrame(editorCtx->vg, split->rect.w, split->rect.h, 1.0f);
+		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, 1.0f);
 		{
 			if (split->draw)
-				split->draw(editorCtx, split);
+				split->draw(split->passArg, split);
 			
-			GeoGui_Draw_SplitBorder(editorCtx->vg, &split->rect, iter);
+			GeoGui_Draw_SplitBorder(geoCtx->vg, &split->rect, iter);
 		}
-		nvgEndFrame(editorCtx->vg);
+		nvgEndFrame(geoCtx->vg);
 		
 		split = split->next;
 		iter++;
@@ -872,43 +870,36 @@ void GeoGui_Draw_Splits(EditorContext* editorCtx) {
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
-void GeoGui_UpdateWorkRegion(EditorContext* editorCtx) {
-	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
-	Vec2s* winDim = &editorCtx->appInfo.winDim;
+void GeoGui_UpdateWorkRegion(GeoGuiContext* geoCtx) {
+	Vec2s* winDim = geoCtx->winDim;
 	
 	geoCtx->workRect = (Rect) { 0, 0 + geoCtx->bar[GUI_BAR_TOP].rect.h, winDim->x,
 				    winDim->y - geoCtx->bar[GUI_BAR_BOT].rect.h -
 				    geoCtx->bar[GUI_BAR_TOP].rect.h };
 }
 
-void GeoGui_SetTopBarHeight(EditorContext* editorCtx, s32 h) {
-	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
-	Vec2s* winDim = &editorCtx->appInfo.winDim;
-	
+void GeoGui_SetTopBarHeight(GeoGuiContext* geoCtx, s32 h) {
 	geoCtx->bar[GUI_BAR_TOP].rect.x = 0;
 	geoCtx->bar[GUI_BAR_TOP].rect.y = 0;
-	geoCtx->bar[GUI_BAR_TOP].rect.w = winDim->x;
+	geoCtx->bar[GUI_BAR_TOP].rect.w = geoCtx->winDim->x;
 	geoCtx->bar[GUI_BAR_TOP].rect.h = h;
-	GeoGui_UpdateWorkRegion(editorCtx);
+	GeoGui_UpdateWorkRegion(geoCtx);
 }
 
-void GeoGui_SetBotBarHeight(EditorContext* editorCtx, s32 h) {
-	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
-	Vec2s* winDim = &editorCtx->appInfo.winDim;
-	
+void GeoGui_SetBotBarHeight(GeoGuiContext* geoCtx, s32 h) {
 	geoCtx->bar[GUI_BAR_BOT].rect.x = 0;
-	geoCtx->bar[GUI_BAR_BOT].rect.y = winDim->y - h;
-	geoCtx->bar[GUI_BAR_BOT].rect.w = winDim->x;
+	geoCtx->bar[GUI_BAR_BOT].rect.y = geoCtx->winDim->y - h;
+	geoCtx->bar[GUI_BAR_BOT].rect.w = geoCtx->winDim->x;
 	geoCtx->bar[GUI_BAR_BOT].rect.h = h;
-	GeoGui_UpdateWorkRegion(editorCtx);
+	GeoGui_UpdateWorkRegion(geoCtx);
 }
 
-void GeoGui_Init(EditorContext* editorCtx) {
-	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
-	Vec2s* winDim = &editorCtx->appInfo.winDim;
-	
-	GeoGui_SetTopBarHeight(editorCtx, 30);
-	GeoGui_SetBotBarHeight(editorCtx, 30);
+void GeoGui_Init(GeoGuiContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void* vg) {
+	geoCtx->winDim = winDim;
+	geoCtx->mouse = mouse;
+	geoCtx->vg = vg;
+	GeoGui_SetTopBarHeight(geoCtx, 30);
+	GeoGui_SetBotBarHeight(geoCtx, 30);
 	
 	Rect lHalf = { geoCtx->workRect.x, geoCtx->workRect.y, geoCtx->workRect.w / 2,
 		       geoCtx->workRect.h };
@@ -921,21 +912,18 @@ void GeoGui_Init(EditorContext* editorCtx) {
 	geoCtx->prevWorkRect = geoCtx->workRect;
 }
 
-void GeoGui_Update(EditorContext* editorCtx) {
-	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
-	
-	GeoGui_SetTopBarHeight(editorCtx, geoCtx->bar[GUI_BAR_TOP].rect.h);
-	GeoGui_SetBotBarHeight(editorCtx, geoCtx->bar[GUI_BAR_BOT].rect.h);
+void GeoGui_Update(GeoGuiContext* geoCtx) {
+	GeoGui_SetTopBarHeight(geoCtx, geoCtx->bar[GUI_BAR_TOP].rect.h);
+	GeoGui_SetBotBarHeight(geoCtx, geoCtx->bar[GUI_BAR_BOT].rect.h);
 	GeoGui_Update_Vtx(geoCtx);
 	GeoGui_Update_Edges(geoCtx);
-	GeoGui_Update_Split(editorCtx);
+	GeoGui_Update_Split(geoCtx);
 	
 	geoCtx->prevWorkRect = geoCtx->workRect;
 }
 
-void GeoGui_Draw(EditorContext* editorCtx) {
-	GeoGuiContext* geoCtx = &editorCtx->geoCtx;
-	Vec2s* winDim = &editorCtx->appInfo.winDim;
+void GeoGui_Draw(GeoGuiContext* geoCtx) {
+	Vec2s* winDim = geoCtx->winDim;
 	
 	// Draw Bars
 	for (s32 i = 0; i < 2; i++) {
@@ -946,22 +934,22 @@ void GeoGui_Draw(EditorContext* editorCtx) {
 			geoCtx->bar[i].rect.h
 		);
 		nvgBeginFrame(
-			editorCtx->vg,
+			geoCtx->vg,
 			geoCtx->bar[i].rect.w,
 			geoCtx->bar[i].rect.h,
 			1.0f
 		);
 		{
-			nvgBeginPath(editorCtx->vg);
+			nvgBeginPath(geoCtx->vg);
 			nvgRect(
-				editorCtx->vg,
+				geoCtx->vg,
 				0,
 				0,
 				geoCtx->bar[i].rect.w,
 				geoCtx->bar[i].rect.h
 			);
-			nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER_DARKER));
-			nvgFill(editorCtx->vg);
+			nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_SPLITTER_DARKER));
+			nvgFill(geoCtx->vg);
 			
 			if (i == 1) {
 				static GeoSplit* lastActive;
@@ -974,12 +962,12 @@ void GeoGui_Draw(EditorContext* editorCtx) {
 					lastActive = geoCtx->actionSplit;
 				}
 				
-				nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_CONT));
-				nvgFontSize(editorCtx->vg, 30 - 16);
-				nvgFontFace(editorCtx->vg, "sans");
-				nvgTextAlign(editorCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+				nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_BASE_CONT));
+				nvgFontSize(geoCtx->vg, 30 - 16);
+				nvgFontFace(geoCtx->vg, "sans");
+				nvgTextAlign(geoCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 				nvgText(
-					editorCtx->vg,
+					geoCtx->vg,
 					8,
 					8,
 					Debug_GeoGui_GetStateStrings(lastActive),
@@ -987,76 +975,76 @@ void GeoGui_Draw(EditorContext* editorCtx) {
 				);
 			}
 		}
-		nvgEndFrame(editorCtx->vg);
+		nvgEndFrame(geoCtx->vg);
 	}
 	
-	GeoGui_Draw_Splits(editorCtx);
+	GeoGui_Draw_Splits(geoCtx);
 	
 	#ifndef NDEBUG
 	if (geoCtx->actionEdge != NULL) {
 		GeoEdge* edge = geoCtx->actionEdge;
-		glViewport(0, 0, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y);
+		glViewport(0, 0, winDim->x, winDim->y);
 		
 		nvgBeginFrame(
-			editorCtx->vg,
-			editorCtx->appInfo.winDim.x,
-			editorCtx->appInfo.winDim.y,
+			geoCtx->vg,
+			winDim->x,
+			winDim->y,
 			1.0f
 		);
 		{
-			nvgBeginPath(editorCtx->vg);
-			nvgLineCap(editorCtx->vg, NVG_ROUND);
-			nvgStrokeWidth(editorCtx->vg, 2.36f);
-			nvgMoveTo(editorCtx->vg, edge->vtx[0]->pos.x, edge->vtx[0]->pos.y);
-			nvgLineTo(editorCtx->vg, edge->vtx[1]->pos.x, edge->vtx[1]->pos.y);
-			nvgStrokeColor(editorCtx->vg, nvgRGBA(255, 0, 0, 125));
-			nvgStroke(editorCtx->vg);
+			nvgBeginPath(geoCtx->vg);
+			nvgLineCap(geoCtx->vg, NVG_ROUND);
+			nvgStrokeWidth(geoCtx->vg, 2.36f);
+			nvgMoveTo(geoCtx->vg, edge->vtx[0]->pos.x, edge->vtx[0]->pos.y);
+			nvgLineTo(geoCtx->vg, edge->vtx[1]->pos.x, edge->vtx[1]->pos.y);
+			nvgStrokeColor(geoCtx->vg, nvgRGBA(255, 0, 0, 125));
+			nvgStroke(geoCtx->vg);
 		}
-		nvgEndFrame(editorCtx->vg);
+		nvgEndFrame(geoCtx->vg);
 	}
 	
 	GeoVtx* vtx = geoCtx->vtxHead;
 	GeoSplit* split = geoCtx->splitHead;
 	s32 num = 0;
-	glViewport(0, 0, editorCtx->appInfo.winDim.x, editorCtx->appInfo.winDim.y);
+	glViewport(0, 0, winDim->x, winDim->y);
 	nvgBeginFrame(
-		editorCtx->vg,
-		editorCtx->appInfo.winDim.x,
-		editorCtx->appInfo.winDim.y,
+		geoCtx->vg,
+		winDim->x,
+		winDim->y,
 		1.0f
 	);
 	
 	while (split) {
-		nvgBeginPath(editorCtx->vg);
-		nvgLineCap(editorCtx->vg, NVG_ROUND);
-		nvgStrokeWidth(editorCtx->vg, 2.5f);
+		nvgBeginPath(geoCtx->vg);
+		nvgLineCap(geoCtx->vg, NVG_ROUND);
+		nvgStrokeWidth(geoCtx->vg, 2.5f);
 		nvgMoveTo(
-			editorCtx->vg,
+			geoCtx->vg,
 			split->vtx[0]->pos.x + 4,
 			split->vtx[0]->pos.y - 4
 		);
 		nvgLineTo(
-			editorCtx->vg,
+			geoCtx->vg,
 			split->vtx[1]->pos.x + 4,
 			split->vtx[1]->pos.y + 4
 		);
 		nvgLineTo(
-			editorCtx->vg,
+			geoCtx->vg,
 			split->vtx[2]->pos.x - 4,
 			split->vtx[2]->pos.y + 4
 		);
 		nvgLineTo(
-			editorCtx->vg,
+			geoCtx->vg,
 			split->vtx[3]->pos.x - 4,
 			split->vtx[3]->pos.y - 4
 		);
 		nvgLineTo(
-			editorCtx->vg,
+			geoCtx->vg,
 			split->vtx[0]->pos.x + 4,
 			split->vtx[0]->pos.y - 4
 		);
-		nvgStrokeColor(editorCtx->vg, nvgHSLA(0.111 * num, 1.0f, 0.4f, 255));
-		nvgStroke(editorCtx->vg);
+		nvgStrokeColor(geoCtx->vg, nvgHSLA(0.111 * num, 1.0f, 0.4f, 255));
+		nvgStroke(geoCtx->vg);
 		
 		split = split->next;
 		num++;
@@ -1068,13 +1056,13 @@ void GeoGui_Draw(EditorContext* editorCtx) {
 		char buf[128];
 		Vec2f pos = {
 			vtx->pos.x + CLAMP(
-				editorCtx->appInfo.winDim.x * 0.5 - vtx->pos.x,
+				winDim->x * 0.5 - vtx->pos.x,
 				-150.0f,
 				150.0f
 			) *
 			0.1f,
 			vtx->pos.y + CLAMP(
-				editorCtx->appInfo.winDim.y * 0.5 - vtx->pos.y,
+				winDim->y * 0.5 - vtx->pos.y,
 				-150.0f,
 				150.0f
 			) *
@@ -1082,20 +1070,20 @@ void GeoGui_Draw(EditorContext* editorCtx) {
 		};
 		
 		sprintf(buf, "%d", num);
-		nvgFontSize(editorCtx->vg, 16);
-		nvgFontFace(editorCtx->vg, "sans");
-		nvgTextAlign(editorCtx->vg, NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER);
-		nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_SPLITTER_DARKER));
-		nvgFontBlur(editorCtx->vg, 1.5f);
-		nvgText(editorCtx->vg, pos.x, pos.y, buf, 0);
-		nvgFontBlur(editorCtx->vg, 0);
-		nvgFillColor(editorCtx->vg, Theme_GetColor(THEME_BASE_CONT));
-		nvgText(editorCtx->vg, pos.x, pos.y, buf, 0);
+		nvgFontSize(geoCtx->vg, 16);
+		nvgFontFace(geoCtx->vg, "sans");
+		nvgTextAlign(geoCtx->vg, NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER);
+		nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_SPLITTER_DARKER));
+		nvgFontBlur(geoCtx->vg, 1.5f);
+		nvgText(geoCtx->vg, pos.x, pos.y, buf, 0);
+		nvgFontBlur(geoCtx->vg, 0);
+		nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_BASE_CONT));
+		nvgText(geoCtx->vg, pos.x, pos.y, buf, 0);
 		
 		vtx = vtx->next;
 		num++;
 	}
 	
-	nvgEndFrame(editorCtx->vg);
+	nvgEndFrame(geoCtx->vg);
 	#endif
 }

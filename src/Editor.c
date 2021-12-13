@@ -23,14 +23,14 @@ void Editor_Draw(EditorContext* editorCtx) {
 	if (glfwGetWindowAttrib(editorCtx->appInfo.mainWindow, GLFW_ICONIFIED))
 		return;
 	
-	GeoGui_Draw(editorCtx);
+	GeoGui_Draw(&editorCtx->geoCtx);
 }
 
 void Editor_Update(EditorContext* editorCtx) {
 	if (glfwGetWindowAttrib(editorCtx->appInfo.mainWindow, GLFW_ICONIFIED))
 		return;
 	
-	GeoGui_Update(editorCtx);
+	GeoGui_Update(&editorCtx->geoCtx);
 	Cursor_Update(&editorCtx->cursorCtx);
 }
 
@@ -50,7 +50,12 @@ void Editor_Init(EditorContext* editorCtx) {
 	}
 	
 	editorCtx->viewCtx.cameraControl = false;
-	GeoGui_Init(editorCtx);
+	GeoGui_Init(
+		&editorCtx->geoCtx,
+		&editorCtx->appInfo.winDim,
+		&editorCtx->inputCtx.mouse,
+		editorCtx->vg
+	);
 	Cursor_Init(&editorCtx->cursorCtx);
 	
 	for (s32 i = -4; i < 22; i++) {
