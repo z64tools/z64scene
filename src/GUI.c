@@ -200,11 +200,71 @@ void Split_AddSplit(GuiContext* guiCtx, Rect* rect) {
 }
 
 void Split_Edge_SetSlideClamp(GuiContext* guiCtx) {
-	SplitEdge* a = guiCtx->actionEdge;
-	s32 align = Lib_Wrap(a->state & EDGE_ALIGN, 0, 1);
-	SplitEdge* editEdges[64];
-	u32 editEdgesCount = 0;
-	SplitEdge* temp = guiCtx->edgeHead;
+	SplitEdge* tempEdge = guiCtx->edgeHead;
+	SplitEdge* setEdgeA = guiCtx->actionEdge;
+	SplitEdge* setEdgeB = guiCtx->edgeHead;
+	
+	setEdgeA->state |= EDGE_EDIT;
+	
+	// Get edge with vtx closest to TOPLEFT
+	while (tempEdge) {
+		if ((tempEdge->state & EDGE_ALIGN) == (setEdgeA->state & EDGE_ALIGN)) {
+			if (tempEdge->vtx[1] == setEdgeA->vtx[0]) {
+				setEdgeA = tempEdge;
+				tempEdge->state |= EDGE_EDIT;
+				tempEdge = guiCtx->edgeHead;
+				continue;
+			}
+		}
+		
+		tempEdge = tempEdge->next;
+	}
+	
+	// Get sibling edge that does not connect with setEdgeA
+	while (setEdgeB) {
+		if ((setEdgeB->state & EDGE_ALIGN) == (setEdgeA->state & EDGE_ALIGN)) {
+			if (setEdgeB->vtx[0] == setEdgeA->vtx[0] && setEdgeB->vtx[1] != setEdgeA->vtx[1]) {
+				setEdgeB->state |= EDGE_EDIT;
+				break;
+			}
+		}
+		
+		setEdgeB = setEdgeB->next;
+	}
+	
+	tempEdge = guiCtx->edgeHead;
+	
+	// Set all below setEdgeA
+	while (tempEdge) {
+		if ((tempEdge->state & EDGE_ALIGN) == (setEdgeA->state & EDGE_ALIGN)) {
+			if (tempEdge->vtx[0] == setEdgeA->vtx[1]) {
+				tempEdge->state |= EDGE_EDIT;
+				setEdgeA = tempEdge;
+				tempEdge = guiCtx->edgeHead;
+				continue;
+			}
+		}
+		
+		tempEdge = tempEdge->next;
+	}
+	
+	tempEdge = guiCtx->edgeHead;
+	
+	// Set all below setEdgeB
+	if (setEdgeB) {
+		while (tempEdge) {
+			if ((tempEdge->state & EDGE_ALIGN) == (setEdgeB->state & EDGE_ALIGN)) {
+				if (tempEdge->vtx[0] == setEdgeB->vtx[1]) {
+					tempEdge->state |= EDGE_EDIT;
+					setEdgeB = tempEdge;
+					tempEdge = guiCtx->edgeHead;
+					continue;
+				}
+			}
+			
+			tempEdge = tempEdge->next;
+		}
+	}
 	
 	guiCtx->edgeMovement.clampMin = guiCtx->workRect.y;
 	guiCtx->edgeMovement.clampMax = guiCtx->workRect.w;
@@ -492,6 +552,19 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 	}
 	
 	while (edge) {
+		if (edge->killFlag == true) {
+			SplitEdge* temp = edge->next;
+			OsPrintfEx("" PRNT_YELW "\aKill Tagged Edge!");
+			Node_Kill(guiCtx->edgeHead, edge);
+			edge = temp;
+			continue;
+		}
+		edge->killFlag = true;
+		
+		if (guiCtx->actionEdge == NULL) {
+			edge->state &= ~EDGE_EDIT;
+		}
+		
 		Split_Update_Edge_RemoveDublicates(guiCtx, edge);
 		edge = edge->next;
 	}
@@ -503,10 +576,6 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 		bool isCornerEdge = ((edge->state & EDGE_STICK) != 0);
 		bool isHor = ((edge->state & EDGE_VERTICAL) == 0);
 		bool matchesActionAlign = (guiCtx->actionEdge && ((edge->state & EDGE_ALIGN) == (guiCtx->actionEdge->state & EDGE_ALIGN)));
-		
-		if (guiCtx->actionEdge == NULL) {
-			edge->state &= ~EDGE_EDIT;
-		}
 		
 		OsAssert(!(edge->state & EDGE_HORIZONTAL && edge->state & EDGE_VERTICAL));
 		
@@ -573,14 +642,6 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 			edge->vtx[0]->pos.s[isHor] = edge->pos;
 			edge->vtx[1]->pos.s[isHor] = edge->pos;
 		} else {
-			if (edge != guiCtx->actionEdge && matchesActionAlign) {
-				if (edge->vtx[0]->pos.s[isHor] != edge->pos) {
-					edge->state |= EDGE_EDIT;
-				} else if (edge->vtx[1]->pos.s[isHor] != edge->pos) {
-					edge->state |= EDGE_EDIT;
-				}
-			}
-			
 			if (isEditEdge && !isCornerEdge) {
 				edge->vtx[0]->pos.s[isHor] = floor(edge->pos * 0.125f) * 8.0f;
 				edge->vtx[1]->pos.s[isHor] = floor(edge->pos * 0.125f) * 8.0f;
@@ -591,20 +652,6 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 			}
 		}
 		
-		edge = edge->next;
-	}
-	
-	edge = guiCtx->edgeHead;
-	
-	while (edge) {
-		if (edge->killFlag == true) {
-			SplitEdge* temp = edge->next;
-			OsPrintfEx("" PRNT_YELW "\aKill Tagged Edge!");
-			Node_Kill(guiCtx->edgeHead, edge);
-			edge = temp;
-			continue;
-		}
-		edge->killFlag = true;
 		edge = edge->next;
 	}
 }
