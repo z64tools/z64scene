@@ -4,10 +4,10 @@ char* Debug_Split_GetStateStrings(Split* split) {
 	static char buffer[1024];
 	s32 t = 0;
 	char* states[] = {
-		"NONE", "POINT_BL",
+		"NONE",     "POINT_BL",
 		"POINT_TL", "POINT_TR",
 		"POINT_BR", "SIDE_L",
-		"SIDE_T", "SIDE_R",
+		"SIDE_T",   "SIDE_R",
 		"SIDE_B",
 	};
 	
@@ -135,44 +135,20 @@ s32 Split_Cursor_GetDistTo(SplitState flag, Split* split) {
 		{ split->mousePos.x, split->mousePos.y },
 		{ split->mousePos.x, split->mousePos.y },
 		{ split->mousePos.x, split->mousePos.y },
-		{ split->mousePos.x, 0 },
-		{ 0, split->mousePos.y },
-		{ split->mousePos.x, 0 },
-		{ 0, split->mousePos.y },
+		{ split->mousePos.x, 0                 },
+		{ 0,                 split->mousePos.y },
+		{ split->mousePos.x, 0                 },
+		{ 0,                 split->mousePos.y }
 	};
 	Vec2s pos[] = {
-		{
-			0,
-			split->rect.h,
-		},
-		{
-			0,
-			0,
-		},
-		{
-			split->rect.w,
-			0,
-		},
-		{
-			split->rect.w,
-			split->rect.h,
-		},
-		{
-			0,
-			0,
-		},
-		{
-			0,
-			0,
-		},
-		{
-			split->rect.w,
-			0,
-		},
-		{
-			0,
-			split->rect.h,
-		},
+		{ 0,             split->rect.h,},
+		{ 0,             0,            },
+		{ split->rect.w, 0,            },
+		{ split->rect.w, split->rect.h,},
+		{ 0,             0,            },
+		{ 0,             0,            },
+		{ split->rect.w, 0,            },
+		{ 0,             split->rect.h,},
 	};
 	s32 i;
 	
@@ -638,8 +614,8 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 		"EDGE_B",
 	};
 	const char* stringEdgeState[] = {
-		"EDGE_HORIZONTAL", "EDGE_VERTICAL", "EDGE_STICK_L",
-		"EDGE_STICK_T",    "EDGE_STICK_R",  "EDGE_STICK_B",
+		"EDGE_HORIZONTAL", "EDGE_VERTICAL",   "EDGE_STICK_L",
+		"EDGE_STICK_T",    "EDGE_STICK_R",    "EDGE_STICK_B",
 	};
 	Split* split = guiCtx->actionSplit;
 	
@@ -885,7 +861,7 @@ void Gui_Init(EditorContext* editorCtx) {
 	Rect lHalf = { guiCtx->workRect.x, guiCtx->workRect.y, guiCtx->workRect.w / 2,
 		       guiCtx->workRect.h };
 	Rect rHalf = { guiCtx->workRect.x + guiCtx->workRect.w / 2, guiCtx->workRect.y,
-		       guiCtx->workRect.w / 2, guiCtx->workRect.h };
+		       guiCtx->workRect.w / 2,                      guiCtx->workRect.h };
 	
 	Split_AddSplit(guiCtx, &lHalf);
 	Split_AddSplit(guiCtx, &rHalf);
