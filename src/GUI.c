@@ -487,7 +487,7 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 	f64 diffCentX = (f64)guiCtx->workRect.w / guiCtx->prevWorkRect.w;
 	f64 diffCentY = (f64)guiCtx->workRect.h / guiCtx->prevWorkRect.h;
 	
-	if (!__inputCtx->mouse.cursorAction) {
+	if (!__inputCtx->mouse.click.hold) {
 		guiCtx->actionEdge = NULL;
 	}
 	
@@ -506,14 +506,6 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 		
 		if (guiCtx->actionEdge == NULL) {
 			edge->state &= ~EDGE_EDIT;
-		}
-		
-		if (edge->killFlag >= 2) {
-			SplitEdge* temp = edge->next;
-			OsPrintfEx("" PRNT_YELW "\aKill Tagged Edge!");
-			Node_Kill(guiCtx->edgeHead, edge);
-			edge = temp;
-			continue;
 		}
 		
 		OsAssert(!(edge->state & EDGE_HORIZONTAL && edge->state & EDGE_VERTICAL));
@@ -599,7 +591,20 @@ void Split_Update_Edges(GuiContext* guiCtx) {
 			}
 		}
 		
-		edge->killFlag++;
+		edge = edge->next;
+	}
+	
+	edge = guiCtx->edgeHead;
+	
+	while (edge) {
+		if (edge->killFlag == true) {
+			SplitEdge* temp = edge->next;
+			OsPrintfEx("" PRNT_YELW "\aKill Tagged Edge!");
+			Node_Kill(guiCtx->edgeHead, edge);
+			edge = temp;
+			continue;
+		}
+		edge->killFlag = true;
 		edge = edge->next;
 	}
 }
@@ -619,7 +624,7 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 	};
 	Split* split = guiCtx->actionSplit;
 	
-	if (split->mousePress) {
+	if (__inputCtx->mouse.click.press) {
 		split->stateFlag |= Split_GetState_CursorPos(split, 20);
 		if (split->stateFlag & SPLIT_SIDES) {
 			s32 i;
@@ -654,6 +659,7 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 			
 			guiCtx->actionEdge = split->edge[i];
 			Split_Edge_SetSlideClamp(guiCtx);
+			Split_Reset(guiCtx);
 		}
 	}
 	
@@ -686,11 +692,12 @@ void Split_Update_ActionSplit(GuiContext* guiCtx) {
 }
 
 void Split_Update_Split_SetRect(Split* split) {
-	split->rect =
-	    (Rect) { floor(split->vtx[1]->pos.x), floor(split->vtx[1]->pos.y),
-		     
-		     floor(split->vtx[3]->pos.x) - floor(split->vtx[1]->pos.x),
-		     floor(split->vtx[3]->pos.y) - floor(split->vtx[1]->pos.y) };
+	split->rect = (Rect) {
+		floor(split->vtx[1]->pos.x),
+		floor(split->vtx[1]->pos.y),
+		floor(split->vtx[3]->pos.x) - floor(split->vtx[1]->pos.x),
+		floor(split->vtx[3]->pos.y) - floor(split->vtx[1]->pos.y)
+	};
 }
 
 void Split_Update_Split(EditorContext* editorCtx) {
@@ -717,13 +724,13 @@ void Split_Update_Split(EditorContext* editorCtx) {
 		    mouse->cursorAction) {
 			if (mouse->click.press) {
 				split->mousePressPos = split->mousePos;
-				split->mousePress = true;
 				guiCtx->actionSplit = split;
 			}
 		}
 		
 		if (guiCtx->actionSplit != NULL) {
-			Split_Update_ActionSplit(guiCtx);
+			if (guiCtx->actionSplit == split)
+				Split_Update_ActionSplit(guiCtx);
 		} else {
 			if (__inputCtx->mouse.click.hold == 0) {
 				if (Split_GetState_CursorPos(split, 20) & SPLIT_POINTS &&
@@ -747,7 +754,6 @@ void Split_Update_Split(EditorContext* editorCtx) {
 			}
 		}
 		
-		split->mousePress = false;
 		for (s32 i = 0; i < 4; i++) {
 			OsAssert(split->edge[i] != NULL);
 			split->edge[i]->killFlag = false;
@@ -793,7 +799,6 @@ void Split_Draw_SplitBorder(NVGcontext* vg, Rect* rect, s32 iter) {
 void Split_Draw_Splits(EditorContext* editorCtx) {
 	GuiContext* guiCtx = &editorCtx->guiCtx;
 	Split* split = guiCtx->splitHead;
-	MouseInput* mouse = &editorCtx->inputCtx.mouse;
 	Vec2s* winDim = &editorCtx->appInfo.winDim;
 	s32 iter = 0;
 	
@@ -876,9 +881,6 @@ void Gui_Update(EditorContext* editorCtx) {
 	Gui_SetBotBarHeight(editorCtx, guiCtx->bar[GUI_BAR_BOT].rect.h);
 	Split_Update_Vtx(guiCtx);
 	Split_Update_Edges(guiCtx);
-	if (guiCtx->actionEdge) {
-		Split_Update_Edges(guiCtx);
-	}
 	Split_Update_Split(editorCtx);
 	
 	guiCtx->prevWorkRect = guiCtx->workRect;

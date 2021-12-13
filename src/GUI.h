@@ -98,7 +98,6 @@ typedef struct Split {
 	Vec2s center;
 	Vec2s mousePos; // relative
 	Vec2s mousePressPos;
-	u8    mousePress    : 1;
 	u8    mouseInRegion : 1;
 	SplitFunc update;
 	SplitFunc draw;
