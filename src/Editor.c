@@ -19,12 +19,66 @@ char* gHash = {
 
 void SplitTask_3DViewport_Update(void* passArg, void* instance, Split* split) {
 	EditorContext* editorCtx = passArg;
+	InputContext* inputCtx = &editorCtx->inputCtx;
+	MouseInput* mouse = &inputCtx->mouse;
 	Vec2s dim = {
 		split->rect.w,
 		split->rect.h
 	};
+	u32 extGrabDist = SPLIT_GRAB_DIST * 1.5;
 	
 	View_SetProjectionDimensions(&editorCtx->viewCtx, &dim);
+	
+	editorCtx->viewCtx.cameraControl = false;
+	if (split->blockMouse == false) {
+		if (split->mouseInSplit && !split->mouseInHeader) {
+			editorCtx->viewCtx.cameraControl = true;
+		}
+	}
+	
+	// Cursor Wrapping
+	if (editorCtx->viewCtx.setCamMove == true) {
+		s16 rel;
+		if (mouse->pos.x < split->edge[EDGE_L]->pos + extGrabDist) {
+			rel = mouse->pos.x - split->edge[EDGE_L]->pos - extGrabDist;
+			
+			glfwSetCursorPos(editorCtx->appInfo.mainWindow, split->edge[EDGE_R]->pos - extGrabDist, editorCtx->inputCtx.mouse.pos.y);
+			mouse->jumpVelComp.x =
+			    (split->edge[EDGE_L]->pos + extGrabDist) -
+			    (split->edge[EDGE_R]->pos - extGrabDist) + rel;
+			OsPrintfEx("%d", rel);
+		}
+		
+		if (mouse->pos.x > split->edge[EDGE_R]->pos - extGrabDist) {
+			rel = mouse->pos.x - split->edge[EDGE_R]->pos + extGrabDist;
+			
+			glfwSetCursorPos(editorCtx->appInfo.mainWindow, split->edge[EDGE_L]->pos + extGrabDist, editorCtx->inputCtx.mouse.pos.y);
+			mouse->jumpVelComp.x =
+			    (split->edge[EDGE_R]->pos - extGrabDist) -
+			    (split->edge[EDGE_L]->pos + extGrabDist) + rel;
+			OsPrintfEx("%d", rel);
+		}
+		
+		if (mouse->pos.y < split->edge[EDGE_T]->pos + extGrabDist) {
+			rel = mouse->pos.y - split->edge[EDGE_T]->pos - extGrabDist;
+			
+			glfwSetCursorPos(editorCtx->appInfo.mainWindow, editorCtx->inputCtx.mouse.pos.x, split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT);
+			mouse->jumpVelComp.y =
+			    (split->edge[EDGE_T]->pos + extGrabDist) -
+			    (split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT) + rel;
+			OsPrintfEx("%d", rel);
+		}
+		
+		if (mouse->pos.y > split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT) {
+			rel = mouse->pos.y - split->edge[EDGE_B]->pos + extGrabDist + SPLIT_BAR_HEIGHT;
+			
+			glfwSetCursorPos(editorCtx->appInfo.mainWindow, editorCtx->inputCtx.mouse.pos.x, split->edge[EDGE_T]->pos + extGrabDist);
+			mouse->jumpVelComp.y =
+			    (split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT) -
+			    (split->edge[EDGE_T]->pos + extGrabDist) + rel;
+			OsPrintfEx("%d", rel);
+		}
+	}
 }
 
 void SplitTask_3DViewport_Draw(void* passArg, void* instance, Split* split) {

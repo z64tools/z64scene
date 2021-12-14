@@ -14,7 +14,7 @@ void Theme_Init(u32 themeId) {
 	sDarkTheme[THEME_SPBG] = nvgHSLA(199.0 / 360, 0.04, 0.16, 255);
 	sDarkTheme[THEME_SHDW] = nvgHSLA(199.0 / 360, 0.00, 0.00, 255);
 	
-	sDarkTheme[THEME_BUTI] = nvgHSLA(210.0 / 360, 0.60, 0.45, 255);
-	sDarkTheme[THEME_BUTH] = nvgHSLA(210.0 / 360, 0.70, 0.50, 255);
-	sDarkTheme[THEME_BUTP] = nvgHSLA(210.0 / 360, 0.70, 0.55, 255);
+	sDarkTheme[THEME_BUTI] = nvgHSLA(042.0 / 360, 0.60, 0.35, 255);
+	sDarkTheme[THEME_BUTH] = nvgHSLA(042.0 / 360, 0.70, 0.50, 255);
+	sDarkTheme[THEME_BUTP] = nvgHSLA(042.0 / 360, 0.85, 0.65, 255);
 }

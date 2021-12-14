@@ -742,26 +742,29 @@ void GeoGrid_Update_Split(GeoGridContext* geoGridCtx) {
 	while (split) {
 		GeoGrid_Update_SplitRect(split);
 		Vec2s rectPos = { split->rect.x, split->rect.y };
+		Rect headerRect = {
+			0, split->rect.h - SPLIT_BAR_HEIGHT,
+			split->rect.w, SPLIT_BAR_HEIGHT
+		};
 		Vec_Vec2s_Substract(&split->mousePos, &mouse->pos, (Vec2s*)&rectPos);
 		split->mouseInSplit = GeoGrid_Cursor_InSplit(split);
+		split->mouseInHeader = GeoGrid_Cursor_InRect(split, &headerRect);
 		split->center.x = split->rect.w * 0.5f;
 		split->center.y = (split->rect.h - SPLIT_BAR_HEIGHT) * 0.5f;
 		
 		split->blockMouse = false;
-		if (geoGridCtx->mouse->click.hold == 0) {
-			if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST * 3) & SPLIT_POINTS &&
-			    split->mouseInSplit) {
-				Cursor_SetCursor(CURSOR_CROSSHAIR);
-				split->blockMouse = true;
-			} else if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST) & SPLIT_SIDE_H &&
-			    split->mouseInSplit) {
-				Cursor_SetCursor(CURSOR_ARROW_H);
-				split->blockMouse = true;
-			} else if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST) & SPLIT_SIDE_V &&
-			    split->mouseInSplit) {
-				Cursor_SetCursor(CURSOR_ARROW_V);
-				split->blockMouse = true;
-			}
+		if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST * 3) & SPLIT_POINTS &&
+		    split->mouseInSplit) {
+			Cursor_SetCursor(CURSOR_CROSSHAIR);
+			split->blockMouse = true;
+		} else if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST) & SPLIT_SIDE_H &&
+		    split->mouseInSplit) {
+			Cursor_SetCursor(CURSOR_ARROW_H);
+			split->blockMouse = true;
+		} else if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST) & SPLIT_SIDE_V &&
+		    split->mouseInSplit) {
+			Cursor_SetCursor(CURSOR_ARROW_V);
+			split->blockMouse = true;
 		}
 		
 		if (geoGridCtx->actionSplit == NULL && split->mouseInSplit && mouse->cursorAction) {
@@ -773,6 +776,10 @@ void GeoGrid_Update_Split(GeoGridContext* geoGridCtx) {
 		
 		if (geoGridCtx->actionSplit != NULL && geoGridCtx->actionSplit == split) {
 			GeoGrid_Update_ActionSplit(geoGridCtx);
+		}
+		
+		if (split->stateFlag != 0) {
+			split->blockMouse = true;
 		}
 		
 		if (split->id > 0) {

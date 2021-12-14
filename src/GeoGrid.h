@@ -113,7 +113,8 @@ typedef struct Split {
 	Vec2s center;
 	Vec2s mousePos; // relative
 	Vec2s mousePressPos;
-	u8    mouseInSplit : 1;
+	bool  mouseInSplit;
+	bool  mouseInHeader;
 	u32   id;
 	bool  blockMouse;
 } Split;
