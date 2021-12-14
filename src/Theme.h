@@ -6,6 +6,7 @@
 
 typedef enum {
 	THEME_BASE,
+	THEME_LGHT,
 	THEME_LINE,
 	THEME_TEXT,
 	THEME_HEDR,

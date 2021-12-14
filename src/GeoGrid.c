@@ -802,6 +802,18 @@ bool GeoGrid_Button(Split* split, void* vg, const char* txt, Rect rect) {
 	bool ret = false;
 	
 	nvgBeginPath(vg);
+	nvgFillColor(vg, Theme_GetColor(THEME_LGHT));
+	nvgRoundedRect(
+		vg,
+		rect.x - 1.0f,
+		rect.y - 1.0f,
+		rect.w + 1.0f * 2,
+		rect.h + 1.0f * 2,
+		SPLIT_ROUND_R
+	);
+	nvgFill(vg);
+	
+	nvgBeginPath(vg);
 	
 	if (GeoGrid_Cursor_InRect(split, &rect)) {
 		if (__inputCtx->mouse.clickL.press) {
