@@ -17,6 +17,27 @@ char* gHash = {
 	#endif
 };
 
+void SplitTask_3DViewport_Update(void* passArg, void* instance, Split* split) {
+	EditorContext* editorCtx = passArg;
+	Vec2s dim = {
+		split->rect.w,
+		split->rect.h
+	};
+	
+	View_SetProjectionDimensions(&editorCtx->viewCtx, &dim);
+}
+
+void SplitTask_3DViewport_Draw(void* passArg, void* instance, Split* split) {
+	EditorContext* editorCtx = passArg;
+	
+	z64_Draw_SetScene(&editorCtx->objCtx.scene);
+	z64_Draw_Room(&editorCtx->objCtx.room[0]);
+}
+
+SplitTask sTaskList[] = {
+	{ SplitTask_3DViewport_Update, SplitTask_3DViewport_Draw, NULL, NULL }
+};
+
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 void Editor_Draw(EditorContext* editorCtx) {
@@ -35,6 +56,9 @@ void Editor_Update(EditorContext* editorCtx) {
 }
 
 void Editor_Init(EditorContext* editorCtx) {
+	sTaskList[0].passArg = editorCtx;
+	editorCtx->geoGridCtx.taskTable = sTaskList;
+	
 	#if 0
 	editorCtx->vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
 	#else
@@ -42,13 +66,13 @@ void Editor_Init(EditorContext* editorCtx) {
 	#endif
 	if (editorCtx->vg == NULL)
 		printf_error("Could not init nanovg.");
-	editorCtx->fontCtx.notoSansID = nvgCreateFont(editorCtx->vg, "sans", "Menlo-Regular.ttf");
+	editorCtx->fontCtx.notoSansID = nvgCreateFont(editorCtx->vg, "sans", "NotoSans-Regular.ttf");
 	if (editorCtx->fontCtx.notoSansID < 0) {
 		OsPrintfEx("Could not load Font");
 	}
 	
 	editorCtx->viewCtx.cameraControl = false;
-	Theme_Init(1);
+	Theme_Init(0);
 	GeoGrid_Init(
 		&editorCtx->geoGridCtx,
 		&editorCtx->appInfo.winDim,

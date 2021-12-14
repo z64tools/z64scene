@@ -12,6 +12,10 @@ typedef enum {
 	THEME_SPBG,
 	THEME_SHDW,
 	
+	THEME_BUTI, // Button Idle
+	THEME_BUTH, // Button Hover
+	THEME_BUTP, // BUTTON Press
+	
 	THEME_MAX
 } ThemeColor;
 

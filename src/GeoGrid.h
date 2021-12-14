@@ -6,14 +6,15 @@
 #include "Theme.h"
 
 #define SPLIT_GRAB_DIST  4
-#define SPLIT_CLAMP      24
-#define SPLIT_BAR_HEIGHT 24
-#define SPLIT_SPLIT_W    3.0
-#define SPLIT_ROUND_R    3.0
+#define SPLIT_BAR_HEIGHT 28
+#define SPLIT_SPLIT_W    2.0
+#define SPLIT_ROUND_R    2.0
+#define SPLIT_CLAMP      (SPLIT_BAR_HEIGHT + SPLIT_SPLIT_W * 1.25)
 
 struct GeoGridContext;
 struct Split;
 typedef void (* SplitFunc)(
+	void*,
 	void*,
 	struct Split*
 );
@@ -93,6 +94,15 @@ typedef struct SplitEdge {
 	u8 killFlag;
 } SplitEdge;
 
+typedef struct {
+	// SplitFunc init;
+	// SplitFunc destroy;
+	SplitFunc update;
+	SplitFunc draw;
+	void* instance;
+	void* passArg;
+} SplitTask;
+
 typedef struct Split {
 	struct Split* prev;
 	struct Split* next;
@@ -104,17 +114,21 @@ typedef struct Split {
 	Vec2s mousePos; // relative
 	Vec2s mousePressPos;
 	u8    mouseInSplit : 1;
-	SplitFunc init;
-	SplitFunc destroy;
-	SplitFunc update;
-	void* passArg;
+	u32   id;
+	bool  blockMouse;
 } Split;
 
 typedef struct {
 	Rect rect;
 } StatusBar;
 
+typedef struct {
+	char* txt;
+	u32   num;
+} GeoContextMenu;
+
 typedef struct GeoGridContext {
+	GeoContextMenu ctxMenu;
 	Split*     actionSplit;
 	Split*     splitHead;
 	SplitVtx*  vtxHead;
@@ -126,16 +140,15 @@ typedef struct GeoGridContext {
 	struct {
 		f64 clampMax;
 		f64 clampMin;
-	} edgeMovement;
+	} slide;
 	MouseInput* mouse;
 	Vec2s* winDim;
 	void*  vg;
+	SplitTask* taskTable;
 } GeoGridContext;
 
 void GeoGrid_Init(GeoGridContext* geoGridCtx, Vec2s* winDim, MouseInput* mouse, void* vg);
 void GeoGrid_Update(GeoGridContext* geoGridCtx);
 void GeoGrid_Draw(GeoGridContext* geoGridCtx);
-
-#define SplitEdgeAlign_Equal(x, y) (((x)->state & EDGE_ALIGN) == ((y)->state & EDGE_ALIGN))
 
 #endif
