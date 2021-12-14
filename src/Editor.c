@@ -37,7 +37,7 @@ void SplitTask_3DViewport_Update(void* passArg, void* instance, Split* split) {
 	}
 	
 	// Cursor Wrapping
-	if (editorCtx->viewCtx.setCamMove == true) {
+	if (editorCtx->viewCtx.setCamMove == true && (mouse->vel.x || mouse->vel.y)) {
 		s16 rel;
 		if (mouse->pos.x < split->edge[EDGE_L]->pos + extGrabDist) {
 			rel = mouse->pos.x - split->edge[EDGE_L]->pos - extGrabDist;
