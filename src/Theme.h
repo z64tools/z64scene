@@ -6,14 +6,16 @@
 
 typedef enum {
 	THEME_BASE,
-	THEME_BAS2,
+	THEME_LINE,
 	THEME_TEXT,
-	THEME_DARK,
+	THEME_HEDR,
+	THEME_SPBG,
+	THEME_SHDW,
 	
 	THEME_MAX
 } ThemeColor;
 
-void Theme_Init();
+void Theme_Init(u32 themeId);
 NVGcolor Theme_GetColor(ThemeColor pal);
 
 #endif

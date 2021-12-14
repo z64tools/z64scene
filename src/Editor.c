@@ -2,7 +2,7 @@
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg_gl.h>
 
-const char* sBuild = {
+char* gBuild = {
 	"z64scene alpha commit[ "
 	#ifndef __COMFLAG__
 	GIT_COMMIT_MSG
@@ -10,7 +10,7 @@ const char* sBuild = {
 	" ]"
 };
 
-const char* sHash = {
+char* gHash = {
 	""
 	#ifndef __COMFLAG__
 	GIT_COMMIT_HASH
@@ -23,14 +23,14 @@ void Editor_Draw(EditorContext* editorCtx) {
 	if (glfwGetWindowAttrib(editorCtx->appInfo.mainWindow, GLFW_ICONIFIED))
 		return;
 	
-	FlexUI_Draw(&editorCtx->flexCtx);
+	GeoGrid_Draw(&editorCtx->geoGridCtx);
 }
 
 void Editor_Update(EditorContext* editorCtx) {
 	if (glfwGetWindowAttrib(editorCtx->appInfo.mainWindow, GLFW_ICONIFIED))
 		return;
 	
-	FlexUI_Update(&editorCtx->flexCtx);
+	GeoGrid_Update(&editorCtx->geoGridCtx);
 	Cursor_Update(&editorCtx->cursorCtx);
 }
 
@@ -48,9 +48,9 @@ void Editor_Init(EditorContext* editorCtx) {
 	}
 	
 	editorCtx->viewCtx.cameraControl = false;
-	Theme_Init();
-	FlexUI_Init(
-		&editorCtx->flexCtx,
+	Theme_Init(1);
+	GeoGrid_Init(
+		&editorCtx->geoGridCtx,
 		&editorCtx->appInfo.winDim,
 		&editorCtx->inputCtx.mouse,
 		editorCtx->vg
