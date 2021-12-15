@@ -19,7 +19,7 @@ char* gHash = {
 
 SplitTask sTaskTable[] = {
 	{
-		NULL
+		"None"
 	},
 	{
 		"3DViewport",
@@ -48,6 +48,7 @@ void Editor_Update(EditorContext* editorCtx) {
 void Editor_Init(EditorContext* editorCtx) {
 	editorCtx->geoCtx.passArg = editorCtx;
 	editorCtx->geoCtx.taskTable = sTaskTable;
+	editorCtx->geoCtx.taskTableNum = ArrayCount(sTaskTable);
 	
 	#if 0
 	editorCtx->vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);

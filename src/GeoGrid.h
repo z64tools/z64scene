@@ -123,7 +123,9 @@ typedef struct {
 	Vec2s  pos;
 	Split* split;
 	char** optionList;
-	u32    num;
+	s32    num;
+	s32    hoverNum;
+	Rect   hoverRect;
 } GeoCtxMenu;
 
 typedef struct {
@@ -132,7 +134,7 @@ typedef struct {
 	SplitFunc destroy;
 	SplitFunc update;
 	SplitFunc draw;
-	u32 size;
+	s32 size;
 } SplitTask;
 
 typedef struct GeoGridContext {
@@ -154,6 +156,7 @@ typedef struct GeoGridContext {
 	void*  vg;
 	void*  passArg;
 	SplitTask* taskTable;
+	s32    taskTableNum;
 } GeoGridContext;
 
 void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void* vg);

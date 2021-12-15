@@ -757,29 +757,31 @@ void GeoGrid_Update_Split(GeoGridContext* geoCtx) {
 		split->center.y = (split->rect.h - SPLIT_BAR_HEIGHT) * 0.5f;
 		
 		split->blockMouse = false;
-		if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST * 3) & SPLIT_POINTS &&
-		    split->mouseInSplit) {
-			Cursor_SetCursor(CURSOR_CROSSHAIR);
-			split->blockMouse = true;
-		} else if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST) & SPLIT_SIDE_H &&
-		    split->mouseInSplit) {
-			Cursor_SetCursor(CURSOR_ARROW_H);
-			split->blockMouse = true;
-		} else if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST) & SPLIT_SIDE_V &&
-		    split->mouseInSplit) {
-			Cursor_SetCursor(CURSOR_ARROW_V);
-			split->blockMouse = true;
-		}
-		
-		if (geoCtx->actionSplit == NULL && split->mouseInSplit && mouse->cursorAction) {
-			if (mouse->click.press) {
-				split->mousePressPos = split->mousePos;
-				geoCtx->actionSplit = split;
+		if (geoCtx->ctxMenu.num == 0) {
+			if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST * 3) & SPLIT_POINTS &&
+			    split->mouseInSplit) {
+				Cursor_SetCursor(CURSOR_CROSSHAIR);
+				split->blockMouse = true;
+			} else if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST) & SPLIT_SIDE_H &&
+			    split->mouseInSplit) {
+				Cursor_SetCursor(CURSOR_ARROW_H);
+				split->blockMouse = true;
+			} else if (GeoGrid_GetState_CursorPos(split, SPLIT_GRAB_DIST) & SPLIT_SIDE_V &&
+			    split->mouseInSplit) {
+				Cursor_SetCursor(CURSOR_ARROW_V);
+				split->blockMouse = true;
 			}
-		}
-		
-		if (geoCtx->actionSplit != NULL && geoCtx->actionSplit == split) {
-			GeoGrid_Update_ActionSplit(geoCtx);
+			
+			if (geoCtx->actionSplit == NULL && split->mouseInSplit && mouse->cursorAction) {
+				if (mouse->click.press) {
+					split->mousePressPos = split->mousePos;
+					geoCtx->actionSplit = split;
+				}
+			}
+			
+			if (geoCtx->actionSplit != NULL && geoCtx->actionSplit == split) {
+				GeoGrid_Update_ActionSplit(geoCtx);
+			}
 		}
 		
 		if (split->stateFlag != 0) {
@@ -855,7 +857,7 @@ bool GeoGrid_Button(Split* split, void* vg, const char* txt, Rect rect) {
 	return ret;
 }
 
-void GeoGrid_SetContextMenu(GeoGridContext* geoCtx, Split* split, char** optionList, u32 num) {
+void GeoGrid_SetContextMenu(GeoGridContext* geoCtx, Split* split, char** optionList, s32 num) {
 	GeoCtxMenu* ctxMenu = &geoCtx->ctxMenu;
 	
 	ctxMenu->optionList = optionList;
@@ -864,6 +866,23 @@ void GeoGrid_SetContextMenu(GeoGridContext* geoCtx, Split* split, char** optionL
 	ctxMenu->pos = split->mousePos;
 	ctxMenu->pos.x += split->vtx[1]->pos.x;
 	ctxMenu->pos.y += split->vtx[1]->pos.y;
+	
+	OsPrintfEx("Set %d", num);
+}
+
+s32 GeoGrid_GetContextMenuResult(GeoGridContext* geoCtx, Split* split) {
+	if (geoCtx->ctxMenu.split == split && geoCtx->ctxMenu.num < 0) {
+		s32 ret = geoCtx->ctxMenu.num;
+		
+		geoCtx->ctxMenu.num = 0;
+		geoCtx->ctxMenu.split = NULL;
+		
+		OsPrintfEx("Get");
+		
+		return -ret;
+	}
+	
+	return 0;
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */
@@ -951,6 +970,7 @@ void GeoGrid_Draw_Debug(GeoGridContext* geoCtx) {
 
 void GeoGrid_Draw_SplitHeader(GeoGridContext* geoCtx, Split* split) {
 	Rect rect = split->rect;
+	s32 menuSel;
 	
 	rect.x = 0;
 	rect.y = CLAMP_MIN(rect.h - SPLIT_BAR_HEIGHT, 0);
@@ -967,16 +987,17 @@ void GeoGrid_Draw_SplitHeader(GeoGridContext* geoCtx, Split* split) {
 	rect.h = SPLIT_BAR_HEIGHT - SPLIT_SPLIT_W - 8;
 	
 	if (GeoGrid_Button(split, geoCtx->vg, "", rect)) {
-		split->id ^= 1;
-		static char* optionList[] = {
-			"Copy",
-			"Paste",
-			NULL,
-			"Exit"
-		};
+		static char* optionList[64] = { NULL };
 		
-		return;
-		GeoGrid_SetContextMenu(geoCtx, split, optionList, ArrayCount(optionList));
+		for (s32 i = 0; i < geoCtx->taskTableNum; i++) {
+			optionList[i] = geoCtx->taskTable[i].taskName;
+		}
+		
+		GeoGrid_SetContextMenu(geoCtx, split, optionList, geoCtx->taskTableNum);
+	}
+	
+	if ((menuSel = GeoGrid_GetContextMenuResult(geoCtx, split))) {
+		split->id = menuSel - 1;
 	}
 }
 
@@ -1076,6 +1097,92 @@ void GeoGrid_Draw_Splits(GeoGridContext* geoCtx) {
 	}
 }
 
+/* ───────────────────────────────────────────────────────────────────────── */
+
+void GeoGrid_Update_ContextMenu(GeoGridContext* geoCtx) {
+	GeoCtxMenu* ctxMenu = &geoCtx->ctxMenu;
+	void* vg = geoCtx->vg;
+	Rect menuRect = {
+		ctxMenu->pos.x,
+		ctxMenu->pos.y,
+		SPLIT_TEXT_SCALE* 16,
+		0
+	};
+	
+	if (ctxMenu->num == 0)
+		return;
+	
+	ctxMenu->hoverNum = -1;
+	
+	for (s32 i = 0; i < ctxMenu->num; i++) {
+		if (ctxMenu->optionList[i] != NULL) {
+			menuRect.h += SPLIT_TEXT_SPLIT + SPLIT_TEXT_SPLIT + SPLIT_TEXT_SCALE;
+		} else {
+			menuRect.h += SPLIT_TEXT_SPLIT;
+		}
+	}
+	
+	if (menuRect.y > geoCtx->winDim->y * 0.5) {
+		menuRect.y -= menuRect.h;
+	}
+	
+	menuRect.h = 0;
+	
+	for (s32 i = 0; i < ctxMenu->num; i++) {
+		if (ctxMenu->optionList[i] != NULL) {
+			Rect pressRect;
+			
+			menuRect.h += SPLIT_TEXT_SPLIT;
+			
+			pressRect.x = menuRect.x;
+			pressRect.y = menuRect.y + menuRect.h - SPLIT_TEXT_SPLIT;
+			pressRect.w = menuRect.w;
+			pressRect.h = SPLIT_TEXT_SCALE + SPLIT_TEXT_SPLIT * 2;
+			
+			if (geoCtx->mouse->pos.x >= pressRect.x && geoCtx->mouse->pos.x < pressRect.x + pressRect.w) {
+				if (geoCtx->mouse->pos.y >= pressRect.y && geoCtx->mouse->pos.y < pressRect.y + pressRect.h) {
+					ctxMenu->hoverNum = i;
+					ctxMenu->hoverRect = pressRect;
+					if (geoCtx->mouse->clickL.press) {
+						ctxMenu->num = -(i + 1);
+						
+						return;
+					}
+				}
+			}
+			
+			menuRect.h += SPLIT_TEXT_SCALE;
+			menuRect.h += SPLIT_TEXT_SPLIT;
+		} else {
+			menuRect.h += SPLIT_TEXT_SPLIT;
+		}
+	}
+	
+	if (geoCtx->mouse->pos.x < ctxMenu->pos.x - SPLIT_CTXM_DIST ||
+	    geoCtx->mouse->pos.x > ctxMenu->pos.x + menuRect.w + SPLIT_CTXM_DIST ||
+	    geoCtx->mouse->pos.y < ctxMenu->pos.y - SPLIT_CTXM_DIST ||
+	    geoCtx->mouse->pos.y > ctxMenu->pos.y + menuRect.h + SPLIT_CTXM_DIST
+	) {
+		ctxMenu->num = 0;
+		ctxMenu->split = NULL;
+	}
+	
+	if (geoCtx->mouse->pos.x > ctxMenu->pos.x ||
+	    geoCtx->mouse->pos.x < ctxMenu->pos.x + menuRect.w ||
+	    geoCtx->mouse->pos.y > ctxMenu->pos.y ||
+	    geoCtx->mouse->pos.y < ctxMenu->pos.y + menuRect.h
+	) {
+		if (geoCtx->mouse->click.press) {
+			ctxMenu->num = 0;
+			ctxMenu->split = NULL;
+			geoCtx->mouse->click.press = 0;
+			geoCtx->mouse->clickL.press = 0;
+			geoCtx->mouse->clickR.press = 0;
+			geoCtx->mouse->clickMid.press = 0;
+		}
+	}
+}
+
 void GeoGrid_Draw_ContextMenu(GeoGridContext* geoCtx) {
 	GeoCtxMenu* ctxMenu = &geoCtx->ctxMenu;
 	void* vg = geoCtx->vg;
@@ -1094,24 +1201,45 @@ void GeoGrid_Draw_ContextMenu(GeoGridContext* geoCtx) {
 		}
 	}
 	
-	if (geoCtx->mouse->pos.x < ctxMenu->pos.x - SPLIT_CTXM_DIST ||
-	    geoCtx->mouse->pos.x > ctxMenu->pos.x + menuRect.w + SPLIT_CTXM_DIST ||
-	    geoCtx->mouse->pos.y < ctxMenu->pos.y - SPLIT_CTXM_DIST ||
-	    geoCtx->mouse->pos.y > ctxMenu->pos.y + menuRect.h + SPLIT_CTXM_DIST
-	) {
-		ctxMenu->num = 0;
+	if (menuRect.y > geoCtx->winDim->y * 0.5) {
+		menuRect.y -= menuRect.h;
 	}
 	
 	if (ctxMenu->num > 0) {
 		glViewport(0, 0, geoCtx->winDim->x, geoCtx->winDim->y);
 		nvgBeginFrame(vg, geoCtx->winDim->x, geoCtx->winDim->y, 1.0f); {
 			nvgBeginPath(vg);
+			nvgFillColor(vg, Theme_GetColor(THEME_TEXT));
+			nvgRoundedRect(vg, menuRect.x - 0.5, menuRect.y - 0.5, menuRect.w + 1.0, menuRect.h + 1.0, SPLIT_ROUND_R);
+			nvgFill(vg);
+			
+			nvgBeginPath(vg);
 			nvgFillColor(vg, Theme_GetColor(THEME_HEDR));
 			nvgRoundedRect(vg, menuRect.x, menuRect.y, menuRect.w, menuRect.h, SPLIT_ROUND_R);
 			nvgFill(vg);
 			
+			if (ctxMenu->hoverNum != -1) {
+				nvgBeginPath(vg);
+				nvgFillColor(vg, Theme_GetColor(THEME_SPBG));
+				nvgRoundedRect(
+					vg,
+					ctxMenu->hoverRect.x,
+					ctxMenu->hoverRect.y,
+					ctxMenu->hoverRect.w,
+					ctxMenu->hoverRect.h,
+					SPLIT_ROUND_R
+				);
+				nvgFill(vg);
+			}
+			
 			menuRect.y = ctxMenu->pos.y;
 			menuRect.x += SPLIT_TEXT_SPLIT * 4;
+			
+			if (menuRect.y > geoCtx->winDim->y * 0.5) {
+				menuRect.y -= menuRect.h;
+			}
+			
+			menuRect.y += SPLIT_TEXT_SPLIT * 0.25;
 			
 			nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_TEXT));
 			nvgFontFace(vg, "sans");
@@ -1135,7 +1263,6 @@ void GeoGrid_Draw_ContextMenu(GeoGridContext* geoCtx) {
 			
 		} nvgEndFrame(vg);
 	}
-	
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */
@@ -1200,6 +1327,7 @@ void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void
 void GeoGrid_Update(GeoGridContext* geoCtx) {
 	GeoGrid_SetTopBarHeight(geoCtx, geoCtx->bar[BAR_TOP].rect.h);
 	GeoGrid_SetBotBarHeight(geoCtx, geoCtx->bar[BAR_BOT].rect.h);
+	GeoGrid_Update_ContextMenu(geoCtx);
 	GeoGrid_Update_Vtx(geoCtx);
 	GeoGrid_Update_Edges(geoCtx);
 	GeoGrid_Update_Split(geoCtx);
