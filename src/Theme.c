@@ -2,8 +2,12 @@
 
 NVGcolor sDarkTheme[THEME_MAX] = { 0 };
 
-NVGcolor Theme_GetColor(ThemeColor pal) {
-	return sDarkTheme[pal];
+NVGcolor Theme_GetColor(ThemeColor pal, u8 alpha) {
+	NVGcolor col = sDarkTheme[pal];
+	
+	col.a = 255.0 / alpha;
+	
+	return col;
 }
 
 void Theme_Init(u32 themeId) {

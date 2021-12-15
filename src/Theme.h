@@ -21,6 +21,6 @@ typedef enum {
 } ThemeColor;
 
 void Theme_Init(u32 themeId);
-NVGcolor Theme_GetColor(ThemeColor pal);
+NVGcolor Theme_GetColor(ThemeColor pal, u8 alpha);
 
 #endif

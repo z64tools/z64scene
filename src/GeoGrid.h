@@ -6,7 +6,7 @@
 #include "Theme.h"
 
 #define SPLIT_GRAB_DIST  4
-#define SPLIT_CTXM_DIST  64
+#define SPLIT_CTXM_DIST  32
 #define SPLIT_TEXT_SCALE 12
 #define SPLIT_BAR_HEIGHT 28
 #define SPLIT_TEXT_SPLIT 8
