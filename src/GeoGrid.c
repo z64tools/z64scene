@@ -1011,15 +1011,15 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 		rect->h - SPLIT_SPLIT_W * 2
 	};
 	
-	nvgBeginPath(vg);
-	nvgRect(vg, 0, 0, rect->w, rect->h);
-	nvgPathWinding(vg, NVG_HOLE);
-	nvgFillColor(vg, Theme_GetColor(THEME_SPBG, 255));
-	nvgFill(vg);
-	
 	if (split->id > 0) {
 		u32 id = split->id;
 		SplitTask* table = geoCtx->taskTable;
+		
+		nvgBeginPath(vg);
+		nvgRect(vg, 0, 0, rect->w, rect->h);
+		nvgPathWinding(vg, NVG_HOLE);
+		nvgFillColor(vg, Theme_GetColor(THEME_LINE, 195));
+		nvgFill(vg);
 		
 		nvgEndFrame(geoCtx->vg);
 		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, 1.0f);
@@ -1027,14 +1027,19 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 		nvgEndFrame(geoCtx->vg);
 		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, 1.0f);
 	} else {
+		nvgBeginPath(vg);
+		nvgRect(vg, 0, 0, rect->w, rect->h);
+		nvgPathWinding(vg, NVG_HOLE);
+		nvgFillColor(vg, Theme_GetColor(THEME_SPBG, 255));
+		nvgFill(vg);
+		
+		#if 0
 		void* vg = geoCtx->vg;
 		f64 thing = 25.0f;
-		Vec2f p[10] = {
-			{ 5.0f, 5.0f },  { -5.0f, 5.0f },
-			{ -5.0f, 2.5f },   { 1.25f, -2.5f },
-			{ -5.0f, -2.5f },  { -5.0f, -5.0f },
-			{ 5.0f, -5.0f }, { 5.0f, -2.5f },
-			{ -1.25f, 2.5f },  { 5.0f, 2.5f }
+		Vec2f p[] = {
+			{ 0.0, -4.5 },
+			{ 5.0, 4.5 },
+			{ -5.0, 4.5 }
 		};
 		
 		nvgBeginPath(vg);
@@ -1052,12 +1057,13 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 		);
 		nvgMoveTo(vg, split->center.x + p[0].x * thing, split->center.y + p[0].y * thing);
 		
-		for (s32 i = 1; i <= 10; i++) {
-			s32 j = Lib_Wrap(i, 0, 9);
+		for (s32 i = 1; i <= ArrayCount(p); i++) {
+			s32 j = Lib_Wrap(i, 0, ArrayCount(p) - 1);
 			
 			nvgLineTo(vg, split->center.x + p[j].x * thing, split->center.y + p[j].y * thing);
 		}
 		nvgFill(vg);
+		#endif
 	}
 	
 	GeoGrid_Draw_SplitHeader(geoCtx, split);
