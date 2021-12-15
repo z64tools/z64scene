@@ -15,6 +15,8 @@ SrcC_win32_z64viewer := $(shell find z64viewer/src/* -type f -name '*.c')
 SrcO_win32_z64viewer := $(foreach f,$(SrcC_win32_z64viewer:.c=.o),bin/win32/$f)
 SrcC_win32_nanoVG    := $(shell find nanovg/src/* -type f -name '*.c')
 SrcO_win32_nanoVG    := $(foreach f,$(SrcC_win32_nanoVG:.c=.o),bin/win32/$f)
+SrcC_win32_cJSON    := $(shell find cJSON/* -maxdepth 0 -type f -name '*.c' -not -name 'test.c')
+SrcO_win32_cJSON    := $(foreach f,$(SrcC_win32_cJSON:.c=.o),bin/win32/$f)
 
 SrcC_linux_z64scene  := $(shell find src/* -type f -name '*.c')
 SrcO_linux_z64scene  := $(foreach f,$(SrcC_linux_z64scene:.c=.o),bin/linux/$f)
@@ -22,12 +24,14 @@ SrcC_linux_z64viewer := $(shell find z64viewer/src/* -type f -name '*.c')
 SrcO_linux_z64viewer := $(foreach f,$(SrcC_linux_z64viewer:.c=.o),bin/linux/$f)
 SrcC_linux_nanoVG    := $(shell find nanovg/src/* -type f -name '*.c')
 SrcO_linux_nanoVG    := $(foreach f,$(SrcC_linux_nanoVG:.c=.o),bin/linux/$f)
+SrcC_linux_cJSON    := $(shell find cJSON/* -maxdepth 0 -type f -name '*.c' -not -name 'test.c')
+SrcO_linux_cJSON    := $(foreach f,$(SrcC_linux_cJSON:.c=.o),bin/linux/$f)
 
 HeaderFiles := src/Editor.h
 HeaderFiles += $(shell find z64viewer/include/* -type f -name '*.h')
 
 # Make build directories
-$(shell mkdir -p bin/ $(foreach dir,$(dir $(SrcO_win32_z64scene)) $(dir $(SrcO_win32_z64viewer)) $(dir $(SrcO_win32_nanoVG)) $(dir $(SrcO_linux_z64scene)) $(dir $(SrcO_linux_z64viewer)) $(dir $(SrcO_linux_nanoVG)),$(dir)))
+$(shell mkdir -p bin/ $(foreach dir, $(dir $(SrcO_win32_z64scene)) $(dir $(SrcO_win32_z64viewer)) $(dir $(SrcO_win32_nanoVG)) $(dir $(SrcO_win32_cJSON)) $(dir $(SrcO_linux_z64scene)) $(dir $(SrcO_linux_z64viewer)) $(dir $(SrcO_linux_nanoVG)) $(dir $(SrcO_linux_cJSON)) ,$(dir)))
 
 default: win32
 
@@ -36,7 +40,7 @@ linux: src_linux z64scene
 
 # WIN32
 
-src_win32: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG)
+src_win32: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_win32_cJSON)
 	
 bin/win32/z64viewer/src/%.o: z64viewer/src/%.c z64viewer/include/%.h $(HeaderFiles)
 	@echo "Win32: [" $< "]"
@@ -54,13 +58,13 @@ bin/win32/src/main.o: src/main.c $(HeaderFiles)
 	@echo "Win32: [" $< "]"
 	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
 
-z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG)
+z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_win32_cJSON)
 	@echo "win32: [" $@ "]"
 	@i686-w64-mingw32.static-gcc $^ -o z64scene.exe -lm -flto `i686-w64-mingw32.static-pkg-config --cflags --libs glfw3` $(FLAGS)
 
 # LINUX
 
-src_linux: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG)
+src_linux: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(SrcO_win32_cJSON)
 	
 bin/linux/z64viewer/src/%.o: z64viewer/src/%.c z64viewer/include/%.h
 	@echo "Linux: [" $< "]"
@@ -78,7 +82,7 @@ bin/linux/src/main.o: src/main.c
 	@echo "Linux: [" $< "]"
 	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
 
-z64scene: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG)
+z64scene: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(SrcO_win32_cJSON)
 	@echo "Linux: [" $@ "]"
 	@gcc $^ -o z64scene -lm -lglfw -ldl -flto $(FLAGS)
 

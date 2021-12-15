@@ -56,3 +56,4 @@ dkms.conf
 __include/*
 compile_flags.txt
 *.png
+*.json

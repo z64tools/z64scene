@@ -157,7 +157,12 @@ typedef struct GeoGridContext {
 	void*  passArg;
 	SplitTask* taskTable;
 	s32    taskTableNum;
+	#ifndef NDEBUG
+	bool   jsonSettings;
+	#endif
 } GeoGridContext;
+
+Vec2s GeoGrid_Layout_LoadJson(GeoGridContext* geoCtx, Vec2s* winDim);
 
 void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void* vg);
 void GeoGrid_Update(GeoGridContext* geoCtx);

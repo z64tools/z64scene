@@ -7,3 +7,6 @@
 [submodule "incbin"]
 	path = incbin
 	url = https://github.com/graphitemaster/incbin.git
+[submodule "cJSON"]
+	path = cJSON
+	url = https://github.com/DaveGamble/cJSON.git

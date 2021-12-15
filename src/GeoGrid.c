@@ -87,19 +87,19 @@ SplitEdge* GeoGrid_AddEdge(GeoGridContext* geoCtx, SplitVtx* v1, SplitVtx* v2) {
 	if (edge->vtx[0]->pos.y == edge->vtx[1]->pos.y) {
 		edge->state |= EDGE_HORIZONTAL;
 		edge->pos = edge->vtx[0]->pos.y;
-		if (edge->pos < geoCtx->workRect.y + 1) {
+		if (edge->pos < geoCtx->workRect.y + 5) {
 			edge->state |= EDGE_STICK_T;
 		}
-		if (edge->pos > geoCtx->workRect.y + geoCtx->workRect.h - 1) {
+		if (edge->pos > geoCtx->workRect.y + geoCtx->workRect.h - 5) {
 			edge->state |= EDGE_STICK_B;
 		}
 	} else {
 		edge->state |= EDGE_VERTICAL;
 		edge->pos = edge->vtx[0]->pos.x;
-		if (edge->pos < geoCtx->workRect.x + 1) {
+		if (edge->pos < geoCtx->workRect.x + 5) {
 			edge->state |= EDGE_STICK_L;
 		}
-		if (edge->pos > geoCtx->workRect.x + geoCtx->workRect.w - 1) {
+		if (edge->pos > geoCtx->workRect.x + geoCtx->workRect.w - 5) {
 			edge->state |= EDGE_STICK_R;
 		}
 	}
@@ -163,7 +163,7 @@ bool GeoGrid_Cursor_InSplit(Split* split) {
 	return (resX && resY);
 }
 
-void GeoGrid_AddSplit(GeoGridContext* geoCtx, Rect* rect) {
+Split* GeoGrid_AddSplit(GeoGridContext* geoCtx, Rectf32* rect) {
 	Split* split = Lib_Calloc(0, sizeof(Split));
 	
 	split->vtx[VTX_BOT_L] = GeoGrid_AddVtx(geoCtx, rect->x, rect->y + rect->h);
@@ -182,6 +182,8 @@ void GeoGrid_AddSplit(GeoGridContext* geoCtx, Rect* rect) {
 	    GeoGrid_AddEdge(geoCtx, split->vtx[VTX_BOT_R], split->vtx[VTX_BOT_L]);
 	
 	Node_Add(geoCtx->splitHead, split);
+	
+	return split;
 }
 
 void GeoGrid_Edge_SetSlideClamp(GeoGridContext* geoCtx) {
@@ -1312,6 +1314,118 @@ void GeoGrid_SetBotBarHeight(GeoGridContext* geoCtx, s32 h) {
 	GeoGrid_UpdateWorkRect(geoCtx);
 }
 
+void GeoGrid_Layout_SaveJson(GeoGridContext* geoCtx) {
+	Split* split = geoCtx->splitHead;
+	cJSON* layout = cJSON_CreateObject();
+	cJSON* temp;
+	cJSON* num;
+	cJSON* jsonSplit = cJSON_CreateArray();
+	
+	cJSON_AddItemToObject(layout, "splits", jsonSplit);
+	
+	while (split) {
+		temp = cJSON_CreateObject();
+		cJSON_AddItemToArray(jsonSplit, temp);
+		
+		num = cJSON_CreateNumber(split->vtx[1]->pos.x);
+		cJSON_AddItemToObject(temp, "x", num);
+		num = cJSON_CreateNumber(split->vtx[1]->pos.y);
+		cJSON_AddItemToObject(temp, "y", num);
+		
+		num = cJSON_CreateNumber(split->vtx[3]->pos.x - split->vtx[1]->pos.x);
+		cJSON_AddItemToObject(temp, "w", num);
+		num = cJSON_CreateNumber(split->vtx[3]->pos.y - split->vtx[1]->pos.y);
+		cJSON_AddItemToObject(temp, "h", num);
+		num = cJSON_CreateNumber(split->id);
+		cJSON_AddItemToObject(temp, "id", num);
+		
+		split = split->next;
+	}
+	
+	jsonSplit = cJSON_CreateArray();
+	cJSON_AddItemToObject(layout, "dim", jsonSplit);
+	temp = cJSON_CreateObject();
+	cJSON_AddItemToArray(jsonSplit, temp);
+	
+	num = cJSON_CreateNumber(geoCtx->winDim->x);
+	cJSON_AddItemToObject(temp, "w", num);
+	num = cJSON_CreateNumber(geoCtx->winDim->y);
+	cJSON_AddItemToObject(temp, "h", num);
+	
+	FILE* file = fopen("Settings.json", "w");
+	
+	OsAssert(file);
+	
+	fprintf(file, "%s", cJSON_Print(layout));
+	fclose(file);
+	cJSON_Delete(layout);
+}
+
+Vec2s GeoGrid_Layout_LoadJson(GeoGridContext* geoCtx, Vec2s* winDim) {
+	MemFile file = MemFile_Initialize();
+	cJSON* json;
+	cJSON* split;
+	cJSON* temp = NULL;
+	cJSON* dim;
+	Vec2s ret;
+	
+	OsPrintfEx("Setting");
+	
+	MemFile_LoadFile(&file, "Settings.json");
+	json = cJSON_ParseWithLength(file.data, file.dataSize);
+	split = cJSON_GetObjectItem(json, "splits");
+	dim = cJSON_GetObjectItem(json, "dim");
+	
+	cJSON_ArrayForEach(temp, dim) {
+		cJSON* w = cJSON_GetObjectItemCaseSensitive(temp, "w");
+		
+		OsAssert(w);
+		cJSON* h = cJSON_GetObjectItemCaseSensitive(temp, "h");
+		
+		OsAssert(h);
+		
+		geoCtx->winDim = winDim;
+		winDim->x = ret.x = w->valueint;
+		winDim->y = ret.y = h->valueint;
+		
+		GeoGrid_SetTopBarHeight(geoCtx, SPLIT_BAR_HEIGHT);
+		GeoGrid_SetBotBarHeight(geoCtx, SPLIT_BAR_HEIGHT);
+	}
+	
+	cJSON_ArrayForEach(temp, split) {
+		cJSON* x = cJSON_GetObjectItemCaseSensitive(temp, "x");
+		
+		OsAssert(x);
+		cJSON* y = cJSON_GetObjectItemCaseSensitive(temp, "y");
+		
+		OsAssert(y);
+		cJSON* w = cJSON_GetObjectItemCaseSensitive(temp, "w");
+		
+		OsAssert(w);
+		cJSON* h = cJSON_GetObjectItemCaseSensitive(temp, "h");
+		
+		OsAssert(h);
+		cJSON* id = cJSON_GetObjectItemCaseSensitive(temp, "id");
+		
+		OsAssert(id);
+		
+		Rectf32 rect = {
+			x->valuedouble, y->valuedouble,
+			w->valuedouble, h->valuedouble
+		};
+		
+		GeoGrid_AddSplit(geoCtx, &rect)->id = id->valueint;
+	}
+	
+	MemFile_Free(&file);
+	
+	geoCtx->jsonSettings = true;
+	
+	return ret;
+}
+
+/* ───────────────────────────────────────────────────────────────────────── */
+
 void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void* vg) {
 	geoCtx->winDim = winDim;
 	geoCtx->mouse = mouse;
@@ -1319,13 +1433,22 @@ void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void
 	GeoGrid_SetTopBarHeight(geoCtx, SPLIT_BAR_HEIGHT);
 	GeoGrid_SetBotBarHeight(geoCtx, SPLIT_BAR_HEIGHT);
 	
-	Rect lHalf = { geoCtx->workRect.x, geoCtx->workRect.y, geoCtx->workRect.w / 2,
-		       geoCtx->workRect.h };
-	Rect rHalf = { geoCtx->workRect.x + geoCtx->workRect.w / 2, geoCtx->workRect.y,
-		       geoCtx->workRect.w / 2,                      geoCtx->workRect.h };
-	
-	GeoGrid_AddSplit(geoCtx, &lHalf);
-	GeoGrid_AddSplit(geoCtx, &rHalf);
+	if (geoCtx->jsonSettings == false) {
+		Rectf32 lHalf = {
+			geoCtx->workRect.x,
+			geoCtx->workRect.y,
+			(f64)geoCtx->workRect.w * 0.75,
+			geoCtx->workRect.h
+		};
+		Rectf32 rHalf = {
+			geoCtx->workRect.x + (f64)geoCtx->workRect.w * 0.75,
+			geoCtx->workRect.y,
+			(f64)geoCtx->workRect.w * 0.25,
+			geoCtx->workRect.h
+		};
+		GeoGrid_AddSplit(geoCtx, &lHalf)->id = 1;
+		GeoGrid_AddSplit(geoCtx, &rHalf);
+	}
 	
 	geoCtx->prevWorkRect = geoCtx->workRect;
 }
@@ -1337,6 +1460,10 @@ void GeoGrid_Update(GeoGridContext* geoCtx) {
 	GeoGrid_Update_Vtx(geoCtx);
 	GeoGrid_Update_Edges(geoCtx);
 	GeoGrid_Update_Split(geoCtx);
+	
+	if (__inputCtx->key[KEY_ENTER].press) {
+		GeoGrid_Layout_SaveJson(geoCtx);
+	}
 	
 	geoCtx->prevWorkRect = geoCtx->workRect;
 }

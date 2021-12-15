@@ -3,6 +3,7 @@
 #include <Global.h>
 #include <Light.h>
 #include <nanovg.h>
+#include "../cJSON/cJSON.h"
 
 typedef enum {
 	THEME_BASE,

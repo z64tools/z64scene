@@ -71,11 +71,6 @@ void Editor_Init(EditorContext* editorCtx) {
 	);
 	Cursor_Init(&editorCtx->cursorCtx);
 	
-	for (s32 i = -4; i < 22; i++) {
-		s32 o = Lib_Wrap(i, -8, 11);
-		OsPrintf("%d - %d", i, o);
-	}
-	
 	glfwSetWindowSizeLimits(
 		editorCtx->appInfo.mainWindow,
 		400,
