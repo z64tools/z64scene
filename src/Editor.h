@@ -14,11 +14,11 @@ typedef struct {
 typedef struct EditorContext {
 	AppInfo appInfo;
 	InputContext   inputCtx;
-	ViewContext    viewCtx;
+	// ViewContext    viewCtx;
 	LightContext   lightCtx;
 	FontContext    fontCtx;
 	ObjectContext  objCtx;
-	GeoGridContext geoGridCtx;
+	GeoGridContext geoCtx;
 	CursorContext  cursorCtx;
 	struct NVGcontext* vg;
 } EditorContext;
@@ -26,5 +26,16 @@ typedef struct EditorContext {
 void Editor_Draw(EditorContext* editorCtx);
 void Editor_Update(EditorContext* editorCtx);
 void Editor_Init(EditorContext* editorCtx);
+
+// EditorTask
+
+void EnSceneView_Init(void* passArg, void* instance, Split* split);
+void EnSceneView_Destroy(void* passArg, void* instance, Split* split);
+void EnSceneView_Update(void* passArg, void* instance, Split* split);
+void EnSceneView_Draw(void* passArg, void* instance, Split* split);
+
+typedef struct {
+	ViewContext viewCtx;
+} SceneView;
 
 #endif

@@ -8,7 +8,6 @@ int main(void) {
 		"z64scene",
 		&editorCtx->appInfo,
 		&editorCtx->inputCtx,
-		&editorCtx->viewCtx,
 		&editorCtx->objCtx,
 		&editorCtx->lightCtx,
 		editorCtx,
