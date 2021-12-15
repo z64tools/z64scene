@@ -33,7 +33,7 @@ SplitVtx* GeoGrid_AddVtx(GeoGridContext* geoCtx, f64 x, f64 y) {
 	SplitVtx* head = geoCtx->vtxHead;
 	
 	while (head) {
-		if (ABS(head->pos.x - x) <= 1.0 && ABS(head->pos.y - y) <= 1.0) {
+		if (fabs(head->pos.x - x) < 0.25 && fabs(head->pos.y - y) < 0.25) {
 			OsPrintfEx("VtxConnect %.2f %.2f", x, y);
 			
 			return head;
@@ -87,19 +87,19 @@ SplitEdge* GeoGrid_AddEdge(GeoGridContext* geoCtx, SplitVtx* v1, SplitVtx* v2) {
 	if (edge->vtx[0]->pos.y == edge->vtx[1]->pos.y) {
 		edge->state |= EDGE_HORIZONTAL;
 		edge->pos = edge->vtx[0]->pos.y;
-		if (edge->pos < geoCtx->workRect.y + 5) {
+		if (edge->pos < geoCtx->workRect.y + 1) {
 			edge->state |= EDGE_STICK_T;
 		}
-		if (edge->pos > geoCtx->workRect.y + geoCtx->workRect.h - 5) {
+		if (edge->pos > geoCtx->workRect.y + geoCtx->workRect.h - 1) {
 			edge->state |= EDGE_STICK_B;
 		}
 	} else {
 		edge->state |= EDGE_VERTICAL;
 		edge->pos = edge->vtx[0]->pos.x;
-		if (edge->pos < geoCtx->workRect.x + 5) {
+		if (edge->pos < geoCtx->workRect.x + 1) {
 			edge->state |= EDGE_STICK_L;
 		}
-		if (edge->pos > geoCtx->workRect.x + geoCtx->workRect.w - 5) {
+		if (edge->pos > geoCtx->workRect.x + geoCtx->workRect.w - 1) {
 			edge->state |= EDGE_STICK_R;
 		}
 	}
@@ -169,17 +169,12 @@ Split* GeoGrid_AddSplit(GeoGridContext* geoCtx, Rectf32* rect) {
 	split->vtx[VTX_BOT_L] = GeoGrid_AddVtx(geoCtx, rect->x, rect->y + rect->h);
 	split->vtx[VTX_TOP_L] = GeoGrid_AddVtx(geoCtx, rect->x, rect->y);
 	split->vtx[VTX_TOP_R] = GeoGrid_AddVtx(geoCtx, rect->x + rect->w, rect->y);
-	split->vtx[VTX_BOT_R] =
-	    GeoGrid_AddVtx(geoCtx, rect->x + rect->w, rect->y + rect->h);
+	split->vtx[VTX_BOT_R] = GeoGrid_AddVtx(geoCtx, rect->x + rect->w, rect->y + rect->h);
 	
-	split->edge[EDGE_L] =
-	    GeoGrid_AddEdge(geoCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_TOP_L]);
-	split->edge[EDGE_T] =
-	    GeoGrid_AddEdge(geoCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
-	split->edge[EDGE_R] =
-	    GeoGrid_AddEdge(geoCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
-	split->edge[EDGE_B] =
-	    GeoGrid_AddEdge(geoCtx, split->vtx[VTX_BOT_R], split->vtx[VTX_BOT_L]);
+	split->edge[EDGE_L] = GeoGrid_AddEdge(geoCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_TOP_L]);
+	split->edge[EDGE_T] = GeoGrid_AddEdge(geoCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
+	split->edge[EDGE_R] = GeoGrid_AddEdge(geoCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
+	split->edge[EDGE_B] = GeoGrid_AddEdge(geoCtx, split->vtx[VTX_BOT_R], split->vtx[VTX_BOT_L]);
 	
 	Node_Add(geoCtx->splitHead, split);
 	
@@ -1520,6 +1515,6 @@ void GeoGrid_Draw(GeoGridContext* geoCtx) {
 	}
 	
 	GeoGrid_Draw_Splits(geoCtx);
-	// GeoGrid_Draw_Debug(geoCtx);
+	GeoGrid_Draw_Debug(geoCtx);
 	GeoGrid_Draw_ContextMenu(geoCtx);
 }
