@@ -1209,12 +1209,12 @@ void GeoGrid_Draw_ContextMenu(GeoGridContext* geoCtx) {
 		glViewport(0, 0, geoCtx->winDim->x, geoCtx->winDim->y);
 		nvgBeginFrame(vg, geoCtx->winDim->x, geoCtx->winDim->y, 1.0f); {
 			nvgBeginPath(vg);
-			nvgFillColor(vg, Theme_GetColor(THEME_TEXT));
+			nvgFillColor(vg, Theme_GetColor(THEME_SHDW));
 			nvgRoundedRect(vg, menuRect.x - 0.5, menuRect.y - 0.5, menuRect.w + 1.0, menuRect.h + 1.0, SPLIT_ROUND_R);
 			nvgFill(vg);
 			
 			nvgBeginPath(vg);
-			nvgFillColor(vg, Theme_GetColor(THEME_HEDR));
+			nvgFillColor(vg, Theme_GetColor(THEME_LINE));
 			nvgRoundedRect(vg, menuRect.x, menuRect.y, menuRect.w, menuRect.h, SPLIT_ROUND_R);
 			nvgFill(vg);
 			
