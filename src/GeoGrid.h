@@ -181,8 +181,8 @@ typedef struct {
 	u8    state;
 	u8    hover;
 	Rect  rect;
-} ElemButton;
+} ElButton;
 
-s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElemButton* button, Rect* rect);
+s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElButton* button, Rect* rect);
 
 #endif

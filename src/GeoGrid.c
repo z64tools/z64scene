@@ -968,9 +968,6 @@ void GeoGrid_Draw_Debug(GeoGridContext* geoCtx) {
 void GeoGrid_Draw_SplitHeader(GeoGridContext* geoCtx, Split* split) {
 	Rect rect = split->rect;
 	s32 menuSel;
-	ElemButton button = {
-		"!"
-	};
 	
 	rect.x = 0;
 	rect.y = CLAMP_MIN(rect.h - SPLIT_BAR_HEIGHT, 0);

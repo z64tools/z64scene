@@ -34,11 +34,13 @@ void Elements_QueueElement(GeoGridContext* geoCtx, Split* split, ElementIndex ty
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
-s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElemButton* button, Rect* rect) {
+s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElButton* button, Rect* rect) {
 	u32 set = 0;
 	
 	if (rect == NULL) {
 		rect = &button->rect;
+	} else {
+		button->rect = *rect;
 	}
 	
 	button->hover = 0;
@@ -59,7 +61,7 @@ s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElemButton* button, Rec
 		geoCtx,
 		split,
 		ELEM_ID_BUTTON,
-		&button
+		button
 	);
 	
 	return button->state;
@@ -68,7 +70,7 @@ s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElemButton* button, Rec
 void Element_Draw_Button(ElementCallInfo* info) {
 	void* vg = info->geoCtx->vg;
 	Split* split = info->split;
-	ElemButton* button = info->arg;
+	ElButton* button = info->arg;
 	
 	nvgBeginPath(vg);
 	nvgFillColor(vg, Theme_GetColor(THEME_LGHT, 175));
