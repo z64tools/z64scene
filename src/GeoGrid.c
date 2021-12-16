@@ -1,4 +1,4 @@
-#include "Editor.h"
+#include "GeoGrid.h"
 
 void GeoGrid_RemoveDublicates(GeoGridContext* geoCtx);
 void GeoGrid_Update_SplitRect(Split* split);
@@ -968,6 +968,9 @@ void GeoGrid_Draw_Debug(GeoGridContext* geoCtx) {
 void GeoGrid_Draw_SplitHeader(GeoGridContext* geoCtx, Split* split) {
 	Rect rect = split->rect;
 	s32 menuSel;
+	ElemButton button = {
+		"!"
+	};
 	
 	rect.x = 0;
 	rect.y = CLAMP_MIN(rect.h - SPLIT_BAR_HEIGHT, 0);
@@ -1019,9 +1022,10 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 		nvgFill(vg);
 		
 		nvgEndFrame(geoCtx->vg);
-		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, 1.0f);
-		table[id].draw(geoCtx->passArg, split->instance, split);
-		nvgEndFrame(geoCtx->vg);
+		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, 1.0f); {
+			table[id].draw(geoCtx->passArg, split->instance, split);
+			Elements_Draw(geoCtx, split);
+		} nvgEndFrame(geoCtx->vg);
 		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, 1.0f);
 	} else {
 		nvgBeginPath(vg);
@@ -1319,18 +1323,30 @@ void GeoGrid_Layout_SaveJson(GeoGridContext* geoCtx) {
 	cJSON_AddItemToObject(layout, "splits", jsonSplit);
 	
 	while (split) {
+		cJSON_AddItemToObject(layout, "splits", jsonSplit);
 		temp = cJSON_CreateObject();
 		cJSON_AddItemToArray(jsonSplit, temp);
 		
-		num = cJSON_CreateNumber(split->vtx[1]->pos.x);
-		cJSON_AddItemToObject(temp, "x", num);
-		num = cJSON_CreateNumber(split->vtx[1]->pos.y);
-		cJSON_AddItemToObject(temp, "y", num);
+		num = cJSON_CreateNumber(split->vtx[0]->pos.x);
+		cJSON_AddItemToObject(temp, "v0x", num);
+		num = cJSON_CreateNumber(split->vtx[0]->pos.y);
+		cJSON_AddItemToObject(temp, "v0y", num);
 		
-		num = cJSON_CreateNumber(split->vtx[3]->pos.x - split->vtx[1]->pos.x);
-		cJSON_AddItemToObject(temp, "w", num);
-		num = cJSON_CreateNumber(split->vtx[3]->pos.y - split->vtx[1]->pos.y);
-		cJSON_AddItemToObject(temp, "h", num);
+		num = cJSON_CreateNumber(split->vtx[1]->pos.x);
+		cJSON_AddItemToObject(temp, "v1x", num);
+		num = cJSON_CreateNumber(split->vtx[1]->pos.y);
+		cJSON_AddItemToObject(temp, "v1y", num);
+		
+		num = cJSON_CreateNumber(split->vtx[2]->pos.x);
+		cJSON_AddItemToObject(temp, "v2x", num);
+		num = cJSON_CreateNumber(split->vtx[2]->pos.y);
+		cJSON_AddItemToObject(temp, "v2y", num);
+		
+		num = cJSON_CreateNumber(split->vtx[3]->pos.x);
+		cJSON_AddItemToObject(temp, "v3x", num);
+		num = cJSON_CreateNumber(split->vtx[3]->pos.y);
+		cJSON_AddItemToObject(temp, "v3y", num);
+		
 		num = cJSON_CreateNumber(split->id);
 		cJSON_AddItemToObject(temp, "id", num);
 		
@@ -1373,11 +1389,7 @@ Vec2s GeoGrid_Layout_LoadJson(GeoGridContext* geoCtx, Vec2s* winDim) {
 	
 	cJSON_ArrayForEach(temp, dim) {
 		cJSON* w = cJSON_GetObjectItemCaseSensitive(temp, "w");
-		
-		OsAssert(w);
 		cJSON* h = cJSON_GetObjectItemCaseSensitive(temp, "h");
-		
-		OsAssert(h);
 		
 		geoCtx->winDim = winDim;
 		winDim->x = ret.x = w->valueint;
@@ -1388,28 +1400,30 @@ Vec2s GeoGrid_Layout_LoadJson(GeoGridContext* geoCtx, Vec2s* winDim) {
 	}
 	
 	cJSON_ArrayForEach(temp, split) {
-		cJSON* x = cJSON_GetObjectItemCaseSensitive(temp, "x");
-		
-		OsAssert(x);
-		cJSON* y = cJSON_GetObjectItemCaseSensitive(temp, "y");
-		
-		OsAssert(y);
-		cJSON* w = cJSON_GetObjectItemCaseSensitive(temp, "w");
-		
-		OsAssert(w);
-		cJSON* h = cJSON_GetObjectItemCaseSensitive(temp, "h");
-		
-		OsAssert(h);
+		cJSON* v0x = cJSON_GetObjectItemCaseSensitive(temp, "v0x");
+		cJSON* v0y = cJSON_GetObjectItemCaseSensitive(temp, "v0y");
+		cJSON* v1x = cJSON_GetObjectItemCaseSensitive(temp, "v1x");
+		cJSON* v1y = cJSON_GetObjectItemCaseSensitive(temp, "v1y");
+		cJSON* v2x = cJSON_GetObjectItemCaseSensitive(temp, "v2x");
+		cJSON* v2y = cJSON_GetObjectItemCaseSensitive(temp, "v2y");
+		cJSON* v3x = cJSON_GetObjectItemCaseSensitive(temp, "v3x");
+		cJSON* v3y = cJSON_GetObjectItemCaseSensitive(temp, "v3y");
 		cJSON* id = cJSON_GetObjectItemCaseSensitive(temp, "id");
+		Split* split = Lib_Calloc(0, sizeof(Split));
 		
-		OsAssert(id);
+		split->vtx[VTX_BOT_L] = GeoGrid_AddVtx(geoCtx, v0x->valuedouble, v0y->valuedouble);
+		split->vtx[VTX_TOP_L] = GeoGrid_AddVtx(geoCtx, v1x->valuedouble, v1y->valuedouble);
+		split->vtx[VTX_TOP_R] = GeoGrid_AddVtx(geoCtx, v2x->valuedouble, v2y->valuedouble);
+		split->vtx[VTX_BOT_R] = GeoGrid_AddVtx(geoCtx, v3x->valuedouble, v3y->valuedouble);
 		
-		Rectf32 rect = {
-			x->valuedouble, y->valuedouble,
-			w->valuedouble, h->valuedouble
-		};
+		split->edge[EDGE_L] = GeoGrid_AddEdge(geoCtx, split->vtx[VTX_BOT_L], split->vtx[VTX_TOP_L]);
+		split->edge[EDGE_T] = GeoGrid_AddEdge(geoCtx, split->vtx[VTX_TOP_L], split->vtx[VTX_TOP_R]);
+		split->edge[EDGE_R] = GeoGrid_AddEdge(geoCtx, split->vtx[VTX_TOP_R], split->vtx[VTX_BOT_R]);
+		split->edge[EDGE_B] = GeoGrid_AddEdge(geoCtx, split->vtx[VTX_BOT_R], split->vtx[VTX_BOT_L]);
 		
-		GeoGrid_AddSplit(geoCtx, &rect)->id = id->valueint;
+		split->id = id->valueint;
+		
+		Node_Add(geoCtx->splitHead, split);
 	}
 	
 	MemFile_Free(&file);
@@ -1446,11 +1460,13 @@ void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void
 	}
 	
 	geoCtx->prevWorkRect = geoCtx->workRect;
+	Elements_Init(geoCtx);
 }
 
 void GeoGrid_Update(GeoGridContext* geoCtx) {
 	GeoGrid_SetTopBarHeight(geoCtx, geoCtx->bar[BAR_TOP].rect.h);
 	GeoGrid_SetBotBarHeight(geoCtx, geoCtx->bar[BAR_BOT].rect.h);
+	Elements_Update(geoCtx);
 	GeoGrid_Update_ContextMenu(geoCtx);
 	GeoGrid_Update_Vtx(geoCtx);
 	GeoGrid_Update_Edges(geoCtx);

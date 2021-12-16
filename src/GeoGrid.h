@@ -3,7 +3,10 @@
 #include <Global.h>
 #include <z64.h>
 #include <nanovg.h>
+#include "Cursor.h"
 #include "Theme.h"
+
+extern char* gBuild;
 
 #define SPLIT_GRAB_DIST  4
 #define SPLIT_CTXM_DIST  32
@@ -162,10 +165,22 @@ typedef struct GeoGridContext {
 	#endif
 } GeoGridContext;
 
+bool GeoGrid_Cursor_InRect(Split* split, Rect* rect);
 Vec2s GeoGrid_Layout_LoadJson(GeoGridContext* geoCtx, Vec2s* winDim);
 
 void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void* vg);
 void GeoGrid_Update(GeoGridContext* geoCtx);
 void GeoGrid_Draw(GeoGridContext* geoCtx);
+
+void Elements_Init(GeoGridContext* geoCtx);
+void Elements_Update(GeoGridContext* geoCtx);
+void Elements_Draw(GeoGridContext* geoCtx, Split* split);
+
+typedef struct {
+	char* txt;
+	u8    state;
+} ElemButton;
+
+s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElemButton* button, Rect* rect);
 
 #endif
