@@ -179,6 +179,8 @@ void Elements_Draw(GeoGridContext* geoCtx, Split* split);
 typedef struct {
 	char* txt;
 	u8    state;
+	u8    hover;
+	Rect  rect;
 } ElemButton;
 
 s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElemButton* button, Rect* rect);

@@ -7,16 +7,7 @@ typedef enum {
 } ElementIndex;
 
 typedef struct {
-	f64   f64[2];
-	s32   s32[2];
-	s16   s16[2];
-	s8    s8[4];
-	Rect  rect;
-	void* ptr[2];
-} ElementArgs;
-
-typedef struct {
-	ElementArgs     args;
+	void*  arg;
 	Split* split;
 	ElementIndex    type;
 	GeoGridContext* geoCtx;
@@ -32,11 +23,11 @@ static u32 sElemNum;
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
-void Elements_QueueElement(GeoGridContext* geoCtx, Split* split, ElementIndex type, ElementArgs args) {
+void Elements_QueueElement(GeoGridContext* geoCtx, Split* split, ElementIndex type, void* arg) {
 	sCurrentElement->geoCtx = geoCtx;
 	sCurrentElement->split = split;
 	sCurrentElement->type = type;
-	sCurrentElement->args = args;
+	sCurrentElement->arg = arg;
 	sCurrentElement++;
 	sElemNum++;
 }
@@ -45,8 +36,12 @@ void Elements_QueueElement(GeoGridContext* geoCtx, Split* split, ElementIndex ty
 
 s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElemButton* button, Rect* rect) {
 	u32 set = 0;
-	u32 hoverOver = 0;
 	
+	if (rect == NULL) {
+		rect = &button->rect;
+	}
+	
+	button->hover = 0;
 	button->state = 0;
 	if (split->mouseInSplit && !split->blockMouse && GeoGrid_Cursor_InRect(split, rect)) {
 		if (geoCtx->mouse->clickL.press) {
@@ -57,23 +52,14 @@ s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElemButton* button, Rec
 			button->state++;
 		}
 		
-		hoverOver = 1;
+		button->hover = 1;
 	}
-	
-	void* args[] = {
-		button, rect, &hoverOver
-	};
 	
 	Elements_QueueElement(
 		geoCtx,
 		split,
 		ELEM_ID_BUTTON,
-		(ElementArgs) {
-		.rect = *rect,
-		.s8[0] = hoverOver,
-		.s8[1] = button->state,
-		.ptr[0] = button->txt
-	}
+		&button
 	);
 	
 	return button->state;
@@ -82,28 +68,24 @@ s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElemButton* button, Rec
 void Element_Draw_Button(ElementCallInfo* info) {
 	void* vg = info->geoCtx->vg;
 	Split* split = info->split;
-	
-	char* txt = info->args.ptr[0];
-	u32 hover = info->args.s8[0];
-	s8 buttonState = info->args.s8[1];
-	Rect* rect = &info->args.rect;
+	ElemButton* button = info->arg;
 	
 	nvgBeginPath(vg);
 	nvgFillColor(vg, Theme_GetColor(THEME_LGHT, 175));
 	nvgRoundedRect(
 		vg,
-		rect->x - 1.0f,
-		rect->y - 1.0f,
-		rect->w + 1.0f * 2,
-		rect->h + 1.0f * 2,
+		button->rect.x - 1.0f,
+		button->rect.y - 1.0f,
+		button->rect.w + 1.0f * 2,
+		button->rect.h + 1.0f * 2,
 		SPLIT_ROUND_R
 	);
 	nvgFill(vg);
 	
 	nvgBeginPath(vg);
 	
-	if (hover) {
-		if (buttonState) {
+	if (button->hover) {
+		if (button->state) {
 			nvgFillColor(vg, Theme_GetColor(THEME_BUTP, 175));
 		} else {
 			nvgFillColor(vg, Theme_GetColor(THEME_BUTH, 175));
@@ -111,7 +93,7 @@ void Element_Draw_Button(ElementCallInfo* info) {
 	} else {
 		nvgFillColor(vg, Theme_GetColor(THEME_BUTI, 175));
 	}
-	nvgRoundedRect(vg, rect->x, rect->y, rect->w, rect->h, SPLIT_ROUND_R);
+	nvgRoundedRect(vg, button->rect.x, button->rect.y, button->rect.w, button->rect.h, SPLIT_ROUND_R);
 	nvgFill(vg);
 }
 
