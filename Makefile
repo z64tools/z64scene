@@ -88,4 +88,4 @@ z64scene: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(
 
 clean:
 	rm -f z64scene.exe z64scene
-	rm -f $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG)
+	rm -f $(shell find bin/* -type f -name '*.o')
