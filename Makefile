@@ -82,7 +82,7 @@ bin/linux/src/main.o: src/main.c
 	@echo "Linux: [" $< "]"
 	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
 
-z64scene: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(SrcO_win32_cJSON)
+z64scene: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(SrcO_linux_cJSON)
 	@echo "Linux: [" $@ "]"
 	@gcc $^ -o z64scene -lm -lglfw -ldl -flto $(FLAGS)
 
