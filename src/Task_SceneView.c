@@ -6,7 +6,9 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	
 	View_Init(&this->viewCtx, &editorCtx->inputCtx);
 	
-	OsPrintfEx("Init");
+	MemFile_LoadFile(&editorCtx->objCtx.zobj, "zobj.zobj");
+	SkelAnime_Init(&editorCtx->objCtx.zobj, &this->skelAnime, 0x0600E988, 0x06010808, this->jointTable);
+	// MemFile_LoadFile(&editorCtx->objCtx.zobj, "object_sd.zobj");
 }
 
 void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
@@ -86,7 +88,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		split->rect.w,
 		split->rect.h
 	};
-	static MtxF mtx[128];
+	Mtx mtx[800];
 	
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editorCtx->inputCtx);
@@ -94,10 +96,11 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	z64_Draw_Room(&editorCtx->objCtx.room[0]);
 	
 	#if 1
+	SkelAnime_Update(&this->skelAnime);
+	
 	Matrix_Translate(0, 0, 0, MTXMODE_NEW);
 	Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
-	Matrix_Push();
-	SkelAnime_Draw(&editorCtx->objCtx.zobj, 0x0600E988, mtx);
-	Matrix_Pop();
+	SkelAnime_Draw(&this->skelAnime, mtx, this->jointTable);
+	// SkelAnime_Draw(&editorCtx->objCtx.zobj, 0x0600bac8, NULL);
 	#endif
 }

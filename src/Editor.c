@@ -62,8 +62,6 @@ void Editor_Init(EditorContext* editorCtx) {
 		OsPrintfEx("Could not load Font");
 	}
 	
-	MemFile_LoadFile(&editorCtx->objCtx.zobj, "zobj.zobj");
-	
 	Theme_Init(0);
 	GeoGrid_Init(
 		&editorCtx->geoCtx,
