@@ -92,6 +92,8 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editorCtx->inputCtx);
+	Matrix_Translate(0, 0, 0, MTXMODE_NEW);
+	Matrix_Push();
 	z64_Draw_SetScene(&editorCtx->objCtx.scene);
 	z64_Draw_Room(&editorCtx->objCtx.room[0]);
 	
@@ -100,9 +102,11 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	
 	Matrix_Translate(0, 0, 0, MTXMODE_NEW);
 	Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
-	gSPSegment(0x8, &this->skelAnime.memFile->cast.s8[0x0000]);
-	gSPSegment(0x9, &this->skelAnime.memFile->cast.s8[0x4800]);
+	gSPSegment(0x8, SEGMENTED_TO_VIRTUAL(0x06000000));
+	gSPSegment(0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
 	SkelAnime_Draw(&this->skelAnime, mtx, this->jointTable);
 	// SkelAnime_Draw(&editorCtx->objCtx.zobj, 0x0600bac8, NULL);
 	#endif
+	
+	Matrix_Pop();
 }
