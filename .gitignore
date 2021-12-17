@@ -57,3 +57,4 @@ __include/*
 compile_flags.txt
 *.png
 *.json
+*.zobj

@@ -1528,6 +1528,6 @@ void GeoGrid_Draw(GeoGridContext* geoCtx) {
 	}
 	
 	GeoGrid_Draw_Splits(geoCtx);
-	GeoGrid_Draw_Debug(geoCtx);
+	// GeoGrid_Draw_Debug(geoCtx);
 	GeoGrid_Draw_ContextMenu(geoCtx);
 }

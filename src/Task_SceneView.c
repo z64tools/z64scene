@@ -86,9 +86,18 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		split->rect.w,
 		split->rect.h
 	};
+	static MtxF mtx[128];
 	
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editorCtx->inputCtx);
 	z64_Draw_SetScene(&editorCtx->objCtx.scene);
 	z64_Draw_Room(&editorCtx->objCtx.room[0]);
+	
+	#if 1
+	Matrix_Translate(0, 0, 0, MTXMODE_NEW);
+	Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
+	Matrix_Push();
+	SkelAnime_Draw(&editorCtx->objCtx.zobj, 0x0600E988, mtx);
+	Matrix_Pop();
+	#endif
 }
