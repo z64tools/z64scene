@@ -38,45 +38,43 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	
 	// Cursor Wrapping
 	if (this->viewCtx.setCamMove == true && (mouse->vel.x || mouse->vel.y)) {
-		s16 rel;
-		if (mouse->pos.x < split->edge[EDGE_L]->pos + extGrabDist) {
-			rel = mouse->pos.x - split->edge[EDGE_L]->pos - extGrabDist;
+		s16 xMin = split->edge[EDGE_L]->pos + extGrabDist;
+		s16 xMax = split->edge[EDGE_R]->pos - extGrabDist;
+		if (mouse->pos.x < xMin || mouse->pos.x > xMax) {
+			s16 oldPos = mouse->pos.x;
+			s16 newPos = Wrap(
+				mouse->pos.x,
+				(s16)(split->edge[EDGE_L]->pos + extGrabDist),
+				(s16)(split->edge[EDGE_R]->pos - extGrabDist)
+			);
 			
-			glfwSetCursorPos(editCtx->appInfo.mainWindow, split->edge[EDGE_R]->pos - extGrabDist, editCtx->inputCtx.mouse.pos.y);
-			mouse->jumpVelComp.x =
-			    (split->edge[EDGE_L]->pos + extGrabDist) -
-			    (split->edge[EDGE_R]->pos - extGrabDist) + rel;
-			OsPrintfEx("%d", rel);
+			mouse->jumpVelComp.x = oldPos - newPos;
+			
+			glfwSetCursorPos(
+				editCtx->appInfo.mainWindow,
+				newPos,
+				editCtx->inputCtx.mouse.pos.y
+			);
 		}
 		
-		if (mouse->pos.x > split->edge[EDGE_R]->pos - extGrabDist) {
-			rel = mouse->pos.x - split->edge[EDGE_R]->pos + extGrabDist;
-			
-			glfwSetCursorPos(editCtx->appInfo.mainWindow, split->edge[EDGE_L]->pos + extGrabDist, editCtx->inputCtx.mouse.pos.y);
-			mouse->jumpVelComp.x =
-			    (split->edge[EDGE_R]->pos - extGrabDist) -
-			    (split->edge[EDGE_L]->pos + extGrabDist) + rel;
-			OsPrintfEx("%d", rel);
-		}
+		s16 yMin = split->edge[EDGE_T]->pos + extGrabDist;
+		s16 yMax = split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT;
 		
-		if (mouse->pos.y < split->edge[EDGE_T]->pos + extGrabDist) {
-			rel = mouse->pos.y - split->edge[EDGE_T]->pos - extGrabDist;
+		if (mouse->pos.y < yMin || mouse->pos.y > yMax) {
+			s16 oldPos = mouse->pos.y;
+			s16 newPos = Wrap(
+				mouse->pos.y,
+				(s16)(split->edge[EDGE_T]->pos + extGrabDist),
+				(s16)(split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT)
+			);
 			
-			glfwSetCursorPos(editCtx->appInfo.mainWindow, editCtx->inputCtx.mouse.pos.x, split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT);
-			mouse->jumpVelComp.y =
-			    (split->edge[EDGE_T]->pos + extGrabDist) -
-			    (split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT) + rel;
-			OsPrintfEx("%d", rel);
-		}
-		
-		if (mouse->pos.y > split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT) {
-			rel = mouse->pos.y - split->edge[EDGE_B]->pos + extGrabDist + SPLIT_BAR_HEIGHT;
+			mouse->jumpVelComp.y = oldPos - newPos;
 			
-			glfwSetCursorPos(editCtx->appInfo.mainWindow, editCtx->inputCtx.mouse.pos.x, split->edge[EDGE_T]->pos + extGrabDist);
-			mouse->jumpVelComp.y =
-			    (split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT) -
-			    (split->edge[EDGE_T]->pos + extGrabDist) + rel;
-			OsPrintfEx("%d", rel);
+			glfwSetCursorPos(
+				editCtx->appInfo.mainWindow,
+				editCtx->inputCtx.mouse.pos.x,
+				newPos
+			);
 		}
 	}
 }
@@ -100,8 +98,8 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	#if 1
 	SkelAnime_Update(&this->skelAnime);
 	
-	Matrix_Translate(0, 0, 0, MTXMODE_NEW);
-	Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
+	Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_NEW);
+	Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
 	gSPSegment(0x8, SEGMENTED_TO_VIRTUAL(0x06000000));
 	gSPSegment(0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
 	SkelAnime_Draw(&this->skelAnime, mtx, this->jointTable);
@@ -109,27 +107,4 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	#endif
 	
 	Matrix_Pop();
-	
-	char buffer[1024];
-	
-	sprintf(
-		buffer,
-		"%.2f %.2f %.2f",
-		this->viewCtx.currentCamera->eye.x,
-		this->viewCtx.currentCamera->eye.y,
-		this->viewCtx.currentCamera->eye.z
-	);
-	nvgFontSize(editCtx->vg, SPLIT_TEXT_SCALE);
-	nvgFontFace(editCtx->vg, "sans");
-	nvgTextAlign(editCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-	
-	nvgFillColor(editCtx->vg, Theme_GetColor(THEME_TEXT, 200));
-	nvgFontBlur(editCtx->vg, 0.0f);
-	nvgText(
-		editCtx->vg,
-		20,
-		20,
-		buffer,
-		NULL
-	);
 }
