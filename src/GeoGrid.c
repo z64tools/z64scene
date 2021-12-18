@@ -6,7 +6,7 @@ void GeoGrid_Update_SplitRect(Split* split);
 /* ───────────────────────────────────────────────────────────────────────── */
 
 SplitDir GeoGrid_GetDir_Opposite(SplitDir dir) {
-	return Lib_Wrap(dir + 2, DIR_L, DIR_B);
+	return Wrap(dir + 2, DIR_L, DIR_B);
 }
 
 SplitDir GeoGrid_GerDir_MouseToPressPos(Split* split) {
@@ -58,11 +58,11 @@ SplitEdge* GeoGrid_AddEdge(GeoGridContext* geoCtx, SplitVtx* v1, SplitVtx* v2) {
 	
 	if (v1->pos.y == v2->pos.y) {
 		if (v1->pos.x > v2->pos.x) {
-			Lib_Swap(v1, v2);
+			Swap(v1, v2);
 		}
 	} else {
 		if (v1->pos.y > v2->pos.y) {
-			Lib_Swap(v1, v2);
+			Swap(v1, v2);
 		}
 	}
 	
@@ -543,7 +543,7 @@ void GeoGrid_Update_Edge_SetSlide(GeoGridContext* geoCtx) {
 		
 		if (isEditEdge && isCornerEdge == false) {
 			SplitEdge* temp = geoCtx->edgeHead;
-			s32 align = Lib_Wrap(edge->state & EDGE_ALIGN, 0, 1);
+			s32 align = Wrap(edge->state & EDGE_ALIGN, 0, 1);
 			
 			while (temp) {
 				for (s32 i = 0; i < 2; i++) {
@@ -582,7 +582,7 @@ void GeoGrid_Update_Edge_SetSlide(GeoGridContext* geoCtx) {
 		}
 		
 		if (isCornerEdge) {
-			s32 revAlign = Lib_Wrap(isHor + 1, 0, 1);
+			s32 revAlign = Wrap(isHor + 1, 0, 1);
 			edge->vtx[0]->pos.s[isHor] = edge->pos;
 			edge->vtx[1]->pos.s[isHor] = edge->pos;
 		} else {
@@ -1056,7 +1056,7 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 		nvgMoveTo(vg, split->center.x + p[0].x * thing, split->center.y + p[0].y * thing);
 		
 		for (s32 i = 1; i <= ArrayCount(p); i++) {
-			s32 j = Lib_Wrap(i, 0, ArrayCount(p) - 1);
+			s32 j = Wrap(i, 0, ArrayCount(p) - 1);
 			
 			nvgLineTo(vg, split->center.x + p[j].x * thing, split->center.y + p[j].y * thing);
 		}
