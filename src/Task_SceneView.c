@@ -40,13 +40,12 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	if (this->viewCtx.setCamMove == true && (mouse->vel.x || mouse->vel.y)) {
 		s16 xMin = split->edge[EDGE_L]->pos + extGrabDist;
 		s16 xMax = split->edge[EDGE_R]->pos - extGrabDist;
+		s16 yMin = split->edge[EDGE_T]->pos + extGrabDist;
+		s16 yMax = split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT;
+		
 		if (mouse->pos.x < xMin || mouse->pos.x > xMax) {
 			s16 oldPos = mouse->pos.x;
-			s16 newPos = Wrap(
-				mouse->pos.x,
-				(s16)(split->edge[EDGE_L]->pos + extGrabDist),
-				(s16)(split->edge[EDGE_R]->pos - extGrabDist)
-			);
+			s16 newPos = Wrap(mouse->pos.x, xMin, xMax);
 			
 			mouse->jumpVelComp.x = oldPos - newPos;
 			
@@ -57,16 +56,9 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 			);
 		}
 		
-		s16 yMin = split->edge[EDGE_T]->pos + extGrabDist;
-		s16 yMax = split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT;
-		
 		if (mouse->pos.y < yMin || mouse->pos.y > yMax) {
 			s16 oldPos = mouse->pos.y;
-			s16 newPos = Wrap(
-				mouse->pos.y,
-				(s16)(split->edge[EDGE_T]->pos + extGrabDist),
-				(s16)(split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT)
-			);
+			s16 newPos = Wrap(mouse->pos.y, yMin, yMax);
 			
 			mouse->jumpVelComp.y = oldPos - newPos;
 			
