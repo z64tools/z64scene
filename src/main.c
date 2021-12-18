@@ -28,7 +28,8 @@ int main(void) {
 		(CallbackFunc)Editor_Update,
 		(CallbackFunc)Editor_Draw,
 		res.x,
-		res.y
+		res.y,
+		2
 	);
 	Editor_Init(editCtx);
 	
