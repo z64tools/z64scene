@@ -23,9 +23,11 @@ typedef struct EditorContext {
 	struct NVGcontext* vg;
 } EditorContext;
 
-void Editor_Draw(EditorContext* editorCtx);
-void Editor_Update(EditorContext* editorCtx);
-void Editor_Init(EditorContext* editorCtx);
+extern EditorContext* gEditCtx;
+
+void Editor_Draw(EditorContext* editCtx);
+void Editor_Update(EditorContext* editCtx);
+void Editor_Init(EditorContext* editCtx);
 
 // EditorTask
 

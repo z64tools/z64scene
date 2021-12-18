@@ -1,4 +1,4 @@
-#include "GeoGrid.h"
+#include "Editor.h"
 
 void GeoGrid_RemoveDublicates(GeoGridContext* geoCtx);
 void GeoGrid_Update_SplitRect(Split* split);

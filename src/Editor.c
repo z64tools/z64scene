@@ -28,51 +28,51 @@ SplitTask sTaskTable[] = {
 	}
 };
 
+EditorContext* gEditCtx;
+
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
-void Editor_Draw(EditorContext* editorCtx) {
-	if (glfwGetWindowAttrib(editorCtx->appInfo.mainWindow, GLFW_ICONIFIED))
+void Editor_Draw(EditorContext* editCtx) {
+	if (glfwGetWindowAttrib(editCtx->appInfo.mainWindow, GLFW_ICONIFIED))
 		return;
 	
-	GeoGrid_Draw(&editorCtx->geoCtx);
+	GeoGrid_Draw(&editCtx->geoCtx);
 }
 
-void Editor_Update(EditorContext* editorCtx) {
-	if (glfwGetWindowAttrib(editorCtx->appInfo.mainWindow, GLFW_ICONIFIED))
+void Editor_Update(EditorContext* editCtx) {
+	if (glfwGetWindowAttrib(editCtx->appInfo.mainWindow, GLFW_ICONIFIED))
 		return;
 	
-	GeoGrid_Update(&editorCtx->geoCtx);
-	Cursor_Update(&editorCtx->cursorCtx);
+	GeoGrid_Update(&editCtx->geoCtx);
+	Cursor_Update(&editCtx->cursorCtx);
 }
 
-void Editor_Init(EditorContext* editorCtx) {
-	editorCtx->geoCtx.passArg = editorCtx;
-	editorCtx->geoCtx.taskTable = sTaskTable;
-	editorCtx->geoCtx.taskTableNum = ArrayCount(sTaskTable);
+void Editor_Init(EditorContext* editCtx) {
+	editCtx->geoCtx.passArg = editCtx;
+	editCtx->geoCtx.taskTable = sTaskTable;
+	editCtx->geoCtx.taskTableNum = ArrayCount(sTaskTable);
+	editCtx->vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 	
-	#if 0
-	editorCtx->vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
-	#else
-	editorCtx->vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-	#endif
-	if (editorCtx->vg == NULL)
+	gEditCtx = editCtx;
+	
+	if (editCtx->vg == NULL)
 		printf_error("Could not init nanovg.");
-	editorCtx->fontCtx.notoSansID = nvgCreateFont(editorCtx->vg, "sans", "NotoSans-Regular.ttf");
-	if (editorCtx->fontCtx.notoSansID < 0) {
+	editCtx->fontCtx.notoSansID = nvgCreateFont(editCtx->vg, "sans", "NotoSans-Regular.ttf");
+	if (editCtx->fontCtx.notoSansID < 0) {
 		OsPrintfEx("Could not load Font");
 	}
 	
 	Theme_Init(0);
 	GeoGrid_Init(
-		&editorCtx->geoCtx,
-		&editorCtx->appInfo.winDim,
-		&editorCtx->inputCtx.mouse,
-		editorCtx->vg
+		&editCtx->geoCtx,
+		&editCtx->appInfo.winDim,
+		&editCtx->inputCtx.mouse,
+		editCtx->vg
 	);
-	Cursor_Init(&editorCtx->cursorCtx);
+	Cursor_Init(&editCtx->cursorCtx);
 	
 	glfwSetWindowSizeLimits(
-		editorCtx->appInfo.mainWindow,
+		editCtx->appInfo.mainWindow,
 		400,
 		200,
 		GLFW_DONT_CARE,
