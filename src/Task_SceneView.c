@@ -7,8 +7,15 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	View_Init(&this->viewCtx, &editCtx->inputCtx);
 	
 	MemFile_LoadFile(&editCtx->objCtx.zobj, "zobj.zobj");
-	SkelAnime_Init(&editCtx->objCtx.zobj, &this->skelAnime, 0x0600E988, 0x06010808, this->jointTable);
-	// MemFile_LoadFile(&editCtx->objCtx.zobj, "object_sd.zobj");
+	SkelAnime_Init(
+		&editCtx->objCtx.zobj,
+		&this->skelAnime,
+		0x0600E988,
+		0x06010808,
+		this->jointTable,
+		this->morphTable
+	);
+	this->skelAnime.playSpeed = 0.3f;
 }
 
 void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {

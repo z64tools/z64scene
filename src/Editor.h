@@ -39,7 +39,8 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split);
 typedef struct {
 	ViewContext viewCtx;
 	Vec3s jointTable[256];
-	SkelAnime   skelAnime;
+	Vec3s morphTable[256];
+	SkelAnime skelAnime;
 } SceneView;
 
 #endif
