@@ -86,6 +86,17 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		split->rect.h
 	};
 	Mtx mtx[800];
+	static s16 frame;
+	static s8 eyeId;
+	u32 eye[] = {
+		0x06000000,
+		0x06000800,
+		0x06001000,
+	};
+	
+	if (Zelda64_20fpsLimiter()) {
+		eyeId = Zelda64_EyeBlink(&frame);
+	}
 	
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
@@ -97,7 +108,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	Matrix_Push(); {
 		Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
 		Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
-		gSPSegment(0x8, SEGMENTED_TO_VIRTUAL(0x06000000));
+		gSPSegment(0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
 		gSPSegment(0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
 		SkelAnime_Draw(&this->skelAnime, mtx, this->jointTable);
 	} Matrix_Pop();
