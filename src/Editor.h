@@ -41,6 +41,7 @@ typedef struct {
 	Vec3s jointTable[256];
 	Vec3s morphTable[256];
 	SkelAnime skelAnime;
+	bool  headerClick;
 } SceneView;
 
 #endif

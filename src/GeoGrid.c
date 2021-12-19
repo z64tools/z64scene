@@ -747,7 +747,7 @@ void GeoGrid_Update_Split(GeoGridContext* geoCtx) {
 			0, split->rect.h - SPLIT_BAR_HEIGHT,
 			split->rect.w, SPLIT_BAR_HEIGHT
 		};
-		Vec_Vec2s_Substract(&split->mousePos, &mouse->pos, (Vec2s*)&rectPos);
+		Vec2_Substract(&split->mousePos, &mouse->pos, &rectPos);
 		split->mouseInSplit = GeoGrid_Cursor_InSplit(split);
 		split->mouseInHeader = GeoGrid_Cursor_InRect(split, &headerRect);
 		split->center.x = split->rect.w * 0.5f;

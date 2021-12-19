@@ -47,15 +47,31 @@ void Cursor_CreateCursors(CursorContext* cursorCtx) {
 void Cursor_Init(CursorContext* cursorCtx) {
 	Cursor_CreateCursors(cursorCtx);
 	__cursorCtx = cursorCtx;
+	cursorCtx->cursorForce = CURSOR_NONE;
 }
 
 void Cursor_Update(CursorContext* cursorCtx) {
+	if (cursorCtx->cursorForce != CURSOR_NONE) {
+		if (cursorCtx->cursorNow != cursorCtx->cursorForce) {
+			glfwSetCursor(__appInfo->mainWindow, __cursorCtx->cursor[cursorCtx->cursorForce].glfwCur);
+			cursorCtx->cursorNow = cursorCtx->cursorForce;
+		}
+		cursorCtx->cursorForce = CURSOR_NONE;
+		
+		return;
+	}
+	
 	if (cursorCtx->cursorSet != cursorCtx->cursorNow) {
 		glfwSetCursor(__appInfo->mainWindow, __cursorCtx->cursor[cursorCtx->cursorSet].glfwCur);
 		cursorCtx->cursorNow = cursorCtx->cursorSet;
 	}
+	
 }
 
 void Cursor_SetCursor(CursorIndex cursorId) {
 	__cursorCtx->cursorSet = cursorId;
+}
+
+void Cursor_ForceCursor(CursorIndex cursorId) {
+	__cursorCtx->cursorForce = cursorId;
 }

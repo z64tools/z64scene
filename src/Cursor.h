@@ -10,7 +10,8 @@ typedef struct {
 } CursorBitmap;
 
 typedef enum {
-	CURSOR_DEFAULT,
+	CURSOR_NONE    = -1,
+	CURSOR_DEFAULT = 0,
 	CURSOR_ARROW_L = 1,
 	CURSOR_ARROW_U,
 	CURSOR_ARROW_R,
@@ -28,10 +29,12 @@ typedef struct {
 	void* _p;
 	CursorIndex  cursorNow;
 	CursorIndex  cursorSet;
+	CursorIndex  cursorForce;
 } CursorContext;
 
 void Cursor_Init(CursorContext* cursorCtx);
 void Cursor_Update(CursorContext* cursorCtx);
 void Cursor_SetCursor(CursorIndex cursorId);
+void Cursor_ForceCursor(CursorIndex cursorId);
 
 #endif

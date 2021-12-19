@@ -34,21 +34,27 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 		split->rect.w,
 		split->rect.h
 	};
-	u32 extGrabDist = SPLIT_GRAB_DIST * 1.5;
 	
-	this->viewCtx.cameraControl = false;
-	if (split->blockMouse == false) {
-		if (split->mouseInSplit && !split->mouseInHeader) {
-			this->viewCtx.cameraControl = true;
-		}
+	if (split->mouseInHeader && mouse->click.press) {
+		this->headerClick = true;
+	}
+	
+	if (this->headerClick == true && mouse->cursorAction == false) {
+		this->headerClick = false;
+	}
+	
+	if (this->headerClick == true) {
+		return;
 	}
 	
 	// Cursor Wrapping
-	if (this->viewCtx.setCamMove == true && (mouse->vel.x || mouse->vel.y)) {
-		s16 xMin = split->edge[EDGE_L]->pos + extGrabDist;
-		s16 xMax = split->edge[EDGE_R]->pos - extGrabDist;
-		s16 yMin = split->edge[EDGE_T]->pos + extGrabDist;
-		s16 yMax = split->edge[EDGE_B]->pos - extGrabDist - SPLIT_BAR_HEIGHT;
+	if (this->viewCtx.setCamMove == true) {
+		s16 xMin = split->edge[EDGE_L]->pos;
+		s16 xMax = split->edge[EDGE_R]->pos;
+		s16 yMin = split->edge[EDGE_T]->pos;
+		s16 yMax = split->edge[EDGE_B]->pos - SPLIT_BAR_HEIGHT;
+		
+		Cursor_ForceCursor(CURSOR_DEFAULT);
 		
 		if (mouse->pos.x < xMin || mouse->pos.x > xMax) {
 			s16 oldPos = mouse->pos.x;
@@ -75,6 +81,13 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 				newPos
 			);
 		}
+	} else {
+		this->viewCtx.cameraControl = false;
+		if (split->blockMouse == false) {
+			if (split->mouseInSplit && !split->mouseInHeader) {
+				this->viewCtx.cameraControl = true;
+			}
+		}
 	}
 }
 
@@ -94,9 +107,8 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		0x06001000,
 	};
 	
-	if (Zelda64_20fpsLimiter()) {
+	if (Zelda64_20fpsLimiter())
 		eyeId = Zelda64_EyeBlink(&frame);
-	}
 	
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
