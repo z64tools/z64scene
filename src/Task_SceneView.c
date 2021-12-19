@@ -100,6 +100,9 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
+	
+	for (int i = 0x8; i < 0x10; ++i)
+		gSPSegment(i, 0);
 	z64_Draw_SetScene(&editCtx->objCtx.scene);
 	z64_Draw_Room(&editCtx->objCtx.room[0]);
 	
