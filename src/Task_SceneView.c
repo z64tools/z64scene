@@ -6,16 +6,17 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	
 	View_Init(&this->viewCtx, &editCtx->inputCtx);
 	
-	MemFile_LoadFile(&editCtx->objCtx.zobj, "zobj.zobj");
-	SkelAnime_Init(
-		&editCtx->objCtx.zobj,
-		&this->skelAnime,
-		0x0600E988,
-		0x06010808,
-		this->jointTable,
-		this->morphTable
-	);
-	this->skelAnime.playSpeed = 0.3f;
+	if (!MemFile_LoadFile(&editCtx->objCtx.zobj, "zobj.zobj")) {
+		SkelAnime_Init(
+			&editCtx->objCtx.zobj,
+			&this->skelAnime,
+			0x0600E988,
+			0x06010808,
+			this->jointTable,
+			this->morphTable
+		);
+		this->skelAnime.playSpeed = 0.3f;
+	}
 	
 	MemFile_LoadFile(&editCtx->objCtx.scene, "scene.zscene");
 	for (s32 i = 0; i < 32; i++) {
@@ -51,12 +52,17 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 		this->headerClick = false;
 	}
 	
-	if (this->headerClick == true) {
-		return;
+	if (this->viewCtx.setCamMove == false) {
+		this->viewCtx.cameraControl = false;
+		if (split->blockMouse == false) {
+			if (split->mouseInSplit && !split->mouseInHeader && !this->headerClick) {
+				this->viewCtx.cameraControl = true;
+			}
+		}
 	}
 	
 	// Cursor Wrapping
-	if (this->viewCtx.setCamMove == true) {
+	if (this->viewCtx.setCamMove && this->viewCtx.cameraControl) {
 		s16 xMin = split->edge[EDGE_L]->pos;
 		s16 xMax = split->edge[EDGE_R]->pos;
 		s16 yMin = split->edge[EDGE_T]->pos;
@@ -89,13 +95,6 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 				newPos
 			);
 		}
-	} else {
-		this->viewCtx.cameraControl = false;
-		if (split->blockMouse == false) {
-			if (split->mouseInSplit && !split->mouseInHeader) {
-				this->viewCtx.cameraControl = true;
-			}
-		}
 	}
 }
 
@@ -121,21 +120,21 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	
-	for (int i = 0x8; i < 0x10; ++i)
-		gSPSegment(i, 0);
+	n64_ClearSegments();
 	z64_Draw_SetScene(&editCtx->objCtx.scene);
 	for (s32 i = 0; i < 32; i++) {
 		if (editCtx->objCtx.room[i].data != NULL)
 			z64_Draw_Room(&editCtx->objCtx.room[i]);
 	}
 	
-	SkelAnime_Update(&this->skelAnime);
-	
-	Matrix_Push(); {
-		Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
-		Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
-		gSPSegment(0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
-		gSPSegment(0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
-		SkelAnime_Draw(&this->skelAnime, mtx, this->jointTable);
-	} Matrix_Pop();
+	if (editCtx->objCtx.zobj.data) {
+		SkelAnime_Update(&this->skelAnime);
+		Matrix_Push(); {
+			Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
+			Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
+			gSPSegment(0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
+			gSPSegment(0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
+			SkelAnime_Draw(&this->skelAnime, mtx, this->jointTable);
+		} Matrix_Pop();
+	}
 }
