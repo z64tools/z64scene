@@ -33,9 +33,6 @@ int main(void) {
 	);
 	Editor_Init(editCtx);
 	
-	MemFile_LoadFile(&editCtx->objCtx.scene, "scene.zscene");
-	MemFile_LoadFile(&editCtx->objCtx.room[0], "room_0.zmap");
-	
 	z64_Update();
 	glfwTerminate();
 }

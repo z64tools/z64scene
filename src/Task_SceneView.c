@@ -16,6 +16,14 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 		this->morphTable
 	);
 	this->skelAnime.playSpeed = 0.3f;
+	
+	MemFile_LoadFile(&editCtx->objCtx.scene, "scene.zscene");
+	for (s32 i = 0; i < 32; i++) {
+		char buffer[64];
+		
+		sprintf(buffer, "room_%d.zmap", i);
+		MemFile_LoadFile(&editCtx->objCtx.room[i], buffer);
+	}
 }
 
 void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
@@ -116,7 +124,10 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	for (int i = 0x8; i < 0x10; ++i)
 		gSPSegment(i, 0);
 	z64_Draw_SetScene(&editCtx->objCtx.scene);
-	z64_Draw_Room(&editCtx->objCtx.room[0]);
+	for (s32 i = 0; i < 32; i++) {
+		if (editCtx->objCtx.room[i].data != NULL)
+			z64_Draw_Room(&editCtx->objCtx.room[i]);
+	}
 	
 	SkelAnime_Update(&this->skelAnime);
 	
