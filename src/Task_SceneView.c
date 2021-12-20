@@ -6,9 +6,9 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	
 	View_Init(&this->viewCtx, &editCtx->inputCtx);
 	
-	if (!MemFile_LoadFile(&editCtx->objCtx.zobj, "zobj.zobj")) {
+	if (!MemFile_LoadFile(&editCtx->zobj, "zobj.zobj")) {
 		SkelAnime_Init(
-			&editCtx->objCtx.zobj,
+			&editCtx->zobj,
 			&this->skelAnime,
 			0x0600E988,
 			0x06010808,
@@ -18,13 +18,15 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 		this->skelAnime.playSpeed = 0.3f;
 	}
 	
-	MemFile_LoadFile(&editCtx->objCtx.scene, "scene.zscene");
+	MemFile_LoadFile(&editCtx->scene.file, "scene.zscene");
 	for (s32 i = 0; i < 32; i++) {
 		char buffer[64];
 		
 		sprintf(buffer, "room_%d.zmap", i);
-		MemFile_LoadFile(&editCtx->objCtx.room[i], buffer);
+		MemFile_LoadFile(&editCtx->room[i].file, buffer);
 	}
+	
+	Scene_ExecuteCommands(&editCtx->scene, NULL);
 }
 
 void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
@@ -39,10 +41,21 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	SceneView* this = instance;
 	InputContext* inputCtx = &editCtx->inputCtx;
 	MouseInput* mouse = &inputCtx->mouse;
+	LightContext* lightCtx = &editCtx->scene.lightCtx;
 	Vec2s dim = {
 		split->rect.w,
 		split->rect.h
 	};
+	
+	if (inputCtx->key[KEY_UP].press) {
+		lightCtx->curLightId = Wrap(lightCtx->curLightId + 1, 0, lightCtx->lightListNum);
+		OsPrintfEx("LightID %d", editCtx->scene.lightCtx.curLightId);
+	}
+	
+	if (inputCtx->key[KEY_DOWN].press) {
+		lightCtx->curLightId = Wrap(lightCtx->curLightId - 1, 0, lightCtx->lightListNum);
+		OsPrintfEx("LightID %d", editCtx->scene.lightCtx.curLightId);
+	}
 	
 	if (split->mouseInHeader && mouse->click.press) {
 		this->headerClick = true;
@@ -121,13 +134,15 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	
 	n64_ClearSegments();
-	z64_Draw_SetScene(&editCtx->objCtx.scene);
+	gSPSegment(0x02, editCtx->scene.file.data);
+	Light_BindLights(&editCtx->scene);
+	
 	for (s32 i = 0; i < 32; i++) {
-		if (editCtx->objCtx.room[i].data != NULL)
-			z64_Draw_Room(&editCtx->objCtx.room[i]);
+		if (editCtx->room[i].file.data != NULL)
+			z64_Draw_Room(&editCtx->room[i].file);
 	}
 	
-	if (editCtx->objCtx.zobj.data) {
+	if (editCtx->zobj.data) {
 		SkelAnime_Update(&this->skelAnime);
 		Matrix_Push(); {
 			Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);

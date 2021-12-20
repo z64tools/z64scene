@@ -14,13 +14,13 @@ typedef struct {
 typedef struct EditorContext {
 	AppInfo appInfo;
 	InputContext   inputCtx;
-	// ViewContext    viewCtx;
-	LightContext   lightCtx;
 	FontContext    fontCtx;
-	ObjectContext  objCtx;
 	GeoGridContext geoCtx;
 	CursorContext  cursorCtx;
 	struct NVGcontext* vg;
+	Scene   scene;
+	Room    room[32];
+	MemFile zobj;
 } EditorContext;
 
 extern EditorContext* gEditCtx;

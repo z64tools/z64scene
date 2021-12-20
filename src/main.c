@@ -22,8 +22,6 @@ int main(void) {
 		"z64scene",
 		&editCtx->appInfo,
 		&editCtx->inputCtx,
-		&editCtx->objCtx,
-		&editCtx->lightCtx,
 		editCtx,
 		(CallbackFunc)Editor_Update,
 		(CallbackFunc)Editor_Draw,
