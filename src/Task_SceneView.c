@@ -120,6 +120,8 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	SceneView* this = instance;
+	LightContext* lightCtx = &editCtx->scene.lightCtx;
+	ViewContext* viewCtx = &this->viewCtx;
 	Vec2s dim = {
 		split->rect.w,
 		split->rect.h
@@ -136,12 +138,12 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	if (Zelda64_20fpsLimiter())
 		eyeId = Zelda64_EyeBlink(&frame);
 	
-	View_SetProjectionDimensions(&this->viewCtx, &dim);
-	View_Update(&this->viewCtx, &editCtx->inputCtx);
-	
 	n64_ClearSegments();
 	gSPSegment(0x02, editCtx->scene.file.data);
 	Light_BindLights(&editCtx->scene);
+	viewCtx->far = ReadBE(lightCtx->envLight[lightCtx->curLightId].fogFar);
+	View_SetProjectionDimensions(&this->viewCtx, &dim);
+	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	
 	for (s32 i = 0; i < 32; i++) {
 		if (editCtx->room[i].file.data != NULL) {
