@@ -19,14 +19,20 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	}
 	
 	MemFile_LoadFile(&editCtx->scene.file, "scene.zscene");
+	Scene_ExecuteCommands(&editCtx->scene, NULL);
+	
 	for (s32 i = 0; i < 32; i++) {
 		char buffer[64];
 		
 		sprintf(buffer, "room_%d.zmap", i);
-		MemFile_LoadFile(&editCtx->room[i].file, buffer);
+		if (MemFile_LoadFile(&editCtx->room[i].file, buffer)) {
+			OsPrintfEx("Break");
+			break;
+		}
+		
+		Scene_ExecuteCommands(NULL, &editCtx->room[i]);
 	}
 	
-	Scene_ExecuteCommands(&editCtx->scene, NULL);
 }
 
 void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
@@ -138,8 +144,9 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	Light_BindLights(&editCtx->scene);
 	
 	for (s32 i = 0; i < 32; i++) {
-		if (editCtx->room[i].file.data != NULL)
-			z64_Draw_Room(&editCtx->room[i].file);
+		if (editCtx->room[i].file.data != NULL) {
+			Room_Draw(&editCtx->room[i]);
+		}
 	}
 	
 	if (editCtx->zobj.data) {
