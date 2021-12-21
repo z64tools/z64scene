@@ -48,12 +48,12 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	};
 	
 	if (inputCtx->key[KEY_UP].press) {
-		lightCtx->curLightId = Wrap(lightCtx->curLightId + 1, 0, lightCtx->lightListNum);
+		lightCtx->curLightId = Wrap(lightCtx->curLightId + 1, 0, lightCtx->lightListNum - 1);
 		OsPrintfEx("LightID %d", editCtx->scene.lightCtx.curLightId);
 	}
 	
 	if (inputCtx->key[KEY_DOWN].press) {
-		lightCtx->curLightId = Wrap(lightCtx->curLightId - 1, 0, lightCtx->lightListNum);
+		lightCtx->curLightId = Wrap(lightCtx->curLightId - 1, 0, lightCtx->lightListNum - 1);
 		OsPrintfEx("LightID %d", editCtx->scene.lightCtx.curLightId);
 	}
 	
