@@ -141,7 +141,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	n64_ClearSegments();
 	gSPSegment(0x02, editCtx->scene.file.data);
 	Light_BindLights(&editCtx->scene);
-	viewCtx->far = ReadBE(lightCtx->envLight[lightCtx->curLightId].fogFar);
+	// viewCtx->far = ReadBE(lightCtx->envLight[lightCtx->curLightId].fogFar);
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	
