@@ -55,7 +55,7 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 		split->rect.h
 	};
 	
-	if (inputCtx->key[KEY_Z].hold) {
+	if (inputCtx->key[KEY_F].hold) {
 		if (inputCtx->key[KEY_LEFT].press) {
 			s16 near = ReadBE(envLight->fogNear) & 0x3FF;
 			near--;
@@ -67,22 +67,6 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 			s16 near = ReadBE(envLight->fogNear) & 0x3FF;
 			near++;
 			envLight->fogNear = ReadBE(near);
-			lightCtx->state |= LIGHT_STATE_CHANGED;
-		}
-	}
-	
-	if (inputCtx->key[KEY_X].hold) {
-		if (inputCtx->key[KEY_LEFT].hold) {
-			s16 far = ReadBE(envLight->fogFar);
-			far -= 100;
-			envLight->fogFar = ReadBE(far);
-			lightCtx->state |= LIGHT_STATE_CHANGED;
-		}
-		
-		if (inputCtx->key[KEY_RIGHT].hold) {
-			s16 far = ReadBE(envLight->fogFar);
-			far += 100;
-			envLight->fogFar = ReadBE(far);
 			lightCtx->state |= LIGHT_STATE_CHANGED;
 		}
 	}
