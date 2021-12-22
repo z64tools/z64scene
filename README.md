@@ -42,7 +42,7 @@ Currently, Windows binaries are produced by cross-compiling from Linux or WSL us
 
 Use the following commands to clone and build the repository:
 ```
-git clone https://github.com/HermosauhuTeam/z64scene.git
+git clone https://github.com/ZeldaDev64/z64scene.git
 cd z64scene
 git submodule update --init
 make all
