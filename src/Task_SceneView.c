@@ -30,7 +30,7 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 			break;
 		}
 		
-		Scene_ExecuteCommands(NULL, &editCtx->room[i]);
+		Scene_ExecuteCommands(&editCtx->scene, &editCtx->room[i]);
 	}
 	
 	editCtx->scene.lightCtx.state |= LIGHT_STATE_CHANGED;
@@ -49,7 +49,7 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	InputContext* inputCtx = &editCtx->inputCtx;
 	MouseInput* mouse = &inputCtx->mouse;
 	LightContext* lightCtx = &editCtx->scene.lightCtx;
-	EnvLight* envLight = &lightCtx->envLight[lightCtx->curLightId];
+	EnvLight* envLight = &lightCtx->envLight[lightCtx->curEnvId];
 	Vec2s dim = {
 		split->rect.w,
 		split->rect.h
@@ -72,12 +72,12 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	}
 	
 	if (inputCtx->key[KEY_UP].press) {
-		lightCtx->curLightId = Wrap(lightCtx->curLightId + 1, 0, lightCtx->lightListNum - 1);
+		lightCtx->curEnvId = Wrap(lightCtx->curEnvId + 1, 0, lightCtx->envListNum - 1);
 		lightCtx->state |= LIGHT_STATE_CHANGED;
 	}
 	
 	if (inputCtx->key[KEY_DOWN].press) {
-		lightCtx->curLightId = Wrap(lightCtx->curLightId - 1, 0, lightCtx->lightListNum - 1);
+		lightCtx->curEnvId = Wrap(lightCtx->curEnvId - 1, 0, lightCtx->envListNum - 1);
 		lightCtx->state |= LIGHT_STATE_CHANGED;
 	}
 	
@@ -158,13 +158,14 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	
 	n64_ClearSegments();
 	gSPSegment(0x02, editCtx->scene.file.data);
-	Light_BindLights(&editCtx->scene);
-	viewCtx->far = ReadBE(lightCtx->envLight[lightCtx->curLightId].fogFar);
+	Light_SetFog(&editCtx->scene, viewCtx);
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	
 	for (s32 i = 0; i < 32; i++) {
 		if (editCtx->room[i].file.data != NULL) {
+			Light_BindEnvLights(&editCtx->scene);
+			Light_BindRoomLights(&editCtx->scene, &editCtx->room[i]);
 			Room_Draw(&editCtx->room[i]);
 		}
 	}
