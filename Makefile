@@ -45,18 +45,22 @@ src_win32: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $
 bin/win32/z64viewer/src/%.o: z64viewer/src/%.c z64viewer/include/%.h $(HeaderFiles)
 	@echo "Win32: [" $< "]"
 	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@i686-w64-mingw32.static-objdump -drz $@ > $(@:.o=.s)
 	
 bin/win32/%.o: %.c %.h $(HeaderFiles)
 	@echo "Win32: [" $< "]"
 	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@i686-w64-mingw32.static-objdump -drz $@ > $(@:.o=.s)
 	
 bin/win32/%.o: %.c $(HeaderFiles)
 	@echo "Win32: [" $< "]"
 	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@i686-w64-mingw32.static-objdump -drz $@ > $(@:.o=.s)
 	
 bin/win32/src/main.o: src/main.c $(HeaderFiles)
 	@echo "Win32: [" $< "]"
 	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
+	@i686-w64-mingw32.static-objdump -drz $@ > $(@:.o=.s)
 
 z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_win32_cJSON)
 	@echo "win32: [" $@ "]"
