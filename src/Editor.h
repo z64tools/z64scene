@@ -3,6 +3,7 @@
 #include "Theme.h"
 #include "GeoGrid.h"
 #include "Cursor.h"
+#include "Actor.h"
 
 extern char* gBuild;
 extern char* gHash;
