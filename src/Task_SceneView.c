@@ -165,7 +165,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	
 	for (s32 i = 0; i < 32; i++) {
 		if (editCtx->room[i].file.data != NULL) {
-			Light_BindEnvLights(&editCtx->scene);
+			Light_BindEnvLights(&editCtx->scene, &editCtx->room[0]);
 			Light_BindRoomLights(&editCtx->scene, &editCtx->room[i]);
 			Room_Draw(&editCtx->room[i]);
 		}
