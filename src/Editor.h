@@ -22,6 +22,7 @@ typedef struct EditorContext {
 	Scene   scene;
 	Room    room[32];
 	MemFile zobj;
+	MemFile gizmo;
 } EditorContext;
 
 extern EditorContext* gEditCtx;

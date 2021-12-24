@@ -18,6 +18,7 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 		this->skelAnime.playSpeed = 0.3f;
 	}
 	
+	MemFile_LoadFile(&editCtx->gizmo, "geometry/gizmo_arrow.zobj");
 	MemFile_LoadFile(&editCtx->scene.file, "scene.zscene");
 	Scene_ExecuteCommands(&editCtx->scene, NULL);
 	
