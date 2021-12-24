@@ -58,3 +58,4 @@ compile_flags.txt
 *.png
 *.json
 *.zobj
+!geometry/*.zobj
