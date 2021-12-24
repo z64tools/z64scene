@@ -116,6 +116,10 @@ typedef struct Split {
 	u32   prevId;
 	bool  blockMouse;
 	void* instance;
+	struct {
+		bool  useCustomBG;
+		RGB8 color;
+	} bg;
 } Split;
 
 typedef struct {

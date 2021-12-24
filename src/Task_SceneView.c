@@ -35,6 +35,7 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	}
 	
 	editCtx->scene.lightCtx.state |= LIGHT_STATE_CHANGED;
+	split->bg.useCustomBG = true;
 }
 
 void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
@@ -134,6 +135,17 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 			);
 		}
 	}
+	
+	n64_ClearSegments();
+	gSPSegment(0x02, editCtx->scene.file.data);
+	Light_SetFog(&editCtx->scene, &this->viewCtx);
+	envLight = &lightCtx->envLight[lightCtx->curEnvId];
+	
+	split->bg.color = (RGB8) {
+		envLight->fogColor.r,
+		envLight->fogColor.g,
+		envLight->fogColor.b
+	};
 }
 
 void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
@@ -159,7 +171,6 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	
 	n64_ClearSegments();
 	gSPSegment(0x02, editCtx->scene.file.data);
-	Light_SetFog(&editCtx->scene, viewCtx);
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	

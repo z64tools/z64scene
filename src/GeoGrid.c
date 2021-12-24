@@ -961,7 +961,6 @@ void GeoGrid_Draw_Debug(GeoGridContext* geoCtx) {
 			vtx = vtx->next;
 			num++;
 		}
-		
 	} nvgEndFrame(geoCtx->vg);
 }
 
@@ -1014,8 +1013,11 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 		
 		nvgBeginPath(vg);
 		nvgRect(vg, 0, 0, rect->w, rect->h);
-		nvgPathWinding(vg, NVG_HOLE);
-		nvgFillColor(vg, Theme_GetColor(THEME_LINE, 195));
+		if (split->bg.useCustomBG == true) {
+			nvgFillColor(vg, nvgRGBA(split->bg.color.r, split->bg.color.g, split->bg.color.b, 255));
+		} else {
+			nvgFillColor(vg, Theme_GetColor(THEME_LINE, 195));
+		}
 		nvgFill(vg);
 		
 		nvgEndFrame(geoCtx->vg);
@@ -1264,7 +1266,6 @@ void GeoGrid_Draw_ContextMenu(GeoGridContext* geoCtx) {
 					menuRect.y += SPLIT_TEXT_SPLIT;
 				}
 			}
-			
 		} nvgEndFrame(vg);
 	}
 }
