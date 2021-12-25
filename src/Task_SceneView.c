@@ -185,10 +185,16 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	if (editCtx->zobj.data) {
 		SkelAnime_Update(&this->skelAnime);
 		Matrix_Push(); {
+			u32 gfxSetEnv[4] = { 0 };
+			
+			gfxSetEnv[0] = WriteBE(u32, 0xFB000000); // SetEnvColor
+			gfxSetEnv[1] = WriteBE(u32, 0xFFFFFFFF); // Color
+			gfxSetEnv[2] = WriteBE(u32, 0xDF000000); // End DisplayList
 			Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
 			Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
 			gSPSegment(0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
 			gSPSegment(0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
+			gSPDisplayList(gfxSetEnv);
 			SkelAnime_Draw(&this->skelAnime, mtx, this->jointTable);
 		} Matrix_Pop();
 	}
