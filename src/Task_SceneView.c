@@ -187,9 +187,9 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		Matrix_Push(); {
 			u32 gfxSetEnv[4] = { 0 };
 			
-			gfxSetEnv[0] = WriteBE(u32, 0xFB000000); // SetEnvColor
-			gfxSetEnv[1] = WriteBE(u32, 0xFFFFFFFF); // Color
-			gfxSetEnv[2] = WriteBE(u32, 0xDF000000); // End DisplayList
+			WriteBE(gfxSetEnv[0], 0xFB000000); // SetEnvColor
+			WriteBE(gfxSetEnv[1], 0xFFFFFFFF); // Color
+			WriteBE(gfxSetEnv[2], 0xDF000000); // End DisplayList
 			Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
 			Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
 			gSPSegment(0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
