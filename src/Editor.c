@@ -30,6 +30,46 @@ SplitTask sTaskTable[] = {
 
 EditorContext* gEditCtx;
 
+void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
+	u8 loadFlag[ROOM_MAX] = { 0 };
+	
+	OsPrintfEx("Drops:");
+	
+	printf_SetSuppressLevel(PSL_NONE);
+	
+	for (s32 i = 0; i < count; i++) {
+		printf_info("Drop File: [%s]", file[i]);
+		
+		if (Lib_MemMem(file[i], strlen(file[i]), ".zscene", strlen(".zscene"))) {
+			printf_info("Loading Scene [%s]", file[i]);
+			MemFile_LoadFile(&gEditCtx->scene.file, file[i]);
+			Scene_ExecuteCommands(&gEditCtx->scene, NULL);
+		}
+		
+		if (Lib_MemMem(file[i], strlen(file[i]), ".zmap", strlen(".zmap"))) {
+			for (s32 j = 0; j < ROOM_MAX; j++) {
+				char roomNum[128] = { 0 };
+				sprintf(roomNum, "_%d.zmap", j);
+				if (Lib_MemMem(file[i], strlen(file[i]), roomNum, strlen(roomNum))) {
+					printf_info("Loading Room [%s]", file[i]);
+					MemFile_LoadFile(&gEditCtx->room[j].file, file[i]);
+					Scene_ExecuteCommands(&gEditCtx->scene, &gEditCtx->room[j]);
+					loadFlag[j] = true;
+				}
+			}
+		}
+	}
+	
+	for (s32 i = 0; i < ROOM_MAX; i++) {
+		if (loadFlag[i] == false && gEditCtx->room[i].file.data != NULL) {
+			printf_info("Clearing Room [%d]", i);
+			MemFile_Free(&gEditCtx->room[i].file);
+		}
+	}
+	
+	printf_SetSuppressLevel(PSL_DEBUG);
+}
+
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 void Editor_Draw(EditorContext* editCtx) {

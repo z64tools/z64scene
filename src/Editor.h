@@ -5,6 +5,8 @@
 #include "Cursor.h"
 #include "Actor.h"
 
+#define ROOM_MAX 128
+
 extern char* gBuild;
 extern char* gHash;
 
@@ -20,7 +22,7 @@ typedef struct EditorContext {
 	CursorContext  cursorCtx;
 	struct NVGcontext* vg;
 	Scene   scene;
-	Room    room[32];
+	Room    room[ROOM_MAX];
 	MemFile zobj;
 	MemFile gizmo;
 } EditorContext;

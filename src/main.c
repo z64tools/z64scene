@@ -2,6 +2,8 @@
 
 static EditorContext* editCtx;
 
+void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]);
+
 int main(void) {
 	Vec2s res = { 1400, 700 };
 	FILE* file = fopen("Settings.json", "rb");
@@ -25,6 +27,7 @@ int main(void) {
 		editCtx,
 		(CallbackFunc)Editor_Update,
 		(CallbackFunc)Editor_Draw,
+		Editor_DropCallback,
 		res.x,
 		res.y,
 		2
