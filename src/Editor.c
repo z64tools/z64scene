@@ -52,6 +52,8 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 				sprintf(roomNum, "_%d.zmap", j);
 				if (Lib_MemMem(file[i], strlen(file[i]), roomNum, strlen(roomNum))) {
 					printf_info("Loading Room [%s]", file[i]);
+					
+					gEditCtx->scene.lightCtx.room[j].lightNum = 0;
 					MemFile_LoadFile(&gEditCtx->room[j].file, file[i]);
 					Scene_ExecuteCommands(&gEditCtx->scene, &gEditCtx->room[j]);
 					loadFlag[j] = true;
@@ -62,6 +64,7 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 	
 	for (s32 i = 0; i < ROOM_MAX; i++) {
 		if (loadFlag[i] == false && gEditCtx->room[i].file.data != NULL) {
+			gEditCtx->scene.lightCtx.room[i].lightNum = 0;
 			printf_info("Clearing Room [%d]", i);
 			MemFile_Free(&gEditCtx->room[i].file);
 		}
