@@ -187,6 +187,11 @@ typedef struct {
 	Rect  rect;
 } ElButton;
 
-s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElButton* button, Rect* rect);
+s32 Element_Button(
+	GeoGridContext* geoCtx,
+	Split* split,
+	ElButton* button,
+	Rect* rect
+);
 
 #endif

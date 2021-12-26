@@ -97,6 +97,21 @@ void Element_Draw_Button(ElementCallInfo* info) {
 	}
 	nvgRoundedRect(vg, button->rect.x, button->rect.y, button->rect.w, button->rect.h, SPLIT_ROUND_R);
 	nvgFill(vg);
+	
+	if (button->txt) {
+		nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255));
+		nvgFontFace(vg, "sans");
+		nvgFontSize(vg, SPLIT_TEXT_SCALE);
+		nvgFontBlur(vg, 0.0);
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+		nvgText(
+			vg,
+			button->rect.x + SPLIT_TEXT_SPLIT,
+			button->rect.y + SPLIT_TEXT_SPLIT,
+			button->txt,
+			NULL
+		);
+	}
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */

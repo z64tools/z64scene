@@ -790,7 +790,7 @@ void GeoGrid_Update_Split(GeoGridContext* geoCtx) {
 		if (split->id > 0) {
 			if (split->id != split->prevId) {
 				if (split->prevId != 0) {
-					table[id].destroy(geoCtx->passArg, split->instance, split);
+					table[split->prevId].destroy(geoCtx->passArg, split->instance, split);
 					free(split->instance);
 				}
 				
@@ -1016,7 +1016,7 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 		if (split->bg.useCustomBG == true) {
 			nvgFillColor(vg, nvgRGBA(split->bg.color.r, split->bg.color.g, split->bg.color.b, 255));
 		} else {
-			nvgFillColor(vg, Theme_GetColor(THEME_LINE, 195));
+			nvgFillColor(vg, Theme_GetColor(THEME_SPBG, 255));
 		}
 		nvgFill(vg);
 		
@@ -1029,7 +1029,6 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 	} else {
 		nvgBeginPath(vg);
 		nvgRect(vg, 0, 0, rect->w, rect->h);
-		nvgPathWinding(vg, NVG_HOLE);
 		nvgFillColor(vg, Theme_GetColor(THEME_SPBG, 255));
 		nvgFill(vg);
 		

@@ -46,6 +46,21 @@ typedef struct {
 	Vec3s morphTable[256];
 	SkelAnime skelAnime;
 	bool  headerClick;
-} SceneView;
+} EnSceneView;
+
+void EnRoom_Init(void* passArg, void* instance, Split* split);
+void EnRoom_Destroy(void* passArg, void* instance, Split* split);
+void EnRoom_Update(void* passArg, void* instance, Split* split);
+void EnRoom_Draw(void* passArg, void* instance, Split* split);
+
+typedef struct {
+	ElButton button;
+} EnRoom;
+
+#define DefineTask(x) x ## _Init, \
+	x ## _Destroy, \
+	x ## _Update, \
+	x ## _Draw, \
+	sizeof(x)
 
 #endif

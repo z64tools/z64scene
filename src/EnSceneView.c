@@ -2,7 +2,7 @@
 
 void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
-	SceneView* this = instance;
+	EnSceneView* this = instance;
 	
 	View_Init(&this->viewCtx, &editCtx->inputCtx);
 	
@@ -41,14 +41,14 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 
 void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
-	SceneView* this = instance;
+	EnSceneView* this = instance;
 	
-	OsPrintfEx("Destroy");
+	split->bg.useCustomBG = false;
 }
 
 void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
-	SceneView* this = instance;
+	EnSceneView* this = instance;
 	InputContext* inputCtx = &editCtx->inputCtx;
 	MouseInput* mouse = &inputCtx->mouse;
 	LightContext* lightCtx = &editCtx->scene.lightCtx;
@@ -151,7 +151,7 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 
 void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
-	SceneView* this = instance;
+	EnSceneView* this = instance;
 	LightContext* lightCtx = &editCtx->scene.lightCtx;
 	ViewContext* viewCtx = &this->viewCtx;
 	Vec2s dim = {

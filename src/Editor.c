@@ -23,8 +23,11 @@ SplitTask sTaskTable[] = {
 	},
 	{
 		"3DViewport",
-		EnSceneView_Init, EnSceneView_Destroy, EnSceneView_Update, EnSceneView_Draw,
-		sizeof(SceneView)
+		DefineTask(EnSceneView)
+	},
+	{
+		"Room",
+		DefineTask(EnRoom)
 	}
 };
 
