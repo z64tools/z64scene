@@ -149,48 +149,27 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	};
 }
 
-u32* Gfx_TwoTexScroll(u32* gfx, s32 t1, u16 x1, u16 y1, s16 w1, s16 h1, s32 t2, u16 x2, u16 y2, s16 w2, s16 h2) {
+Gfx* Gfx_TwoTexScroll(Gfx* gfx, s32 t1, u16 x1, u16 y1, s16 w1, s16 h1, s32 t2, u16 x2, u16 y2, s16 w2, s16 h2) {
 	u32 temp;
 	s32 i = 0;
 	
-	// gDPTileSync
-	WriteBE(gfx[i++], 0xE7000000);
-	WriteBE(gfx[i++], 0x00000000);
+	x1 %= 2048;
+	y1 %= 2048;
+	x2 %= 2048;
+	y2 %= 2048;
 	
-	// gDPSetTileSize
-	temp = 0xF2000000;
-	temp |= (x1 & 0x0FFF) < 12;
-	temp |= (y1 & 0x0FFF);
-	WriteBE(gfx[i++], temp);
-	temp = (t1 != 0) ? 0x01000000 : 0;
-	temp |= (w1 & 0x0FFF) < 12;
-	temp |= (h1 & 0x0FFF);
-	WriteBE(gfx[i++], temp);
-	
-	// gDPTileSync
-	WriteBE(gfx[i++], 0xE7000000);
-	WriteBE(gfx[i++], 0x00000000);
-	
-	// gDPSetTileSize
-	temp = 0xF2000000;
-	temp |= (x2 & 0x0FFF) < 12;
-	temp |= (y2 & 0x0FFF);
-	WriteBE(gfx[i++], temp);
-	temp = (t2 != 0) ? 0x01000000 : 0;
-	temp |= (w2 & 0x0FFF) < 12;
-	temp |= (h2 & 0x0FFF);
-	WriteBE(gfx[i++], temp);
-	
-	// gDPTileSync
-	WriteBE(gfx[i++], 0xDF000000);
-	WriteBE(gfx[i++], 0x00000000);
+	gDPTileSync(gfx);
+	gDPSetTileSize(gfx + 1, t1, x1, y1, (x1 + ((w1 - 1) << 2)), (y1 + ((h1 - 1) << 2)));
+	gDPTileSync(gfx + 2);
+	gDPSetTileSize(gfx + 3, t2, x2, y2, (x2 + ((w2 - 1) << 2)), (y2 + ((h2 - 1) << 2)));
+	gSPEndDisplayList(gfx + 4);
 	
 	return gfx;
 }
 
 void EnSceneView_KokiriDraw(void) {
-	static u32 sSceneAnim09[2 * 5] = { 0 };
-	static u32 sSceneAnim08[2 * 5] = { 0 };
+	static Gfx sSceneAnim09[5] = { 0 };
+	static Gfx sSceneAnim08[5] = { 0 };
 	static u32 gameplayFrames;
 	
 	if (Zelda64_20fpsLimiter())
@@ -225,7 +204,7 @@ void EnSceneView_KokiriDraw(void) {
 			1,
 			gameplayFrames % 128,
 			gameplayFrames % 128,
-			128,
+			32,
 			32
 		)
 	);
