@@ -149,6 +149,88 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	};
 }
 
+u32* Gfx_TwoTexScroll(u32* gfx, s32 t1, u16 x1, u16 y1, s16 w1, s16 h1, s32 t2, u16 x2, u16 y2, s16 w2, s16 h2) {
+	u32 temp;
+	s32 i = 0;
+	
+	// gDPTileSync
+	WriteBE(gfx[i++], 0xE7000000);
+	WriteBE(gfx[i++], 0x00000000);
+	
+	// gDPSetTileSize
+	temp = 0xF2000000;
+	temp |= (x1 & 0x0FFF) < 12;
+	temp |= (y1 & 0x0FFF);
+	WriteBE(gfx[i++], temp);
+	temp = (t1 != 0) ? 0x01000000 : 0;
+	temp |= (w1 & 0x0FFF) < 12;
+	temp |= (h1 & 0x0FFF);
+	WriteBE(gfx[i++], temp);
+	
+	// gDPTileSync
+	WriteBE(gfx[i++], 0xE7000000);
+	WriteBE(gfx[i++], 0x00000000);
+	
+	// gDPSetTileSize
+	temp = 0xF2000000;
+	temp |= (x2 & 0x0FFF) < 12;
+	temp |= (y2 & 0x0FFF);
+	WriteBE(gfx[i++], temp);
+	temp = (t2 != 0) ? 0x01000000 : 0;
+	temp |= (w2 & 0x0FFF) < 12;
+	temp |= (h2 & 0x0FFF);
+	WriteBE(gfx[i++], temp);
+	
+	// gDPTileSync
+	WriteBE(gfx[i++], 0xDF000000);
+	WriteBE(gfx[i++], 0x00000000);
+	
+	return gfx;
+}
+
+void EnSceneView_KokiriDraw(void) {
+	static u32 sSceneAnim09[2 * 5] = { 0 };
+	static u32 sSceneAnim08[2 * 5] = { 0 };
+	static u32 gameplayFrames;
+	
+	if (Zelda64_20fpsLimiter())
+		gameplayFrames++;
+	
+	gSPSegment(
+		0x09,
+		Gfx_TwoTexScroll(
+			sSceneAnim09,
+			0,
+			127 - gameplayFrames % 128,
+			gameplayFrames % 128,
+			32,
+			32,
+			1,
+			gameplayFrames % 128,
+			gameplayFrames % 128,
+			32,
+			32
+		)
+	);
+	
+	gSPSegment(
+		0x08,
+		Gfx_TwoTexScroll(
+			sSceneAnim08,
+			0,
+			127 - gameplayFrames % 128,
+			(gameplayFrames * 10) % 128,
+			32,
+			32,
+			1,
+			gameplayFrames % 128,
+			gameplayFrames % 128,
+			128,
+			32
+		)
+	);
+}
+
 void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnSceneView* this = instance;
@@ -174,6 +256,8 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	gSPSegment(0x02, editCtx->scene.file.data);
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
+	
+	EnSceneView_KokiriDraw();
 	
 	for (s32 i = 0; i < 32; i++) {
 		if (editCtx->room[i].file.data != NULL) {
