@@ -73,18 +73,22 @@ src_linux: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $
 bin/linux/z64viewer/src/%.o: z64viewer/src/%.c z64viewer/include/%.h
 	@echo "Linux: [" $< "]"
 	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
+	@objdump -drz $@ > $(@:.o=.s)
 	
 bin/linux/%.o: %.c %.h
 	@echo "Linux: [" $< "]"
 	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
+	@objdump -drz $@ > $(@:.o=.s)
 	
 bin/linux/%.o: %.c
 	@echo "Linux: [" $< "]"
 	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
+	@objdump -drz $@ > $(@:.o=.s)
 	
 bin/linux/src/main.o: src/main.c
 	@echo "Linux: [" $< "]"
 	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
+	@objdump -drz $@ > $(@:.o=.s)
 
 z64scene: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(SrcO_linux_cJSON)
 	@echo "Linux: [" $@ "]"
