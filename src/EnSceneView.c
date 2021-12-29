@@ -150,9 +150,6 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 }
 
 Gfx* Gfx_TwoTexScroll(Gfx* gfx, s32 t1, u16 x1, u16 y1, s16 w1, s16 h1, s32 t2, u16 x2, u16 y2, s16 w2, s16 h2) {
-	u32 temp;
-	s32 i = 0;
-	
 	x1 %= 2048;
 	y1 %= 2048;
 	x2 %= 2048;
