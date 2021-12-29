@@ -138,7 +138,7 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	}
 	
 	n64_ClearSegments();
-	gSPSegment(0x02, editCtx->scene.file.data);
+	gxSPSegment(0x02, editCtx->scene.file.data);
 	Light_SetFog(&editCtx->scene, &this->viewCtx);
 	envLight = &lightCtx->envLight[lightCtx->curEnvId];
 	
@@ -172,7 +172,7 @@ void EnSceneView_KokiriDraw(void) {
 	if (Zelda64_20fpsLimiter())
 		gameplayFrames++;
 	
-	gSPSegment(
+	gxSPSegment(
 		0x09,
 		Gfx_TwoTexScroll(
 			sSceneAnim09,
@@ -189,7 +189,7 @@ void EnSceneView_KokiriDraw(void) {
 		)
 	);
 	
-	gSPSegment(
+	gxSPSegment(
 		0x08,
 		Gfx_TwoTexScroll(
 			sSceneAnim08,
@@ -229,7 +229,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		eyeId = Zelda64_EyeBlink(&frame);
 	
 	n64_ClearSegments();
-	gSPSegment(0x02, editCtx->scene.file.data);
+	gxSPSegment(0x02, editCtx->scene.file.data);
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	
@@ -253,9 +253,9 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 			WriteBE(gfxSetEnv[2], 0xDF000000); // End DisplayList
 			Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
 			Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
-			gSPSegment(0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
-			gSPSegment(0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
-			gSPDisplayList(gfxSetEnv);
+			gxSPSegment(0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
+			gxSPSegment(0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
+			gxSPDisplayList(gfxSetEnv);
 			SkelAnime_Draw(&this->skelAnime, mtx, this->jointTable);
 		} Matrix_Pop();
 	}
