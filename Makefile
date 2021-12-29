@@ -27,7 +27,7 @@ SrcO_linux_nanoVG    := $(foreach f,$(SrcC_linux_nanoVG:.c=.o),bin/linux/$f)
 SrcC_linux_cJSON    := $(shell find cJSON/* -maxdepth 0 -type f -name '*.c' -not -name 'test.c')
 SrcO_linux_cJSON    := $(foreach f,$(SrcC_linux_cJSON:.c=.o),bin/linux/$f)
 
-HeaderFiles := src/Editor.h
+HeaderFiles := $(shell find src/* -type f -name '*.h')
 HeaderFiles += $(shell find z64viewer/include/* -type f -name '*.h')
 
 # Make build directories
@@ -41,16 +41,6 @@ linux: src_linux z64scene
 # WIN32
 
 src_win32: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_win32_cJSON)
-	
-bin/win32/z64viewer/src/%.o: z64viewer/src/%.c z64viewer/include/%.h $(HeaderFiles)
-	@echo "Win32: [" $< "]"
-	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
-	@i686-w64-mingw32.static-objdump -drz $@ > $(@:.o=.s)
-	
-bin/win32/%.o: %.c %.h $(HeaderFiles)
-	@echo "Win32: [" $< "]"
-	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
-	@i686-w64-mingw32.static-objdump -drz $@ > $(@:.o=.s)
 	
 bin/win32/%.o: %.c $(HeaderFiles)
 	@echo "Win32: [" $< "]"
@@ -69,16 +59,6 @@ z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG
 # LINUX
 
 src_linux: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(SrcO_win32_cJSON)
-	
-bin/linux/z64viewer/src/%.o: z64viewer/src/%.c z64viewer/include/%.h
-	@echo "Linux: [" $< "]"
-	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
-	@objdump -drz $@ > $(@:.o=.s)
-	
-bin/linux/%.o: %.c %.h
-	@echo "Linux: [" $< "]"
-	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
-	@objdump -drz $@ > $(@:.o=.s)
 	
 bin/linux/%.o: %.c
 	@echo "Linux: [" $< "]"
