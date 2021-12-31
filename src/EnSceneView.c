@@ -137,8 +137,7 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 		}
 	}
 	
-	n64_ClearSegments();
-	gxSPSegment(0x02, editCtx->scene.file.data);
+	n64_set_segment(0x02, editCtx->scene.file.data);
 	Light_SetFog(&editCtx->scene, &this->viewCtx);
 	envLight = &lightCtx->envLight[lightCtx->curEnvId];
 	
@@ -216,7 +215,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		split->rect.w,
 		split->rect.h
 	};
-	Mtx mtx[800];
+	static Mtx mtx[800];
 	static s16 frame;
 	static s8 eyeId;
 	u32 eye[] = {
@@ -227,6 +226,10 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	
 	if (Zelda64_20fpsLimiter())
 		eyeId = Zelda64_EyeBlink(&frame);
+	
+	/* init drawing */
+	n64_graph_alloc(0);
+	OpaNow = OpaHead;
 	
 	n64_ClearSegments();
 	gxSPSegment(0x02, editCtx->scene.file.data);
@@ -255,8 +258,10 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 			Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
 			gxSPSegment(0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
 			gxSPSegment(0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
-			gxSPDisplayList(gfxSetEnv);
+			gxSPDisplayList(&gfxSetEnv);
 			SkelAnime_Draw(&this->skelAnime, mtx, this->jointTable);
 		} Matrix_Pop();
 	}
+	gSPEndDisplayList(OpaNow++);
+	n64_draw(OpaHead);
 }
