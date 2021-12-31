@@ -108,6 +108,7 @@ void Editor_Init(EditorContext* editCtx) {
 		OsPrintfEx("Could not load Font");
 	}
 	
+	Rcp_Init();
 	Theme_Init(0);
 	GeoGrid_Init(
 		&editCtx->geoCtx,

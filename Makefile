@@ -1,6 +1,6 @@
 .PHONY = z64scene.exe z64scene default win32 linux clean
 
-FLAGS = -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-braces \
+FLAGS = -Wall -Wstrict-aliasing -fcompare-debug-second -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-braces \
 				-I z64viewer/include -I nanovg/src \
 				-s -Os #-DNDEBUG
 

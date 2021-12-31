@@ -7,6 +7,7 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	View_Init(&this->viewCtx, &editCtx->inputCtx);
 	
 	if (!MemFile_LoadFile(&editCtx->zobj, "zobj.zobj")) {
+		gSegment[6] = editCtx->zobj.data;
 		SkelAnime_Init(
 			&editCtx->zobj,
 			&this->skelAnime,
@@ -171,7 +172,8 @@ void EnSceneView_KokiriDraw(void) {
 	if (Zelda64_20fpsLimiter())
 		gameplayFrames++;
 	
-	gxSPSegment(
+	gSPSegment(
+		POLY_OPA_DISP++,
 		0x09,
 		Gfx_TwoTexScroll(
 			sSceneAnim09,
@@ -188,7 +190,8 @@ void EnSceneView_KokiriDraw(void) {
 		)
 	);
 	
-	gxSPSegment(
+	gSPSegment(
+		POLY_OPA_DISP++,
 		0x08,
 		Gfx_TwoTexScroll(
 			sSceneAnim08,
@@ -215,7 +218,6 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		split->rect.w,
 		split->rect.h
 	};
-	static Mtx mtx[800];
 	static s16 frame;
 	static s8 eyeId;
 	u32 eye[] = {
@@ -229,10 +231,10 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	
 	/* init drawing */
 	n64_graph_alloc(0);
-	OpaNow = OpaHead;
+	gPolyOpaDisp = gPolyOpaHead;
 	
 	n64_ClearSegments();
-	gxSPSegment(0x02, editCtx->scene.file.data);
+	gSegment[2] = editCtx->scene.file.data;
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	
@@ -247,21 +249,18 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	}
 	
 	if (editCtx->zobj.data) {
+		gSegment[0x6] = editCtx->zobj.data;
 		SkelAnime_Update(&this->skelAnime);
 		Matrix_Push(); {
-			u32 gfxSetEnv[4] = { 0 };
-			
-			WriteBE(gfxSetEnv[0], 0xFB000000); // SetEnvColor
-			WriteBE(gfxSetEnv[1], 0xFFFFFFFF); // Color
-			WriteBE(gfxSetEnv[2], 0xDF000000); // End DisplayList
+			gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+			gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
+			gSPSegment(POLY_OPA_DISP++, 0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
+			gSPSegment(POLY_OPA_DISP++, 0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
 			Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
 			Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
-			gxSPSegment(0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
-			gxSPSegment(0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
-			gxSPDisplayList(&gfxSetEnv);
-			SkelAnime_Draw(&this->skelAnime, mtx, this->jointTable);
+			SkelAnime_Draw(&this->skelAnime, SKELANIME_FLEX, this->jointTable);
 		} Matrix_Pop();
 	}
-	gSPEndDisplayList(OpaNow++);
-	n64_draw(OpaHead);
+	gSPEndDisplayList(gPolyOpaDisp++);
+	n64_draw(gPolyOpaHead);
 }
