@@ -250,6 +250,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	
 	if (editCtx->zobj.data) {
 		gSegment[0x6] = editCtx->zobj.data;
+		gSPSegment(POLY_OPA_DISP++, 0x6, editCtx->zobj.data);
 		SkelAnime_Update(&this->skelAnime);
 		Matrix_Push(); {
 			gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
