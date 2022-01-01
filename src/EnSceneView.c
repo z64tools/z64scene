@@ -149,7 +149,9 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	};
 }
 
-Gfx* Gfx_TwoTexScroll(Gfx* gfx, s32 t1, u16 x1, u16 y1, s16 w1, s16 h1, s32 t2, u16 x2, u16 y2, s16 w2, s16 h2) {
+Gfx* Gfx_TwoTexScroll(s32 t1, u16 x1, u16 y1, s16 w1, s16 h1, s32 t2, u16 x2, u16 y2, s16 w2, s16 h2) {
+	Gfx* gfx = Graph_Alloc(5 * sizeof(Gfx));
+	
 	x1 %= 2048;
 	y1 %= 2048;
 	x2 %= 2048;
@@ -165,8 +167,6 @@ Gfx* Gfx_TwoTexScroll(Gfx* gfx, s32 t1, u16 x1, u16 y1, s16 w1, s16 h1, s32 t2, 
 }
 
 void EnSceneView_KokiriDraw(void) {
-	static Gfx sSceneAnim09[5] = { 0 };
-	static Gfx sSceneAnim08[5] = { 0 };
 	static u32 gameplayFrames;
 	
 	if (Zelda64_20fpsLimiter())
@@ -176,7 +176,6 @@ void EnSceneView_KokiriDraw(void) {
 		POLY_OPA_DISP++,
 		0x09,
 		Gfx_TwoTexScroll(
-			sSceneAnim09,
 			0,
 			127 - gameplayFrames % 128,
 			gameplayFrames % 128,
@@ -194,7 +193,6 @@ void EnSceneView_KokiriDraw(void) {
 		POLY_OPA_DISP++,
 		0x08,
 		Gfx_TwoTexScroll(
-			sSceneAnim08,
 			0,
 			127 - gameplayFrames % 128,
 			(gameplayFrames * 10) % 128,
@@ -229,12 +227,12 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	if (Zelda64_20fpsLimiter())
 		eyeId = Zelda64_EyeBlink(&frame);
 	
-	/* init drawing */
 	n64_graph_alloc(0);
+	n64_ClearSegments();
 	gPolyOpaDisp = gPolyOpaHead;
 	
-	n64_ClearSegments();
-	gSegment[2] = editCtx->scene.file.data;
+	gxSPSegment(POLY_OPA_DISP++, 0x2, editCtx->scene.file.data);
+	
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	
@@ -249,19 +247,18 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	}
 	
 	if (editCtx->zobj.data) {
-		gSegment[0x6] = editCtx->zobj.data;
-		gSPSegment(POLY_OPA_DISP++, 0x6, editCtx->zobj.data);
+		gxSPSegment(POLY_OPA_DISP++, 0x6, editCtx->zobj.data);
+		gSPSegment(POLY_OPA_DISP++, 0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
+		gSPSegment(POLY_OPA_DISP++, 0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
 		SkelAnime_Update(&this->skelAnime);
 		Matrix_Push(); {
 			gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
 			gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
-			gSPSegment(POLY_OPA_DISP++, 0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
-			gSPSegment(POLY_OPA_DISP++, 0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
 			Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
 			Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
 			SkelAnime_Draw(&this->skelAnime, SKELANIME_FLEX, this->jointTable);
 		} Matrix_Pop();
 	}
-	gSPEndDisplayList(gPolyOpaDisp++);
+	gSPEndDisplayList(POLY_OPA_DISP++);
 	n64_draw(gPolyOpaHead);
 }
