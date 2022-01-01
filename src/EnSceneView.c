@@ -227,7 +227,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	if (Zelda64_20fpsLimiter())
 		eyeId = Zelda64_EyeBlink(&frame);
 	
-	n64_graph_alloc(0);
+	Graph_Alloc(GRAPH_INIT);
 	n64_ClearSegments();
 	gPolyOpaDisp = gPolyOpaHead;
 	
