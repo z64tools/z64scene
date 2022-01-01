@@ -34,7 +34,7 @@ SplitVtx* GeoGrid_AddVtx(GeoGridContext* geoCtx, f64 x, f64 y) {
 	
 	while (head) {
 		if (fabs(head->pos.x - x) < 0.25 && fabs(head->pos.y - y) < 0.25) {
-			OsPrintfEx("VtxConnect %.2f %.2f", x, y);
+			// OsPrintfEx("VtxConnect %.2f %.2f", x, y);
 			
 			return head;
 		}
@@ -68,7 +68,7 @@ SplitEdge* GeoGrid_AddEdge(GeoGridContext* geoCtx, SplitVtx* v1, SplitVtx* v2) {
 	
 	while (head) {
 		if (head->vtx[0] == v1 && head->vtx[1] == v2) {
-			OsPrintfEx("EdgeConnect");
+			// OsPrintfEx("EdgeConnect");
 			
 			edge = head;
 			break;
@@ -238,7 +238,7 @@ void GeoGrid_Edge_SetSlideClamp(GeoGridContext* geoCtx) {
 		tempEdge = tempEdge->next;
 	}
 	
-	OsPrintfEx("Align %d Min %.2f Max %.2f", align, posMin, posMax);
+	// OsPrintfEx("Align %d Min %.2f Max %.2f", align, posMin, posMax);
 	
 	if (geoCtx->actionEdge->state & EDGE_VERTICAL) {
 		geoCtx->slide.clampMin = geoCtx->workRect.x;
@@ -266,7 +266,7 @@ void GeoGrid_Split(GeoGridContext* geoCtx, Split* split, SplitDir dir) {
 	
 	Node_Add(geoCtx->splitHead, newSplit);
 	
-	OsPrintfEx("SplitDir: %d", dir);
+	// OsPrintfEx("SplitDir: %d", dir);
 	
 	if (dir == DIR_L) {
 		newSplit->vtx[0] = GeoGrid_AddVtx(geoCtx, splitPos, split->vtx[0]->pos.y);
@@ -416,7 +416,7 @@ void GeoGrid_Update_Vtx_RemoveDublicates(GeoGridContext* geoCtx, SplitVtx* vtx) 
 			
 			vtx2 = vtx2->next;
 			Node_Kill(geoCtx->vtxHead, kill);
-			OsPrintfEx("" PRNT_YELW "Kill Dublicate Vtx!");
+			// OsPrintfEx("" PRNT_YELW "Kill Dublicate Vtx!");
 			continue;
 		}
 		
@@ -452,7 +452,7 @@ void GeoGrid_Update_Vtx(GeoGridContext* geoCtx) {
 			if (vtx->killFlag == true) {
 				SplitVtx* killVtx = vtx;
 				vtx = vtx->prev;
-				OsPrintfEx("" PRNT_YELW "Kill Tagged Vtx!");
+				// OsPrintfEx("" PRNT_YELW "Kill Tagged Vtx!");
 				Node_Kill(geoCtx->vtxHead, killVtx);
 				continue;
 			}
@@ -495,7 +495,7 @@ void GeoGrid_Update_Edge_RemoveDublicates(GeoGridContext* geoCtx, SplitEdge* edg
 			
 			edge2 = edge2->next;
 			Node_Kill(geoCtx->edgeHead, kill);
-			OsPrintfEx("" PRNT_YELW "Kill Dublicate Edge!");
+			// OsPrintfEx("" PRNT_YELW "Kill Dublicate Edge!");
 			continue;
 		}
 		
@@ -550,7 +550,7 @@ void GeoGrid_Update_Edge_SetSlide(GeoGridContext* geoCtx) {
 					if (((temp->state & EDGE_ALIGN) != (edge->state & EDGE_ALIGN)) && temp->vtx[1] == edge->vtx[i]) {
 						if (temp->vtx[0]->pos.s[align] > geoCtx->slide.clampMin) {
 							geoCtx->slide.clampMin = temp->vtx[0]->pos.s[align];
-							OsPrintfEx("foundMin %.2f", temp->vtx[0]->pos.s[align]);
+							// OsPrintfEx("foundMin %.2f", temp->vtx[0]->pos.s[align]);
 						}
 					}
 				}
@@ -559,7 +559,7 @@ void GeoGrid_Update_Edge_SetSlide(GeoGridContext* geoCtx) {
 					if (((temp->state & EDGE_ALIGN) != (edge->state & EDGE_ALIGN)) && temp->vtx[0] == edge->vtx[i]) {
 						if (temp->vtx[1]->pos.s[align] < geoCtx->slide.clampMax) {
 							geoCtx->slide.clampMax = temp->vtx[1]->pos.s[align];
-							OsPrintfEx("foundMax %.2f", temp->vtx[1]->pos.s[align]);
+							// OsPrintfEx("foundMax %.2f", temp->vtx[1]->pos.s[align]);
 						}
 					}
 				}
@@ -614,7 +614,7 @@ void GeoGrid_Update_Edges(GeoGridContext* geoCtx) {
 	while (edge) {
 		if (edge->killFlag == true) {
 			SplitEdge* temp = edge->next;
-			OsPrintfEx("" PRNT_YELW "Kill Tagged Edge!");
+			// OsPrintfEx("" PRNT_YELW "Kill Tagged Edge!");
 			Node_Kill(geoCtx->edgeHead, edge);
 			edge = temp;
 			continue;
@@ -668,7 +668,7 @@ void GeoGrid_Update_ActionSplit(GeoGridContext* geoCtx) {
 			#ifndef NDEBUG
 			char buffer[1024] = "None";
 			s32 t = 0;
-			OsPrintfEx("Split: %s", stringDirection[i]);
+			// OsPrintfEx("Split: %s", stringDirection[i]);
 			
 			for (s32 j = 0; (1 << j) <= EDGE_STICK_B; j++) {
 				if (split->edge[i]->state & (1 << j)) {
@@ -681,7 +681,7 @@ void GeoGrid_Update_ActionSplit(GeoGridContext* geoCtx) {
 				}
 			}
 			
-			OsPrintf("Edge: [%08X] [%s]", split->edge[i], buffer);
+			// OsPrintf("Edge: [%08X] [%s]", split->edge[i], buffer);
 			
 			#endif
 			
@@ -795,7 +795,7 @@ void GeoGrid_Update_Split(GeoGridContext* geoCtx) {
 				}
 				
 				split->instance = Lib_Calloc(0, table[id].size);
-				OsPrintfEx("%08X", split->instance);
+				// OsPrintfEx("%08X", split->instance);
 				table[id].init(geoCtx->passArg, split->instance, split);
 				split->prevId = split->id;
 			}
@@ -864,7 +864,7 @@ void GeoGrid_SetContextMenu(GeoGridContext* geoCtx, Split* split, char** optionL
 	ctxMenu->pos.x += split->vtx[1]->pos.x;
 	ctxMenu->pos.y += split->vtx[1]->pos.y;
 	
-	OsPrintfEx("Set %d", num);
+	// OsPrintfEx("Set %d", num);
 }
 
 s32 GeoGrid_GetContextMenuResult(GeoGridContext* geoCtx, Split* split) {
@@ -874,7 +874,7 @@ s32 GeoGrid_GetContextMenuResult(GeoGridContext* geoCtx, Split* split) {
 		geoCtx->ctxMenu.num = 0;
 		geoCtx->ctxMenu.split = NULL;
 		
-		OsPrintfEx("Get");
+		// OsPrintfEx("Get");
 		
 		return -ret;
 	}
@@ -1377,7 +1377,7 @@ Vec2s GeoGrid_Layout_LoadJson(GeoGridContext* geoCtx, Vec2s* winDim) {
 	cJSON* dim;
 	Vec2s ret;
 	
-	OsPrintfEx("Setting");
+	// OsPrintfEx("Setting");
 	
 	MemFile_LoadFile(&file, "Settings.json");
 	json = cJSON_ParseWithLength(file.data, file.dataSize);
