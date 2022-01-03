@@ -174,6 +174,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	}
 	
 	Graph_Alloc(GRAPH_INIT);
+	n64_assign_triangle(TRI_INIT);
 	n64_ClearSegments();
 	gPolyOpaDisp = gPolyOpaHead;
 	

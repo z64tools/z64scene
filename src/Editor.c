@@ -79,6 +79,7 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 	}
 	
 	if (loadRoom) {
+		n64_clearShaderCache();
 		for (s32 i = 0; i < ROOM_MAX; i++) {
 			if (loadFlag[i] == false && gEditCtx->room[i].file.data != NULL) {
 				gEditCtx->scene.lightCtx.room[i].lightNum = 0;
