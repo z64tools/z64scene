@@ -9,8 +9,9 @@ int main(void) {
 	FILE* file = fopen("Settings.json", "rb");
 	
 	#ifndef NDEBUG
-	printf_SetPrefix("");
-	printf_SetSuppressLevel(PSL_DEBUG);
+		printf_SetPrefix("");
+		printf_SetSuppressLevel(PSL_DEBUG);
+		printf_WinFix();
 	#endif
 	
 	editCtx = Lib_Calloc(0, sizeof(EditorContext));

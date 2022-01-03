@@ -1,10 +1,11 @@
 #include "Editor.h"
 
+s32 gSceneConfIndex = 0;
+
 void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnSceneView* this = instance;
 	
-	Scene_Init();
 	View_Init(&this->viewCtx, &editCtx->inputCtx);
 	
 	if (!MemFile_LoadFile(&editCtx->zobj, "zobj.zobj")) {
@@ -181,7 +182,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	
-	gSceneDrawConf[6](&editCtx->scene);
+	gSceneDrawConf[gSceneConfIndex](&editCtx->scene);
 	
 	for (s32 i = 0; i < 32; i++) {
 		if (editCtx->room[i].file.data != NULL) {

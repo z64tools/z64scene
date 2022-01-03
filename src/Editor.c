@@ -5,7 +5,7 @@
 char* gBuild = {
 	"z64scene alpha commit[ "
 	#ifndef __COMFLAG__
-	GIT_COMMIT_MSG
+		GIT_COMMIT_MSG
 	#endif
 	" ]"
 };
@@ -13,7 +13,7 @@ char* gBuild = {
 char* gHash = {
 	""
 	#ifndef __COMFLAG__
-	GIT_COMMIT_HASH
+		GIT_COMMIT_HASH
 	#endif
 };
 
@@ -34,22 +34,35 @@ SplitTask sTaskTable[] = {
 EditorContext* gEditCtx;
 
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
-	u8 loadFlag[ROOM_MAX] = { 0 };
-	
-	OsPrintfEx("Drops:");
+	s8 loadFlag[ROOM_MAX] = { 0 };
+	s32 loadRoom = 0;
 	
 	printf_SetSuppressLevel(PSL_NONE);
 	
 	for (s32 i = 0; i < count; i++) {
 		printf_info("Drop File: [%s]", file[i]);
 		
-		if (Lib_MemMem(file[i], strlen(file[i]), ".zscene", strlen(".zscene"))) {
+		if (String_MemMem(file[i], "conf.txt")) {
+			MemFile memFile = MemFile_Initialize();
+			char* shaderPtr;
+			printf_info("Loading Conf [%s]", file[i]);
+			
+			MemFile_LoadFile_String(&memFile, file[i]);
+			shaderPtr = String_MemMem(memFile.data, "shader");
+			OsAssert(shaderPtr != NULL);
+			printf_info("ShaderID [%s]", String_GetWord(shaderPtr, 1));
+			gSceneConfIndex = String_NumStrToInt(String_GetWord(shaderPtr, 1));
+			MemFile_Free(&memFile);
+		}
+		
+		if (String_MemMem(file[i], ".zscene")) {
 			printf_info("Loading Scene [%s]", file[i]);
 			MemFile_LoadFile(&gEditCtx->scene.file, file[i]);
 			Scene_ExecuteCommands(&gEditCtx->scene, NULL);
 		}
 		
-		if (Lib_MemMem(file[i], strlen(file[i]), ".zmap", strlen(".zmap"))) {
+		if (String_MemMem(file[i], ".zmap")) {
+			loadRoom++;
 			for (s32 j = 0; j < ROOM_MAX; j++) {
 				char roomNum[128] = { 0 };
 				sprintf(roomNum, "_%d.zmap", j);
@@ -65,11 +78,13 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 		}
 	}
 	
-	for (s32 i = 0; i < ROOM_MAX; i++) {
-		if (loadFlag[i] == false && gEditCtx->room[i].file.data != NULL) {
-			gEditCtx->scene.lightCtx.room[i].lightNum = 0;
-			printf_info("Clearing Room [%d]", i);
-			MemFile_Free(&gEditCtx->room[i].file);
+	if (loadRoom) {
+		for (s32 i = 0; i < ROOM_MAX; i++) {
+			if (loadFlag[i] == false && gEditCtx->room[i].file.data != NULL) {
+				gEditCtx->scene.lightCtx.room[i].lightNum = 0;
+				printf_info("Clearing Room [%d]", i);
+				MemFile_Free(&gEditCtx->room[i].file);
+			}
 		}
 	}
 	

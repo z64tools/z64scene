@@ -9,6 +9,7 @@
 
 extern char* gBuild;
 extern char* gHash;
+extern s32 gSceneConfIndex;
 
 typedef struct {
 	s32 notoSansID;
