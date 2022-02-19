@@ -30,7 +30,7 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 		
 		sprintf(buffer, "room_%d.zmap", i);
 		if (MemFile_LoadFile(&editCtx->room[i].file, buffer)) {
-			OsPrintfEx("Break");
+			printf_debugExt("Break");
 			break;
 		}
 		

@@ -42,31 +42,31 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 	for (s32 i = 0; i < count; i++) {
 		printf_info("Drop File: [%s]", file[i]);
 		
-		if (String_MemMem(file[i], "conf.txt")) {
+		if (StrStr(file[i], "conf.txt")) {
 			MemFile memFile = MemFile_Initialize();
 			char* shaderPtr;
 			printf_info("Loading Conf [%s]", file[i]);
 			
 			MemFile_LoadFile_String(&memFile, file[i]);
-			shaderPtr = String_MemMem(memFile.data, "shader");
-			OsAssert(shaderPtr != NULL);
+			shaderPtr = StrStr(memFile.data, "shader");
+			Assert(shaderPtr != NULL);
 			printf_info("ShaderID [%s]", String_GetWord(shaderPtr, 1));
-			gSceneConfIndex = String_NumStrToInt(String_GetWord(shaderPtr, 1));
+			gSceneConfIndex = String_GetInt(String_GetWord(shaderPtr, 1));
 			MemFile_Free(&memFile);
 		}
 		
-		if (String_MemMem(file[i], ".zscene")) {
+		if (StrStr(file[i], ".zscene")) {
 			printf_info("Loading Scene [%s]", file[i]);
 			MemFile_LoadFile(&gEditCtx->scene.file, file[i]);
 			Scene_ExecuteCommands(&gEditCtx->scene, NULL);
 		}
 		
-		if (String_MemMem(file[i], ".zmap")) {
+		if (StrStr(file[i], ".zmap")) {
 			loadRoom++;
 			for (s32 j = 0; j < ROOM_MAX; j++) {
 				char roomNum[128] = { 0 };
 				sprintf(roomNum, "_%d.zmap", j);
-				if (Lib_MemMem(file[i], strlen(file[i]), roomNum, strlen(roomNum))) {
+				if (MemMem(file[i], strlen(file[i]), roomNum, strlen(roomNum))) {
 					printf_info("Loading Room [%s]", file[i]);
 					
 					gEditCtx->scene.lightCtx.room[j].lightNum = 0;
@@ -121,7 +121,7 @@ void Editor_Init(EditorContext* editCtx) {
 		printf_error("Could not init nanovg.");
 	editCtx->fontCtx.notoSansID = nvgCreateFont(editCtx->vg, "sans", "NotoSans-Regular.ttf");
 	if (editCtx->fontCtx.notoSansID < 0) {
-		OsPrintfEx("Could not load Font");
+		printf_debugExt("Could not load Font");
 	}
 	
 	Rcp_Init();

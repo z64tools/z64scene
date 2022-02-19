@@ -42,13 +42,13 @@ void Actor_GetActorInit() {
 	
 	ActorInit* initData = (ActorInit*)ptr;
 	
-	OsPrintfEx("ActorID:    %08X", ReadBE(initData->id));
-	OsPrintf("Category:   %08X", ReadBE(initData->category));
-	OsPrintf("ObjectID:   %08X", ReadBE(initData->objectId));
-	OsPrintf("InitFunc:   %08X", ReadBE(initData->init));
-	OsPrintf("DestFunc:   %08X", ReadBE(initData->destroy));
-	OsPrintf("UpdateFunc: %08X", ReadBE(initData->update));
-	OsPrintf("DrawFunc:   %08X", ReadBE(initData->draw));
+	printf_debugExt("ActorID:    %08X", ReadBE(initData->id));
+	printf_debug("Category:   %08X", ReadBE(initData->category));
+	printf_debug("ObjectID:   %08X", ReadBE(initData->objectId));
+	printf_debug("InitFunc:   %08X", ReadBE(initData->init));
+	printf_debug("DestFunc:   %08X", ReadBE(initData->destroy));
+	printf_debug("UpdateFunc: %08X", ReadBE(initData->update));
+	printf_debug("DrawFunc:   %08X", ReadBE(initData->draw));
 	
 	MemFile_Free(&actorOvl);
 }

@@ -14,7 +14,7 @@ int main(void) {
 		printf_WinFix();
 	#endif
 	
-	editCtx = Lib_Calloc(0, sizeof(EditorContext));
+	editCtx = Calloc(0, sizeof(EditorContext));
 	
 	if (file != NULL) {
 		fclose(file);

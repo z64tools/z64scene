@@ -121,7 +121,7 @@ ElementFunc sFuncTable[] = {
 };
 
 void Elements_Init(GeoGridContext* geoCtx) {
-	sElementStack = sCurrentElement = Lib_Malloc(0, sizeof(ElementCallInfo) * 512);
+	sElementStack = sCurrentElement = Malloc(0, sizeof(ElementCallInfo) * 512);
 }
 
 void Elements_Update(GeoGridContext* geoCtx) {

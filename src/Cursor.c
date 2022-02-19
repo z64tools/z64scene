@@ -18,7 +18,7 @@ static CursorContext* __cursorCtx;
 void Cursor_CreateBitmap(CursorContext* cursorCtx, CursorIndex id,  const u8* data, s32 size, s32 xcent, s32 ycent) {
 	CursorBitmap* dest = &cursorCtx->cursor[id];
 	
-	cursorCtx->cursor[id].bitmap = Lib_Malloc(0, sizeof(RGBA8) * size * size);;
+	cursorCtx->cursor[id].bitmap = Malloc(0, sizeof(RGBA8) * size * size);;
 	
 	for (s32 i = 0, j = 0; i < size * size; i++, j += 2) {
 		dest->bitmap[i].r = data[j];
@@ -30,7 +30,7 @@ void Cursor_CreateBitmap(CursorContext* cursorCtx, CursorIndex id,  const u8* da
 	dest->img.height = dest->img.width = size;
 	dest->img.pixels = (void*)dest->bitmap;
 	dest->glfwCur = glfwCreateCursor((void*)&dest->img, xcent, ycent);
-	OsAssert(dest->glfwCur != NULL);
+	Assert(dest->glfwCur != NULL);
 }
 
 void Cursor_CreateCursors(CursorContext* cursorCtx) {
