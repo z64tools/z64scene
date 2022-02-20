@@ -46,8 +46,6 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 	s8 loadFlag[ROOM_MAX] = { 0 };
 	s32 loadRoom = 0;
 	
-	printf_SetSuppressLevel(PSL_NONE);
-	
 	for (s32 i = 0; i < count; i++) {
 		printf_debug("Drop File: [%s]", file[i]);
 		
@@ -110,16 +108,24 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 			}
 		}
 	}
-	
-	printf_SetSuppressLevel(PSL_DEBUG);
+}
+
+void Editor_NewScene(EditorContext* editCtx) {
+	strcpy(editCtx->project.sceneName, "Untitled_Scene");
 }
 
 /* / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / */
 
 void Editor_Draw(EditorContext* editCtx) {
+	s32 winWidth, winHeight;
+	s32 fbWidth, fbHeight;
+	
 	if (glfwGetWindowAttrib(editCtx->appInfo.mainWindow, GLFW_ICONIFIED))
 		return;
 	
+	glfwGetWindowSize(editCtx->appInfo.mainWindow, &winWidth, &winHeight);
+	glfwGetFramebufferSize(editCtx->appInfo.mainWindow, &fbWidth, &fbHeight);
+	gPixelRatio = (float)fbWidth / (float)winWidth;
 	GeoGrid_Draw(&editCtx->geoCtx);
 }
 
@@ -163,6 +169,7 @@ void Editor_Init(EditorContext* editCtx) {
 		editCtx->vg
 	);
 	Cursor_Init(&editCtx->cursorCtx);
+	Editor_NewScene(editCtx);
 	
 	glfwSetWindowSizeLimits(
 		editCtx->appInfo.mainWindow,

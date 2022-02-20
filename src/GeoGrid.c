@@ -1,5 +1,7 @@
 #include "Editor.h"
 
+f32 gPixelRatio = 1.0f;
+
 void GeoGrid_RemoveDublicates(GeoGridContext* geoCtx);
 void GeoGrid_Update_SplitRect(Split* split);
 
@@ -867,7 +869,7 @@ void GeoGrid_Draw_Debug(GeoGridContext* geoCtx) {
 	Vec2s* winDim = geoCtx->winDim;
 	
 	glViewport(0, 0, winDim->x, winDim->y);
-	nvgBeginFrame(geoCtx->vg, winDim->x, winDim->y, 1.0f); {
+	nvgBeginFrame(geoCtx->vg, winDim->x, winDim->y, gPixelRatio); {
 		while (split) {
 			nvgBeginPath(geoCtx->vg);
 			nvgLineCap(geoCtx->vg, NVG_ROUND);
@@ -997,11 +999,11 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 		nvgFill(vg);
 		
 		nvgEndFrame(geoCtx->vg);
-		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, 1.0f); {
+		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, gPixelRatio); {
 			table[id].draw(geoCtx->passArg, split->instance, split);
 			Element_Draw(geoCtx, split);
 		} nvgEndFrame(geoCtx->vg);
-		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, 1.0f);
+		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, gPixelRatio);
 	} else {
 		nvgBeginPath(vg);
 		nvgRect(vg, 0, 0, rect->w, rect->h);
@@ -1070,7 +1072,7 @@ void GeoGrid_Draw_Splits(GeoGridContext* geoCtx) {
 			split->rect.w,
 			split->rect.h
 		);
-		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, 1.0f); {
+		nvgBeginFrame(geoCtx->vg, split->rect.w, split->rect.h, gPixelRatio); {
 			GeoGrid_Draw_SplitBorder(geoCtx, split);
 		} nvgEndFrame(geoCtx->vg);
 		
@@ -1197,7 +1199,7 @@ void GeoGrid_Draw_ContextMenu(GeoGridContext* geoCtx) {
 	
 	if (ctxMenu->num > 0) {
 		glViewport(0, 0, geoCtx->winDim->x, geoCtx->winDim->y);
-		nvgBeginFrame(vg, geoCtx->winDim->x, geoCtx->winDim->y, 1.0f); {
+		nvgBeginFrame(vg, geoCtx->winDim->x, geoCtx->winDim->y, gPixelRatio); {
 			nvgBeginPath(vg);
 			nvgFillColor(vg, Theme_GetColor(THEME_SHADOW, 255));
 			nvgRoundedRect(vg, sCtxMenuRect.x - 0.5, sCtxMenuRect.y - 0.5, sCtxMenuRect.w + 1.0, sCtxMenuRect.h + 1.0, SPLIT_ROUND_R);
@@ -1468,7 +1470,7 @@ void GeoGrid_Draw(GeoGridContext* geoCtx) {
 			geoCtx->bar[i].rect.w,
 			geoCtx->bar[i].rect.h
 		);
-		nvgBeginFrame(geoCtx->vg, geoCtx->bar[i].rect.w, geoCtx->bar[i].rect.h, 1.0f); {
+		nvgBeginFrame(geoCtx->vg, geoCtx->bar[i].rect.w, geoCtx->bar[i].rect.h, gPixelRatio); {
 			nvgBeginPath(geoCtx->vg);
 			nvgRect(
 				geoCtx->vg,

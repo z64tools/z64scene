@@ -4,14 +4,9 @@ void EnRoom_Init(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
 	
-	if (this->sceneName.txt == NULL) {
-		this->sceneName.txt = Graph_Alloc(512);
-		strcpy(this->sceneName.txt, "Untitled Scene");
-	}
-	
+	this->sceneName.txt = editCtx->project.sceneName;
 	this->leButton.txt = Tmp_String("This is a Button");
 	this->leButton.toggle = true;
-	
 	this->saveLayout.txt = Tmp_String("Save Layout");
 }
 

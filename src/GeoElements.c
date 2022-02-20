@@ -526,14 +526,16 @@ void Element_Update(GeoGridContext* geoCtx) {
 			}
 			if (geoCtx->input->key[KEY_V].press) {
 				txt = (char*)Input_GetClipboardStr();
+				printf_debugExt("Paste [%s]", txt);
 			}
 			if (geoCtx->input->key[KEY_C].press) {
 				s32 max = fmax(sSelectPos, sTextPos);
 				s32 min = fmin(sSelectPos, sTextPos);
-				char* copy = Graph_Alloc(max - min + 1);
+				char* copy = Tmp_Alloc(512);
 				
 				memcpy(copy, &sCurTextbox->txt[min], max - min);
 				Input_SetClipboardStr(copy);
+				printf_debugExt("Copy [%s]", copy);
 			}
 		} else {
 			if (geoCtx->input->key[KEY_LEFT].press) {

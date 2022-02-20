@@ -26,6 +26,9 @@ typedef struct EditorContext {
 	Room    room[ROOM_MAX];
 	MemFile zobj;
 	void*   gizmo;
+	struct {
+		char sceneName[512];
+	} project;
 } EditorContext;
 
 extern EditorContext* gEditCtx;

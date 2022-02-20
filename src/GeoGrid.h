@@ -7,6 +7,7 @@
 #include "Theme.h"
 
 extern char* gBuild;
+extern f32 gPixelRatio;
 
 #define SPLIT_GRAB_DIST  4
 #define SPLIT_CTXM_DIST  32
