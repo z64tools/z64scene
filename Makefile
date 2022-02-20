@@ -61,7 +61,7 @@ z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG
 
 # LINUX
 
-src_linux: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(SrcO_win32_cJSON)
+src_linux: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(SrcO_linux_cJSON)
 	
 bin/linux/%.o: %.c
 	@echo "Linux: [" $< "]"

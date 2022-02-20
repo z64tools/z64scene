@@ -25,7 +25,7 @@ typedef struct EditorContext {
 	Scene   scene;
 	Room    room[ROOM_MAX];
 	MemFile zobj;
-	MemFile gizmo;
+	void*   gizmo;
 } EditorContext;
 
 extern EditorContext* gEditCtx;
@@ -55,8 +55,11 @@ void EnRoom_Update(void* passArg, void* instance, Split* split);
 void EnRoom_Draw(void* passArg, void* instance, Split* split);
 
 typedef struct {
-	ElTextbox sceneName;
-	ElButton  leButton;
+	ElTextbox  sceneName;
+	ElButton   leButton;
+	ElCheckbox checkBox;
+	
+	ElButton   saveLayout;
 } EnRoom;
 
 #define DefineTask(x) x ## _Init, \

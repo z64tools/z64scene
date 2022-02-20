@@ -16,10 +16,10 @@ extern char* gBuild;
 #define SPLIT_CLAMP      ((SPLIT_BAR_HEIGHT + SPLIT_SPLIT_W * 1.25) * 2)
 
 #define SPLIT_ELEM_X_PADDING 8
-#define SPLIT_TEXT_H         (SPLIT_TEXT_PADDING * 2 + SPLIT_TEXT_SMALL)
+#define SPLIT_TEXT_H         (SPLIT_TEXT_PADDING * 2 + SPLIT_TEXT)
 
 #define SPLIT_TEXT_PADDING 4
-#define SPLIT_TEXT_SMALL   11
+#define SPLIT_TEXT         11
 #define SPLIT_TEXT_MED     12
 
 struct GeoGridContext;
@@ -175,6 +175,7 @@ typedef struct GeoGridContext {
 } GeoGridContext;
 
 bool GeoGrid_Cursor_InRect(Split* split, Rect* rect);
+void GeoGrid_Layout_SaveJson(GeoGridContext* geoCtx);
 Vec2s GeoGrid_Layout_LoadJson(GeoGridContext* geoCtx, Vec2s* winDim);
 
 void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, InputContext* input, void* vg);
@@ -186,11 +187,13 @@ void Element_Update(GeoGridContext* geoCtx);
 void Element_Draw(GeoGridContext* geoCtx, Split* split);
 
 typedef struct {
-	char* txt;
-	u8    state;
-	u8    hover;
-	u8    toggle;
-	Rect  rect;
+	char*    txt;
+	u8       state;
+	u8       hover;
+	u8       toggle;
+	Rect     rect;
+	NVGcolor colorOL;
+	NVGcolor colorIL;
 } ElButton;
 
 typedef struct {
@@ -205,9 +208,17 @@ typedef struct {
 	Rect  rect;
 } ElText;
 
+typedef struct {
+	Rect rect;
+	u8   toggle;
+	NVGcolor color;
+	f32  lerp;
+} ElCheckbox;
+
 s32 Element_Button(GeoGridContext*, Split*, ElButton*);
 void Element_Textbox(GeoGridContext*, Split*, ElTextbox*);
 f32 Element_Text(GeoGridContext* geoCtx, Split* split, ElText* txt);
+s32 Element_Checkbox(GeoGridContext* geoCtx, Split* split, ElCheckbox* this);
 
 void Element_SetRect_Text(Rect* rect, f32 x, f32 y, f32 w);
 

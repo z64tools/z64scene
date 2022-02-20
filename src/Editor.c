@@ -2,6 +2,12 @@
 #define NANOVG_GL3_IMPLEMENTATION
 #include <nanovg_gl.h>
 
+#define INCBIN_PREFIX
+#include "../incbin/incbin.h"
+
+INCBIN(gFontSans, "NotoSans-Regular.ttf");
+INCBIN(gGizmo3D, "geometry/gizmo_arrow.zobj");
+
 char* gBuild = {
 	"z64scene alpha commit[ "
 	#ifndef __COMFLAG__
@@ -133,21 +139,20 @@ void Editor_Init(EditorContext* editCtx) {
 	
 	gEditCtx = editCtx;
 	
-	editCtx->gizmo = MemFile_Initialize();
 	editCtx->zobj = MemFile_Initialize();
 	editCtx->scene.file = MemFile_Initialize();
 	for (s32 i = 0; i < ROOM_MAX; i++) {
 		editCtx->room[i].file = MemFile_Initialize();
 	}
 	
-	MemFile_LoadFile(&editCtx->gizmo, "geometry/gizmo_arrow.zobj");
-	
 	if (editCtx->vg == NULL)
 		printf_error("Could not init nanovg.");
-	editCtx->fontCtx.notoSansID = nvgCreateFont(editCtx->vg, "sans", "NotoSans-Regular.ttf");
+	editCtx->fontCtx.notoSansID = nvgCreateFontMem(editCtx->vg, "sans", (void*)gFontSansData, gFontSansSize, 0);
 	if (editCtx->fontCtx.notoSansID < 0) {
 		printf_debugExt("Could not load Font");
 	}
+	
+	editCtx->gizmo = (void*)gGizmo3DData;
 	
 	Rcp_Init();
 	Theme_Init(0);

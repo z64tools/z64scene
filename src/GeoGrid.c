@@ -924,7 +924,7 @@ void GeoGrid_Draw_Debug(GeoGridContext* geoCtx) {
 			};
 			
 			sprintf(buf, "%d", num);
-			nvgFontSize(geoCtx->vg, SPLIT_TEXT_SMALL);
+			nvgFontSize(geoCtx->vg, SPLIT_TEXT);
 			nvgFontFace(geoCtx->vg, "sans");
 			nvgTextAlign(geoCtx->vg, NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER);
 			nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_HEADER, 255));
@@ -1098,7 +1098,7 @@ void CtxMenu_UpdateRect(GeoGridContext* geoCtx) {
 	for (s32 i = 0; i < ctxMenu->num; i++) {
 		if (ctxMenu->optionList[i] != NULL) {
 			nvgFontFace(vg, "sans");
-			nvgFontSize(vg, SPLIT_TEXT_SMALL);
+			nvgFontSize(vg, SPLIT_TEXT);
 			nvgFontBlur(vg, 0);
 			nvgTextLetterSpacing(vg, 1.10);
 			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
@@ -1110,7 +1110,7 @@ void CtxMenu_UpdateRect(GeoGridContext* geoCtx) {
 	sCtxMenuRect.h = 0;
 	for (s32 i = 0; i < ctxMenu->num; i++) {
 		if (ctxMenu->optionList[i] != NULL) {
-			sCtxMenuRect.h += SPLIT_TEXT_PADDING + SPLIT_TEXT_PADDING + SPLIT_TEXT_SMALL;
+			sCtxMenuRect.h += SPLIT_TEXT_PADDING + SPLIT_TEXT_PADDING + SPLIT_TEXT;
 		} else {
 			sCtxMenuRect.h += SPLIT_TEXT_PADDING * 1.5;
 		}
@@ -1142,7 +1142,7 @@ void GeoGrid_Update_ContextMenu(GeoGridContext* geoCtx) {
 			pressRect.x = sCtxMenuRect.x;
 			pressRect.y = sCtxMenuRect.y + sCtxMenuRect.h - SPLIT_TEXT_PADDING;
 			pressRect.w = sCtxMenuRect.w;
-			pressRect.h = SPLIT_TEXT_SMALL + SPLIT_TEXT_PADDING * 2;
+			pressRect.h = SPLIT_TEXT + SPLIT_TEXT_PADDING * 2;
 			
 			if (geoCtx->input->mouse.pos.x >= pressRect.x && geoCtx->input->mouse.pos.x < pressRect.x + pressRect.w) {
 				if (geoCtx->input->mouse.pos.y >= pressRect.y && geoCtx->input->mouse.pos.y < pressRect.y + pressRect.h) {
@@ -1156,7 +1156,7 @@ void GeoGrid_Update_ContextMenu(GeoGridContext* geoCtx) {
 				}
 			}
 			
-			sCtxMenuRect.h += SPLIT_TEXT_SMALL;
+			sCtxMenuRect.h += SPLIT_TEXT;
 			sCtxMenuRect.h += SPLIT_TEXT_PADDING;
 		} else {
 			sCtxMenuRect.h += SPLIT_TEXT_PADDING * 1.5;
@@ -1234,13 +1234,13 @@ void GeoGrid_Draw_ContextMenu(GeoGridContext* geoCtx) {
 			for (s32 i = 0; i < ctxMenu->num; i++) {
 				if (ctxMenu->optionList[i] != NULL) {
 					nvgFontFace(vg, "sans");
-					nvgFontSize(vg, SPLIT_TEXT_SMALL);
+					nvgFontSize(vg, SPLIT_TEXT);
 					nvgFontBlur(vg, 0);
 					nvgTextLetterSpacing(vg, 1.10);
 					nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 					nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_TEXT, 255));
 					nvgText(vg, sCtxMenuRect.x, sCtxMenuRect.y + SPLIT_TEXT_PADDING, ctxMenu->optionList[i], NULL);
-					sCtxMenuRect.y += SPLIT_TEXT_SMALL + SPLIT_TEXT_PADDING + SPLIT_TEXT_PADDING;
+					sCtxMenuRect.y += SPLIT_TEXT + SPLIT_TEXT_PADDING + SPLIT_TEXT_PADDING;
 				} else {
 					nvgBeginPath(vg);
 					nvgMoveTo(vg, ctxMenu->pos.x + SPLIT_TEXT_PADDING, sCtxMenuRect.y + SPLIT_TEXT_PADDING * 0.5);
@@ -1346,7 +1346,7 @@ void GeoGrid_Layout_SaveJson(GeoGridContext* geoCtx) {
 	num = cJSON_CreateNumber(geoCtx->winDim->y);
 	cJSON_AddItemToObject(temp, "h", num);
 	
-	FILE* file = fopen("Settings.json", "w");
+	FILE* file = fopen("z64scene.json", "w");
 	
 	Assert(file);
 	
@@ -1363,7 +1363,7 @@ Vec2s GeoGrid_Layout_LoadJson(GeoGridContext* geoCtx, Vec2s* winDim) {
 	cJSON* dim;
 	Vec2s ret;
 	
-	MemFile_LoadFile(&file, "Settings.json");
+	MemFile_LoadFile(&file, "z64scene.json");
 	json = cJSON_ParseWithLength(file.data, file.dataSize);
 	split = cJSON_GetObjectItem(json, "splits");
 	dim = cJSON_GetObjectItem(json, "dim");
@@ -1436,8 +1436,9 @@ void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, InputContext* inputCtx,
 			(f64)geoCtx->workRect.w * 0.25,
 			geoCtx->workRect.h
 		};
-		GeoGrid_AddSplit(geoCtx, &lHalf)->id = 0;
-		GeoGrid_AddSplit(geoCtx, &rHalf);
+		
+		GeoGrid_AddSplit(geoCtx, &lHalf)->id = 2;
+		GeoGrid_AddSplit(geoCtx, &rHalf)->id = 3;
 	}
 	
 	geoCtx->prevWorkRect = geoCtx->workRect;
@@ -1452,10 +1453,6 @@ void GeoGrid_Update(GeoGridContext* geoCtx) {
 	GeoGrid_Update_Vtx(geoCtx);
 	GeoGrid_Update_Edges(geoCtx);
 	GeoGrid_Update_Split(geoCtx);
-	
-	if (__inputCtx->key[KEY_ENTER].press) {
-		GeoGrid_Layout_SaveJson(geoCtx);
-	}
 	
 	geoCtx->prevWorkRect = geoCtx->workRect;
 }
@@ -1484,7 +1481,7 @@ void GeoGrid_Draw(GeoGridContext* geoCtx) {
 			nvgFill(geoCtx->vg);
 			
 			if (i == 1) {
-				nvgFontSize(geoCtx->vg, SPLIT_TEXT_SMALL);
+				nvgFontSize(geoCtx->vg, SPLIT_TEXT);
 				nvgFontFace(geoCtx->vg, "sans");
 				nvgTextAlign(geoCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 				

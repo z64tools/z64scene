@@ -4,10 +4,15 @@ void EnRoom_Init(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
 	
-	this->sceneName.txt = Graph_Alloc(512);
-	strcpy(this->sceneName.txt, "Untitled Scene");
+	if (this->sceneName.txt == NULL) {
+		this->sceneName.txt = Graph_Alloc(512);
+		strcpy(this->sceneName.txt, "Untitled Scene");
+	}
+	
 	this->leButton.txt = Tmp_String("This is a Button");
 	this->leButton.toggle = true;
+	
+	this->saveLayout.txt = Tmp_String("Save Layout");
 }
 
 void EnRoom_Destroy(void* passArg, void* instance, Split* split) {
@@ -35,6 +40,21 @@ void EnRoom_Update(void* passArg, void* instance, Split* split) {
 	
 	Element_SetRect_Text(&this->leButton.rect, x, y, 0);
 	Element_Button(&editCtx->geoCtx, split, &this->leButton);
+	
+	x += this->leButton.rect.w + SPLIT_ELEM_X_PADDING;
+	
+	Element_SetRect_Text(&this->checkBox.rect, x, y, 0);
+	Element_Checkbox(&editCtx->geoCtx, split, &this->checkBox);
+	
+	x = SPLIT_ELEM_X_PADDING;
+	y = split->rect.h - SPLIT_TEXT_H - SPLIT_BAR_HEIGHT - SPLIT_TEXT_PADDING * 2;
+	
+	Element_SetRect_Text(&this->saveLayout.rect, x, y, 0);
+	
+	if (Element_Button(&editCtx->geoCtx, split, &this->saveLayout)) {
+		printf_debug("Layout Saved");
+		GeoGrid_Layout_SaveJson(&editCtx->geoCtx);
+	}
 }
 
 void EnRoom_Draw(void* passArg, void* instance, Split* split) {
