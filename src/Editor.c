@@ -22,6 +22,9 @@ SplitTask sTaskTable[] = {
 		"None"
 	},
 	{
+		NULL
+	},
+	{
 		"3DViewport",
 		DefineTask(EnSceneView)
 	},
@@ -151,7 +154,7 @@ void Editor_Init(EditorContext* editCtx) {
 	GeoGrid_Init(
 		&editCtx->geoCtx,
 		&editCtx->appInfo.winDim,
-		&editCtx->inputCtx.mouse,
+		&editCtx->inputCtx,
 		editCtx->vg
 	);
 	Cursor_Init(&editCtx->cursorCtx);

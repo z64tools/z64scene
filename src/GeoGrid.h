@@ -13,9 +13,12 @@ extern char* gBuild;
 #define SPLIT_BAR_HEIGHT 28
 #define SPLIT_SPLIT_W    2.0
 #define SPLIT_ROUND_R    2.0
-#define SPLIT_CLAMP      (SPLIT_BAR_HEIGHT + SPLIT_SPLIT_W * 1.25)
+#define SPLIT_CLAMP      ((SPLIT_BAR_HEIGHT + SPLIT_SPLIT_W * 1.25) * 2)
 
-#define SPLIT_TEXT_PADDING 8
+#define SPLIT_ELEM_X_PADDING 8
+#define SPLIT_TEXT_H         (SPLIT_TEXT_PADDING * 2 + SPLIT_TEXT_SMALL)
+
+#define SPLIT_TEXT_PADDING 4
 #define SPLIT_TEXT_SMALL   11
 #define SPLIT_TEXT_MED     12
 
@@ -178,24 +181,34 @@ void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, InputContext* input, vo
 void GeoGrid_Update(GeoGridContext* geoCtx);
 void GeoGrid_Draw(GeoGridContext* geoCtx);
 
-void Elements_Init(GeoGridContext* geoCtx);
-void Elements_Update(GeoGridContext* geoCtx);
-void Elements_Draw(GeoGridContext* geoCtx, Split* split);
+void Element_Init(GeoGridContext* geoCtx);
+void Element_Update(GeoGridContext* geoCtx);
+void Element_Draw(GeoGridContext* geoCtx, Split* split);
 
 typedef struct {
 	char* txt;
 	u8    state;
 	u8    hover;
+	u8    toggle;
 	Rect  rect;
 } ElButton;
+
 typedef struct {
-	char txt[512];
-	u8   hover;
-	Rect rect;
+	char*    txt;
+	u8       hover;
+	Rect     rect;
 	NVGcolor bgCl;
 } ElTextbox;
 
-bool Element_Button(GeoGridContext*, Split*, ElButton*);
+typedef struct {
+	char* txt;
+	Rect  rect;
+} ElText;
+
+s32 Element_Button(GeoGridContext*, Split*, ElButton*);
 void Element_Textbox(GeoGridContext*, Split*, ElTextbox*);
+f32 Element_Text(GeoGridContext* geoCtx, Split* split, ElText* txt);
+
+void Element_SetRect_Text(Rect* rect, f32 x, f32 y, f32 w);
 
 #endif

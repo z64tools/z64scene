@@ -55,9 +55,8 @@ void EnRoom_Update(void* passArg, void* instance, Split* split);
 void EnRoom_Draw(void* passArg, void* instance, Split* split);
 
 typedef struct {
-	ElButton  button;
-	ElTextbox txtbox;
-	ElTextbox txtbox2;
+	ElTextbox sceneName;
+	ElButton  leButton;
 } EnRoom;
 
 #define DefineTask(x) x ## _Init, \

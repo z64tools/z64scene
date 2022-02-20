@@ -4,29 +4,10 @@ void EnRoom_Init(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
 	
-	this->button.txt = "Press Me!";
-	this->button.rect = (Rect) {
-		(SPLIT_TEXT_PADDING) * 2,
-		(SPLIT_TEXT_PADDING) * 2,
-		72,
-		SPLIT_TEXT_PADDING + SPLIT_TEXT_SMALL + SPLIT_TEXT_PADDING
-	};
-	
-	strcpy(this->txtbox.txt, "textbox");
-	this->txtbox.rect = (Rect) {
-		(SPLIT_TEXT_PADDING) * 2,
-		this->button.rect.y + this->button.rect.h + (SPLIT_TEXT_PADDING),
-		72 * 3,
-		SPLIT_TEXT_PADDING + SPLIT_TEXT_SMALL + SPLIT_TEXT_PADDING
-	};
-	
-	strcpy(this->txtbox2.txt, "textbox2");
-	this->txtbox2.rect = (Rect) {
-		(SPLIT_TEXT_PADDING) * 2,
-		this->txtbox.rect.y + this->txtbox.rect.h + (SPLIT_TEXT_PADDING),
-		72 * 3,
-		SPLIT_TEXT_PADDING + SPLIT_TEXT_SMALL + SPLIT_TEXT_PADDING
-	};
+	this->sceneName.txt = Graph_Alloc(512);
+	strcpy(this->sceneName.txt, "Untitled Scene");
+	this->leButton.txt = Tmp_String("This is a Button");
+	this->leButton.toggle = true;
 }
 
 void EnRoom_Destroy(void* passArg, void* instance, Split* split) {
@@ -37,10 +18,23 @@ void EnRoom_Destroy(void* passArg, void* instance, Split* split) {
 void EnRoom_Update(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
+	f32 x = SPLIT_ELEM_X_PADDING;
+	f32 y = SPLIT_ELEM_X_PADDING;
+	static ElText scenNameTx = {
+		"Scene Name:"
+	};
 	
-	Element_Button(&editCtx->geoCtx, split, &this->button);
-	Element_Textbox(&editCtx->geoCtx, split, &this->txtbox);
-	Element_Textbox(&editCtx->geoCtx, split, &this->txtbox2);
+	Element_SetRect_Text(&scenNameTx.rect, x, y, 0);
+	x += Element_Text(&editCtx->geoCtx, split, &scenNameTx);
+	x += SPLIT_ELEM_X_PADDING;
+	Element_SetRect_Text(&this->sceneName.rect, x, y, split->rect.w - x - SPLIT_ELEM_X_PADDING);
+	Element_Textbox(&editCtx->geoCtx, split, &this->sceneName);
+	
+	x = SPLIT_ELEM_X_PADDING;
+	y += SPLIT_TEXT_H + SPLIT_ELEM_X_PADDING;
+	
+	Element_SetRect_Text(&this->leButton.rect, x, y, 0);
+	Element_Button(&editCtx->geoCtx, split, &this->leButton);
 }
 
 void EnRoom_Draw(void* passArg, void* instance, Split* split) {

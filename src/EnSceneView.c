@@ -38,8 +38,8 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	// }
 	
 	// editCtx->scene.lightCtx.state |= LIGHT_STATE_CHANGED;
-	// split->bg.useCustomBG = true;
-	// this->viewCtx.matchDrawDist = true;
+	split->bg.useCustomBG = true;
+	this->viewCtx.matchDrawDist = true;
 }
 
 void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
