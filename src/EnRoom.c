@@ -21,7 +21,7 @@ void EnRoom_Update(void* passArg, void* instance, Split* split) {
 	f32 x = SPLIT_ELEM_X_PADDING;
 	f32 y = SPLIT_ELEM_X_PADDING;
 	static ElText scenNameTx = {
-		"Scene Name:"
+		"Name:"
 	};
 	
 	Element_SetRect_Text(&scenNameTx.rect, x, y, 0);

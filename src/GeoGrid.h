@@ -20,8 +20,8 @@ extern f32 gPixelRatio;
 #define SPLIT_TEXT_H         (SPLIT_TEXT_PADDING * 2 + SPLIT_TEXT)
 
 #define SPLIT_TEXT_PADDING 4
-#define SPLIT_TEXT         11
-#define SPLIT_TEXT_MED     12
+#define SPLIT_TEXT         12
+#define SPLIT_TEXT_MED     SPLIT_TEXT
 
 struct GeoGridContext;
 struct Split;
@@ -113,6 +113,7 @@ typedef struct Split {
 	SplitEdge*    edge[4];
 	SplitVtx* vtx[4];
 	Rect  rect; // Absolute XY, relative WH
+	Rect  cect;
 	Vec2s center;
 	Vec2s mousePos; // relative
 	Vec2s mousePressPos;
@@ -126,6 +127,9 @@ typedef struct Split {
 		bool useCustomBG;
 		RGB8 color;
 	} bg;
+	struct {
+		char data[80];
+	} header;
 } Split;
 
 typedef struct {
@@ -186,8 +190,9 @@ void GeoGrid_Draw(GeoGridContext* geoCtx);
 void Element_Init(GeoGridContext* geoCtx);
 void Element_Update(GeoGridContext* geoCtx);
 void Element_Draw(GeoGridContext* geoCtx, Split* split);
+void Element_PostDraw(GeoGridContext* geoCtx, Split* split);
 
-typedef struct {
+typedef struct ElButton {
 	char*    txt;
 	u8       state;
 	u8       hover;
@@ -221,6 +226,7 @@ void Element_Textbox(GeoGridContext*, Split*, ElTextbox*);
 f32 Element_Text(GeoGridContext* geoCtx, Split* split, ElText* txt);
 s32 Element_Checkbox(GeoGridContext* geoCtx, Split* split, ElCheckbox* this);
 
+void Element_PushToPost();
 void Element_SetRect_Text(Rect* rect, f32 x, f32 y, f32 w);
 
 #endif

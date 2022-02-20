@@ -5,8 +5,33 @@
 #define INCBIN_PREFIX
 #include "../incbin/incbin.h"
 
-INCBIN(gFontSans, "NotoSans-Regular.ttf");
-INCBIN(gGizmo3D, "geometry/gizmo_arrow.zobj");
+INCBIN(gFont_CascadiaCode, "assets/CascadiaCode-SemiBold.ttf");
+INCBIN(gFont_NotoSand, "assets/NotoSans-Bold.ttf");
+INCBIN(gGizmo3D, "assets/gizmo_arrow.zobj");
+
+INCBIN(gAppIcon_16, "assets/icon/16.data");
+INCBIN(gAppIcon_32, "assets/icon/32.data");
+INCBIN(gAppIcon_64, "assets/icon/64.data");
+INCBIN(gAppIcon_128, "assets/icon/128.data");
+
+static GLFWimage gAppIcon[4] = {
+	{
+		16, 16,
+		(void*)gAppIcon_16Data
+	},
+	{
+		32, 32,
+		(void*)gAppIcon_32Data
+	},
+	{
+		64, 64,
+		(void*)gAppIcon_64Data
+	},
+	{
+		128, 128,
+		(void*)gAppIcon_128Data
+	},
+};
 
 char* gBuild = {
 	"z64scene alpha commit[ "
@@ -15,7 +40,6 @@ char* gBuild = {
 	#endif
 	" ]"
 };
-
 char* gHash = {
 	""
 	#ifndef __COMFLAG__
@@ -31,11 +55,11 @@ SplitTask sTaskTable[] = {
 		NULL
 	},
 	{
-		"3DViewport",
+		"3D-Viewport",
 		DefineTask(EnSceneView)
 	},
 	{
-		"Room",
+		"Scene",
 		DefineTask(EnRoom)
 	}
 };
@@ -153,10 +177,8 @@ void Editor_Init(EditorContext* editCtx) {
 	
 	if (editCtx->vg == NULL)
 		printf_error("Could not init nanovg.");
-	editCtx->fontCtx.notoSansID = nvgCreateFontMem(editCtx->vg, "sans", (void*)gFontSansData, gFontSansSize, 0);
-	if (editCtx->fontCtx.notoSansID < 0) {
-		printf_debugExt("Could not load Font");
-	}
+	nvgCreateFontMem(editCtx->vg, "font-basic", (void*)gFont_CascadiaCodeData, gFont_CascadiaCodeSize, 0);
+	nvgCreateFontMem(editCtx->vg, "font-bold", (void*)gFont_NotoSandData, gFont_NotoSandSize, 0);
 	
 	editCtx->gizmo = (void*)gGizmo3DData;
 	
@@ -171,6 +193,7 @@ void Editor_Init(EditorContext* editCtx) {
 	Cursor_Init(&editCtx->cursorCtx);
 	Editor_NewScene(editCtx);
 	
+	glfwSetWindowIcon(editCtx->appInfo.mainWindow, 4, gAppIcon);
 	glfwSetWindowSizeLimits(
 		editCtx->appInfo.mainWindow,
 		400,

@@ -210,4 +210,38 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	
 	gSPEndDisplayList(POLY_OPA_DISP++);
 	n64_draw(gPolyOpaHead);
+	
+	if (editCtx->scene.file.data == NULL && editCtx->zobj.data == NULL) {
+		void* vg = editCtx->vg;
+		const char* txt = "z64scene";
+		static f32 fontSize = 1;
+		f32 boundr[4];
+		
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+		nvgFontBlur(vg, 0.0);
+		
+		nvgFontFace(vg, "font-bold");
+		nvgFontSize(vg, 35);
+		nvgTextLetterSpacing(vg, 2.0f);
+		nvgFillColor(vg, Theme_GetColor(THEME_SELECTION, 200));
+		nvgText(
+			vg,
+			split->cect.w * 0.5,
+			split->cect.h * 0.5,
+			txt,
+			NULL
+		);
+		
+		nvgFontFace(vg, "font-basic");
+		nvgFontSize(vg, 15);
+		nvgTextLetterSpacing(vg, 0.0f);
+		nvgFillColor(vg, Theme_GetColor(THEME_LINE, 85));
+		nvgText(
+			vg,
+			split->cect.w * 0.5,
+			split->cect.h * 0.5 + 35 * 0.75f,
+			"drop files here",
+			NULL
+		);
+	}
 }
