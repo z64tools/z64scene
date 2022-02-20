@@ -21,7 +21,7 @@ int main(void) {
 		res = GeoGrid_Layout_LoadJson(&editCtx->geoCtx, &editCtx->appInfo.winDim);
 	}
 	
-	z64_Init(
+	Zelda64_Init(
 		"z64scene",
 		&editCtx->appInfo,
 		&editCtx->inputCtx,
@@ -35,6 +35,6 @@ int main(void) {
 	);
 	Editor_Init(editCtx);
 	
-	z64_Update();
+	Zelda64_Update();
 	glfwTerminate();
 }

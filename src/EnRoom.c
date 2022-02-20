@@ -5,6 +5,28 @@ void EnRoom_Init(void* passArg, void* instance, Split* split) {
 	EnRoom* this = instance;
 	
 	this->button.txt = "Press Me!";
+	this->button.rect = (Rect) {
+		(SPLIT_TEXT_PADDING) * 2,
+		(SPLIT_TEXT_PADDING) * 2,
+		72,
+		SPLIT_TEXT_PADDING + SPLIT_TEXT_SMALL + SPLIT_TEXT_PADDING
+	};
+	
+	strcpy(this->txtbox.txt, "textbox");
+	this->txtbox.rect = (Rect) {
+		(SPLIT_TEXT_PADDING) * 2,
+		this->button.rect.y + this->button.rect.h + (SPLIT_TEXT_PADDING),
+		72 * 3,
+		SPLIT_TEXT_PADDING + SPLIT_TEXT_SMALL + SPLIT_TEXT_PADDING
+	};
+	
+	strcpy(this->txtbox2.txt, "textbox2");
+	this->txtbox2.rect = (Rect) {
+		(SPLIT_TEXT_PADDING) * 2,
+		this->txtbox.rect.y + this->txtbox.rect.h + (SPLIT_TEXT_PADDING),
+		72 * 3,
+		SPLIT_TEXT_PADDING + SPLIT_TEXT_SMALL + SPLIT_TEXT_PADDING
+	};
 }
 
 void EnRoom_Destroy(void* passArg, void* instance, Split* split) {
@@ -15,14 +37,10 @@ void EnRoom_Destroy(void* passArg, void* instance, Split* split) {
 void EnRoom_Update(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
-	Rect buttonRect = {
-		SPLIT_TEXT_SPLIT* 2,
-		SPLIT_TEXT_SPLIT* 2,
-		72,
-		SPLIT_TEXT_SPLIT + SPLIT_TEXT_SCALE + SPLIT_TEXT_SPLIT
-	};
 	
-	Element_Button(&editCtx->geoCtx, split, &this->button, &buttonRect);
+	Element_Button(&editCtx->geoCtx, split, &this->button);
+	Element_Textbox(&editCtx->geoCtx, split, &this->txtbox);
+	Element_Textbox(&editCtx->geoCtx, split, &this->txtbox2);
 }
 
 void EnRoom_Draw(void* passArg, void* instance, Split* split) {

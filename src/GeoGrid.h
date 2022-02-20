@@ -10,12 +10,14 @@ extern char* gBuild;
 
 #define SPLIT_GRAB_DIST  4
 #define SPLIT_CTXM_DIST  32
-#define SPLIT_TEXT_SCALE 12
 #define SPLIT_BAR_HEIGHT 28
-#define SPLIT_TEXT_SPLIT 8
 #define SPLIT_SPLIT_W    2.0
 #define SPLIT_ROUND_R    2.0
 #define SPLIT_CLAMP      (SPLIT_BAR_HEIGHT + SPLIT_SPLIT_W * 1.25)
+
+#define SPLIT_TEXT_PADDING 8
+#define SPLIT_TEXT_SMALL   11
+#define SPLIT_TEXT_MED     12
 
 struct GeoGridContext;
 struct Split;
@@ -32,56 +34,56 @@ typedef enum {
 
 typedef enum {
 	VTX_BOT_L = 0,
-	VTX_TOP_L,
-	VTX_TOP_R,
-	VTX_BOT_R,
-	EDGE_L    = 0,
-	EDGE_T,
-	EDGE_R,
+		VTX_TOP_L,
+		VTX_TOP_R,
+		VTX_BOT_R,
+		EDGE_L = 0,
+		EDGE_T,
+		EDGE_R,
 	EDGE_B
 } SplitPos;
 
 typedef enum {
 	DIR_L = 0,
-	DIR_T,
-	DIR_R,
-	DIR_B,
+		DIR_T,
+		DIR_R,
+		DIR_B,
 } SplitDir;
 
 typedef enum {
 	SPLIT_POINT_NONE = 0,
-	SPLIT_POINT_BL   = (1 << 0),
-	SPLIT_POINT_TL   = (1 << 1),
-	SPLIT_POINT_TR   = (1 << 2),
-	SPLIT_POINT_BR   = (1 << 3),
+		SPLIT_POINT_BL = (1 << 0),
+		SPLIT_POINT_TL = (1 << 1),
+		SPLIT_POINT_TR = (1 << 2),
+		SPLIT_POINT_BR = (1 << 3),
 	
-	SPLIT_POINTS     = (SPLIT_POINT_TL | SPLIT_POINT_TR | SPLIT_POINT_BL | SPLIT_POINT_BR),
+		SPLIT_POINTS   = (SPLIT_POINT_TL | SPLIT_POINT_TR | SPLIT_POINT_BL | SPLIT_POINT_BR),
 	
-	SPLIT_SIDE_L     = (1 << 4),
-	SPLIT_SIDE_T     = (1 << 5),
-	SPLIT_SIDE_R     = (1 << 6),
-	SPLIT_SIDE_B     = (1 << 7),
+		SPLIT_SIDE_L   = (1 << 4),
+		SPLIT_SIDE_T   = (1 << 5),
+		SPLIT_SIDE_R   = (1 << 6),
+		SPLIT_SIDE_B   = (1 << 7),
 	
-	SPLIT_SIDE_H     = (SPLIT_SIDE_L | SPLIT_SIDE_R),
-	SPLIT_SIDE_V     = (SPLIT_SIDE_T | SPLIT_SIDE_B),
-	SPLIT_SIDES      = (SPLIT_SIDE_H | SPLIT_SIDE_V),
+		SPLIT_SIDE_H   = (SPLIT_SIDE_L | SPLIT_SIDE_R),
+		SPLIT_SIDE_V   = (SPLIT_SIDE_T | SPLIT_SIDE_B),
+		SPLIT_SIDES    = (SPLIT_SIDE_H | SPLIT_SIDE_V),
 } SplitState;
 
 typedef enum {
 	EDGE_STATE_NONE = 0,
-	EDGE_HORIZONTAL = (1 << 0),
-	EDGE_VERTICAL   = (1 << 1),
+		EDGE_HORIZONTAL = (1 << 0),
+		EDGE_VERTICAL   = (1 << 1),
 	
-	EDGE_ALIGN      = (EDGE_HORIZONTAL | EDGE_VERTICAL),
+		EDGE_ALIGN      = (EDGE_HORIZONTAL | EDGE_VERTICAL),
 	
-	EDGE_STICK_L    = (1 << 2),
-	EDGE_STICK_T    = (1 << 3),
-	EDGE_STICK_R    = (1 << 4),
-	EDGE_STICK_B    = (1 << 5),
+		EDGE_STICK_L    = (1 << 2),
+		EDGE_STICK_T    = (1 << 3),
+		EDGE_STICK_R    = (1 << 4),
+		EDGE_STICK_B    = (1 << 5),
 	
-	EDGE_STICK      = (EDGE_STICK_L | EDGE_STICK_T | EDGE_STICK_R | EDGE_STICK_B),
+		EDGE_STICK      = (EDGE_STICK_L | EDGE_STICK_T | EDGE_STICK_R | EDGE_STICK_B),
 	
-	EDGE_EDIT       = (1 << 6),
+		EDGE_EDIT       = (1 << 6),
 } EdgeState;
 
 typedef struct SplitVtx {
@@ -117,7 +119,7 @@ typedef struct Split {
 	bool  blockMouse;
 	void* instance;
 	struct {
-		bool  useCustomBG;
+		bool useCustomBG;
 		RGB8 color;
 	} bg;
 } Split;
@@ -158,21 +160,21 @@ typedef struct GeoGridContext {
 		f64 clampMax;
 		f64 clampMin;
 	} slide;
-	MouseInput* mouse;
+	InputContext* input;
 	Vec2s* winDim;
 	void*  vg;
 	void*  passArg;
 	SplitTask* taskTable;
 	s32    taskTableNum;
 	#ifndef NDEBUG
-	bool   jsonSettings;
+		bool jsonSettings;
 	#endif
 } GeoGridContext;
 
 bool GeoGrid_Cursor_InRect(Split* split, Rect* rect);
 Vec2s GeoGrid_Layout_LoadJson(GeoGridContext* geoCtx, Vec2s* winDim);
 
-void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, MouseInput* mouse, void* vg);
+void GeoGrid_Init(GeoGridContext* geoCtx, Vec2s* winDim, InputContext* input, void* vg);
 void GeoGrid_Update(GeoGridContext* geoCtx);
 void GeoGrid_Draw(GeoGridContext* geoCtx);
 
@@ -186,12 +188,14 @@ typedef struct {
 	u8    hover;
 	Rect  rect;
 } ElButton;
+typedef struct {
+	char txt[512];
+	u8   hover;
+	Rect rect;
+	NVGcolor bgCl;
+} ElTextbox;
 
-s32 Element_Button(
-	GeoGridContext* geoCtx,
-	Split* split,
-	ElButton* button,
-	Rect* rect
-);
+bool Element_Button(GeoGridContext*, Split*, ElButton*);
+void Element_Textbox(GeoGridContext*, Split*, ElTextbox*);
 
 #endif

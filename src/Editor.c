@@ -40,34 +40,47 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 	printf_SetSuppressLevel(PSL_NONE);
 	
 	for (s32 i = 0; i < count; i++) {
-		printf_info("Drop File: [%s]", file[i]);
+		printf_debug("Drop File: [%s]", file[i]);
 		
 		if (StrStr(file[i], "conf.txt")) {
 			MemFile memFile = MemFile_Initialize();
 			char* shaderPtr;
-			printf_info("Loading Conf [%s]", file[i]);
+			printf_debug("Loading Config [%s]", file[i]);
 			
 			MemFile_LoadFile_String(&memFile, file[i]);
 			shaderPtr = StrStr(memFile.data, "shader");
 			Assert(shaderPtr != NULL);
-			printf_info("ShaderID [%s]", String_GetWord(shaderPtr, 1));
+			printf_debug("ShaderID [%s]", String_GetWord(shaderPtr, 1));
 			gSceneConfIndex = String_GetInt(String_GetWord(shaderPtr, 1));
 			MemFile_Free(&memFile);
 		}
 		
+		if (StrStr(file[i], "config.cfg")) {
+			MemFile memFile = MemFile_Initialize();
+			char* shaderPtr;
+			printf_debug("Loading Config [%s]", file[i]);
+			
+			if (!MemFile_LoadFile_String(&memFile, file[i]))
+				gSceneConfIndex = Config_GetInt(&memFile, "scene_func_id");
+			MemFile_Free(&memFile);
+		}
+		
 		if (StrStr(file[i], ".zscene")) {
-			printf_info("Loading Scene [%s]", file[i]);
+			printf_debug("Loading Scene [%s]", file[i]);
 			MemFile_LoadFile(&gEditCtx->scene.file, file[i]);
 			Scene_ExecuteCommands(&gEditCtx->scene, NULL);
 		}
 		
-		if (StrStr(file[i], ".zmap")) {
+		if (StrStr(file[i], ".zmap") || StrStr(file[i], ".zroom")) {
 			loadRoom++;
 			for (s32 j = 0; j < ROOM_MAX; j++) {
 				char roomNum[128] = { 0 };
-				sprintf(roomNum, "_%d.zmap", j);
+				if (StrStr(file[i], ".zmap"))
+					sprintf(roomNum, "_%d.zmap", j);
+				else
+					sprintf(roomNum, "_%d.zroom", j);
 				if (MemMem(file[i], strlen(file[i]), roomNum, strlen(roomNum))) {
-					printf_info("Loading Room [%s]", file[i]);
+					printf_debug("Loading Room [%s]", file[i]);
 					
 					gEditCtx->scene.lightCtx.room[j].lightNum = 0;
 					MemFile_LoadFile(&gEditCtx->room[j].file, file[i]);
@@ -83,7 +96,7 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 		for (s32 i = 0; i < ROOM_MAX; i++) {
 			if (loadFlag[i] == false && gEditCtx->room[i].file.data != NULL) {
 				gEditCtx->scene.lightCtx.room[i].lightNum = 0;
-				printf_info("Clearing Room [%d]", i);
+				printf_debug("Clearing Room [%d]", i);
 				MemFile_Free(&gEditCtx->room[i].file);
 			}
 		}
@@ -116,6 +129,15 @@ void Editor_Init(EditorContext* editCtx) {
 	editCtx->vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 	
 	gEditCtx = editCtx;
+	
+	editCtx->gizmo = MemFile_Initialize();
+	editCtx->zobj = MemFile_Initialize();
+	editCtx->scene.file = MemFile_Initialize();
+	for (s32 i = 0; i < ROOM_MAX; i++) {
+		editCtx->room[i].file = MemFile_Initialize();
+	}
+	
+	MemFile_LoadFile(&editCtx->gizmo, "geometry/gizmo_arrow.zobj");
 	
 	if (editCtx->vg == NULL)
 		printf_error("Could not init nanovg.");

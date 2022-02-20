@@ -1,6 +1,7 @@
 #include "Editor.h"
 
 s32 gSceneConfIndex = 0;
+s64 sFirstInit = 0;
 
 void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
@@ -8,38 +9,37 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	
 	View_Init(&this->viewCtx, &editCtx->inputCtx);
 	
-	if (!MemFile_LoadFile(&editCtx->zobj, "zobj.zobj")) {
-		gSegment[6] = editCtx->zobj.data;
-		SkelAnime_Init(
-			&editCtx->zobj,
-			&this->skelAnime,
-			0x0600E988,
-			0x06010808,
-			this->jointTable,
-			this->morphTable
-		);
-		this->skelAnime.playSpeed = 0.3f;
-	}
+	// if (!MemFile_LoadFile(&editCtx->zobj, "zobj.zobj")) {
+	// 	gSegment[6] = editCtx->zobj.data;
+	// 	SkelAnime_Init(
+	// 		&editCtx->zobj,
+	// 		&this->skelAnime,
+	// 		0x0600E988,
+	// 		0x06010808,
+	// 		this->jointTable,
+	// 		this->morphTable
+	// 	);
+	// 	this->skelAnime.playSpeed = 0.3f;
+	// }
 	
-	MemFile_LoadFile(&editCtx->gizmo, "geometry/gizmo_arrow.zobj");
-	MemFile_LoadFile(&editCtx->scene.file, "scene.zscene");
-	Scene_ExecuteCommands(&editCtx->scene, NULL);
+	// MemFile_LoadFile(&editCtx->scene.file, "scene.zscene");
+	// Scene_ExecuteCommands(&editCtx->scene, NULL);
+	//
+	// for (s32 i = 0; i < 32; i++) {
+	// 	char buffer[64];
+	//
+	// 	sprintf(buffer, "room_%d.zmap", i);
+	// 	if (MemFile_LoadFile(&editCtx->room[i].file, buffer)) {
+	// 		printf_debugExt("Break");
+	// 		break;
+	// 	}
+	//
+	// 	Scene_ExecuteCommands(&editCtx->scene, &editCtx->room[i]);
+	// }
 	
-	for (s32 i = 0; i < 32; i++) {
-		char buffer[64];
-		
-		sprintf(buffer, "room_%d.zmap", i);
-		if (MemFile_LoadFile(&editCtx->room[i].file, buffer)) {
-			printf_debugExt("Break");
-			break;
-		}
-		
-		Scene_ExecuteCommands(&editCtx->scene, &editCtx->room[i]);
-	}
-	
-	editCtx->scene.lightCtx.state |= LIGHT_STATE_CHANGED;
-	split->bg.useCustomBG = true;
-	this->viewCtx.matchDrawDist = true;
+	// editCtx->scene.lightCtx.state |= LIGHT_STATE_CHANGED;
+	// split->bg.useCustomBG = true;
+	// this->viewCtx.matchDrawDist = true;
 }
 
 void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
@@ -140,15 +140,16 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 		}
 	}
 	
-	n64_set_segment(0x02, editCtx->scene.file.data);
-	Light_SetFog(&editCtx->scene, &this->viewCtx);
-	envLight = &lightCtx->envLight[lightCtx->curEnvId];
-	
-	split->bg.color = (RGB8) {
-		envLight->fogColor.r,
-		envLight->fogColor.g,
-		envLight->fogColor.b
-	};
+	if (editCtx->scene.file.data != NULL) {
+		n64_set_segment(0x02, editCtx->scene.file.data);
+		Light_SetFog(&editCtx->scene, &this->viewCtx);
+		envLight = &lightCtx->envLight[lightCtx->curEnvId];
+		split->bg.color = (RGB8) {
+			envLight->fogColor.r,
+			envLight->fogColor.g,
+			envLight->fogColor.b
+		};
+	}
 }
 
 void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
@@ -168,32 +169,32 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		0x06001000,
 	};
 	
-	if (Zelda64_20fpsLimiter()) {
+	if (Zelda64_20fpsLimiter())
 		gGameplayFrames++;
-		eyeId = Zelda64_EyeBlink(&frame);
-	}
 	
 	Graph_Alloc(GRAPH_INIT);
 	n64_assign_triangle(TRI_INIT);
 	n64_ClearSegments();
 	gPolyOpaDisp = gPolyOpaHead;
 	
-	gxSPSegment(POLY_OPA_DISP++, 0x2, editCtx->scene.file.data);
-	
 	View_SetProjectionDimensions(&this->viewCtx, &dim);
 	View_Update(&this->viewCtx, &editCtx->inputCtx);
 	
-	gSceneDrawConf[gSceneConfIndex](&editCtx->scene);
-	
-	for (s32 i = 0; i < 32; i++) {
-		if (editCtx->room[i].file.data != NULL) {
-			Light_BindEnvLights(&editCtx->scene, &editCtx->room[0]);
-			Light_BindRoomLights(&editCtx->scene, &editCtx->room[i]);
-			Room_Draw(&editCtx->room[i]);
+	if (editCtx->scene.file.data != NULL) {
+		gxSPSegment(POLY_OPA_DISP++, 0x2, editCtx->scene.file.data);
+		gSceneDrawConf[gSceneConfIndex](&editCtx->scene);
+		for (s32 i = 0; i < ROOM_MAX; i++) {
+			if (editCtx->room[i].file.data != NULL) {
+				Light_BindEnvLights(&editCtx->scene, &editCtx->room[0]);
+				Light_BindRoomLights(&editCtx->scene, &editCtx->room[i]);
+				Room_Draw(&editCtx->room[i]);
+			}
 		}
 	}
 	
 	if (editCtx->zobj.data) {
+		if (Zelda64_20fpsLimiter())
+			eyeId = Zelda64_EyeBlink(&frame);
 		gxSPSegment(POLY_OPA_DISP++, 0x6, editCtx->zobj.data);
 		gSPSegment(POLY_OPA_DISP++, 0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
 		gSPSegment(POLY_OPA_DISP++, 0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
@@ -206,6 +207,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 			SkelAnime_Draw(&this->skelAnime, SKELANIME_FLEX, this->jointTable);
 		} Matrix_Pop();
 	}
+	
 	gSPEndDisplayList(POLY_OPA_DISP++);
 	n64_draw(gPolyOpaHead);
 }

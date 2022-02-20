@@ -40,7 +40,7 @@ linux: src_linux z64scene
 
 # WIN32
 
-src_win32: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_win32_cJSON)
+src_win32: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_win32_cJSON) src/icon.o
 	
 bin/win32/%.o: %.c $(HeaderFiles)
 	@echo "Win32: [" $< "]"
@@ -52,7 +52,10 @@ bin/win32/src/main.o: src/main.c $(HeaderFiles)
 	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
 	@i686-w64-mingw32.static-objdump -drz $@ > $(@:.o=.s)
 
-z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_win32_cJSON)
+src/icon.o: src/icon.rc src/icon.ico
+	@i686-w64-mingw32.static-windres -o $@ $<
+
+z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_win32_cJSON) src/icon.o
 	@echo "win32: [" $@ "]"
 	@i686-w64-mingw32.static-gcc $^ -o z64scene.exe -lm -flto `i686-w64-mingw32.static-pkg-config --cflags --libs glfw3` $(FLAGS)
 
