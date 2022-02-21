@@ -219,8 +219,8 @@ typedef struct {
 	u8 isHintText   : 2;
 	TextAlign align : 3;
 	struct {
-		u8  isFloat : 1;
-		u8  updt    : 1;
+		u8  isInt : 1;
+		u8  updt  : 1;
 		f32 value;
 		f32 min;
 		f32 max;
@@ -249,8 +249,9 @@ typedef struct {
 	f32  min;
 	f32  max;
 	
-	u8   hover;
-	u8   holdState;
+	u8   isInt     : 1;
+	u8   hover     : 1;
+	u8   holdState : 1;
 	NVGcolor color;
 	
 	s32 isTextbox;

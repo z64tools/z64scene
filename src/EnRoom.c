@@ -18,7 +18,11 @@ void EnRoom_Init(void* passArg, void* instance, Split* split) {
 	
 	this->leButton.txt = Tmp_String("This is a Button");
 	this->leButton.toggle = true;
+	
 	this->saveLayout.txt = Tmp_String("Save Layout");
+	this->slider.isInt = true;
+	this->slider.min = 0;
+	this->slider.max = 255;
 }
 
 void EnRoom_Destroy(void* passArg, void* instance, Split* split) {
