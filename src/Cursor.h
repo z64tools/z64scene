@@ -21,6 +21,8 @@ typedef enum {
 	CURSOR_ARROW_V,
 	
 	CURSOR_CROSSHAIR,
+	
+	CURSOR_EMPTY,
 	CURSOR_MAX
 } CursorIndex;
 

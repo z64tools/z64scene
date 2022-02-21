@@ -63,6 +63,7 @@ typedef struct {
 	ElCheckbox checkBox;
 	
 	ElButton   saveLayout;
+	ElSlider   slider;
 } EnRoom;
 
 #define DefineTask(x) x ## _Init, \

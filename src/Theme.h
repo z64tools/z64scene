@@ -19,13 +19,14 @@ typedef enum {
 	THEME_BUTTON_HOVER, // Button Hover
 	THEME_BUTTON_PRESS, // BUTTON Press
 	
-	THEME_SELECTION, // SELECTED
+	THEME_PRIM, // YELLOW
+	THEME_ACCENT, // BLUE
 	
 	THEME_MAX
 } ThemeColor;
 
 void Theme_Init(u32 themeId);
 void Theme_SmoothStepToCol(NVGcolor* src, NVGcolor target, f32 a, f32 b, f32 c);
-NVGcolor Theme_GetColor(ThemeColor pal, u8 alpha);
+NVGcolor Theme_GetColor(ThemeColor pal, s32 alpha);
 
 #endif

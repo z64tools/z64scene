@@ -2,10 +2,10 @@
 
 NVGcolor sDarkTheme[THEME_MAX] = { 0 };
 
-NVGcolor Theme_GetColor(ThemeColor pal, u8 alpha) {
+NVGcolor Theme_GetColor(ThemeColor pal, s32 alpha) {
 	NVGcolor col = sDarkTheme[pal];
 	
-	col.a = 255.0 / (f32)alpha;
+	col.a = (f32)alpha * 0.00392156862745; // X / 255
 	
 	return col;
 }
@@ -31,5 +31,6 @@ void Theme_Init(u32 themeId) {
 	sDarkTheme[THEME_BUTTON_HOVER] = nvgHSLA(225.0 / 360, 0.07, 0.20, 175);
 	sDarkTheme[THEME_BUTTON_PRESS] = nvgHSLA(225.0 / 360, 0.07, 0.30, 175);
 	
-	sDarkTheme[THEME_SELECTION] = nvgHSLA(44.0 / 360, 0.5, 0.5, 175);
+	sDarkTheme[THEME_PRIM] = nvgHSLA(44.0 / 360, 0.5, 0.5, 175);
+	sDarkTheme[THEME_ACCENT] = nvgHSLA(235.0 / 360, 0.4, 0.5, 175);
 }

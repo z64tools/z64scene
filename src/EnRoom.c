@@ -31,9 +31,9 @@ void EnRoom_Update(void* passArg, void* instance, Split* split) {
 	Element_Textbox(&editCtx->geoCtx, split, &this->sceneName);
 	
 	x = SPLIT_ELEM_X_PADDING;
-	y += SPLIT_TEXT_H + SPLIT_ELEM_X_PADDING;
+	y += SPLIT_ELEM_Y_PADDING;
 	
-	Element_SetRect_Text(&this->leButton.rect, x, y, 0);
+	Element_SetRect_Text(&this->leButton.rect, x, y, 140);
 	Element_Button(&editCtx->geoCtx, split, &this->leButton);
 	
 	x += this->leButton.rect.w + SPLIT_ELEM_X_PADDING;
@@ -42,7 +42,13 @@ void EnRoom_Update(void* passArg, void* instance, Split* split) {
 	Element_Checkbox(&editCtx->geoCtx, split, &this->checkBox);
 	
 	x = SPLIT_ELEM_X_PADDING;
-	y = split->rect.h - SPLIT_TEXT_H - SPLIT_BAR_HEIGHT - SPLIT_TEXT_PADDING * 2;
+	y += SPLIT_ELEM_Y_PADDING;
+	
+	Element_SetRect_Text(&this->slider.rect, x, y, 140);
+	Element_Slider(&editCtx->geoCtx, split, &this->slider);
+	
+	x = SPLIT_ELEM_X_PADDING;
+	y = split->cect.h - SPLIT_ELEM_Y_PADDING - 4;
 	
 	Element_SetRect_Text(&this->saveLayout.rect, x, y, 0);
 	

@@ -9,6 +9,7 @@ INCBIN(gCursor_ArrowR, "assets/cursor/arrow_right.ia16");
 INCBIN(gCursor_ArrowH, "assets/cursor/arrow_horizontal.ia16");
 INCBIN(gCursor_ArrowV, "assets/cursor/arrow_vertical.ia16");
 INCBIN(gCursor_Crosshair, "assets/cursor/crosshair.ia16");
+INCBIN(gCursor_Empty, "assets/cursor/empty.ia16");
 
 static CursorContext* __cursorCtx;
 
@@ -41,6 +42,7 @@ void Cursor_CreateCursors(CursorContext* cursorCtx) {
 	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_H, gCursor_ArrowHData, 32, 16, 16);
 	Cursor_CreateBitmap(cursorCtx, CURSOR_ARROW_V, gCursor_ArrowVData, 32, 16, 16);
 	Cursor_CreateBitmap(cursorCtx, CURSOR_CROSSHAIR, gCursor_CrosshairData, 40, 19, 20);
+	Cursor_CreateBitmap(cursorCtx, CURSOR_EMPTY, gCursor_EmptyData, 16, 0, 0);
 }
 
 void Cursor_Init(CursorContext* cursorCtx) {

@@ -117,26 +117,14 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 			s16 oldPos = mouse->pos.x;
 			s16 newPos = Wrap(mouse->pos.x, xMin, xMax);
 			
-			mouse->jumpVelComp.x = oldPos - newPos;
-			
-			glfwSetCursorPos(
-				editCtx->appInfo.mainWindow,
-				newPos,
-				editCtx->inputCtx.mouse.pos.y
-			);
+			Input_SetMousePos(newPos, MOUSE_KEEP_AXIS);
 		}
 		
 		if (mouse->pos.y < yMin || mouse->pos.y > yMax) {
 			s16 oldPos = mouse->pos.y;
 			s16 newPos = Wrap(mouse->pos.y, yMin, yMax);
 			
-			mouse->jumpVelComp.y = oldPos - newPos;
-			
-			glfwSetCursorPos(
-				editCtx->appInfo.mainWindow,
-				editCtx->inputCtx.mouse.pos.x,
-				newPos
-			);
+			Input_SetMousePos(MOUSE_KEEP_AXIS, newPos);
 		}
 	}
 	
@@ -223,7 +211,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		nvgFontFace(vg, "font-bold");
 		nvgFontSize(vg, 35);
 		nvgTextLetterSpacing(vg, 2.0f);
-		nvgFillColor(vg, Theme_GetColor(THEME_SELECTION, 200));
+		nvgFillColor(vg, Theme_GetColor(THEME_PRIM, 355));
 		nvgText(
 			vg,
 			split->cect.w * 0.5,
@@ -235,7 +223,7 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		nvgFontFace(vg, "font-basic");
 		nvgFontSize(vg, 15);
 		nvgTextLetterSpacing(vg, 0.0f);
-		nvgFillColor(vg, Theme_GetColor(THEME_LINE, 85));
+		nvgFillColor(vg, Theme_GetColor(THEME_LINE, 755));
 		nvgText(
 			vg,
 			split->cect.w * 0.5,

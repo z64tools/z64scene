@@ -801,41 +801,6 @@ void GeoGrid_Update_Split(GeoGridContext* geoCtx) {
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
-bool GeoGrid_Button(Split* split, void* vg, const char* txt, Rect rect) {
-	bool ret = false;
-	
-	nvgBeginPath(vg);
-	nvgFillColor(vg, Theme_GetColor(THEME_LIGHT, 175));
-	nvgRoundedRect(
-		vg,
-		rect.x - 1.0f,
-		rect.y - 1.0f,
-		rect.w + 1.0f * 2,
-		rect.h + 1.0f * 2,
-		SPLIT_ROUND_R
-	);
-	nvgFill(vg);
-	
-	nvgBeginPath(vg);
-	
-	if (GeoGrid_Cursor_InRect(split, &rect)) {
-		if (__inputCtx->mouse.clickL.press) {
-			ret = true;
-		}
-		if (__inputCtx->mouse.clickL.hold) {
-			nvgFillColor(vg, Theme_GetColor(THEME_BUTTON_PRESS, 175));
-		} else {
-			nvgFillColor(vg, Theme_GetColor(THEME_BUTTON_HOVER, 175));
-		}
-	} else {
-		nvgFillColor(vg, Theme_GetColor(THEME_BUTTON_IDLE, 175));
-	}
-	nvgRoundedRect(vg, rect.x, rect.y, rect.w, rect.h, SPLIT_ROUND_R);
-	nvgFill(vg);
-	
-	return ret;
-}
-
 void GeoGrid_SetContextMenu(GeoGridContext* geoCtx, Split* split, char** optionList, s32 num) {
 	GeoCtxMenu* ctxMenu = &geoCtx->ctxMenu;
 	

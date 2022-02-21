@@ -16,8 +16,9 @@ extern f32 gPixelRatio;
 #define SPLIT_ROUND_R    2.0
 #define SPLIT_CLAMP      ((SPLIT_BAR_HEIGHT + SPLIT_SPLIT_W * 1.25) * 2)
 
-#define SPLIT_ELEM_X_PADDING 8
 #define SPLIT_TEXT_H         (SPLIT_TEXT_PADDING * 2 + SPLIT_TEXT)
+#define SPLIT_ELEM_X_PADDING 8
+#define SPLIT_ELEM_Y_PADDING (SPLIT_TEXT_H + 4)
 
 #define SPLIT_TEXT_PADDING 4
 #define SPLIT_TEXT         12
@@ -219,12 +220,25 @@ typedef struct {
 	u8   toggle;
 	NVGcolor color;
 	f32  lerp;
+	u8   hover;
 } ElCheckbox;
+
+typedef struct {
+	Rect rect;
+	f32  value;
+	f32  target;
+	u8   holdState;
+	f32  min;
+	f32  max;
+	char txt[32];
+	NVGcolor color;
+} ElSlider;
 
 s32 Element_Button(GeoGridContext*, Split*, ElButton*);
 void Element_Textbox(GeoGridContext*, Split*, ElTextbox*);
 f32 Element_Text(GeoGridContext* geoCtx, Split* split, ElText* txt);
 s32 Element_Checkbox(GeoGridContext* geoCtx, Split* split, ElCheckbox* this);
+f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this);
 
 void Element_PushToPost();
 void Element_SetRect_Text(Rect* rect, f32 x, f32 y, f32 w);
