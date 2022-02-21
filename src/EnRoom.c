@@ -23,6 +23,7 @@ void EnRoom_Init(void* passArg, void* instance, Split* split) {
 	this->slider.isInt = true;
 	this->slider.min = 0;
 	this->slider.max = 255;
+	Element_Slider_SetValue(&this->slider, 255);
 }
 
 void EnRoom_Destroy(void* passArg, void* instance, Split* split) {

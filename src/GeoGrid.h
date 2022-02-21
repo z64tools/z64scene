@@ -262,6 +262,7 @@ s32 Element_Button(GeoGridContext*, Split*, ElButton*);
 void Element_Textbox(GeoGridContext*, Split*, ElTextbox*);
 f32 Element_Text(GeoGridContext* geoCtx, Split* split, ElText* txt);
 s32 Element_Checkbox(GeoGridContext* geoCtx, Split* split, ElCheckbox* this);
+void Element_Slider_SetValue(ElSlider* this, f32 val);
 f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this);
 
 void Element_PushToPost();

@@ -33,6 +33,10 @@ static s32 sFlickFlag = 1;
 
 static s16 sBreatheYaw;
 static f32 sBreathe;
+static const char* sFmt[] = {
+	"%.3f",
+	"%d"
+};
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
@@ -214,19 +218,15 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 		if (this == sCurTextbox) {
 			this->nbx.updt = true;
 		} else {
-			char* fmt[] = {
-				"%.3f",
-				"%d"
-			};
-			
 			if (this->nbx.updt) {
 				this->nbx.value = this->nbx.isInt ? String_GetInt(this->txt) : String_GetFloat(this->txt);
 				if (this->nbx.min != 0 || this->nbx.max != 0)
 					this->nbx.value = CLAMP(this->nbx.value, this->nbx.min, this->nbx.max);
-				sprintf(
+				snprintf(
 					this->txt,
-					fmt[this->nbx.isInt],
-					this->nbx.value
+					31,
+					sFmt[this->nbx.isInt],
+					this->nbx.isInt ? String_GetInt(this->txt) : String_GetFloat(this->txt)
 				);
 			}
 		}
@@ -551,18 +551,21 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 	);
 	nvgFill(vg);
 	
-	char* fmt[] = {
-		"%.3f",
-		"%d"
-	};
-	
-	snprintf(
-		this->txt,
-		31,
-		fmt[this->isInt],
-		this->isInt ? (s32)Lerp(this->target, this->min, this->max) :
-		(s32)Lerp(this->target, this->min, this->max)
-	);
+	if (this->isInt) {
+		snprintf(
+			this->txt,
+			31,
+			sFmt[this->isInt],
+			(s32)floorf(Lerp(this->target, this->min, this->max))
+		);
+	} else {
+		snprintf(
+			this->txt,
+			31,
+			sFmt[this->isInt],
+			Lerp(this->target, this->min, this->max)
+		);
+	}
 	
 	nvgFontFace(vg, "font-basic");
 	nvgFontSize(vg, SPLIT_TEXT);
@@ -646,7 +649,7 @@ void Element_Textbox(GeoGridContext* geoCtx, Split* split, ElTextbox* this) {
 		if (Input_GetMouse(MOUSE_L)->press) {
 			if (this != sCurTextbox) {
 				sCtrlA = 1;
-				this->isHintText = 1;
+				this->isHintText = 2;
 				sTextPos = 0;
 				sSelectPos = strlen(this->txt);
 			}
@@ -708,6 +711,12 @@ s32 Element_Checkbox(GeoGridContext* geoCtx, Split* split, ElCheckbox* this) {
 	return this->toggle;
 }
 
+void Element_Slider_SetValue(ElSlider* this, f32 val) {
+	this->target = val;
+	this->target -= this->min;
+	this->target /= this->max - this->min;
+	this->target = CLAMP(this->target, 0.0f, 1.0f);
+}
 f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 	if (this->min == 0.0f && this->max == 0.0f)
 		this->max = 1.0f;
@@ -750,10 +759,7 @@ f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 				
 				return Lerp(this->target, this->min, this->max);
 			} else {
-				this->target = this->isInt ? String_GetInt(this->txt) : String_GetFloat(this->txt);
-				this->target -= this->min;
-				this->target /= this->max;
-				this->target = CLAMP(this->target, this->min, this->max);
+				Element_Slider_SetValue(this, this->isInt ? String_GetInt(this->txt) : String_GetFloat(this->txt));
 				
 				goto queue;
 			}
@@ -790,8 +796,8 @@ f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 			Input_SetMousePos(x, y);
 		}
 	}
-	
 	this->target = CLAMP(this->target, 0.0f, 1.0f);
+	
 queue:
 	Element_QueueElement(
 		geoCtx,
