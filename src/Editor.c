@@ -73,7 +73,7 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 	for (s32 i = 0; i < count; i++) {
 		printf_debug("Drop File: [%s]", file[i]);
 		
-		if (StrStr(file[i], "conf.txt")) {
+		if (StrStrCase(file[i], "conf.txt")) {
 			MemFile memFile = MemFile_Initialize();
 			char* shaderPtr;
 			printf_debug("Loading Config [%s]", file[i]);
@@ -86,7 +86,7 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 			MemFile_Free(&memFile);
 		}
 		
-		if (StrStr(file[i], "config.cfg")) {
+		if (StrStrCase(file[i], "config.cfg")) {
 			MemFile memFile = MemFile_Initialize();
 			char* shaderPtr;
 			printf_debug("Loading Config [%s]", file[i]);
@@ -95,14 +95,14 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 				gSceneConfIndex = Config_GetInt(&memFile, "scene_func_id");
 			MemFile_Free(&memFile);
 		}
-		
-		if (StrStr(file[i], ".zscene")) {
+
+		if (StrStrCase(file[i], ".zscene")) {
 			printf_debug("Loading Scene [%s]", file[i]);
 			MemFile_LoadFile(&gEditCtx->scene.file, file[i]);
 			Scene_ExecuteCommands(&gEditCtx->scene, NULL);
 		}
 		
-		if (StrStr(file[i], ".zmap") || StrStr(file[i], ".zroom")) {
+		if (StrStrCase(file[i], ".zmap") || StrStrCase(file[i], ".zroom")) {
 			loadRoom++;
 			for (s32 j = 0; j < ROOM_MAX; j++) {
 				char roomNum[128] = { 0 };

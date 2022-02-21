@@ -26,6 +26,7 @@ static Split* sCurSplitTextbox;
 static s32 sTextPos;
 static s32 sSelectPos = -1;
 static char* sStoreA;
+static s32 sCtrlA = 0;
 
 static s32 sFlickTimer;
 static s32 sFlickFlag = 1;
@@ -197,21 +198,62 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 	Split* split = info->split;
 	ElTextbox* this = info->arg;
 	
+	Assert(this->txt != NULL);
+	static char buffer[512]; strcpy(buffer, this->txt);
 	Rectf32 bound = { 0 };
 	Rectf32 sel = { 0 };
-	static char buffer[512]; strcpy(buffer, this->txt);
 	char* txtA = buffer;
 	char* txtB = &buffer[strlen(buffer)];
+	f32 ccx = 0;
 	
 	if (this->rect.w < 16) {
 		return;
 	}
 	
+	if (this->isNumBox) {
+		if (this == sCurTextbox) {
+			this->nbx.updt = true;
+		} else {
+			if (this->nbx.isFloat) {
+				if (this->nbx.updt) {
+					this->nbx.value = String_GetFloat(this->txt);
+					if (this->nbx.min != 0 || this->nbx.max != 0)
+						this->nbx.value = CLAMP(this->nbx.value, this->nbx.min, this->nbx.max);
+					sprintf(this->txt, "%.3f", String_GetFloat(this->txt));
+				}
+			} else {
+				if (this->nbx.updt) {
+					this->nbx.value = (s32)String_GetFloat(this->txt);
+					if (this->nbx.min != 0 || this->nbx.max != 0)
+						this->nbx.value = CLAMP(this->nbx.value, this->nbx.min, this->nbx.max);
+					sprintf(this->txt, "%d", (s32)String_GetFloat(this->txt));
+					this->nbx.updt = false;
+				}
+			}
+		}
+	}
+	
 	nvgFontFace(vg, "font-basic");
 	nvgFontSize(vg, SPLIT_TEXT);
 	nvgFontBlur(vg, 0.0);
-	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 	nvgTextLetterSpacing(vg, 0.1);
+	
+	switch (this->align) {
+		case ALIGN_LEFT:
+			break;
+		case ALIGN_CENTER:
+			nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+			nvgTextBounds(vg, 0, 0, txtA, txtB, (f32*)&bound);
+			ccx = this->rect.w * 0.5 + bound.x - SPLIT_TEXT_PADDING;
+			break;
+		case ALIGN_RIGHT:
+			nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+			nvgTextBounds(vg, 0, 0, txtA, txtB, (f32*)&bound);
+			ccx = this->rect.w + bound.x - SPLIT_TEXT_PADDING * 2;
+			break;
+	}
+	
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 	nvgTextBounds(vg, 0, 0, txtA, txtB, (f32*)&bound);
 	
 	if (sStoreA != NULL && this == sCurTextbox) {
@@ -219,10 +261,10 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 			sStoreA = buffer;
 		} else {
 			txtA = sStoreA;
-			nvgTextBounds(vg, 0, 0, txtA, txtB, (f32*)&bound);
+			nvgTextBounds(vg, ccx, 0, txtA, txtB, (f32*)&bound);
 			while (bound.w > this->rect.w - SPLIT_TEXT_PADDING * 2) {
 				txtB--;
-				nvgTextBounds(vg, 0, 0, txtA, txtB, (f32*)&bound);
+				nvgTextBounds(vg, ccx, 0, txtA, txtB, (f32*)&bound);
 			}
 			
 			if (strlen(buffer) > 4) {
@@ -242,10 +284,10 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 					txtB = &buffer[strlen(buffer)];
 					sStoreA = txtA;
 					
-					nvgTextBounds(vg, 0, 0, txtA, txtB, (f32*)&bound);
+					nvgTextBounds(vg, ccx, 0, txtA, txtB, (f32*)&bound);
 					while (bound.w > this->rect.w - SPLIT_TEXT_PADDING * 2) {
 						txtB--;
-						nvgTextBounds(vg, 0, 0, txtA, txtB, (f32*)&bound);
+						nvgTextBounds(vg, ccx, 0, txtA, txtB, (f32*)&bound);
 					}
 				}
 			}
@@ -265,53 +307,56 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 	s32 posB = (uPtr)txtB - (uPtr)buffer;
 	
 	if (GeoGrid_Cursor_InRect(split, &this->rect) && inputCtx->mouse.clickL.hold) {
-		if (inputCtx->mouse.clickL.press) {
-			f32 dist = 400;
-			for (char* tempB = txtA; tempB <= txtB; tempB++) {
-				Vec2s glyphPos;
-				f32 res;
-				nvgTextBounds(vg, 0, 0, txtA, tempB, (f32*)&bound);
-				glyphPos.x = this->rect.x + bound.w + SPLIT_TEXT_PADDING - 1;
-				glyphPos.y = this->rect.y + bound.h - 1 + SPLIT_TEXT * 0.5;
-				
-				res = Vec_Vec2s_DistXZ(&split->mousePos, &glyphPos);
-				
-				if (res < dist) {
-					dist = res;
-					
-					sTextPos = (uPtr)tempB - (uPtr)buffer;
-				}
-			}
+		if (this->isHintText) {
+			this->isHintText = 2;
+			sTextPos = 0;
+			sSelectPos = strlen(this->txt);
 		} else {
-			f32 dist = 400;
-			uPtr wow;
-			for (char* tempB = txtA; tempB <= txtB; tempB++) {
-				Vec2s glyphPos;
-				f32 res;
-				nvgTextBounds(vg, 0, 0, txtA, tempB, (f32*)&bound);
-				glyphPos.x = this->rect.x + bound.w + SPLIT_TEXT_PADDING - 1;
-				glyphPos.y = this->rect.y + bound.h - 1 + SPLIT_TEXT * 0.5;
-				
-				res = Vec_Vec2s_DistXZ(&split->mousePos, &glyphPos);
-				
-				if (res < dist) {
-					dist = res;
-					wow = (uPtr)tempB - (uPtr)buffer;
+			if (Input_GetMouse(MOUSE_L)->press) {
+				f32 dist = 400;
+				for (char* tempB = txtA; tempB <= txtB; tempB++) {
+					Vec2s glyphPos;
+					f32 res;
+					nvgTextBounds(vg, ccx, 0, txtA, tempB, (f32*)&bound);
+					glyphPos.x = this->rect.x + bound.w + SPLIT_TEXT_PADDING - 1;
+					glyphPos.y = this->rect.y + bound.h - 1 + SPLIT_TEXT * 0.5;
+					
+					res = Vec_Vec2s_DistXZ(&split->mousePos, &glyphPos);
+					
+					if (res < dist) {
+						dist = res;
+						
+						sTextPos = (uPtr)tempB - (uPtr)buffer;
+					}
 				}
-			}
-			
-			if (wow != sTextPos) {
-				sSelectPos = wow;
+			} else {
+				f32 dist = 400;
+				uPtr wow;
+				for (char* tempB = txtA; tempB <= txtB; tempB++) {
+					Vec2s glyphPos;
+					f32 res;
+					nvgTextBounds(vg, ccx, 0, txtA, tempB, (f32*)&bound);
+					glyphPos.x = this->rect.x + bound.w + SPLIT_TEXT_PADDING - 1;
+					glyphPos.y = this->rect.y + bound.h - 1 + SPLIT_TEXT * 0.5;
+					
+					res = Vec_Vec2s_DistXZ(&split->mousePos, &glyphPos);
+					
+					if (res < dist) {
+						dist = res;
+						wow = (uPtr)tempB - (uPtr)buffer;
+					}
+				}
+				
+				if (wow != sTextPos) {
+					sSelectPos = wow;
+				}
 			}
 		}
-	}
+	} else if (this->isHintText == 2) this->isHintText = 0;
 	
-	this->rect.h = SPLIT_TEXT_MED * 1.5;
+	if (this != sCurTextbox) Theme_SmoothStepToCol(&this->bgCl, Theme_GetColor(THEME_LIGHT, 255), 0.25, 0.15, 0.0);
+	else Theme_SmoothStepToCol(&this->bgCl, Theme_GetColor(THEME_PRIM, 255), 0.25, 0.05, 0.0);
 	
-	if (this != sCurTextbox)
-		Theme_SmoothStepToCol(&this->bgCl, Theme_GetColor(THEME_LIGHT, 255), 0.25, 0.15, 0.0);
-	else
-		Theme_SmoothStepToCol(&this->bgCl, Theme_GetColor(THEME_PRIM, 255), 0.25, 0.05, 0.0);
 	Element_Draw_RoundedOutline(vg, &this->rect, this->bgCl);
 	
 	nvgBeginPath(vg);
@@ -337,7 +382,7 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 			
 			nvgBeginPath(vg);
 			nvgFillColor(vg, Theme_GetColor(THEME_PRIM, 255));
-			nvgRoundedRect(vg, x, this->rect.y + 2, CLAMP_MAX(xmax, this->rect.w - SPLIT_TEXT_PADDING - 2), this->rect.h - 4, SPLIT_ROUND_R);
+			nvgRoundedRect(vg, x + ccx, this->rect.y + 2, CLAMP_MAX(xmax, this->rect.w - SPLIT_TEXT_PADDING - 2), this->rect.h - 4, SPLIT_ROUND_R);
 			nvgFill(vg);
 		} else {
 			sFlickTimer++;
@@ -350,7 +395,7 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 				nvgTextBounds(vg, 0, 0, txtA, &buffer[sTextPos], (f32*)&bound);
 				nvgBeginPath(vg);
 				nvgFillColor(vg, Theme_GetColor(THEME_PRIM, 355));
-				nvgRoundedRect(vg, this->rect.x + bound.w + SPLIT_TEXT_PADDING - 1, this->rect.y + bound.h - 3, 2, SPLIT_TEXT, SPLIT_ROUND_R);
+				nvgRoundedRect(vg, this->rect.x + bound.w + SPLIT_TEXT_PADDING - 1 + ccx, this->rect.y + bound.h - 3, 2, SPLIT_TEXT, SPLIT_ROUND_R);
 				nvgFill(vg);
 			}
 		}
@@ -359,13 +404,14 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 			for (s32 i = 0; i < 3; i++)
 				txtB[-i] = '.';
 	}
-	if (this == sCurTextbox)
-		nvgFillColor(vg, Theme_GetColor(THEME_TEXT_HIGHLIGHT, 255));
+	
+	if (this->isHintText)
+		nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 125));
 	else
 		nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255));
 	nvgText(
 		vg,
-		this->rect.x + SPLIT_TEXT_PADDING,
+		this->rect.x + SPLIT_TEXT_PADDING + ccx,
 		this->rect.y + this->rect.h * 0.5,
 		txtA,
 		txtB
@@ -472,6 +518,7 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 	Split* split = info->split;
 	ElSlider* this = info->arg;
 	Rectf32 rect;
+	s32 alpha = this->hover ? 355 : 255;
 	
 	Math_SmoothStepToF(&this->value, this->target, 0.25f, 0.75f, 0.0f);
 	rect.x = this->rect.x;
@@ -486,7 +533,7 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 		Theme_SmoothStepToCol(&this->color, Theme_GetColor(THEME_ACCENT, 255), 0.25f, 0.5f, 0.0f);
 	}
 	
-	Element_Draw_RoundedOutline(vg, &this->rect, Theme_GetColor(THEME_LIGHT, 255));
+	Element_Draw_RoundedOutline(vg, &this->rect, Theme_GetColor(THEME_LIGHT, alpha));
 	Element_Draw_RoundedRect(vg, &this->rect, Theme_GetColor(THEME_SHADOW, 255));
 	
 	if (this->value <= 0.02) {
@@ -587,9 +634,15 @@ void Element_Textbox(GeoGridContext* geoCtx, Split* split, ElTextbox* this) {
 	if (Element_PressCondition(geoCtx, split, &this->rect)) {
 		this->hover = 1;
 		if (Input_GetMouse(MOUSE_L)->press) {
+			if (this != sCurTextbox) {
+				sCtrlA = 1;
+				this->isHintText = 1;
+				sTextPos = 0;
+				sSelectPos = strlen(this->txt);
+			}
+			
 			sCurTextbox = this;
 			sCurSplitTextbox = split;
-			sTextPos = strlen(this->txt);
 		}
 	}
 	
@@ -649,11 +702,57 @@ f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 	if (this->min == 0.0f && this->max == 0.0f)
 		this->max = 1.0f;
 	
+	this->hover = false;
 	if (Element_PressCondition(geoCtx, split, &this->rect) || this->holdState) {
 		u32 pos = false;
 		this->holdState = false;
+		this->hover = true;
 		
-		if (Input_GetMouse(MOUSE_L)->hold) {
+		if (Input_GetMouse(MOUSE_R)->press) {
+			sCurTextbox = &this->textBox;
+			sCurSplitTextbox = split;
+			sCtrlA = 1;
+			
+			this->isTextbox = true;
+			
+			this->textBox.isNumBox = true;
+			this->textBox.rect = this->rect;
+			this->textBox.align = ALIGN_CENTER;
+			this->textBox.txt = this->txt;
+			this->textBox.size = 32;
+			
+			this->textBox.nbx.isFloat = true;
+			this->textBox.nbx.max = this->max;
+			this->textBox.nbx.min = this->min;
+			
+			this->textBox.isHintText = 2;
+			sTextPos = 0;
+			sSelectPos = strlen(this->txt);
+		}
+		
+		if (this->isTextbox) {
+			this->isTextbox = false;
+			if (sCurTextbox == &this->textBox) {
+				this->isTextbox = true;
+				this->holdState = true;
+				
+				Element_Textbox(geoCtx, split, &this->textBox);
+				
+				return Lerp(this->target, this->min, this->max);
+			} else {
+				this->target = String_GetFloat(this->txt);
+				this->target -= this->min;
+				this->target /= this->max;
+				this->target = CLAMP(this->target, this->min, this->max);
+				
+				goto queue;
+			}
+		}
+		
+		if (Input_GetMouse(MOUSE_L)->press) {
+			pos = true;
+			Cursor_SetCursor(CURSOR_EMPTY);
+		} else if (Input_GetMouse(MOUSE_L)->hold) {
 			if (Input_GetKey(KEY_LEFT_SHIFT)->hold) {
 				this->target += (f32)geoCtx->input->mouse.vel.x * 0.001;
 				pos = true;
@@ -682,8 +781,8 @@ f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 		}
 	}
 	
-	this->target = CLAMP(this->target, 0.0, 1.0f);
-	
+	this->target = CLAMP(this->target, this->min, this->max);
+queue:
 	Element_QueueElement(
 		geoCtx,
 		split,
@@ -727,6 +826,9 @@ void Element_Update(GeoGridContext* geoCtx) {
 		
 		if (Input_GetMouse(MOUSE_ANY)->press || Input_GetKey(KEY_ENTER)->press) {
 			sSelectPos = -1;
+			sCtrlA = 0;
+			
+			Assert(sCurSplitTextbox != NULL);
 			if (!GeoGrid_Cursor_InRect(sCurSplitTextbox, &sCurTextbox->rect) || Input_GetKey(KEY_ENTER)->press) {
 				sCurTextbox = NULL;
 				sCurTextbox = NULL;
@@ -742,11 +844,14 @@ void Element_Update(GeoGridContext* geoCtx) {
 			if (Input_GetKey(KEY_A)->press) {
 				prevTextPos = strlen(sCurTextbox->txt);
 				sTextPos = 0;
+				sCtrlA = 1;
 			}
+			
 			if (Input_GetKey(KEY_V)->press) {
 				txt = (char*)Input_GetClipboardStr();
 				printf_debugExt("Paste [%s]", txt);
 			}
+			
 			if (Input_GetKey(KEY_C)->press) {
 				s32 max = fmax(sSelectPos, sTextPos);
 				s32 min = fmin(sSelectPos, sTextPos);
@@ -756,6 +861,7 @@ void Element_Update(GeoGridContext* geoCtx) {
 				Input_SetClipboardStr(copy);
 				printf_debugExt("Copy [%s]", copy);
 			}
+			
 			if (Input_GetKey(KEY_X)->press) {
 				s32 max = fmax(sSelectPos, sTextPos);
 				s32 min = fmin(sSelectPos, sTextPos);
@@ -765,19 +871,48 @@ void Element_Update(GeoGridContext* geoCtx) {
 				Input_SetClipboardStr(copy);
 				printf_debugExt("Copy [%s]", copy);
 			}
-		} else {
+			
 			if (Input_GetKey(KEY_LEFT)->press) {
-				sTextPos--;
-				press++;
 				sFlickFlag = 1;
 				sFlickTimer = 0;
+				while (sTextPos > 0 && isalnum(sCurTextbox->txt[sTextPos - 1]))
+					sTextPos--;
+				if (sTextPos == prevTextPos)
+					sTextPos--;
+			}
+			if (Input_GetKey(KEY_RIGHT)->press) {
+				sFlickFlag = 1;
+				sFlickTimer = 0;
+				while (isalnum(sCurTextbox->txt[sTextPos]))
+					sTextPos++;
+				if (sTextPos == prevTextPos)
+					sTextPos++;
+			}
+		} else {
+			if (Input_GetKey(KEY_LEFT)->press) {
+				if (sCtrlA == 0) {
+					sTextPos--;
+					press++;
+					sFlickFlag = 1;
+					sFlickTimer = 0;
+				} else {
+					sTextPos = fmin(sTextPos, sSelectPos);
+					sCtrlA = 0;
+					sSelectPos = -1;
+				}
 			}
 			
 			if (Input_GetKey(KEY_RIGHT)->press) {
-				sTextPos++;
-				press++;
-				sFlickFlag = 1;
-				sFlickTimer = 0;
+				if (sCtrlA == 0) {
+					sTextPos++;
+					press++;
+					sFlickFlag = 1;
+					sFlickTimer = 0;
+				} else {
+					sTextPos = fmax(sTextPos, sSelectPos);
+					sCtrlA = 0;
+					sSelectPos = -1;
+				}
 			}
 			
 			if (Input_GetKey(KEY_HOME)->press) {
@@ -802,13 +937,15 @@ void Element_Update(GeoGridContext* geoCtx) {
 				if (Input_GetKey(KEY_RIGHT)->hold) {
 					sTextPos++;
 				}
+				sFlickFlag = 1;
+				sFlickTimer = 0;
 			}
 		}
 		
 		sTextPos = CLAMP(sTextPos, 0, strlen(sCurTextbox->txt));
 		
 		if (sTextPos != prevTextPos) {
-			if (Input_GetKey(KEY_LEFT_SHIFT)->hold || Input_GetKey(KEY_LEFT_CONTROL)->hold) {
+			if (Input_GetKey(KEY_LEFT_SHIFT)->hold || Input_GetShortcut(KEY_LEFT_CONTROL, KEY_A)) {
 				if (sSelectPos == -1)
 					sSelectPos = prevTextPos;
 			} else
@@ -842,9 +979,10 @@ void Element_Update(GeoGridContext* geoCtx) {
 			}
 			
 			if (strlen(sCurTextbox->txt) == 0)
-				strcpy(sCurTextbox->txt, txt);
-			else
-				String_Insert(&sCurTextbox->txt[sTextPos], txt);
+				snprintf(sCurTextbox->txt, sCurTextbox->size, "%s", txt);
+			else {
+				String_InsertExt(sCurTextbox->txt, txt, sTextPos, sCurTextbox->size);
+			}
 			
 			sTextPos += strlen(txt);
 		}

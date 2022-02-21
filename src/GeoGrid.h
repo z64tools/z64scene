@@ -33,6 +33,12 @@ typedef void (* SplitFunc)(
 );
 
 typedef enum {
+	ALIGN_LEFT,
+	ALIGN_CENTER,
+	ALIGN_RIGHT
+} TextAlign;
+
+typedef enum {
 	BAR_TOP,
 	BAR_BOT
 } GuiBarIndex;
@@ -129,7 +135,7 @@ typedef struct Split {
 		RGB8 color;
 	} bg;
 	struct {
-		char data[80];
+		char data[160];
 	} header;
 } Split;
 
@@ -205,9 +211,20 @@ typedef struct ElButton {
 
 typedef struct {
 	char*    txt;
-	u8       hover;
+	s32      size;
 	Rect     rect;
 	NVGcolor bgCl;
+	u8 hover        : 1;
+	u8 isNumBox     : 1;
+	u8 isHintText   : 2;
+	TextAlign align : 3;
+	struct {
+		u8  isFloat : 1;
+		u8  updt    : 1;
+		f32 value;
+		f32 min;
+		f32 max;
+	} nbx;
 } ElTextbox;
 
 typedef struct {
@@ -224,14 +241,20 @@ typedef struct {
 } ElCheckbox;
 
 typedef struct {
+	char txt[32];
 	Rect rect;
+	
 	f32  value;
 	f32  target;
-	u8   holdState;
 	f32  min;
 	f32  max;
-	char txt[32];
+	
+	u8   hover;
+	u8   holdState;
 	NVGcolor color;
+	
+	s32 isTextbox;
+	ElTextbox textBox;
 } ElSlider;
 
 s32 Element_Button(GeoGridContext*, Split*, ElButton*);

@@ -59,6 +59,7 @@ void EnRoom_Draw(void* passArg, void* instance, Split* split);
 
 typedef struct {
 	ElTextbox  sceneName;
+	ElTextbox  lele;
 	ElButton   leButton;
 	ElCheckbox checkBox;
 	
