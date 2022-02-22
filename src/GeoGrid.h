@@ -16,13 +16,12 @@ extern f32 gPixelRatio;
 #define SPLIT_ROUND_R    2.0
 #define SPLIT_CLAMP      ((SPLIT_BAR_HEIGHT + SPLIT_SPLIT_W * 1.25) * 2)
 
-#define SPLIT_TEXT_H         (SPLIT_TEXT_PADDING * 2 + SPLIT_TEXT)
-#define SPLIT_ELEM_X_PADDING 8
-#define SPLIT_ELEM_Y_PADDING (SPLIT_TEXT_H + 4)
-
 #define SPLIT_TEXT_PADDING 4
 #define SPLIT_TEXT         12
-#define SPLIT_TEXT_MED     SPLIT_TEXT
+
+#define SPLIT_TEXT_H         (SPLIT_TEXT_PADDING * 2 + SPLIT_TEXT)
+#define SPLIT_ELEM_X_PADDING 6
+#define SPLIT_ELEM_Y_PADDING (SPLIT_TEXT_H + SPLIT_ELEM_X_PADDING)
 
 struct GeoGridContext;
 struct Split;
@@ -266,6 +265,7 @@ void Element_Slider_SetValue(ElSlider* this, f32 val);
 f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this);
 
 void Element_PushToPost();
-void Element_SetRect_Text(Rect* rect, f32 x, f32 y, f32 w);
+void Element_SetRect(Rect* rect, f32 x, f32 y, f32 w);
+void Element_SetRect_Two(Split* split, Rect* rectA, f32 separate, Rect* rectB, f32 y);
 
 #endif

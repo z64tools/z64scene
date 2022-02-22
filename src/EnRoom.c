@@ -34,48 +34,40 @@ void EnRoom_Destroy(void* passArg, void* instance, Split* split) {
 void EnRoom_Update(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
-	f32 x = SPLIT_ELEM_X_PADDING;
-	f32 y = SPLIT_ELEM_X_PADDING;
+	s32 x = SPLIT_ELEM_X_PADDING;
+	s32 y = SPLIT_ELEM_X_PADDING;
 	static ElText scenNameTx = {
 		"Name:"
 	};
 	
 	if (demoText[12] != 0)
 		printf("\a");
-	
-	Element_SetRect_Text(&scenNameTx.rect, x, y, 0);
-	x += Element_Text(&editCtx->geoCtx, split, &scenNameTx);
-	x += SPLIT_ELEM_X_PADDING;
-	Element_SetRect_Text(&this->sceneName.rect, x, y, split->rect.w - x - SPLIT_ELEM_X_PADDING);
-	Element_Textbox(&editCtx->geoCtx, split, &this->sceneName);
-	
-	x = SPLIT_ELEM_X_PADDING;
-	y += SPLIT_ELEM_Y_PADDING;
-	
-	Element_SetRect_Text(&this->lele.rect, x, y, split->rect.w - x - SPLIT_ELEM_X_PADDING);
-	Element_Textbox(&editCtx->geoCtx, split, &this->lele);
-	
-	x = SPLIT_ELEM_X_PADDING;
-	y += SPLIT_ELEM_Y_PADDING;
-	
-	Element_SetRect_Text(&this->leButton.rect, x, y, 140);
-	Element_Button(&editCtx->geoCtx, split, &this->leButton);
-	
-	x += this->leButton.rect.w + SPLIT_ELEM_X_PADDING;
-	
-	Element_SetRect_Text(&this->checkBox.rect, x, y, 0);
-	Element_Checkbox(&editCtx->geoCtx, split, &this->checkBox);
-	
-	x = SPLIT_ELEM_X_PADDING;
-	y += SPLIT_ELEM_Y_PADDING;
-	
-	Element_SetRect_Text(&this->slider.rect, x, y, 140);
-	Element_Slider(&editCtx->geoCtx, split, &this->slider);
+	{
+		Element_SetRect(&scenNameTx.rect, x, y, 0);
+		x += Element_Text(&editCtx->geoCtx, split, &scenNameTx) + 4;
+		Element_SetRect(&this->sceneName.rect, x, y, split->rect.w - x - SPLIT_ELEM_X_PADDING);
+		Element_Textbox(&editCtx->geoCtx, split, &this->sceneName);
+		
+		x = SPLIT_ELEM_X_PADDING;
+		y += SPLIT_ELEM_Y_PADDING;
+		Element_SetRect(&this->lele.rect, x, y, split->rect.w - x - SPLIT_ELEM_X_PADDING);
+		Element_Textbox(&editCtx->geoCtx, split, &this->lele);
+		
+		x = SPLIT_ELEM_X_PADDING;
+		y += SPLIT_ELEM_Y_PADDING;
+		Element_SetRect_Two(split, &this->leButton.rect, split->rect.w - SPLIT_ELEM_X_PADDING * 3 - SPLIT_TEXT_H, &this->checkBox.rect, y);
+		Element_Button(&editCtx->geoCtx, split, &this->leButton);
+		Element_Checkbox(&editCtx->geoCtx, split, &this->checkBox);
+		
+		x = SPLIT_ELEM_X_PADDING;
+		y += SPLIT_ELEM_Y_PADDING;
+		Element_SetRect(&this->slider.rect, x, y, split->rect.w - SPLIT_ELEM_X_PADDING * 2);
+		Element_Slider(&editCtx->geoCtx, split, &this->slider);
+	}
 	
 	x = SPLIT_ELEM_X_PADDING;
 	y = split->cect.h - SPLIT_ELEM_Y_PADDING - 4;
-	
-	Element_SetRect_Text(&this->saveLayout.rect, x, y, 0);
+	Element_SetRect(&this->saveLayout.rect, x, y, 0);
 	
 	if (Element_Button(&editCtx->geoCtx, split, &this->saveLayout)) {
 		printf_debug("Layout Saved");

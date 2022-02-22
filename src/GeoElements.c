@@ -49,16 +49,6 @@ static void Element_QueueElement(GeoGridContext* geoCtx, Split* split, ElementFu
 	sElemNum++;
 }
 
-void Element_PushToPost() {
-	sCurrentPost[0] = sCurrentElement[-1];
-	
-	sCurrentPost++;
-	sPostNum++;
-	
-	sCurrentElement--;
-	sElemNum--;
-}
-
 static void Element_Draw_RoundedOutline(void* vg, Rect* rect, NVGcolor color) {
 	nvgBeginPath(vg);
 	nvgFillColor(vg, color);
@@ -138,8 +128,6 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 	Rect rect = this->rect;
 	s32 alpha = this->hover ? 300 : 255;
 	ThemeColor colID = this->hover ? THEME_PRIM : THEME_ACCENT;
-	
-	rect.h = SPLIT_TEXT_MED * 1.5;
 	
 	if (rect.w < 16) {
 		return;
@@ -691,7 +679,7 @@ f32 Element_Text(GeoGridContext* geoCtx, Split* split, ElText* this) {
 }
 
 s32 Element_Checkbox(GeoGridContext* geoCtx, Split* split, ElCheckbox* this) {
-	this->rect.w = this->rect.h = SPLIT_TEXT_H - SPLIT_TEXT_PADDING * 0.5;
+	this->rect.w = this->rect.h;
 	
 	this->hover = 0;
 	if (Element_PressCondition(geoCtx, split, &this->rect)) {
@@ -711,12 +699,6 @@ s32 Element_Checkbox(GeoGridContext* geoCtx, Split* split, ElCheckbox* this) {
 	return this->toggle;
 }
 
-void Element_Slider_SetValue(ElSlider* this, f32 val) {
-	this->target = val;
-	this->target -= this->min;
-	this->target /= this->max - this->min;
-	this->target = CLAMP(this->target, 0.0f, 1.0f);
-}
 f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 	if (this->min == 0.0f && this->max == 0.0f)
 		this->max = 1.0f;
@@ -811,12 +793,44 @@ queue:
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
-void Element_SetRect_Text(Rect* rect, f32 x, f32 y, f32 w) {
+void Element_Slider_SetValue(ElSlider* this, f32 val) {
+	this->target = val;
+	this->target -= this->min;
+	this->target /= this->max - this->min;
+	this->target = CLAMP(this->target, 0.0f, 1.0f);
+}
+
+void Element_PushToPost() {
+	sCurrentPost[0] = sCurrentElement[-1];
+	
+	sCurrentPost++;
+	sPostNum++;
+	
+	sCurrentElement--;
+	sElemNum--;
+}
+
+void Element_SetRect(Rect* rect, f32 x, f32 y, f32 w) {
 	rect->x = x;
 	rect->y = y;
 	rect->w = w;
 	rect->h = SPLIT_TEXT_H;
 }
+
+void Element_SetRect_Two(Split* split, Rect* rectA, f32 separate, Rect* rectB, f32 y) {
+	f32 x = SPLIT_ELEM_X_PADDING;
+	
+	if (separate < 0) {
+		separate = (split->rect.w - x - SPLIT_ELEM_X_PADDING) * fabs(separate);
+	}
+	
+	Element_SetRect(rectA, x, y, separate);
+	x += separate + SPLIT_ELEM_X_PADDING;
+	separate = split->rect.w - separate;
+	Element_SetRect(rectB, x, y, separate);
+}
+
+/* ───────────────────────────────────────────────────────────────────────── */
 
 void Element_Init(GeoGridContext* geoCtx) {
 	sCurrentElement = pElementStack;
