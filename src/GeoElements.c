@@ -628,7 +628,6 @@ s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElButton* this) {
 		nvgTextBounds(vg, 0, 0, this->txt, NULL, bounds);
 		
 		w = bounds[2] + SPLIT_TEXT_PADDING * 2;
-		printf_debug("%.0f %d", w, this->rect.w);
 		this->rect.w = fmax(this->rect.w, w);
 	}
 	
