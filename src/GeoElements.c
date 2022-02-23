@@ -535,7 +535,8 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 	ElSlider* this = info->arg;
 	Rectf32 rect;
 	
-	Math_SmoothStepToF(&this->vValue, this->value, 0.25f, 0.75f, 0.0f);
+	Math_SmoothStepToF(&this->vValue, this->value, 0.5f, (this->max - this->min) * 0.5f, 0.0f);
+	this->vValue = this->value;
 	rect.x = this->rect.x;
 	rect.y = this->rect.y;
 	rect.w = this->rect.w;
@@ -749,28 +750,25 @@ f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 			this->holdState = true;
 		} else if (Input_GetMouse(MOUSE_L)->hold) {
 			if (geoCtx->input->mouse.vel.x) {
-				if (this->isSliding == false)
+				if (this->isSliding == false) {
 					Element_Slider_SetCursorToVal(split, this);
-				
-				if (Input_GetKey(KEY_LEFT_SHIFT)->hold)
-					this->value += (f32)geoCtx->input->mouse.vel.x * 0.001;
-				else
-					this->value = (f32)(geoCtx->input->mouse.pos.x - this->rect.x - split->rect.x) / (this->rect.w);
-				this->isSliding = true;
+				} else {
+					if (Input_GetKey(KEY_LEFT_SHIFT)->hold)
+						this->value += (f32)geoCtx->input->mouse.vel.x * 0.0001f;
+					else
+						this->value += (f32)geoCtx->input->mouse.vel.x * 0.001f;
+					this->value = CLAMP(this->value, 0.0f, 1.0f);
+					
+					pos = true;
+				}
 			}
 			
+			this->isSliding = true;
 			this->holdState = true;
-			
-			if (this->isSliding) {
-				this->isSliding = true;
-				pos = true;
-			}
 		} else if (Input_GetMouse(MOUSE_L)->release) {
 			if (this->isSliding == false) {
 				Element_Slider_SetTextbox(split, this);
 			}
-			this->isSliding = false;
-		} else {
 			this->isSliding = false;
 		}
 		
@@ -786,9 +784,9 @@ f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 		
 		if (pos) Element_Slider_SetCursorToVal(split, this);
 	}
-	this->value = CLAMP(this->value, 0.0f, 1.0f);
 	
 queue_element:
+	this->value = CLAMP(this->value, 0.0f, 1.0f);
 	
 	if (this->isSliding)
 		Cursor_SetCursor(CURSOR_EMPTY);
