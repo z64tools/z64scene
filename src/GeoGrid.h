@@ -235,8 +235,9 @@ typedef struct {
 	Rect rect;
 	u8   toggle;
 	NVGcolor color;
-	f32  lerp;
-	u8   hover;
+	NVGcolor colorO;
+	f32 lerp;
+	u8  hover;
 } ElCheckbox;
 
 typedef struct {

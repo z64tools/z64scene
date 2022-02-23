@@ -85,34 +85,20 @@ static s32 Element_PressCondition(GeoGridContext* geoCtx, Split* split, Rect* re
 }
 
 static void Element_Draw_TextOutline(void* vg, f32 x, f32 y, char* txt) {
-	nvgFillColor(vg, Theme_GetColor(THEME_BASE_D1, 80));
-	nvgFontBlur(vg, 0.55);
+	nvgFillColor(vg, Theme_GetColor(THEME_TEXT_OUTLINE, 255, 1.0f));
+	nvgFontBlur(vg, 1.0);
 	
 	nvgText(
 		vg,
-		x + 1,
-		y + 1,
+		x,
+		y,
 		txt,
 		NULL
 	);
 	nvgText(
 		vg,
-		x + 1,
-		y - 1,
-		txt,
-		NULL
-	);
-	nvgText(
-		vg,
-		x - 1,
-		y + 1,
-		txt,
-		NULL
-	);
-	nvgText(
-		vg,
-		x - 1,
-		y - 1,
+		x,
+		y,
 		txt,
 		NULL
 	);
@@ -154,31 +140,28 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 	Split* split = info->split;
 	ElButton* this = info->arg;
 	
-	s32 alpha = this->hover ? 300 : 255;
-	ThemeColor colID = this->hover ? THEME_PRIM : THEME_ACCENT;
-	
 	if (this->rect.w < 16) {
 		return;
 	}
 	
-	if (this->toggle == 2)
-		Theme_SmoothStepToCol(&this->colorOL, Theme_GetColor(colID, 355), 0.16, 0.1, 0.0);
+	if (this->hover)
+		Theme_SmoothStepToCol(&this->colorOL, Theme_GetColor(THEME_HIGHLIGHT, 255, 1.0f), 0.16, 0.1, 0.0);
 	else
-		Theme_SmoothStepToCol(&this->colorOL, Theme_GetColor(THEME_BASE_D1, 355), 0.16, 0.1, 0.0);
+		Theme_SmoothStepToCol(&this->colorOL, Theme_GetColor(THEME_BASE, 255, 0.75f), 0.16, 0.1, 0.0);
 	
 	Element_Draw_RoundedOutline(vg, &this->rect, this->colorOL);
 	
 	nvgBeginPath(vg);
 	if (this->toggle == 2) {
-		Theme_SmoothStepToCol(&this->colorIL, Theme_GetColor(colID, alpha), 0.16, 0.1, 0.0);
+		Theme_SmoothStepToCol(&this->colorIL, Theme_GetColor(THEME_PRIM, 255, 1.0f), 0.16, 0.1, 0.0);
 	} else {
 		if (this->state) {
 			if (this->toggle)
-				Theme_SmoothStepToCol(&this->colorIL, Theme_GetColor(THEME_BASE_L4, alpha), 0.16, 0.1, 0.0);
+				Theme_SmoothStepToCol(&this->colorIL, Theme_GetColor(THEME_BASE_L3, 255, 1.5f), 0.16, 0.1, 0.0);
 			else
-				Theme_SmoothStepToCol(&this->colorIL, Theme_GetColor(colID, alpha), 0.66, 0.4, 0.0);
+				Theme_SmoothStepToCol(&this->colorIL, Theme_GetColor(THEME_PRIM, 255, 1.0f), 0.66, 0.4, 0.0);
 		} else {
-			Theme_SmoothStepToCol(&this->colorIL, Theme_GetColor(THEME_BASE_L3, alpha), 0.16, 0.1, 0.0);
+			Theme_SmoothStepToCol(&this->colorIL, Theme_GetColor(THEME_BASE_L3, 255, 1.0f), 0.16, 0.1, 0.0);
 		}
 	}
 	
@@ -192,16 +175,14 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 		nvgTextLetterSpacing(vg, 0.0);
 		
-		if (colID == THEME_PRIM) {
-			Element_Draw_TextOutline(
-				vg,
-				this->rect.x + this->rect.w * 0.5,
-				this->rect.y + this->rect.h * 0.5,
-				this->txt
-			);
-		}
+		Element_Draw_TextOutline(
+			vg,
+			this->rect.x + this->rect.w * 0.5,
+			this->rect.y + this->rect.h * 0.5,
+			this->txt
+		);
 		
-		nvgFillColor(vg, Theme_GetColor(THEME_TEXT, alpha));
+		nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
 		nvgFontBlur(vg, 0.0);
 		nvgText(
 			vg,
@@ -369,13 +350,19 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 		}
 	} else if (this->isHintText == 2) this->isHintText = 0;
 	
-	if (this != sCurTextbox) Theme_SmoothStepToCol(&this->bgCl, Theme_GetColor(THEME_BASE_L3, 255), 0.25, 0.15, 0.0);
-	else Theme_SmoothStepToCol(&this->bgCl, Theme_GetColor(THEME_PRIM, 255), 0.25, 0.05, 0.0);
+	if (this != sCurTextbox) {
+		if (this->hover) {
+			Theme_SmoothStepToCol(&this->bgCl, Theme_GetColor(THEME_HIGHLIGHT, 255, 1.0f), 0.25, 0.15, 0.0);
+		} else {
+			Theme_SmoothStepToCol(&this->bgCl, Theme_GetColor(THEME_BASE_L2, 255, 1.0f), 0.25, 0.15, 0.0);
+		}
+	} else
+		Theme_SmoothStepToCol(&this->bgCl, Theme_GetColor(THEME_PRIM, 255, 1.0f), 0.25, 0.05, 0.0);
 	
 	Element_Draw_RoundedOutline(vg, &this->rect, this->bgCl);
 	
 	nvgBeginPath(vg);
-	nvgFillColor(vg, Theme_GetColor(THEME_BASE_D1, 255));
+	nvgFillColor(vg, Theme_GetColor(THEME_BASE, 255, 0.75f));
 	nvgRoundedRect(vg, this->rect.x, this->rect.y, this->rect.w, this->rect.h, SPLIT_ROUND_R);
 	nvgFill(vg);
 	
@@ -396,7 +383,7 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 			xmax = this->rect.x + bound.w + SPLIT_TEXT_PADDING - 1 - x;
 			
 			nvgBeginPath(vg);
-			nvgFillColor(vg, Theme_GetColor(THEME_PRIM, 255));
+			nvgFillColor(vg, Theme_GetColor(THEME_PRIM, 255, 1.0f));
 			nvgRoundedRect(vg, x + ccx, this->rect.y + 2, CLAMP_MAX(xmax, this->rect.w - SPLIT_TEXT_PADDING - 2), this->rect.h - 4, SPLIT_ROUND_R);
 			nvgFill(vg);
 		} else {
@@ -409,7 +396,7 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 				nvgBeginPath(vg);
 				nvgTextBounds(vg, 0, 0, txtA, &buffer[sTextPos], (f32*)&bound);
 				nvgBeginPath(vg);
-				nvgFillColor(vg, Theme_GetColor(THEME_TEXT_HIGHLIGHT, 255));
+				nvgFillColor(vg, Theme_GetColor(THEME_HIGHLIGHT, 255, 1.0f));
 				nvgRoundedRect(vg, this->rect.x + bound.w + SPLIT_TEXT_PADDING - 1 + ccx, this->rect.y + bound.h - 3, 2, SPLIT_TEXT, SPLIT_ROUND_R);
 				nvgFill(vg);
 			}
@@ -421,9 +408,9 @@ static void Element_Draw_Textbox(ElementCallInfo* info) {
 	}
 	
 	if (this->isHintText)
-		nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 125));
+		nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 125, 1.0f));
 	else
-		nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255));
+		nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
 	nvgText(
 		vg,
 		this->rect.x + SPLIT_TEXT_PADDING + ccx,
@@ -442,18 +429,10 @@ static void Element_Draw_Text(ElementCallInfo* info) {
 	nvgFontSize(vg, SPLIT_TEXT);
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 	
-	nvgFontBlur(vg, 1.5);
-	nvgFillColor(vg, Theme_GetColor(THEME_BASE_D3, 255));
-	nvgText(
-		vg,
-		this->rect.x,
-		this->rect.y + this->rect.h * 0.5,
-		this->txt,
-		NULL
-	);
+	Element_Draw_TextOutline(vg, this->rect.x, this->rect.y + this->rect.h * 0.5, this->txt);
 	
 	nvgFontBlur(vg, 0.0);
-	nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255));
+	nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
 	nvgText(
 		vg,
 		this->rect.x,
@@ -468,7 +447,6 @@ static void Element_Draw_Checkbox(ElementCallInfo* info) {
 	Split* split = info->split;
 	ElCheckbox* this = info->arg;
 	Vec2f center;
-	ThemeColor colID = this->hover ? THEME_PRIM : THEME_ACCENT;
 	const Vec2f sVector_Cross[] = {
 		{ .x = -10, .y =  10 }, { .x =  -7, .y =  10 },
 		{ .x =   0, .y =   3 }, { .x =   7, .y =  10 },
@@ -480,16 +458,22 @@ static void Element_Draw_Checkbox(ElementCallInfo* info) {
 		{ .x =  -3, .y =   0 }, { .x = -10, .y =   7 },
 	};
 	
-	if (this->toggle) {
-		Math_SmoothStepToF(&this->lerp, 0.8f - sBreathe * 0.08, 0.178f, 0.1f, 0.0f);
-		Theme_SmoothStepToCol(&this->color, Theme_GetColor(colID, 255), 0.16, 0.13, 0.0);
+	if (this->hover) {
+		Theme_SmoothStepToCol(&this->colorO, Theme_GetColor(THEME_HIGHLIGHT, 255, 1.0f), 0.16, 0.13, 0.0);
 	} else {
-		Math_SmoothStepToF(&this->lerp, 0.0f, 0.268f, 0.1f, 0.0f);
-		Theme_SmoothStepToCol(&this->color, Theme_GetColor(THEME_BASE_L3, 255), 0.16, 0.13, 0.0);
+		Theme_SmoothStepToCol(&this->colorO, Theme_GetColor(THEME_BASE_L2, 255, 1.00f), 0.16, 0.13, 0.0);
 	}
 	
-	Element_Draw_RoundedOutline(vg, &this->rect, this->color);
-	Element_Draw_RoundedRect(vg, &this->rect, Theme_GetColor(THEME_BASE_D1, 255));
+	if (this->toggle) {
+		Math_SmoothStepToF(&this->lerp, 0.8f - sBreathe * 0.08, 0.178f, 0.1f, 0.0f);
+		Theme_SmoothStepToCol(&this->color, Theme_GetColor(THEME_PRIM, 255, 1.0f), 0.16, 0.13, 0.0);
+	} else {
+		Math_SmoothStepToF(&this->lerp, 0.0f, 0.268f, 0.1f, 0.0f);
+		Theme_SmoothStepToCol(&this->color, Theme_GetColor(THEME_BASE_L2, 255, 1.0f), 0.16, 0.13, 0.0);
+	}
+	
+	Element_Draw_RoundedOutline(vg, &this->rect, this->colorO);
+	Element_Draw_RoundedRect(vg, &this->rect, Theme_GetColor(THEME_PRIM, 255, 0.25f));
 	
 	NVGcolor col = this->color;
 	f32 flipLerp = 1.0f - this->lerp;
@@ -543,18 +527,18 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 	rect.w = CLAMP_MIN(rect.w * this->vValue, 0);
 	
 	if (this->isSliding) {
-		Theme_SmoothStepToCol(&this->color, Theme_GetColor(THEME_PRIM, 325), 0.25f, 0.5f, 0.0f);
+		Theme_SmoothStepToCol(&this->color, Theme_GetColor(THEME_PRIM, 255, 1.25f), 0.25f, 0.5f, 0.0f);
 	} else {
-		Theme_SmoothStepToCol(&this->color, Theme_GetColor(THEME_ACCENT, 255), 0.25f, 0.5f, 0.0f);
+		Theme_SmoothStepToCol(&this->color, Theme_GetColor(THEME_PRIM, 255, 1.0f), 0.25f, 0.5f, 0.0f);
 	}
 	
 	if (this->hover)
-		Theme_SmoothStepToCol(&this->hovColor, Theme_GetColor(THEME_BASE_L3, 455), 0.25f, 0.5f, 0.0f);
+		Theme_SmoothStepToCol(&this->hovColor, Theme_GetColor(THEME_HIGHLIGHT, 255, 1.0f), 0.25f, 0.5f, 0.0f);
 	else
-		Theme_SmoothStepToCol(&this->hovColor, Theme_GetColor(THEME_BASE_L3, 255), 0.25f, 0.5f, 0.0f);
+		Theme_SmoothStepToCol(&this->hovColor, Theme_GetColor(THEME_BASE_L2, 255, 1.0f), 0.25f, 0.5f, 0.0f);
 	
 	Element_Draw_RoundedOutline(vg, &this->rect, this->hovColor);
-	Element_Draw_RoundedRect(vg, &this->rect, Theme_GetColor(THEME_BASE_D3, 255));
+	Element_Draw_RoundedRect(vg, &this->rect, Theme_GetColor(THEME_BASE, 255, 0.75f));
 	
 	if (this->vValue <= 0.02) {
 		this->color.a = Lerp(CLAMP_MIN((this->vValue - 0.01f) * 100.0f, 0.0f), 0.0, this->color.a);
@@ -592,15 +576,13 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 	nvgFontSize(vg, SPLIT_TEXT);
 	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 	
-	if (this->holdState) {
-		Element_Draw_TextOutline(
-			vg,
-			this->rect.x + this->rect.w * 0.5,
-			this->rect.y + this->rect.h * 0.5,
-			this->txt
-		);
-	}
-	nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255));
+	Element_Draw_TextOutline(
+		vg,
+		this->rect.x + this->rect.w * 0.5,
+		this->rect.y + this->rect.h * 0.5,
+		this->txt
+	);
+	nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
 	nvgFontBlur(vg, 0.0);
 	nvgText(
 		vg,
@@ -698,7 +680,7 @@ f32 Element_Text(GeoGridContext* geoCtx, Split* split, ElText* this) {
 	nvgFontBlur(vg, 0.0);
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 	nvgTextLetterSpacing(vg, 0.1);
-	nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255));
+	nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
 	nvgTextBounds(vg, 0, 0, this->txt, NULL, bounds);
 	
 	Element_QueueElement(

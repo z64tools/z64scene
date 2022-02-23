@@ -174,7 +174,7 @@ void EnSceneView_Draw_Empty(EditorContext* editCtx, EnSceneView* this, Split* sp
 	nvgFontFace(vg, "font-bold");
 	nvgFontSize(vg, 35);
 	nvgTextLetterSpacing(vg, 2.0f);
-	nvgFillColor(vg, Theme_GetColor(THEME_PRIM, 355));
+	nvgFillColor(vg, Theme_GetColor(THEME_ACCENT, 255, 1.0f));
 	nvgText(
 		vg,
 		split->cect.w * 0.5,
