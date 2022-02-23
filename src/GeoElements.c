@@ -154,11 +154,10 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 	Split* split = info->split;
 	ElButton* this = info->arg;
 	
-	Rect rect = this->rect;
 	s32 alpha = this->hover ? 300 : 255;
 	ThemeColor colID = this->hover ? THEME_PRIM : THEME_ACCENT;
 	
-	if (rect.w < 16) {
+	if (this->rect.w < 16) {
 		return;
 	}
 	
@@ -167,7 +166,7 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 	else
 		Theme_SmoothStepToCol(&this->colorOL, Theme_GetColor(THEME_LINE, 355), 0.16, 0.1, 0.0);
 	
-	Element_Draw_RoundedOutline(vg, &rect, this->colorOL);
+	Element_Draw_RoundedOutline(vg, &this->rect, this->colorOL);
 	
 	nvgBeginPath(vg);
 	if (this->toggle == 2) {
@@ -184,7 +183,7 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 	}
 	
 	nvgFillColor(vg, this->colorIL);
-	nvgRoundedRect(vg, rect.x, rect.y, rect.w, rect.h, SPLIT_ROUND_R);
+	nvgRoundedRect(vg, this->rect.x, this->rect.y, this->rect.w, this->rect.h, SPLIT_ROUND_R);
 	nvgFill(vg);
 	
 	if (this->txt) {
@@ -196,8 +195,8 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 		if (colID == THEME_PRIM) {
 			Element_Draw_TextOutline(
 				vg,
-				rect.x + rect.w * 0.5,
-				rect.y + rect.h * 0.5,
+				this->rect.x + this->rect.w * 0.5,
+				this->rect.y + this->rect.h * 0.5,
 				this->txt
 			);
 		}
@@ -206,8 +205,8 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 		nvgFontBlur(vg, 0.0);
 		nvgText(
 			vg,
-			rect.x + rect.w * 0.5,
-			rect.y + rect.h * 0.5,
+			this->rect.x + this->rect.w * 0.5,
+			this->rect.y + this->rect.h * 0.5,
 			this->txt,
 			NULL
 		);
@@ -536,7 +535,7 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 	Rectf32 rect;
 	
 	Math_SmoothStepToF(&this->vValue, this->value, 0.5f, (this->max - this->min) * 0.5f, 0.0f);
-	this->vValue = this->value;
+	
 	rect.x = this->rect.x;
 	rect.y = this->rect.y;
 	rect.w = this->rect.w;
@@ -578,7 +577,7 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 			this->txt,
 			31,
 			sFmt[this->isInt],
-			(s32)floorf(Lerp(this->value, this->min, this->max))
+			(s32)rint(Lerp(this->value, this->min, this->max))
 		);
 	} else {
 		snprintf(
@@ -618,6 +617,20 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElButton* this) {
 	s32 set = 0;
 	void* vg = geoCtx->vg;
+	f32 bounds[4] = { 0 };
+	f32 w;
+	
+	if (this->txt) {
+		nvgFontFace(vg, "font-basic");
+		nvgFontSize(vg, SPLIT_TEXT);
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgTextLetterSpacing(vg, 0.0);
+		nvgTextBounds(vg, 0, 0, this->txt, NULL, bounds);
+		
+		w = bounds[2] + SPLIT_TEXT_PADDING * 2;
+		printf_debug("%.0f %d", w, this->rect.w);
+		this->rect.w = fmax(this->rect.w, w);
+	}
 	
 	this->hover = 0;
 	this->state = 0;
@@ -757,13 +770,15 @@ f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 						this->value += (f32)geoCtx->input->mouse.vel.x * 0.0001f;
 					else
 						this->value += (f32)geoCtx->input->mouse.vel.x * 0.001f;
-					this->value = CLAMP(this->value, 0.0f, 1.0f);
+					if (this->min || this->max)
+						this->value = CLAMP(this->value, 0.0f, 1.0f);
 					
 					pos = true;
 				}
+				
+				this->isSliding = true;
 			}
 			
-			this->isSliding = true;
 			this->holdState = true;
 		} else if (Input_GetMouse(MOUSE_L)->release) {
 			if (this->isSliding == false) {
@@ -786,7 +801,8 @@ f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 	}
 	
 queue_element:
-	this->value = CLAMP(this->value, 0.0f, 1.0f);
+	if (this->min || this->max)
+		this->value = CLAMP(this->value, 0.0f, 1.0f);
 	
 	if (this->isSliding)
 		Cursor_SetCursor(CURSOR_EMPTY);
@@ -809,7 +825,7 @@ void Element_Slider_SetValue(ElSlider* this, f32 val) {
 	this->value = val;
 	this->value -= this->min;
 	this->value /= this->max - this->min;
-	this->value = CLAMP(this->value, 0.0f, 1.0f);
+	this->vValue = this->value = CLAMP(this->value, 0.0f, 1.0f);
 }
 
 void Element_PushToPost() {
