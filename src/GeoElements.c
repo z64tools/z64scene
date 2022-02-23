@@ -170,16 +170,33 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 	nvgFill(vg);
 	
 	if (this->txt) {
+		char* txt = this->txt;
+		char ftxt[512];
+		f32 bounds[4];
+		
 		nvgFontFace(vg, "font-basic");
 		nvgFontSize(vg, SPLIT_TEXT);
-		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 		nvgTextLetterSpacing(vg, 0.0);
+		nvgTextBounds(vg, 0, 0, txt, NULL, bounds);
+		
+		if (bounds[2] > this->rect.w - SPLIT_TEXT_PADDING * 2) {
+			strcpy(ftxt, txt);
+			txt = ftxt;
+			
+			while (bounds[2] > this->rect.w - SPLIT_TEXT_PADDING * 2) {
+				txt[strlen(txt) - 1] = '\0';
+				nvgTextBounds(vg, 0, 0, txt, NULL, bounds);
+			}
+		}
+		
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 		
 		Element_Draw_TextOutline(
 			vg,
 			this->rect.x + this->rect.w * 0.5,
 			this->rect.y + this->rect.h * 0.5,
-			this->txt
+			txt
 		);
 		
 		nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
@@ -188,7 +205,7 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 			vg,
 			this->rect.x + this->rect.w * 0.5,
 			this->rect.y + this->rect.h * 0.5,
-			this->txt,
+			txt,
 			NULL
 		);
 	}
@@ -599,19 +616,6 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElButton* this) {
 	s32 set = 0;
 	void* vg = geoCtx->vg;
-	f32 bounds[4] = { 0 };
-	f32 w;
-	
-	if (this->txt) {
-		nvgFontFace(vg, "font-basic");
-		nvgFontSize(vg, SPLIT_TEXT);
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgTextLetterSpacing(vg, 0.0);
-		nvgTextBounds(vg, 0, 0, this->txt, NULL, bounds);
-		
-		w = bounds[2] + SPLIT_TEXT_PADDING * 2;
-		this->rect.w = fmax(this->rect.w, w);
-	}
 	
 	this->hover = 0;
 	this->state = 0;
