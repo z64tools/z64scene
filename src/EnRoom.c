@@ -6,11 +6,13 @@ void EnRoom_Init(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
 	
-	// this->sceneName.txt = editCtx->project.sceneName;
-	this->sceneName.txt = demoText;
+	this->sceneName.txt = editCtx->project.sceneName;
+	
+	if (!strcmp(this->sceneName.txt, "Untitled_Scene"))
+		this->sceneName.isHintText = true;
+	
 	this->sceneName.align = ALIGN_LEFT;
-	this->sceneName.size = 12;
-	this->sceneName.isHintText = true;
+	this->sceneName.size = 32;
 	
 	this->lele.txt = Graph_Alloc(32);
 	this->lele.align = ALIGN_LEFT;
@@ -40,8 +42,6 @@ void EnRoom_Update(void* passArg, void* instance, Split* split) {
 		"Name:"
 	};
 	
-	if (demoText[12] != 0)
-		printf("\a");
 	{
 		Element_SetRect(&scenNameTx.rect, x, y, 0);
 		x += Element_Text(&editCtx->geoCtx, split, &scenNameTx) + 4;

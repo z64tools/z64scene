@@ -3,6 +3,17 @@
 s32 gSceneConfIndex = 0;
 s64 sFirstInit = 0;
 
+void EnSceneView_Draw_Empty(EditorContext*, EnSceneView*, Split*);
+void EnSceneView_Draw_3DViewport(EditorContext*, EnSceneView*, Split*);
+
+void (*sDrawFunc[2])(EditorContext*, EnSceneView*, Split*) = {
+	EnSceneView_Draw_Empty,
+	EnSceneView_Draw_3DViewport,
+};
+u32 sDrawId;
+
+/* ───────────────────────────────────────────────────────────────────────── */
+
 void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnSceneView* this = instance;
@@ -128,6 +139,7 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 		}
 	}
 	
+	sDrawId = 0;
 	if (editCtx->scene.file.data != NULL) {
 		n64_set_segment(0x02, editCtx->scene.file.data);
 		Light_SetFog(&editCtx->scene, &this->viewCtx);
@@ -137,24 +149,59 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 			envLight->fogColor.g,
 			envLight->fogColor.b
 		};
+		
+		sDrawId = 1;
 	}
 }
 
 void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnSceneView* this = instance;
+	
+	sDrawFunc[sDrawId](editCtx, this, split);
+}
+
+/* ───────────────────────────────────────────────────────────────────────── */
+
+void EnSceneView_Draw_Empty(EditorContext* editCtx, EnSceneView* this, Split* split) {
+	const char* txt = "z64scene";
+	void* vg = editCtx->vg;
+	f32 boundr[4];
+	
+	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+	nvgFontBlur(vg, 0.0);
+	
+	nvgFontFace(vg, "font-bold");
+	nvgFontSize(vg, 35);
+	nvgTextLetterSpacing(vg, 2.0f);
+	nvgFillColor(vg, Theme_GetColor(THEME_PRIM, 355));
+	nvgText(
+		vg,
+		split->cect.w * 0.5,
+		split->cect.h * 0.5,
+		txt,
+		NULL
+	);
+	
+	nvgFontFace(vg, "font-basic");
+	nvgFontSize(vg, 15);
+	nvgTextLetterSpacing(vg, 0.0f);
+	nvgFillColor(vg, Theme_GetColor(THEME_LINE, 755));
+	nvgText(
+		vg,
+		split->cect.w * 0.5,
+		split->cect.h * 0.5 + 35 * 0.75f,
+		"drop files here",
+		NULL
+	);
+}
+
+void EnSceneView_Draw_3DViewport(EditorContext* editCtx, EnSceneView* this, Split* split) {
 	LightContext* lightCtx = &editCtx->scene.lightCtx;
 	ViewContext* viewCtx = &this->viewCtx;
 	Vec2s dim = {
 		split->rect.w,
 		split->rect.h
-	};
-	static s16 frame;
-	static s8 eyeId;
-	u32 eye[] = {
-		0x06000000,
-		0x06000800,
-		0x06001000,
 	};
 	
 	if (Zelda64_20fpsLimiter())
@@ -180,56 +227,24 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
 		}
 	}
 	
-	if (editCtx->zobj.data) {
-		if (Zelda64_20fpsLimiter())
-			eyeId = Zelda64_EyeBlink(&frame);
-		gxSPSegment(POLY_OPA_DISP++, 0x6, editCtx->zobj.data);
-		gSPSegment(POLY_OPA_DISP++, 0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
-		gSPSegment(POLY_OPA_DISP++, 0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
-		SkelAnime_Update(&this->skelAnime);
-		Matrix_Push(); {
-			gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-			gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
-			Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
-			Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
-			SkelAnime_Draw(&this->skelAnime, SKELANIME_FLEX, this->jointTable);
-		} Matrix_Pop();
-	}
+	#if 0
+		if (editCtx->zobj.data) {
+			if (Zelda64_20fpsLimiter())
+				eyeId = Zelda64_EyeBlink(&frame);
+			gxSPSegment(POLY_OPA_DISP++, 0x6, editCtx->zobj.data);
+			gSPSegment(POLY_OPA_DISP++, 0x8, SEGMENTED_TO_VIRTUAL(eye[eyeId]));
+			gSPSegment(POLY_OPA_DISP++, 0x9, SEGMENTED_TO_VIRTUAL(0x06004800));
+			SkelAnime_Update(&this->skelAnime);
+			Matrix_Push(); {
+				gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+				gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
+				Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
+				Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
+				SkelAnime_Draw(&this->skelAnime, SKELANIME_FLEX, this->jointTable);
+			} Matrix_Pop();
+		}
+	#endif
 	
 	gSPEndDisplayList(POLY_OPA_DISP++);
 	n64_draw(gPolyOpaHead);
-	
-	if (editCtx->scene.file.data == NULL && editCtx->zobj.data == NULL) {
-		void* vg = editCtx->vg;
-		const char* txt = "z64scene";
-		static f32 fontSize = 1;
-		f32 boundr[4];
-		
-		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-		nvgFontBlur(vg, 0.0);
-		
-		nvgFontFace(vg, "font-bold");
-		nvgFontSize(vg, 35);
-		nvgTextLetterSpacing(vg, 2.0f);
-		nvgFillColor(vg, Theme_GetColor(THEME_PRIM, 355));
-		nvgText(
-			vg,
-			split->cect.w * 0.5,
-			split->cect.h * 0.5,
-			txt,
-			NULL
-		);
-		
-		nvgFontFace(vg, "font-basic");
-		nvgFontSize(vg, 15);
-		nvgTextLetterSpacing(vg, 0.0f);
-		nvgFillColor(vg, Theme_GetColor(THEME_LINE, 755));
-		nvgText(
-			vg,
-			split->cect.w * 0.5,
-			split->cect.h * 0.5 + 35 * 0.75f,
-			"drop files here",
-			NULL
-		);
-	}
 }

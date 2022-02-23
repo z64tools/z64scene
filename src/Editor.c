@@ -95,7 +95,7 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* file[]) {
 				gSceneConfIndex = Config_GetInt(&memFile, "scene_func_id");
 			MemFile_Free(&memFile);
 		}
-
+		
 		if (StrStrCase(file[i], ".zscene")) {
 			printf_debug("Loading Scene [%s]", file[i]);
 			MemFile_LoadFile(&gEditCtx->scene.file, file[i]);

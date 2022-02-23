@@ -118,6 +118,35 @@ static void Element_Draw_TextOutline(void* vg, f32 x, f32 y, char* txt) {
 	);
 }
 
+static void Element_Slider_SetCursorToVal(Split* split, ElSlider* this) {
+	f32 x = split->rect.x + this->rect.x + this->rect.w * this->value;
+	f32 y = split->rect.y + this->rect.y + this->rect.h * 0.5;
+	
+	Input_SetMousePos(x, y);
+}
+
+static void Element_Slider_SetTextbox(Split* split, ElSlider* this) {
+	sCurTextbox = &this->textBox;
+	sCurSplitTextbox = split;
+	sCtrlA = 1;
+	
+	this->isTextbox = true;
+	
+	this->textBox.isNumBox = true;
+	this->textBox.rect = this->rect;
+	this->textBox.align = ALIGN_CENTER;
+	this->textBox.txt = this->txt;
+	this->textBox.size = 32;
+	
+	this->textBox.nbx.isInt = this->isInt;
+	this->textBox.nbx.max = this->max;
+	this->textBox.nbx.min = this->min;
+	
+	this->textBox.isHintText = 2;
+	sTextPos = 0;
+	sSelectPos = strlen(this->txt);
+}
+
 /* ───────────────────────────────────────────────────────────────────────── */
 
 static void Element_Draw_Button(ElementCallInfo* info) {
@@ -161,13 +190,13 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 	if (this->txt) {
 		nvgFontFace(vg, "font-basic");
 		nvgFontSize(vg, SPLIT_TEXT);
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 		nvgTextLetterSpacing(vg, 0.0);
 		
 		if (colID == THEME_PRIM) {
 			Element_Draw_TextOutline(
 				vg,
-				rect.x + SPLIT_TEXT_PADDING,
+				rect.x + rect.w * 0.5,
 				rect.y + rect.h * 0.5,
 				this->txt
 			);
@@ -177,7 +206,7 @@ static void Element_Draw_Button(ElementCallInfo* info) {
 		nvgFontBlur(vg, 0.0);
 		nvgText(
 			vg,
-			rect.x + SPLIT_TEXT_PADDING,
+			rect.x + rect.w * 0.5,
 			rect.y + rect.h * 0.5,
 			this->txt,
 			NULL
@@ -505,26 +534,30 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 	Split* split = info->split;
 	ElSlider* this = info->arg;
 	Rectf32 rect;
-	s32 alpha = this->hover ? 355 : 255;
 	
-	Math_SmoothStepToF(&this->value, this->target, 0.25f, 0.75f, 0.0f);
+	Math_SmoothStepToF(&this->vValue, this->value, 0.25f, 0.75f, 0.0f);
 	rect.x = this->rect.x;
 	rect.y = this->rect.y;
 	rect.w = this->rect.w;
 	rect.h = this->rect.h;
-	rect.w = CLAMP_MIN(rect.w * this->value, 0);
+	rect.w = CLAMP_MIN(rect.w * this->vValue, 0);
 	
-	if (this->holdState) {
+	if (this->isSliding) {
 		Theme_SmoothStepToCol(&this->color, Theme_GetColor(THEME_PRIM, 325), 0.25f, 0.5f, 0.0f);
 	} else {
 		Theme_SmoothStepToCol(&this->color, Theme_GetColor(THEME_ACCENT, 255), 0.25f, 0.5f, 0.0f);
 	}
 	
-	Element_Draw_RoundedOutline(vg, &this->rect, Theme_GetColor(THEME_LIGHT, alpha));
+	if (this->hover)
+		Theme_SmoothStepToCol(&this->hovColor, Theme_GetColor(THEME_LIGHT, 455), 0.25f, 0.5f, 0.0f);
+	else
+		Theme_SmoothStepToCol(&this->hovColor, Theme_GetColor(THEME_LIGHT, 255), 0.25f, 0.5f, 0.0f);
+	
+	Element_Draw_RoundedOutline(vg, &this->rect, this->hovColor);
 	Element_Draw_RoundedRect(vg, &this->rect, Theme_GetColor(THEME_SHADOW, 255));
 	
-	if (this->value <= 0.02) {
-		this->color.a = Lerp(CLAMP_MIN((this->value - 0.01f) * 100.0f, 0.0f), 0.0, this->color.a);
+	if (this->vValue <= 0.02) {
+		this->color.a = Lerp(CLAMP_MIN((this->vValue - 0.01f) * 100.0f, 0.0f), 0.0, this->color.a);
 	}
 	
 	nvgBeginPath(vg);
@@ -544,14 +577,14 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 			this->txt,
 			31,
 			sFmt[this->isInt],
-			(s32)floorf(Lerp(this->target, this->min, this->max))
+			(s32)floorf(Lerp(this->value, this->min, this->max))
 		);
 	} else {
 		snprintf(
 			this->txt,
 			31,
 			sFmt[this->isInt],
-			Lerp(this->target, this->min, this->max)
+			Lerp(this->value, this->min, this->max)
 		);
 	}
 	
@@ -584,19 +617,6 @@ static void Element_Draw_Slider(ElementCallInfo* info) {
 s32 Element_Button(GeoGridContext* geoCtx, Split* split, ElButton* this) {
 	s32 set = 0;
 	void* vg = geoCtx->vg;
-	
-	if (this->txt) {
-		Rectf32 txtb = { 0 };
-		
-		nvgFontFace(vg, "font-basic");
-		nvgFontSize(vg, SPLIT_TEXT);
-		nvgFontBlur(vg, 0.0);
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgTextLetterSpacing(vg, 0.0);
-		nvgTextBounds(vg, 0, 0, this->txt, NULL, (f32*)&txtb);
-		
-		this->rect.w = fmax(this->rect.w, txtb.w + SPLIT_TEXT_PADDING * 2);
-	}
 	
 	this->hover = 0;
 	this->state = 0;
@@ -709,28 +729,6 @@ f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 		this->holdState = false;
 		this->hover = true;
 		
-		if (Input_GetMouse(MOUSE_R)->press) {
-			sCurTextbox = &this->textBox;
-			sCurSplitTextbox = split;
-			sCtrlA = 1;
-			
-			this->isTextbox = true;
-			
-			this->textBox.isNumBox = true;
-			this->textBox.rect = this->rect;
-			this->textBox.align = ALIGN_CENTER;
-			this->textBox.txt = this->txt;
-			this->textBox.size = 32;
-			
-			this->textBox.nbx.isInt = this->isInt;
-			this->textBox.nbx.max = this->max;
-			this->textBox.nbx.min = this->min;
-			
-			this->textBox.isHintText = 2;
-			sTextPos = 0;
-			sSelectPos = strlen(this->txt);
-		}
-		
 		if (this->isTextbox) {
 			this->isTextbox = false;
 			if (sCurTextbox == &this->textBox) {
@@ -739,48 +737,62 @@ f32 Element_Slider(GeoGridContext* geoCtx, Split* split, ElSlider* this) {
 				
 				Element_Textbox(geoCtx, split, &this->textBox);
 				
-				return Lerp(this->target, this->min, this->max);
+				return Lerp(this->value, this->min, this->max);
 			} else {
 				Element_Slider_SetValue(this, this->isInt ? String_GetInt(this->txt) : String_GetFloat(this->txt));
 				
-				goto queue;
+				goto queue_element;
 			}
 		}
 		
 		if (Input_GetMouse(MOUSE_L)->press) {
-			pos = true;
-			Cursor_SetCursor(CURSOR_EMPTY);
-		} else if (Input_GetMouse(MOUSE_L)->hold) {
-			if (Input_GetKey(KEY_LEFT_SHIFT)->hold) {
-				this->target += (f32)geoCtx->input->mouse.vel.x * 0.001;
-				pos = true;
-			} else {
-				this->target = (f32)(split->mousePos.x - this->rect.x) / (this->rect.w);
-			}
-			Cursor_SetCursor(CURSOR_EMPTY);
 			this->holdState = true;
+		} else if (Input_GetMouse(MOUSE_L)->hold) {
+			if (geoCtx->input->mouse.vel.x) {
+				if (this->isSliding == false)
+					Element_Slider_SetCursorToVal(split, this);
+				
+				if (Input_GetKey(KEY_LEFT_SHIFT)->hold)
+					this->value += (f32)geoCtx->input->mouse.vel.x * 0.001;
+				else
+					this->value = (f32)(geoCtx->input->mouse.pos.x - this->rect.x - split->rect.x) / (this->rect.w);
+				this->isSliding = true;
+			}
+			
+			this->holdState = true;
+			
+			if (this->isSliding) {
+				this->isSliding = true;
+				pos = true;
+			}
+		} else if (Input_GetMouse(MOUSE_L)->release) {
+			if (this->isSliding == false) {
+				Element_Slider_SetTextbox(split, this);
+			}
+			this->isSliding = false;
+		} else {
+			this->isSliding = false;
 		}
 		
 		if (geoCtx->input->mouse.scrollY) {
 			if (Input_GetKey(KEY_LEFT_SHIFT)->hold) {
-				this->target += geoCtx->input->mouse.scrollY * 0.1;
+				this->value += geoCtx->input->mouse.scrollY * 0.1;
 			} else if (Input_GetKey(KEY_LEFT_ALT)->hold) {
-				this->target += geoCtx->input->mouse.scrollY * 0.001;
+				this->value += geoCtx->input->mouse.scrollY * 0.001;
 			} else {
-				this->target += geoCtx->input->mouse.scrollY * 0.01;
+				this->value += geoCtx->input->mouse.scrollY * 0.01;
 			}
 		}
 		
-		if (Input_GetMouse(MOUSE_L)->release || pos) {
-			f32 x = split->rect.x + this->rect.x + this->rect.w * this->target;
-			f32 y = split->rect.y + this->rect.y + this->rect.h * 0.5;
-			
-			Input_SetMousePos(x, y);
-		}
+		if (pos) Element_Slider_SetCursorToVal(split, this);
 	}
-	this->target = CLAMP(this->target, 0.0f, 1.0f);
+	this->value = CLAMP(this->value, 0.0f, 1.0f);
 	
-queue:
+queue_element:
+	
+	if (this->isSliding)
+		Cursor_SetCursor(CURSOR_EMPTY);
+	
 	Element_QueueElement(
 		geoCtx,
 		split,
@@ -788,16 +800,18 @@ queue:
 		this
 	);
 	
-	return Lerp(this->target, this->min, this->max);
+	this->pValue = this->value;
+	
+	return Lerp(this->value, this->min, this->max);
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
 void Element_Slider_SetValue(ElSlider* this, f32 val) {
-	this->target = val;
-	this->target -= this->min;
-	this->target /= this->max - this->min;
-	this->target = CLAMP(this->target, 0.0f, 1.0f);
+	this->value = val;
+	this->value -= this->min;
+	this->value /= this->max - this->min;
+	this->value = CLAMP(this->value, 0.0f, 1.0f);
 }
 
 void Element_PushToPost() {

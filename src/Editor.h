@@ -27,7 +27,7 @@ typedef struct EditorContext {
 	MemFile zobj;
 	void*   gizmo;
 	struct {
-		char sceneName[512];
+		char sceneName[32];
 	} project;
 } EditorContext;
 

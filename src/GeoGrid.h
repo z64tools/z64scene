@@ -17,7 +17,7 @@ extern f32 gPixelRatio;
 #define SPLIT_CLAMP      ((SPLIT_BAR_HEIGHT + SPLIT_SPLIT_W * 1.25) * 2)
 
 #define SPLIT_TEXT_PADDING 4
-#define SPLIT_TEXT         12
+#define SPLIT_TEXT         11
 
 #define SPLIT_TEXT_H         (SPLIT_TEXT_PADDING * 2 + SPLIT_TEXT)
 #define SPLIT_ELEM_X_PADDING 6
@@ -243,15 +243,18 @@ typedef struct {
 	char txt[32];
 	Rect rect;
 	
+	f32  vValue; /* Visual Value */
+	f32  pValue; /* Previous Value */
 	f32  value;
-	f32  target;
 	f32  min;
 	f32  max;
 	
+	u8   isSliding : 1;
 	u8   isInt     : 1;
 	u8   hover     : 1;
 	u8   holdState : 1;
 	NVGcolor color;
+	NVGcolor hovColor;
 	
 	s32 isTextbox;
 	ElTextbox textBox;
