@@ -894,7 +894,7 @@ void GeoGrid_Draw_Debug(GeoGridContext* geoCtx) {
 			nvgFontSize(geoCtx->vg, SPLIT_TEXT);
 			nvgFontFace(geoCtx->vg, "font-basic");
 			nvgTextAlign(geoCtx->vg, NVG_ALIGN_MIDDLE | NVG_ALIGN_CENTER);
-			nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_HEADER, 255));
+			nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_BASE_L1, 255));
 			nvgFontBlur(geoCtx->vg, 1.5f);
 			nvgText(geoCtx->vg, pos.x, pos.y, buf, 0);
 			nvgFontBlur(geoCtx->vg, 0);
@@ -974,7 +974,7 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 		if (split->bg.useCustomBG == true) {
 			nvgFillColor(vg, nvgRGBA(split->bg.color.r, split->bg.color.g, split->bg.color.b, 255));
 		} else {
-			nvgFillColor(vg, Theme_GetColor(THEME_SPBG, 255));
+			nvgFillColor(vg, Theme_GetColor(THEME_BASE_L2, 255));
 		}
 		nvgFill(vg);
 		
@@ -987,7 +987,7 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 	} else {
 		nvgBeginPath(vg);
 		nvgRect(vg, 0, 0, rect->w, rect->h);
-		nvgFillColor(vg, Theme_GetColor(THEME_SPBG, 255));
+		nvgFillColor(vg, Theme_GetColor(THEME_BASE_L2, 255));
 		nvgFill(vg);
 		
 		#if 0
@@ -1008,8 +1008,8 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 					split->center.y,
 					0,
 					800,
-					Theme_GetColor(THEME_HEADER, 255),
-					Theme_GetColor(THEME_SHADOW, 255)
+					Theme_GetColor(THEME_BASE_L1, 255),
+					Theme_GetColor(THEME_BASE_D3, 255)
 				)
 			);
 			nvgMoveTo(vg, split->center.x + p[0].x * thing, split->center.y + p[0].y * thing);
@@ -1038,7 +1038,7 @@ void GeoGrid_Draw_SplitBorder(GeoGridContext* geoCtx, Split* split) {
 		SPLIT_ROUND_R
 	);
 	nvgPathWinding(geoCtx->vg, NVG_HOLE);
-	nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_LINE, 255));
+	nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_BASE_D1, 255));
 	nvgFill(geoCtx->vg);
 }
 
@@ -1183,18 +1183,18 @@ void GeoGrid_Draw_ContextMenu(GeoGridContext* geoCtx) {
 		glViewport(0, 0, geoCtx->winDim->x, geoCtx->winDim->y);
 		nvgBeginFrame(vg, geoCtx->winDim->x, geoCtx->winDim->y, gPixelRatio); {
 			nvgBeginPath(vg);
-			nvgFillColor(vg, Theme_GetColor(THEME_SHADOW, 255));
+			nvgFillColor(vg, Theme_GetColor(THEME_BASE_D3, 255));
 			nvgRoundedRect(vg, sCtxMenuRect.x - 0.5, sCtxMenuRect.y - 0.5, sCtxMenuRect.w + 1.0, sCtxMenuRect.h + 1.0, SPLIT_ROUND_R);
 			nvgFill(vg);
 			
 			nvgBeginPath(vg);
-			nvgFillColor(vg, Theme_GetColor(THEME_LINE, 255));
+			nvgFillColor(vg, Theme_GetColor(THEME_BASE_D1, 255));
 			nvgRoundedRect(vg, sCtxMenuRect.x, sCtxMenuRect.y, sCtxMenuRect.w, sCtxMenuRect.h, SPLIT_ROUND_R);
 			nvgFill(vg);
 			
 			if (ctxMenu->hoverNum != -1) {
 				nvgBeginPath(vg);
-				nvgFillColor(vg, Theme_GetColor(THEME_SPBG, 255));
+				nvgFillColor(vg, Theme_GetColor(THEME_BASE_L2, 255));
 				nvgRoundedRect(
 					vg,
 					ctxMenu->hoverRect.x,
@@ -1461,7 +1461,7 @@ void GeoGrid_Draw(GeoGridContext* geoCtx) {
 				geoCtx->bar[i].rect.w,
 				geoCtx->bar[i].rect.h
 			);
-			nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_HEADER, 255));
+			nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_BASE_L1, 255));
 			nvgFill(geoCtx->vg);
 			
 			if (i == 1) {
@@ -1469,7 +1469,7 @@ void GeoGrid_Draw(GeoGridContext* geoCtx) {
 				nvgFontFace(geoCtx->vg, "font-basic");
 				nvgTextAlign(geoCtx->vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 				
-				nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_SHADOW, 255));
+				nvgFillColor(geoCtx->vg, Theme_GetColor(THEME_BASE_D3, 255));
 				nvgFontBlur(geoCtx->vg, 2.0f);
 				nvgText(
 					geoCtx->vg,

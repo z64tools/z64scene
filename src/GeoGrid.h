@@ -17,7 +17,7 @@ extern f32 gPixelRatio;
 #define SPLIT_CLAMP      ((SPLIT_BAR_HEIGHT + SPLIT_SPLIT_W * 1.25) * 2)
 
 #define SPLIT_TEXT_PADDING 4
-#define SPLIT_TEXT         11
+#define SPLIT_TEXT         12
 
 #define SPLIT_TEXT_H         (SPLIT_TEXT_PADDING * 2 + SPLIT_TEXT)
 #define SPLIT_ELEM_X_PADDING 6
