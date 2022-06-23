@@ -1,82 +1,74 @@
-.PHONY = z64scene.exe z64scene default win32 linux clean
+CFLAGS          = -Wall -Wno-switch -DEXTLIB=153 -DNDEBUG
+CFLAGS_MAIN     = -Wall -Wno-switch -DNDEBUG
+OPT_WIN32      := -Ofast
+OPT_LINUX      := -Ofast
+SOURCE_C       := $(shell find src/* -type f -name '*.c')
+SOURCE_O_LINUX := $(foreach f,$(SOURCE_C:.c=.o),bin/linux/$f)
+SOURCE_O_WIN32 := $(foreach f,$(SOURCE_C:.c=.o),bin/win32/$f)
 
-FLAGS = -Wall -Wstrict-aliasing -fcompare-debug-second -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-braces \
-				-I z64viewer/include -I nanovg/src \
-				-s -Os #-DNDEBUG
+RELEASE_EXECUTABLE_LINUX := app_linux/z64scene
+RELEASE_EXECUTABLE_WIN32 := app_win32/z64scene.exe
 
-GIT_COMMIT_HASH := $(shell git log -1 --pretty=%h | tr -d '\n' | sed 's/`//g')
-GIT_COMMIT_MSG  := $(shell git log -1 --pretty=%B | tr -d '\n' | sed 's/`//g')
-FLAGS           += -DGIT_COMMIT_HASH="\"$(GIT_COMMIT_HASH)\""
-FLAGS           += -DGIT_COMMIT_MSG="\"$(GIT_COMMIT_MSG)\""
+PRNT_DGRY := \e[90;2m
+PRNT_GRAY := \e[0;90m
+PRNT_REDD := \e[0;91m
+PRNT_GREN := \e[0;92m
+PRNT_YELW := \e[0;93m
+PRNT_BLUE := \e[0;94m
+PRNT_PRPL := \e[0;95m
+PRNT_CYAN := \e[0;96m
+PRNT_RSET := \e[m
 
-SrcC_win32_z64scene  := $(shell find src/* -type f -name '*.c')
-SrcO_win32_z64scene  := $(foreach f,$(SrcC_win32_z64scene:.c=.o),bin/win32/$f)
-SrcC_win32_z64viewer := $(shell find z64viewer/src/* -type f -name '*.c')
-SrcO_win32_z64viewer := $(foreach f,$(SrcC_win32_z64viewer:.c=.o),bin/win32/$f)
-SrcC_win32_nanoVG    := $(shell find nanovg/src/* -type f -name '*.c')
-SrcO_win32_nanoVG    := $(foreach f,$(SrcC_win32_nanoVG:.c=.o),bin/win32/$f)
-SrcC_win32_cJSON    := $(shell find cJSON/* -maxdepth 0 -type f -name '*.c' -not -name 'test.c')
-SrcO_win32_cJSON    := $(foreach f,$(SrcC_win32_cJSON:.c=.o),bin/win32/$f)
+.PHONY: default \
+		win32 \
+		linux
 
-SrcC_linux_z64scene  := $(shell find src/* -type f -name '*.c')
-SrcO_linux_z64scene  := $(foreach f,$(SrcC_linux_z64scene:.c=.o),bin/linux/$f)
-SrcC_linux_z64viewer := $(shell find z64viewer/src/* -type f -name '*.c')
-SrcO_linux_z64viewer := $(foreach f,$(SrcC_linux_z64viewer:.c=.o),bin/linux/$f)
-SrcC_linux_nanoVG    := $(shell find nanovg/src/* -type f -name '*.c')
-SrcO_linux_nanoVG    := $(foreach f,$(SrcC_linux_nanoVG:.c=.o),bin/linux/$f)
-SrcC_linux_cJSON    := $(shell find cJSON/* -maxdepth 0 -type f -name '*.c' -not -name 'test.c')
-SrcO_linux_cJSON    := $(foreach f,$(SrcC_linux_cJSON:.c=.o),bin/linux/$f)
+default: linux
+linux: $(RELEASE_EXECUTABLE_LINUX)
+win32: $(RELEASE_EXECUTABLE_WIN32)
 
-HeaderFiles := $(shell find src/* -type f -name '*.h')
-HeaderFiles += $(shell find z64viewer/include/* -type f -name '*.h')
+$(shell mkdir -p bin/ $(foreach dir, \
+	$(dir $(RELEASE_EXECUTABLE_LINUX)) \
+	$(dir $(SOURCE_O_LINUX)) \
+	\
+	$(dir $(RELEASE_EXECUTABLE_WIN32)) \
+	$(dir $(SOURCE_O_WIN32)) \
+	, $(dir)))
 
-# Make build directories
-$(shell mkdir -p bin/ $(foreach dir, $(dir $(SrcO_win32_z64scene)) $(dir $(SrcO_win32_z64viewer)) $(dir $(SrcO_win32_nanoVG)) $(dir $(SrcO_win32_cJSON)) $(dir $(SrcO_linux_z64scene)) $(dir $(SrcO_linux_z64viewer)) $(dir $(SrcO_linux_nanoVG)) $(dir $(SrcO_linux_cJSON)) ,$(dir)))
-
-default: win32
-
-win32: src_win32 z64scene.exe
-linux: src_linux z64scene
-
-# WIN32
-
-src_win32: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_win32_cJSON) src/icon.o
-	
-bin/win32/%.o: %.c $(HeaderFiles)
-	@echo "Win32: [" $< "]"
-	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
-	@i686-w64-mingw32.static-objdump -drz $@ > $(@:.o=.s)
-	
-bin/win32/src/main.o: src/main.c $(HeaderFiles)
-	@echo "Win32: [" $< "]"
-	@i686-w64-mingw32.static-gcc $< -c -o $@ $(FLAGS)
-	@i686-w64-mingw32.static-objdump -drz $@ > $(@:.o=.s)
-
-src/icon.o: src/icon.rc src/icon.ico
-	@i686-w64-mingw32.static-windres -o $@ $<
-
-z64scene.exe: $(SrcO_win32_z64scene) $(SrcO_win32_z64viewer) $(SrcO_win32_nanoVG) $(SrcO_win32_cJSON) src/icon.o
-	@echo "win32: [" $@ "]"
-	@i686-w64-mingw32.static-gcc $^ -o z64scene.exe -lm -flto `i686-w64-mingw32.static-pkg-config --cflags --libs glfw3` $(FLAGS)
-
-# LINUX
-
-src_linux: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(SrcO_linux_cJSON)
-	
-bin/linux/%.o: %.c
-	@echo "Linux: [" $< "]"
-	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
-	@objdump -drz $@ > $(@:.o=.s)
-	
-bin/linux/src/main.o: src/main.c
-	@echo "Linux: [" $< "]"
-	@gcc -lm -lglfw -ldl  $< -c -o $@ $(FLAGS)
-	@objdump -drz $@ > $(@:.o=.s)
-
-z64scene: $(SrcO_linux_z64scene) $(SrcO_linux_z64viewer) $(SrcO_linux_nanoVG) $(SrcO_linux_cJSON)
-	@echo "Linux: [" $@ "]"
-	@gcc $^ -o z64scene -lm -lglfw -ldl -flto $(FLAGS)
+include $(C_INCLUDE_PATH)/ExtLib.mk
 
 clean:
-	rm -f z64scene.exe z64scene
-	rm -f $(shell find bin/* -type f -name '*.o')
+	rm -f $(RELEASE_EXECUTABLE_LINUX)
+	rm -f $(RELEASE_EXECUTABLE_WIN32)
+	rm -f $(SOURCE_O_LINUX)
+	rm -f $(SOURCE_O_WIN32)
+	rm -f -R bin
+
+# # # # # # # # # # # # # # # # # # # #
+# LINUX BUILD                         #
+# # # # # # # # # # # # # # # # # # # #
+	
+bin/linux/%.o: %.c %.h $(HEADER) $(ExtLib_H)
+bin/linux/%.o: %.c $(HEADER) $(ExtLib_H)
+	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)]"
+	@gcc -c -o $@ $< $(OPT_LINUX) $(CFLAGS)
+
+$(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O)
+	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
+	@gcc -o $@ $^ -lm -ldl -pthread $(OPT_LINUX) $(CFLAGS_MAIN) $(ExtGui_Linux_Flags)
+
+# # # # # # # # # # # # # # # # # # # #
+# WIN32 BUILD                         #
+# # # # # # # # # # # # # # # # # # # #
+	
+bin/win32/%.o: %.c %.h $(HEADER) $(ExtLib_H)
+bin/win32/%.o: %.c $(HEADER) $(ExtLib_H)
+	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)]"
+	@i686-w64-mingw32.static-gcc -c -o $@ $< $(OPT_WIN32) $(CFLAGS) -D_WIN32
+
+bin/win32/icon.o: src/icon.rc src/icon.ico
+	@i686-w64-mingw32.static-windres -o $@ $<
+
+$(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O)
+	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
+	@i686-w64-mingw32.static-gcc -o $@ $^ -lm -pthread $(OPT_WIN32) $(CFLAGS_MAIN) -D_WIN32 $(ExtGui_Win32_Flags)
