@@ -4,9 +4,9 @@
 typedef struct EditorContext {
 	AppInfo app;
 	void*   vg;
-	GeoGridContext geoGrid;
-	CursorContext  cursor;
-	InputContext   input;
+	GeoGrid geoGrid;
+	CursorContext cursor;
+	InputContext  input;
 } EditorContext;
 
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]);
