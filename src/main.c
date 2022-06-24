@@ -37,7 +37,7 @@ int main(void) {
 	printf_SetPrefix("");
 	
 	Calloc(editCtx, sizeof(EditorContext));
-	editCtx->vg = Interface_Init("z64audio", &editCtx->app, &editCtx->input, editCtx, (void*)Editor_Update, (void*)Editor_Draw, Editor_DropCallback, 980, 480, 2);
+	editCtx->vg = Interface_Init("z64scene", &editCtx->app, &editCtx->input, editCtx, (void*)Editor_Update, (void*)Editor_Draw, Editor_DropCallback, 980, 480, 4);
 	
 	editCtx->geoGrid.passArg = editCtx;
 	editCtx->geoGrid.taskTable = gTaskTable;
@@ -71,7 +71,6 @@ int main(void) {
 	Interface_Main();
 	
 	ThreadLock_Free();
-	glfwTerminate();
 	
 	return 0;
 }
