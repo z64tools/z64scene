@@ -3,9 +3,6 @@
 #define INCBIN_PREFIX
 #include <incbin.h>
 
-INCBIN(gFont_CascadiaCode, "assets/CascadiaCode-SemiBold.ttf");
-INCBIN(gFont_NotoSand, "assets/NotoSans-Bold.ttf");
-
 INCBIN(gCursor_ArrowU, "assets/arrow_up.ia16");
 INCBIN(gCursor_ArrowL, "assets/arrow_left.ia16");
 INCBIN(gCursor_ArrowD, "assets/arrow_down.ia16");
@@ -42,9 +39,6 @@ int main(void) {
 	editCtx->geoGrid.passArg = editCtx;
 	editCtx->geoGrid.taskTable = gTaskTable;
 	editCtx->geoGrid.taskTableNum = ArrayCount(gTaskTable);
-	
-	nvgCreateFontMem(editCtx->vg, "font-basic", (void*)gFont_CascadiaCodeData, gFont_CascadiaCodeSize, 0);
-	nvgCreateFontMem(editCtx->vg, "font-bold", (void*)gFont_NotoSandData, gFont_NotoSandSize, 0);
 	
 	Theme_Init(0);
 	GeoGrid_Init(&editCtx->geoGrid, &editCtx->app.winDim, &editCtx->input, editCtx->vg);

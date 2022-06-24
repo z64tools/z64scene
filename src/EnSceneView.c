@@ -51,7 +51,7 @@ void EnSceneView_Draw_Empty(EditorContext* editCtx, EnSceneView* this, Split* sp
 	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 	nvgFontBlur(vg, 0.0);
 	
-	nvgFontFace(vg, "font-bold");
+	nvgFontFace(vg, "dejavu-light");
 	nvgFontSize(vg, 35);
 	nvgTextLetterSpacing(vg, 2.0f);
 	nvgFillColor(vg, Theme_GetColor(THEME_ACCENT, 255, 1.0f));
@@ -63,7 +63,7 @@ void EnSceneView_Draw_Empty(EditorContext* editCtx, EnSceneView* this, Split* sp
 		NULL
 	);
 	
-	nvgFontFace(vg, "font-basic");
+	nvgFontFace(vg, "dejavu");
 	nvgFontSize(vg, 15);
 	nvgTextLetterSpacing(vg, 0.0f);
 	nvgFillColor(vg, nvgHSLA(0, 0, 0.35, 255));
