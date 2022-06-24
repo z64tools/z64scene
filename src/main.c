@@ -61,7 +61,16 @@ int main(void) {
 	Rectf32 size = {
 		editCtx->geoGrid.workRect.x,
 		editCtx->geoGrid.workRect.y,
-		editCtx->geoGrid.workRect.w,
+		editCtx->geoGrid.workRect.w * 0.70,
+		editCtx->geoGrid.workRect.h
+	};
+	
+	GeoGrid_AddSplit(&editCtx->geoGrid, &size)->id = 2;
+	
+	size = (Rectf32) {
+		size.w,
+		editCtx->geoGrid.workRect.y,
+		editCtx->geoGrid.workRect.w - size.w,
 		editCtx->geoGrid.workRect.h
 	};
 	
