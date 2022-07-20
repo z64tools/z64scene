@@ -1,5 +1,7 @@
 #include <ExtLib.h>
 #include <ExtGui/Global.h>
+#include "z_skelanime.h"
+#include "z_light.h"
 
 typedef struct {
 	u16   index;
@@ -53,6 +55,13 @@ void EnSceneView_Draw(void* passArg, void* instance, Split* split);
 
 typedef struct {
 	ViewContext view;
+	SkelAnime   skelAnime;
+	Vec3s jointTbl[65];
+	Vec3s morphTbl[65];
+	s8    headerClick;
+	
+	MemFile* zobj;
+	u32 zobjCount;
 } EnSceneView;
 
 void EnRoom_Init(void* passArg, void* instance, Split* split);

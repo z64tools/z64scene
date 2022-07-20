@@ -1,0 +1,3 @@
+[submodule "z64viewer"]
+	path = z64viewer
+	url = https://github.com/z64me/z64viewer

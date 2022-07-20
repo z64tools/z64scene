@@ -1,7 +1,7 @@
 #include "Editor.h"
 
 void EnRoom_Init(void* passArg, void* instance, Split* split) {
-	EditorContext* editCtx = passArg;
+	// EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
 	
 	this->sceneName.txt = StrDupX("Untitled_Scene", 64);
@@ -21,7 +21,7 @@ void EnRoom_Init(void* passArg, void* instance, Split* split) {
 }
 
 void EnRoom_Destroy(void* passArg, void* instance, Split* split) {
-	EditorContext* editCtx = passArg;
+	// EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
 	
 	Free(this->sceneName.txt);
@@ -60,7 +60,7 @@ void EnRoom_Update(void* passArg, void* instance, Split* split) {
 }
 
 void EnRoom_Draw(void* passArg, void* instance, Split* split) {
-	EditorContext* editCtx = passArg;
-	EnRoom* this = instance;
-	void* vg = editCtx->vg;
+	// EditorContext* editCtx = passArg;
+	// EnRoom* this = instance;
+	// void* vg = editCtx->vg;
 }

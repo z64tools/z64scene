@@ -1,8 +1,9 @@
-CFLAGS          = -Wall -Wno-switch -DEXTLIB=156 -DNDEBUG
+CFLAGS          = -Wall -Wno-switch -DEXTLIB=156 -DNDEBUG -I z64viewer/include/
 CFLAGS_MAIN     = -Wall -Wno-switch -DNDEBUG
 OPT_WIN32      := -Ofast
 OPT_LINUX      := -Ofast
-SOURCE_C       := $(shell find src/* -type f -name '*.c')
+SOURCE_C        = $(shell find src/* -type f -name '*.c')
+SOURCE_C       += $(shell find z64viewer/src/* -type f -name '*.c')
 SOURCE_O_LINUX := $(foreach f,$(SOURCE_C:.c=.o),bin/linux/$f)
 SOURCE_O_WIN32 := $(foreach f,$(SOURCE_C:.c=.o),bin/win32/$f)
 
