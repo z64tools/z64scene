@@ -348,6 +348,8 @@ void Scene_LoadScene(Scene* this, const char* file) {
 	Scene_ExecuteCommands(this, NULL);
 	
 	Calloc(this->room, sizeof(Room*) * 255);
+	
+	this->useFog = true;
 }
 
 void Scene_LoadRoom(Scene* this, const char* file) {
@@ -409,6 +411,7 @@ void Scene_Draw(Scene* this) {
 	static EnvLightSettings* prevEnv;
 	EnvLightSettings* env = this->env + this->setupEnv;
 	s8 l1n[3], l2n[3];
+	u16 fogNear;
 	
 	Assert(env != NULL);
 	
@@ -444,6 +447,11 @@ void Scene_Draw(Scene* this) {
 		l2n[2] = -l1n[2];
 	}
 	
+	if (this->useFog == false)
+		fogNear = 1000;
+	else
+		fogNear = env->fogNear & 0x3FF;
+	
 	gSegment[2] = this->segment;
 	gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
 	
@@ -452,7 +460,7 @@ void Scene_Draw(Scene* this) {
 	}
 	
 	Light_SetAmbLight(env->ambientColor);
-	Light_SetFog(env->fogNear & 0x3FF, 0, env->fogColor);
+	Light_SetFog(fogNear, 0, env->fogColor);
 	Light_SetDirLight(l1n, env->light1Color);
 	Light_SetDirLight(l2n, env->light2Color);
 	

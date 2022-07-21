@@ -15,12 +15,27 @@ typedef struct {
 	u16 index;
 } ObjectEntry;
 
+typedef struct {
+	ViewContext view;
+	s8 headerClick;
+} EnSceneView;
+
+typedef struct EnRoom {
+	ElSlider   envIdSlider;
+	ElButton   buttonDayLight;
+	ElButton   buttonFog;
+	ElText envID;
+} EnRoom;
+
 typedef struct EditorContext {
 	AppInfo app;
 	void*   vg;
 	GeoGrid geoGrid;
 	CursorContext cursor;
 	InputContext  input;
+	
+	EnRoom* tabRoom;
+	EnSceneView* tabScene;
 	
 	Scene scene;
 	
@@ -45,22 +60,10 @@ void EnSceneView_Destroy(void* passArg, void* instance, Split* split);
 void EnSceneView_Update(void* passArg, void* instance, Split* split);
 void EnSceneView_Draw(void* passArg, void* instance, Split* split);
 
-typedef struct {
-	ViewContext view;
-	s8 headerClick;
-} EnSceneView;
-
 void EnRoom_Init(void* passArg, void* instance, Split* split);
 void EnRoom_Destroy(void* passArg, void* instance, Split* split);
 void EnRoom_Update(void* passArg, void* instance, Split* split);
 void EnRoom_Draw(void* passArg, void* instance, Split* split);
-
-typedef struct EnRoom {
-	ElSlider   envIdSlider;
-	ElButton   buttonDayLight;
-	ElCheckbox checkBox;
-	ElText envID;
-} EnRoom;
 
 extern Gfx* gSetupDL;
 #define gSetupDList(x) & gSetupDL[6 * x]

@@ -24,11 +24,13 @@ typedef struct {
 	u32 numRoom;
 	
 	EnvLightSettings* env;
-	u32  numEnv;
-	u8   setupEnv;
-	u8   useDaylight;
+	u32 numEnv;
+	u8  setupEnv;
+	u8  useDaylight;
+	u8  useFog;
 	
-	u8   setupHeader;
+	u8  setupHeader;
+	struct Split* split;
 } Scene;
 
 void Scene_LoadScene(Scene* this, const char* file);

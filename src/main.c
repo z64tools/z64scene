@@ -59,7 +59,7 @@ int main(void) {
 		editCtx->geoGrid.workRect.h
 	};
 	
-	GeoGrid_AddSplit(&editCtx->geoGrid, &size)->id = 2;
+	GeoGrid_AddSplit(&editCtx->geoGrid, "Viewport", &size)->id = 2;
 	
 	size = (Rectf32) {
 		size.w,
@@ -68,7 +68,7 @@ int main(void) {
 		editCtx->geoGrid.workRect.h
 	};
 	
-	GeoGrid_AddSplit(&editCtx->geoGrid, &size)->id = 1;
+	GeoGrid_AddSplit(&editCtx->geoGrid, "RoomTab", &size)->id = 1;
 	
 	ThreadLock_Init();
 	Interface_Main();

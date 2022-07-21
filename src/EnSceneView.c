@@ -10,8 +10,6 @@ void EnSceneView_Init(void* passArg, void* instance, Split* split) {
 	EnSceneView* this = instance;
 	
 	View_Init(&this->view, &editCtx->input);
-	
-	split->bg.useCustomBG = true;
 }
 
 void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
@@ -26,6 +24,9 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	EnSceneView* this = instance;
 	InputContext* inputCtx = &editCtx->input;
 	MouseInput* mouse = &inputCtx->mouse;
+	
+	if (editCtx->scene.segment == NULL)
+		return;
 	
 	if (split->mouseInHeader && mouse->click.press) {
 		this->headerClick = true;
@@ -65,6 +66,12 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 			Input_SetMousePos(MOUSE_KEEP_AXIS, newPos);
 		}
 	}
+	
+	if (editCtx->scene.segment) {
+		EnvLightSettings* env = editCtx->scene.env + editCtx->scene.setupEnv;
+		memcpy(split->bg.color.c, env->fogColor, 3);
+		this->view.far = env->fogFar;
+	}
 }
 
 void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
@@ -83,6 +90,7 @@ void EnSceneView_Draw_Empty(EditorContext* editCtx, EnSceneView* this, Split* sp
 	const char* txt = "z64scene";
 	void* vg = editCtx->vg;
 	
+	split->bg.useCustomBG = false;
 	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 	nvgFontBlur(vg, 0.0);
 	
@@ -92,8 +100,8 @@ void EnSceneView_Draw_Empty(EditorContext* editCtx, EnSceneView* this, Split* sp
 	nvgFillColor(vg, Theme_GetColor(THEME_ACCENT, 255, 1.0f));
 	nvgText(
 		vg,
-		split->cect.w * 0.5,
-		split->cect.h * 0.5,
+		split->rect.w * 0.5,
+		split->rect.h * 0.5,
 		txt,
 		NULL
 	);
@@ -104,8 +112,8 @@ void EnSceneView_Draw_Empty(EditorContext* editCtx, EnSceneView* this, Split* sp
 	nvgFillColor(vg, nvgHSLA(0, 0, 0.35, 255));
 	nvgText(
 		vg,
-		split->cect.w * 0.5,
-		split->cect.h * 0.5 + 35 * 0.75f,
+		split->rect.w * 0.5,
+		split->rect.h * 0.5 + 35 * 0.75f,
 		"drop files here",
 		NULL
 	);
@@ -117,6 +125,7 @@ void EnSceneView_Draw_3DViewport(EditorContext* editCtx, EnSceneView* this, Spli
 		split->rect.h
 	};
 	
+	split->bg.useCustomBG = true;
 	n64_graph_init();
 	
 	View_SetProjectionDimensions(&this->view, &dim);
@@ -126,13 +135,8 @@ void EnSceneView_Draw_3DViewport(EditorContext* editCtx, EnSceneView* this, Spli
 	n64_setMatrix_view(&this->view.viewMtx);
 	n64_setMatrix_projection(&this->view.projMtx);
 	
-	if (editCtx->scene.segment) {
+	if (editCtx->scene.segment)
 		Scene_Draw(&editCtx->scene);
-		
-		EnvLightSettings* env = editCtx->scene.env + editCtx->scene.setupEnv;
-		
-		memcpy(split->bg.color.c, env->fogColor, 3);
-	}
 	
 	// Matrix_Push(); {
 	// 	gxSPSegment(POLY_OPA_DISP++, 0x6, this->zobj[0].data);
