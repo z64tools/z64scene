@@ -1,4 +1,4 @@
-#include "z_skelanime.h"
+#include "SkelAnime.h"
 #include <n64.h>
 
 static u32 gS;
@@ -29,7 +29,7 @@ void SkelAnime_Free(SkelAnime* this) {
 	Free(this->morphTable);
 }
 
-void SkelAnime_GetFrameData(u32 animation, s32 frame, s32 limbCount, Vec3s* frameTable) {
+static void SkelAnime_GetFrameData(u32 animation, s32 frame, s32 limbCount, Vec3s* frameTable) {
 	AnimationHeader animHeader = *((AnimationHeader*)SEGMENTED_TO_VIRTUAL(animation));
 	
 	SwapBE(animHeader.jointIndices);
@@ -66,7 +66,7 @@ void SkelAnime_GetFrameData(u32 animation, s32 frame, s32 limbCount, Vec3s* fram
 	}
 }
 
-void SkelAnime_InterpFrameTable(s32 limbCount, Vec3s* dst, Vec3s* start, Vec3s* target, f32 weight) {
+static void SkelAnime_InterpFrameTable(s32 limbCount, Vec3s* dst, Vec3s* start, Vec3s* target, f32 weight) {
 	s32 i;
 	s16 diff;
 	s16 base;
@@ -120,7 +120,7 @@ void SkelAnime_Update(SkelAnime* this) {
 	this->prevFrame = this->curFrame;
 }
 
-void SkelAnime_Limb(u32 skelSeg, u8 limbId, Mtx** mtx, Vec3s* jointTable) {
+static void SkelAnime_Limb(u32 skelSeg, u8 limbId, Mtx** mtx, Vec3s* jointTable) {
 	StandardLimb* limb;
 	u32* limbList;
 	Vec3s rot = { 0 };

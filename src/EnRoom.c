@@ -4,27 +4,21 @@ void EnRoom_Init(void* passArg, void* instance, Split* split) {
 	// EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
 	
-	this->sceneName.txt = StrDupX("Untitled_Scene", 64);
-	this->sceneName.isHintText = true;
+	this->buttonDayLight.txt = xFmt("Use Daylight");
+	this->buttonDayLight.toggle = true;
 	
-	this->sceneName.align = ALIGN_LEFT;
-	this->sceneName.size = 64;
+	this->envIdSlider.isInt = true;
+	this->envIdSlider.min = 0;
+	this->envIdSlider.max = 255;
 	
-	this->leButton.txt = xFmt("This is a Button");
-	this->leButton.toggle = true;
+	this->envID.txt = "Env ID:";
 	
-	this->saveLayout.txt = xFmt("Save Layout");
-	this->slider.isInt = true;
-	this->slider.min = 0;
-	this->slider.max = 255;
-	Element_Slider_SetValue(&this->slider, 255);
+	Element_Slider_SetValue(&this->envIdSlider, 0);
 }
 
 void EnRoom_Destroy(void* passArg, void* instance, Split* split) {
 	// EditorContext* editCtx = passArg;
-	EnRoom* this = instance;
-	
-	Free(this->sceneName.txt);
+	// EnRoom* this = instance;
 }
 
 void EnRoom_Update(void* passArg, void* instance, Split* split) {
@@ -32,31 +26,21 @@ void EnRoom_Update(void* passArg, void* instance, Split* split) {
 	EnRoom* this = instance;
 	s32 x = SPLIT_ELEM_X_PADDING;
 	s32 y = SPLIT_ELEM_X_PADDING;
-	static ElText scenNameTx = {
-		"Name:"
-	};
 	
 	{
-		Element_SetRect(&scenNameTx.rect, x, y, 0);
-		x += Element_Text(&editCtx->geoGrid, split, &scenNameTx) + 4;
-		Element_SetRect(&this->sceneName.rect, x, y, split->rect.w - x - SPLIT_ELEM_X_PADDING);
-		Element_Textbox(&editCtx->geoGrid, split, &this->sceneName);
+		Element_SetRect_Multiple(split, y, &this->buttonDayLight.rect, 1.0);
+		editCtx->scene.useDaylight = Element_Button(&editCtx->geoGrid, split, &this->buttonDayLight);
 		
 		x = SPLIT_ELEM_X_PADDING;
 		y += SPLIT_ELEM_Y_PADDING;
-		Element_SetRect_Multiple(split, y, &this->leButton.rect, 0.5, &this->checkBox.rect, 0.5);
-		Element_Button(&editCtx->geoGrid, split, &this->leButton);
-		Element_Checkbox(&editCtx->geoGrid, split, &this->checkBox);
 		
-		x = SPLIT_ELEM_X_PADDING;
-		y += SPLIT_ELEM_Y_PADDING;
-		Element_SetRect(&this->slider.rect, x, y, split->rect.w - SPLIT_ELEM_X_PADDING * 2);
-		Element_Slider(&editCtx->geoGrid, split, &this->slider);
+		this->envIdSlider.min = 0;
+		this->envIdSlider.max = ClampMin(editCtx->scene.numEnv - 1, 0);
+		this->envIdSlider.isInt = true;
+		Element_SetRect_Multiple(split, y, &this->envID.rect, 0.25, &this->envIdSlider.rect, 0.75);
+		Element_Text(&editCtx->geoGrid, split, &this->envID);
+		editCtx->scene.setupEnv = Element_Slider(&editCtx->geoGrid, split, &this->envIdSlider);
 	}
-	
-	x = SPLIT_ELEM_X_PADDING;
-	y = split->cect.h - SPLIT_ELEM_Y_PADDING - 4;
-	Element_SetRect(&this->saveLayout.rect, x, y, 0);
 }
 
 void EnRoom_Draw(void* passArg, void* instance, Split* split) {
