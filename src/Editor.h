@@ -1,5 +1,5 @@
 #include <ExtLib.h>
-#include <ExtGui/Global.h>
+#include <ExtGui/Interface.h>
 #include "SkelAnime.h"
 #include "Light.h"
 #include "Scene.h"
@@ -21,18 +21,18 @@ typedef struct {
 } EnSceneView;
 
 typedef struct EnRoom {
-	ElSlider   envIdSlider;
-	ElButton   buttonDayLight;
-	ElButton   buttonFog;
-	ElText envID;
+	ElSlider envIdSlider;
+	ElButton buttonDayLight;
+	ElButton buttonFog;
+	ElText   envID;
 } EnRoom;
 
 typedef struct EditorContext {
 	AppInfo app;
 	void*   vg;
-	GeoGrid geoGrid;
-	CursorContext cursor;
-	InputContext  input;
+	GeoGrid geo;
+	Cursor  cursor;
+	Input   input;
 	
 	EnRoom* tabRoom;
 	EnSceneView* tabScene;

@@ -49,14 +49,8 @@ void* NewMtx() {
 // # EDITOR                              #
 // # # # # # # # # # # # # # # # # # # # #
 
-static EditorContext* sEditCtx;
-
-EditorContext* Editor_GetCtx(void) {
-	return sEditCtx;
-}
-
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
-	EditorContext* editor = Editor_GetCtx();
+	EditorContext* editor = GetUserCtx(window);
 	s32 getRoom = false;
 	
 	printf_info("DragNDrop: %d", count);
@@ -94,11 +88,10 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 }
 
 void Editor_Update(EditorContext* editor) {
-	sEditCtx = editor;
-	GeoGrid_Update(&editor->geoGrid);
+	GeoGrid_Update(&editor->geo);
 	Cursor_Update(&editor->cursor);
 }
 
 void Editor_Draw(EditorContext* editor) {
-	GeoGrid_Draw(&editor->geoGrid);
+	GeoGrid_Draw(&editor->geo);
 }

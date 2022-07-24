@@ -439,9 +439,9 @@ void Scene_Draw(Scene* this) {
 				break;
 		}
 		
-		l1n[0] = Math_SinS((time - 0x8000)) * 120.0f;
-		l1n[1] = Math_CosS((time - 0x8000)) * 120.0f;
-		l1n[2] = Math_CosS((time - 0x8000)) * 20.0f;
+		l1n[0] = SinS((time - 0x8000)) * 120.0f;
+		l1n[1] = CosS((time - 0x8000)) * 120.0f;
+		l1n[2] = CosS((time - 0x8000)) * 20.0f;
 		l2n[0] = -l1n[0];
 		l2n[1] = -l1n[1];
 		l2n[2] = -l1n[2];

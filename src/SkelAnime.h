@@ -1,7 +1,7 @@
 #ifndef __Z64_SKELANIME_H__
 #define __Z64_SKELANIME_H__
 
-#include <ExtGui/Vector.h>
+#include <ExtGui/Math.h>
 #include <ExtGui/Matrix.h>
 #include <n64.h>
 

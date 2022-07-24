@@ -1,4 +1,4 @@
-CFLAGS          = -Wall -Wno-switch -DEXTLIB=160 -DNDEBUG -I z64viewer/include/
+CFLAGS          = -Wall -Wno-switch -DEXTLIB=161 -DNDEBUG -I z64viewer/include/
 CFLAGS_MAIN     = -Wall -Wno-switch -DNDEBUG
 OPT_WIN32      := -Ofast
 OPT_LINUX      := -Ofast

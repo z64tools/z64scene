@@ -22,7 +22,7 @@ void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
 void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnSceneView* this = instance;
-	InputContext* inputCtx = &editCtx->input;
+	Input* inputCtx = &editCtx->input;
 	MouseInput* mouse = &inputCtx->mouse;
 	
 	if (editCtx->scene.segment == NULL)
@@ -57,13 +57,13 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 		if (mouse->pos.x < xMin || mouse->pos.x > xMax) {
 			s16 newPos = WrapS(mouse->pos.x, xMin, xMax);
 			
-			Input_SetMousePos(newPos, MOUSE_KEEP_AXIS);
+			Input_SetMousePos(&editCtx->input, newPos, MOUSE_KEEP_AXIS);
 		}
 		
 		if (mouse->pos.y < yMin || mouse->pos.y > yMax) {
 			s16 newPos = WrapS(mouse->pos.y, yMin, yMax);
 			
-			Input_SetMousePos(MOUSE_KEEP_AXIS, newPos);
+			Input_SetMousePos(&editCtx->input, MOUSE_KEEP_AXIS, newPos);
 		}
 	}
 	

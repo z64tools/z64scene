@@ -30,19 +30,19 @@ void EnRoom_Update(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
 	
-	Element_SetRowY(0);
-	Element_SetRect(split, &this->buttonDayLight.rect, 0.5, &this->buttonFog.rect, 0.5);
-	editCtx->scene.useDaylight = Element_Button(&editCtx->geoGrid, split, &this->buttonDayLight);
-	editCtx->scene.useFog = Element_Button(&editCtx->geoGrid, split, &this->buttonFog);
+	Element_RowY(0);
+	Element_Row(split, &this->buttonDayLight.rect, 0.5, &this->buttonFog.rect, 0.5);
+	editCtx->scene.useDaylight = Element_Button(&editCtx->geo, split, &this->buttonDayLight);
+	editCtx->scene.useFog = Element_Button(&editCtx->geo, split, &this->buttonFog);
 	
 	this->envIdSlider.min = 0;
 	this->envIdSlider.max = ClampMin((f32)(editCtx->scene.numEnv) - 1.0f, 1.0f);
 	this->envIdSlider.isInt = true;
-	f32 w = Element_Text(&editCtx->geoGrid, split, &this->envID) + SPLIT_ELEM_X_PADDING * 3;
+	f32 w = Element_Text(&editCtx->geo, split, &this->envID) + SPLIT_ELEM_X_PADDING * 3;
 	
 	w /= split->rect.w;
-	Element_SetRect(split, &this->envID.rect, w, &this->envIdSlider.rect, 1.0 - w);
-	editCtx->scene.setupEnv = Element_Slider(&editCtx->geoGrid, split, &this->envIdSlider);
+	Element_Row(split, &this->envID.rect, w, &this->envIdSlider.rect, 1.0 - w);
+	editCtx->scene.setupEnv = Element_Slider(&editCtx->geo, split, &this->envIdSlider);
 }
 
 void EnRoom_Draw(void* passArg, void* instance, Split* split) {
