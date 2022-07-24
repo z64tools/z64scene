@@ -97,7 +97,7 @@ void EnSceneView_Draw_Empty(EditorContext* editCtx, EnSceneView* this, Split* sp
 	nvgFontFace(vg, "dejavu-light");
 	nvgFontSize(vg, 35);
 	nvgTextLetterSpacing(vg, 2.0f);
-	nvgFillColor(vg, Theme_GetColor(THEME_ACCENT, 255, 1.0f));
+	nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
 	nvgText(
 		vg,
 		split->rect.w * 0.5,

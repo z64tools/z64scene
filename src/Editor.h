@@ -24,7 +24,7 @@ typedef struct EnRoom {
 	ElSlider envIdSlider;
 	ElButton buttonDayLight;
 	ElButton buttonFog;
-	ElText   envID;
+	ElCombo  comboBox;
 } EnRoom;
 
 typedef struct EditorContext {

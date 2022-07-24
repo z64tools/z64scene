@@ -1,22 +1,38 @@
 #include "Editor.h"
 
+void Update_PropMode(PropEnum* penum, s32 i, void* arg) {
+	ElCombo* this = arg;
+	
+	this->key = i;
+}
+
 void EnRoom_Init(void* passArg, void* instance, Split* split) {
-	// EditorContext* editCtx = passArg;
+	EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
 	
-	this->buttonDayLight.txt = "Sun/Moon Light Dir";
-	this->buttonDayLight.toggle = true;
+	Element_Combo_SetPropEnum(
+		&this->comboBox,
+		PropEnum_Init(
+			Update_PropMode,
+			&this->comboBox,
+			1,
+			(EnumItem[]) {
+		{ 0, "Field" },
+		{ 1, "Dungeon" },
+	},
+			2
+		)
+	);
 	
-	this->buttonFog.txt = "Fog";
-	this->buttonFog.toggle = 2;
-	this->buttonFog.state = 1;
+	Element_Name(&this->buttonDayLight, "Sun/Moon Light Dir");
+	Element_Name(&this->buttonFog, "Fog");
+	Element_Name(&this->comboBox, "Keep:");
+	Element_Name(&this->envIdSlider, "EnvID:");
 	
-	this->envIdSlider.isInt = true;
-	this->envIdSlider.min = 0;
-	this->envIdSlider.max = 1;
+	Element_Button_SetValue(&this->buttonDayLight, true, false);
+	Element_Button_SetValue(&this->buttonFog, true, true);
 	
-	this->envID.txt = "Env ID:";
-	
+	Element_Slider_SetParams(&this->envIdSlider, 0, 1, "int");
 	Element_Slider_SetValue(&this->envIdSlider, 0);
 }
 
@@ -30,18 +46,30 @@ void EnRoom_Update(void* passArg, void* instance, Split* split) {
 	EditorContext* editCtx = passArg;
 	EnRoom* this = instance;
 	
+	if (editCtx->scene.segment == NULL) {
+		Element_Disable(&this->envIdSlider);
+		Element_Disable(&this->buttonDayLight);
+		Element_Disable(&this->buttonFog);
+		Element_Disable(&this->comboBox);
+	} else {
+		Element_Enable(&this->envIdSlider);
+		Element_Enable(&this->buttonDayLight);
+		Element_Enable(&this->buttonFog);
+		Element_Enable(&this->comboBox);
+		Element_Slider_SetParams(&this->envIdSlider, 0, ClampMin(editCtx->scene.numEnv - 1, 1), "int");
+	}
+	
 	Element_RowY(0);
-	Element_Row(split, &this->buttonDayLight.rect, 0.5, &this->buttonFog.rect, 0.5);
+	Element_Row(split, &this->buttonDayLight, 0.5, &this->buttonFog, 0.5);
 	editCtx->scene.useDaylight = Element_Button(&editCtx->geo, split, &this->buttonDayLight);
 	editCtx->scene.useFog = Element_Button(&editCtx->geo, split, &this->buttonFog);
 	
-	this->envIdSlider.min = 0;
-	this->envIdSlider.max = ClampMin((f32)(editCtx->scene.numEnv) - 1.0f, 1.0f);
-	this->envIdSlider.isInt = true;
-	f32 w = Element_Text(&editCtx->geo, split, &this->envID) + SPLIT_ELEM_X_PADDING * 3;
+	Element_Row(split, &this->comboBox, 1.0);
+	Element_DisplayName(&editCtx->geo, split, &this->comboBox);
+	Element_Combo(&editCtx->geo, split, &this->comboBox);
 	
-	w /= split->rect.w;
-	Element_Row(split, &this->envID.rect, w, &this->envIdSlider.rect, 1.0 - w);
+	Element_Row(split, &this->envIdSlider, 1.0);
+	Element_DisplayName(&editCtx->geo, split, &this->envIdSlider);
 	editCtx->scene.setupEnv = Element_Slider(&editCtx->geo, split, &this->envIdSlider);
 }
 
