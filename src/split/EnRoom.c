@@ -43,17 +43,24 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 	
 	Element_RowY(0);
 	Element_Row(split, &this->buttonDayLight, 0.5, &this->buttonFog, 0.5);
-	editor->scene.useDaylight = Element_Button(&editor->geo, split, &this->buttonDayLight);
-	editor->scene.useFog = Element_Button(&editor->geo, split, &this->buttonFog);
+	editor->scene.useDaylight = Element_Button(&this->buttonDayLight);
+	editor->scene.useFog = Element_Button(&this->buttonFog);
+	
+	Element_Box(BOX_START);
 	
 	Element_Row(split, &this->comboBox, 1.0);
-	Element_DisplayName(&editor->geo, split, &this->comboBox);
-	Element_Combo(&editor->geo, split, &this->comboBox);
+	Element_DisplayName(&this->comboBox);
+	Element_Combo(&this->comboBox);
+	
+	Element_Box(BOX_START);
 	
 	Element_Row(split, &this->envID, 1.0);
-	Element_DisplayName(&editor->geo, split, &this->envID);
+	Element_DisplayName(&this->envID);
 	Element_Combo_SetPropEnum(&this->envID, editor->interface.propEndID);
-	editor->scene.setupEnv = Element_Combo(&editor->geo, split, &this->envID);
+	editor->scene.setupEnv = Element_Combo(&this->envID);
+	
+	Element_Box(BOX_END);
+	Element_Box(BOX_END);
 }
 
 void EnRoom_Draw(Editor* editor, EnRoom* this, Split* split) {

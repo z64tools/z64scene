@@ -1,4 +1,6 @@
-CFLAGS          = -Wall -Wno-switch -DEXTLIB=161 -DNDEBUG -I z64viewer/include/ -I src/
+include setup.mk
+
+CFLAGS          = -Wall -Wno-switch -DEXTLIB=200 -DNDEBUG -I z64viewer/include/ -I src/
 CFLAGS_MAIN     = -Wall -Wno-switch -DNDEBUG
 OPT_WIN32      := -Ofast
 OPT_LINUX      := -Ofast
@@ -36,7 +38,7 @@ $(shell mkdir -p bin/ $(foreach dir, \
 	$(dir $(SOURCE_O_WIN32)) \
 	, $(dir)))
 
-include $(C_INCLUDE_PATH)/ExtLib.mk
+include $(PATH_EXTLIB)/ExtLib.mk
 
 clean:
 	rm -f $(RELEASE_EXECUTABLE_LINUX)

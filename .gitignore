@@ -13,3 +13,4 @@ check.sh
 *.exe
 *.zroom
 *.zscene
+settings.mk
