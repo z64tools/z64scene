@@ -45,12 +45,18 @@ void* NewMtx() {
 	return Matrix_ToMtx(n64_graph_alloc(sizeof(Mtx)));
 }
 
+static Editor* sEditor;
+
 // # # # # # # # # # # # # # # # # # # # #
 // # EDITOR                              #
 // # # # # # # # # # # # # # # # # # # # #
 
+Editor* GetEditor(void) {
+	return sEditor;
+}
+
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
-	EditorContext* editor = GetUserCtx(window);
+	Editor* editor = GetUserCtx(window);
 	s32 getRoom = false;
 	
 	printf_info("DragNDrop: %d", count);
@@ -87,11 +93,13 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 	editor->state.drawBlock = false;
 }
 
-void Editor_Update(EditorContext* editor) {
+void Editor_Update(Editor* editor) {
+	sEditor = editor;
+	
 	GeoGrid_Update(&editor->geo);
 	Cursor_Update(&editor->cursor);
 }
 
-void Editor_Draw(EditorContext* editor) {
+void Editor_Draw(Editor* editor) {
 	GeoGrid_Draw(&editor->geo);
 }

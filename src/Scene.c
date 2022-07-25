@@ -702,9 +702,19 @@ static void Scene_CommandTransitionActorList(Scene* scene, Room* room, SceneCmd*
 }
 
 static void Scene_CommandLightSettingsList(Scene* scene, Room* room, SceneCmd* cmd) {
+	Editor* editor = GetEditor();
+	InterfaceContext* interface = &editor->interface;
+	
 	scene->numEnv = cmd->lightSettingList.num;
 	scene->env = SEGMENTED_TO_VIRTUAL(cmd->lightSettingList.segment);
 	Log("Light List: %08X", (u8*)scene->env - (u8*)scene->segment);
+	
+	if (interface->propEndID)
+		PropEnum_Free(interface->propEndID);
+	
+	interface->propEndID = PropEnum_Init(0, 0);
+	for (s32 i = 0; i < editor->scene.numEnv; i++)
+		PropEnum_Add(interface->propEndID, xFmt("Env %d", i));
 }
 
 static void Scene_CommandSkyboxSettings(Scene* scene, Room* room, SceneCmd* cmd) {

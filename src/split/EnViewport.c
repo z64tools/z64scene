@@ -1,31 +1,30 @@
-#include "Editor.h"
+#include "EnViewport.h"
 
-void EnSceneView_Draw_Empty(EditorContext*, EnSceneView*, Split*);
-void EnSceneView_Draw_3DViewport(EditorContext*, EnSceneView*, Split*);
+void EnViewport_Init(Editor* editor, EnViewport* this, Split* split);
+void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split);
+void EnViewport_Update(Editor* editor, EnViewport* this, Split* split);
+void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split);
+
+SplitTask gEnViewportTask = DefineTask("Viewport", EnViewport);
+
+void EnViewport_Draw_Empty(Editor*, EnViewport*, Split*);
+void EnViewport_Draw_3DViewport(Editor*, EnViewport*, Split*);
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
-void EnSceneView_Init(void* passArg, void* instance, Split* split) {
-	EditorContext* editCtx = passArg;
-	EnSceneView* this = instance;
-	
-	View_Init(&this->view, &editCtx->input);
+void EnViewport_Init(Editor* editor, EnViewport* this, Split* split) {
+	View_Init(&this->view, &editor->input);
 }
 
-void EnSceneView_Destroy(void* passArg, void* instance, Split* split) {
-	// EditorContext* editCtx = passArg;
-	// EnSceneView* this = instance;
-	
+void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split) {
 	split->bg.useCustomBG = false;
 }
 
-void EnSceneView_Update(void* passArg, void* instance, Split* split) {
-	EditorContext* editCtx = passArg;
-	EnSceneView* this = instance;
-	Input* inputCtx = &editCtx->input;
+void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
+	Input* inputCtx = &editor->input;
 	MouseInput* mouse = &inputCtx->mouse;
 	
-	if (editCtx->scene.segment == NULL)
+	if (editor->scene.segment == NULL)
 		return;
 	
 	if (split->mouseInHeader && mouse->click.press) {
@@ -57,38 +56,35 @@ void EnSceneView_Update(void* passArg, void* instance, Split* split) {
 		if (mouse->pos.x < xMin || mouse->pos.x > xMax) {
 			s16 newPos = WrapS(mouse->pos.x, xMin, xMax);
 			
-			Input_SetMousePos(&editCtx->input, newPos, MOUSE_KEEP_AXIS);
+			Input_SetMousePos(&editor->input, newPos, MOUSE_KEEP_AXIS);
 		}
 		
 		if (mouse->pos.y < yMin || mouse->pos.y > yMax) {
 			s16 newPos = WrapS(mouse->pos.y, yMin, yMax);
 			
-			Input_SetMousePos(&editCtx->input, MOUSE_KEEP_AXIS, newPos);
+			Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, newPos);
 		}
 	}
 	
-	if (editCtx->scene.segment) {
-		EnvLightSettings* env = editCtx->scene.env + editCtx->scene.setupEnv;
+	if (editor->scene.segment) {
+		EnvLightSettings* env = editor->scene.env + editor->scene.setupEnv;
 		memcpy(split->bg.color.c, env->fogColor, 3);
 		this->view.far = env->fogFar;
 	}
 }
 
-void EnSceneView_Draw(void* passArg, void* instance, Split* split) {
-	EditorContext* editCtx = passArg;
-	EnSceneView* this = instance;
-	
-	if (editCtx->scene.segment == NULL)
-		EnSceneView_Draw_Empty(editCtx, this, split);
+void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
+	if (editor->scene.segment == NULL)
+		EnViewport_Draw_Empty(editor, this, split);
 	else
-		EnSceneView_Draw_3DViewport(editCtx, this, split);
+		EnViewport_Draw_3DViewport(editor, this, split);
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
-void EnSceneView_Draw_Empty(EditorContext* editCtx, EnSceneView* this, Split* split) {
+void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 	const char* txt = "z64scene";
-	void* vg = editCtx->vg;
+	void* vg = editor->vg;
 	
 	split->bg.useCustomBG = false;
 	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
@@ -119,7 +115,7 @@ void EnSceneView_Draw_Empty(EditorContext* editCtx, EnSceneView* this, Split* sp
 	);
 }
 
-void EnSceneView_Draw_3DViewport(EditorContext* editCtx, EnSceneView* this, Split* split) {
+void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) {
 	Vec2s dim = {
 		split->rect.w,
 		split->rect.h
@@ -129,14 +125,14 @@ void EnSceneView_Draw_3DViewport(EditorContext* editCtx, EnSceneView* this, Spli
 	n64_graph_init();
 	
 	View_SetProjectionDimensions(&this->view, &dim);
-	View_Update(&this->view, &editCtx->input);
+	View_Update(&this->view, &editor->input);
 	
 	n64_setMatrix_model(&this->view.modelMtx);
 	n64_setMatrix_view(&this->view.viewMtx);
 	n64_setMatrix_projection(&this->view.projMtx);
 	
-	if (editCtx->scene.segment)
-		Scene_Draw(&editCtx->scene);
+	if (editor->scene.segment)
+		Scene_Draw(&editor->scene);
 	
 	// Matrix_Push(); {
 	// 	gxSPSegment(POLY_OPA_DISP++, 0x6, this->zobj[0].data);

@@ -1,4 +1,4 @@
-CFLAGS          = -Wall -Wno-switch -DEXTLIB=161 -DNDEBUG -I z64viewer/include/
+CFLAGS          = -Wall -Wno-switch -DEXTLIB=161 -DNDEBUG -I z64viewer/include/ -I src/
 CFLAGS_MAIN     = -Wall -Wno-switch -DNDEBUG
 OPT_WIN32      := -Ofast
 OPT_LINUX      := -Ofast
@@ -48,19 +48,23 @@ clean:
 # # # # # # # # # # # # # # # # # # # #
 # LINUX BUILD                         #
 # # # # # # # # # # # # # # # # # # # #
+
+bin/linux/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
 bin/linux/%.o: %.c %.h $(HEADER) $(ExtLib_H)
 bin/linux/%.o: %.c $(HEADER) $(ExtLib_H)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)]"
 	@gcc -c -o $@ $< $(OPT_LINUX) $(CFLAGS)
 
-$(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O)
+$(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O) $(ASSETS_O_LINUX)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
 	@gcc -o $@ $^ -lm -ldl -pthread $(OPT_LINUX) $(CFLAGS_MAIN) $(ExtGui_Linux_Flags)
 
 # # # # # # # # # # # # # # # # # # # #
 # WIN32 BUILD                         #
 # # # # # # # # # # # # # # # # # # # #
+
+bin/win32/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
 bin/win32/%.o: %.c %.h $(HEADER) $(ExtLib_H)
 bin/win32/%.o: %.c $(HEADER) $(ExtLib_H)
@@ -70,6 +74,6 @@ bin/win32/%.o: %.c $(HEADER) $(ExtLib_H)
 bin/win32/icon.o: src/icon.rc src/icon.ico
 	@i686-w64-mingw32.static-windres -o $@ $<
 
-$(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O)
+$(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O) $(ASSETS_O_WIN32)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
 	@i686-w64-mingw32.static-gcc -o $@ $^ -lm -pthread $(OPT_WIN32) $(CFLAGS_MAIN) -D_WIN32 $(ExtGui_Win32_Flags)
