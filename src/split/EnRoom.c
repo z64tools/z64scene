@@ -52,7 +52,7 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 	Element_DisplayName(&this->comboBox);
 	Element_Combo(&this->comboBox);
 	
-	Element_Box(BOX_START);
+	// Element_Box(BOX_START);
 	
 	Element_Row(split, &this->envID, 1.0);
 	Element_DisplayName(&this->envID);
@@ -60,7 +60,7 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 	editor->scene.setupEnv = Element_Combo(&this->envID);
 	
 	Element_Box(BOX_END);
-	Element_Box(BOX_END);
+	// Element_Box(BOX_END);
 }
 
 void EnRoom_Draw(Editor* editor, EnRoom* this, Split* split) {

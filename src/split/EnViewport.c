@@ -49,20 +49,24 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 		s16 xMin = split->edge[EDGE_L]->pos;
 		s16 xMax = split->edge[EDGE_R]->pos;
 		s16 yMin = split->edge[EDGE_T]->pos;
-		s16 yMax = split->edge[EDGE_B]->pos - SPLIT_BAR_HEIGHT;
+		s16 yMax = split->edge[EDGE_B]->pos;
 		
 		Cursor_ForceCursor(CURSOR_DEFAULT);
 		
 		if (mouse->pos.x < xMin || mouse->pos.x > xMax) {
-			s16 newPos = WrapS(mouse->pos.x, xMin, xMax);
+			s32 newPos = WrapS(mouse->pos.x, xMin, xMax);
 			
+			printf_info("MM   x%4d y%4d mp%4d", xMin, xMax, mouse->pos.x);
 			Input_SetMousePos(&editor->input, newPos, MOUSE_KEEP_AXIS);
+			printf_info("Jump x%4d y%4d np%4d", editor->input.mouse.jumpVelComp.x, editor->input.mouse.jumpVelComp.y, newPos);
 		}
 		
 		if (mouse->pos.y < yMin || mouse->pos.y > yMax) {
-			s16 newPos = WrapS(mouse->pos.y, yMin, yMax);
+			s32 newPos = WrapS(mouse->pos.y, yMin, yMax);
 			
+			printf_info("MM   x%4d y%4d mp%4d", yMin, yMax, mouse->pos.y);
 			Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, newPos);
+			printf_info("Jump x%4d y%4d np%4d", editor->input.mouse.jumpVelComp.x, editor->input.mouse.jumpVelComp.y, newPos);
 		}
 	}
 	
