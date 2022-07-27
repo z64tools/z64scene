@@ -5,6 +5,7 @@
 
 typedef struct {
 	ViewContext view;
+	SkelAnime   skelAnime;
 	s8 headerClick;
 } EnViewport;
 

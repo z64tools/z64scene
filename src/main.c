@@ -71,10 +71,8 @@ int main(void) {
 	
 	GeoGrid_AddSplit(&editor->geo, "RoomTab", &size)->id = TAB_ROOM;
 	
-	ThreadLock_Init();
+	Editor_Init(editor);
 	Interface_Main(&editor->app);
-	
-	ThreadLock_Free();
 	
 	return 0;
 }

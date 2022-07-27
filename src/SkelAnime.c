@@ -5,6 +5,7 @@ static u32 gS;
 
 void SkelAnime_Init(MemFile* memFile, SkelAnime* this, u32 skeleton, u32 animation) {
 	this->memFile = memFile;
+	gSegment[6] = memFile->data;
 	
 	Log("%08X", skeleton);
 	SkeletonHeader* skel = SEGMENTED_TO_VIRTUAL(skeleton);
@@ -133,19 +134,19 @@ static void SkelAnime_Limb(u32 skelSeg, u8 limbId, Mtx** mtx, Vec3s* jointTable)
 	Matrix_Push();
 	
 	if (limbId == 0) {
-		Vec3_Copy(pos, jointTable[0]);
-		Vec3_Copy(rot, jointTable[1]);
+		pos = jointTable[0];
+		rot = jointTable[1];
 	} else {
-		Vec3_Copy(pos, limb->jointPos);
+		pos = limb->jointPos;
 		
 		for (s32 i = 0; i < 3; i++)
 			SwapBE(pos.axis[i]);
 		
 		limbId++;
-		Vec3_Copy(rot, jointTable[limbId]);
+		rot = jointTable[limbId];
 	}
 	
-	Vec3_Copy(rpos, pos);
+	veccpy(&rpos, &pos);
 	
 	Matrix_TranslateRotateZYX(&rpos, &rot);
 	

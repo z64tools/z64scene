@@ -12,8 +12,13 @@ void EnViewport_Draw_3DViewport(Editor*, EnViewport*, Split*);
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
+// MemFile gNora;
+
 void EnViewport_Init(Editor* editor, EnViewport* this, Split* split) {
 	View_Init(&this->view, &editor->input);
+	
+	// MemFile_LoadFile(&gNora, "Nora.zobj");
+	// SkelAnime_Init(&gNora, &this->skelAnime, 0x0600D978, 0x0600EF44);
 }
 
 void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split) {
@@ -125,6 +130,8 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 		split->rect.h
 	};
 	
+	Log("Draw");
+	
 	split->bg.useCustomBG = true;
 	n64_graph_init();
 	
@@ -139,7 +146,7 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 		Scene_Draw(&editor->scene);
 	
 	// Matrix_Push(); {
-	// 	gxSPSegment(POLY_OPA_DISP++, 0x6, this->zobj[0].data);
+	// 	gxSPSegment(POLY_OPA_DISP++, 0x6, gNora.data);
 	//
 	// 	gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
 	//
@@ -166,4 +173,6 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	
 	gSPEndDisplayList(POLY_OPA_DISP++);
 	n64_draw(gPolyOpaHead);
+	
+	Log("OK");
 }

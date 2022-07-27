@@ -5,9 +5,10 @@
 
 typedef struct {
 	ElCombo  envID;
-	ElButton buttonDayLight;
+	ElButton buttonIndoor;
 	ElButton buttonFog;
 	ElCombo  comboBox;
+	ElSlider slider;
 } EnRoom;
 
 extern SplitTask gEnRoomTask;
