@@ -47,30 +47,18 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 			this->view.cameraControl = true;
 	}
 	
-	// Cursor Wrapping
+// Cursor Wrapping
 	if (this->view.setCamMove && this->view.cameraControl) {
 		s16 xMin = split->edge[EDGE_L]->pos;
 		s16 xMax = split->edge[EDGE_R]->pos;
 		s16 yMin = split->edge[EDGE_T]->pos;
 		s16 yMax = split->edge[EDGE_B]->pos;
 		
-		Cursor_ForceCursor(CURSOR_DEFAULT);
+		if (mouse->pos.x < xMin || mouse->pos.x > xMax)
+			Input_SetMousePos(&editor->input, WrapS(mouse->pos.x, xMin, xMax), MOUSE_KEEP_AXIS);
 		
-		if (mouse->pos.x < xMin || mouse->pos.x > xMax) {
-			s32 newPos = WrapS(mouse->pos.x, xMin, xMax);
-			
-			printf_info("MM   x%4d y%4d mp%4d", xMin, xMax, mouse->pos.x);
-			Input_SetMousePos(&editor->input, newPos, MOUSE_KEEP_AXIS);
-			printf_info("Jump x%4d y%4d np%4d", editor->input.mouse.jumpVelComp.x, editor->input.mouse.jumpVelComp.y, newPos);
-		}
-		
-		if (mouse->pos.y < yMin || mouse->pos.y > yMax) {
-			s32 newPos = WrapS(mouse->pos.y, yMin, yMax);
-			
-			printf_info("MM   x%4d y%4d mp%4d", yMin, yMax, mouse->pos.y);
-			Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, newPos);
-			printf_info("Jump x%4d y%4d np%4d", editor->input.mouse.jumpVelComp.x, editor->input.mouse.jumpVelComp.y, newPos);
-		}
+		if (mouse->pos.y < yMin || mouse->pos.y > yMax)
+			Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(mouse->pos.y, yMin, yMax));
 	}
 	
 	if (editor->scene.segment) {
@@ -81,28 +69,29 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 }
 
 static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
+	nvgFontSize(vg, 12);
 	nvgFontFace(vg, "dejavu");
 	nvgFontBlur(vg, 1.0f);
 	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 	for (s32 i = 0; i < 2; i++)
-		nvgText(vg, 4, 4 + SPLIT_ELEM_Y_PADDING * row, msg, NULL);
+		nvgText(vg, 8, 8 + SPLIT_ELEM_Y_PADDING * row, msg, NULL);
 	
 	nvgFontBlur(vg, 0.0f);
 	nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
-	nvgText(vg, 4, 4 + SPLIT_ELEM_Y_PADDING * row, msg, NULL);
+	nvgText(vg, 8, 8 + SPLIT_ELEM_Y_PADDING * row, msg, NULL);
 	
 	nvgFontFace(vg, "dejavu-bold");
 	nvgFontBlur(vg, 1.0f);
 	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 	for (s32 i = 0; i < 2; i++)
-		nvgText(vg, 4 + 120, 4 + SPLIT_ELEM_Y_PADDING * row, xFmt(fmt, val), NULL);
+		nvgText(vg, 8 + 120, 8 + SPLIT_ELEM_Y_PADDING * row, xFmt(fmt, val), NULL);
 	
 	nvgFontBlur(vg, 0.0f);
 	if (dangerValue)
 		nvgFillColor(vg, nvgHSLA(SQ(Clamp(val / dangerValue, 0, 1)) * 0.5f + 0.5f, 0.6, 0.6, 225));
 	else
 		nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
-	nvgText(vg, 4 + 120, 4 + SPLIT_ELEM_Y_PADDING * row, xFmt(fmt, val), NULL);
+	nvgText(vg, 8 + 120, 8 + SPLIT_ELEM_Y_PADDING * row, xFmt(fmt, val), NULL);
 }
 
 void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
