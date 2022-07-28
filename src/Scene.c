@@ -126,6 +126,7 @@ void Scene_Draw(Scene* this) {
 	
 	gSegment[2] = this->segment;
 	gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
+	gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
 	
 	if (prevEnv != env) {
 		printf_hex("EnvLight", env, sizeof(*env), 0);
@@ -158,6 +159,8 @@ void Room_Draw(Scene* scene, Room* room) {
 	n64_set_onlyGeoLayer(GEOLAYER_ALL);
 	gSPDisplayList(POLY_OPA_DISP++, gSetupDList(0x19));
 	gDPSetEnvColor(POLY_OPA_DISP++, 0x80, 0x80, 0x80, 0x80);
+	gSPDisplayList(POLY_XLU_DISP++, gSetupDList(0x19));
+	gDPSetEnvColor(POLY_XLU_DISP++, 0x80, 0x80, 0x80, 0x80);
 	
 	Matrix_Push();
 	Matrix_Translate(0, 0, 0, MTXMODE_NEW);
@@ -165,8 +168,10 @@ void Room_Draw(Scene* scene, Room* room) {
 	gSegment[3] = room->segment;
 	Log("Room Segment %X", room->segment);
 	gSPSegment(POLY_OPA_DISP++, 0x03, room->segment);
+	gSPSegment(POLY_XLU_DISP++, 0x03, room->segment);
 	
 	gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+	gSPMatrix(POLY_XLU_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
 	
 	if (header->base.type == 0) {
 		PolygonType0* polygon = &header->polygon0;

@@ -11,6 +11,7 @@ INCBIN(gCursor_ArrowH_, "assets/arrow_horizontal.ia16");
 INCBIN(gCursor_ArrowV_, "assets/arrow_vertical.ia16");
 INCBIN(gCursor_Crosshair_, "assets/crosshair.ia16");
 INCBIN(gCursor_Empty_, "assets/empty.ia16");
+INCBIN(gAppIcon_, "assets/icon32.rgba");
 
 typedef enum {
 	TAB_NULL,
@@ -28,6 +29,9 @@ SplitTask* gTaskTable[] = {
 
 int main(void) {
 	Editor* editor;
+	GLFWimage icon = {
+		128, 128, (void*)gAppIcon_Data
+	};
 	
 	Log_Init();
 	printf_WinFix();
@@ -72,6 +76,7 @@ int main(void) {
 	GeoGrid_AddSplit(&editor->geo, "Room", &size)->id = TAB_ROOM;
 	
 	// GeoGrid_Debug(true);
+	glfwSetWindowIcon(editor->app.window, 1, &icon);
 	Editor_Init(editor);
 	Interface_Main(&editor->app);
 	

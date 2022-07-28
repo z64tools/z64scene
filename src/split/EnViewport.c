@@ -200,10 +200,17 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	
 	Profiler_I(0);
 	gSPEndDisplayList(POLY_OPA_DISP++);
+	gSPEndDisplayList(POLY_XLU_DISP++);
+	
+	Assert(POLY_OPA_DISP < &gPolyOpaHead[4096]);
+	Assert(POLY_XLU_DISP < &gPolyXluHead[4096]);
+	
+	Log("OPA");
 	n64_draw(gPolyOpaHead);
 	
-	// gSPEndDisplayList(POLY_XLU_DISP++);
-	// n64_draw(gPolyXluHead);
+	Log("XLU");
+	n64_draw(gPolyXluHead);
+	
 	Profiler_O(0);
 	
 	Log("OK");
