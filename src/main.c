@@ -69,8 +69,9 @@ int main(void) {
 		editor->geo.workRect.h
 	};
 	
-	GeoGrid_AddSplit(&editor->geo, "RoomTab", &size)->id = TAB_ROOM;
+	GeoGrid_AddSplit(&editor->geo, "Room", &size)->id = TAB_ROOM;
 	
+	// GeoGrid_Debug(true);
 	Editor_Init(editor);
 	Interface_Main(&editor->app);
 	

@@ -61,7 +61,6 @@ static void Editor_TriCallback(s32 flag, const Vec3f* v0, const Vec3f* v1, const
 	
 	if (flag == 0) {
 		editor->triCount = 0;
-		printf_info("Reset");
 		
 		return;
 	}
@@ -78,7 +77,7 @@ static void Editor_TriCallback(s32 flag, const Vec3f* v0, const Vec3f* v1, const
 
 void Editor_Init(Editor* editor) {
 	sEditor = editor;
-	n64_set_triangle_buffer_callback((void*)Editor_TriCallback);
+	// n64_set_triangle_buffer_callback((void*)Editor_TriCallback);
 	editor->triHead = SysAlloc(sizeof(Triangle) * 4096);
 }
 

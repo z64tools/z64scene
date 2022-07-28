@@ -13,6 +13,8 @@ void Scene_LoadScene(Scene* this, const char* file) {
 	MemFile_LoadFile(&this->file, file);
 	this->segment = this->file.data;
 	
+	// n64_freeTexelCache();
+	n64_clearShaderCache();
 	Scene_ExecuteCommands(this, NULL);
 	
 	Calloc(this->room, sizeof(Room*) * 255);

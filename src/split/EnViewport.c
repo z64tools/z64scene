@@ -42,11 +42,9 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	
 	if (this->view.setCamMove == false) {
 		this->view.cameraControl = false;
-		if (split->blockMouse == false) {
-			if (split->mouseInSplit && !split->mouseInHeader && !this->headerClick) {
-				this->view.cameraControl = true;
-			}
-		}
+		
+		if (split->blockMouse == false && split->mouseInSplit)
+			this->view.cameraControl = true;
 	}
 	
 	// Cursor Wrapping
@@ -82,11 +80,49 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	}
 }
 
+static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
+	nvgFontFace(vg, "dejavu");
+	nvgFontBlur(vg, 1.0f);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	for (s32 i = 0; i < 2; i++)
+		nvgText(vg, 4, 4 + SPLIT_ELEM_Y_PADDING * row, msg, NULL);
+	
+	nvgFontBlur(vg, 0.0f);
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
+	nvgText(vg, 4, 4 + SPLIT_ELEM_Y_PADDING * row, msg, NULL);
+	
+	nvgFontFace(vg, "dejavu-bold");
+	nvgFontBlur(vg, 1.0f);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	for (s32 i = 0; i < 2; i++)
+		nvgText(vg, 4 + 120, 4 + SPLIT_ELEM_Y_PADDING * row, xFmt(fmt, val), NULL);
+	
+	nvgFontBlur(vg, 0.0f);
+	if (dangerValue)
+		nvgFillColor(vg, nvgHSLA(SQ(Clamp(val / dangerValue, 0, 1)) * 0.5f + 0.5f, 0.6, 0.6, 225));
+	else
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
+	nvgText(vg, 4 + 120, 4 + SPLIT_ELEM_Y_PADDING * row, xFmt(fmt, val), NULL);
+}
+
 void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
+	void* vg = editor->vg;
+	
+	Profiler_O(4);
+	Profiler_I(4);
+	
 	if (editor->scene.segment == NULL)
 		EnViewport_Draw_Empty(editor, this, split);
 	else
 		EnViewport_Draw_3DViewport(editor, this, split);
+	
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+	nvgFontSize(vg, 15);
+	nvgTextLetterSpacing(vg, 0.0f);
+	
+	ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(4), 0);
+	ProfilerText(vg, 1, "N64 Render:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
+	ProfilerText(vg, 2, "View:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */
@@ -135,8 +171,10 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	split->bg.useCustomBG = true;
 	n64_graph_init();
 	
+	Profiler_I(1);
 	View_SetProjectionDimensions(&this->view, &dim);
 	View_Update(&this->view, &editor->input);
+	Profiler_O(1);
 	
 	n64_setMatrix_model(&this->view.modelMtx);
 	n64_setMatrix_view(&this->view.viewMtx);
@@ -171,8 +209,13 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	// 	gSPDisplayList(POLY_OPA_DISP++, 0x060017C0);
 	// } Matrix_Pop();
 	
+	Profiler_I(0);
 	gSPEndDisplayList(POLY_OPA_DISP++);
 	n64_draw(gPolyOpaHead);
+	
+	// gSPEndDisplayList(POLY_XLU_DISP++);
+	// n64_draw(gPolyXluHead);
+	Profiler_O(0);
 	
 	Log("OK");
 }
