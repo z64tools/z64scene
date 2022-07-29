@@ -112,6 +112,7 @@ void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
 	ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(4), 0);
 	ProfilerText(vg, 1, "N64 Render:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
 	ProfilerText(vg, 2, "View:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
+	ProfilerText(vg, 3, "Delta:", "%.2f", gDeltaTime, 0);
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */

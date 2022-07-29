@@ -16,13 +16,13 @@ void EnRoom_Init(Editor* editor, EnRoom* this, Split* split) {
 	Element_Name(&this->buttonFog, "Fog");
 	Element_Name(&this->comboBox, "Keep");
 	Element_Name(&this->envID, "EnvID");
-	Element_Name(&this->slider, "Slider");
+	Element_Name(&this->slider, "FPS");
 	
 	Element_Button_SetValue(&this->buttonIndoor, true, false);
 	Element_Button_SetValue(&this->buttonFog, true, true);
 	
-	Element_Slider_SetParams(&this->slider, 0, 25, "int");
-	Element_Slider_SetValue(&this->slider, 0);
+	Element_Slider_SetParams(&this->slider, 5, 120, "int");
+	Element_Slider_SetValue(&this->slider, 120);
 }
 
 void EnRoom_Destroy(Editor* editor, EnRoom* this, Split* split) {
@@ -67,7 +67,7 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 	
 	Element_Row(split, &this->slider, 1.0);
 	Element_DisplayName(&this->slider);
-	Element_Slider(&this->slider);
+	gFPS = Element_Slider(&this->slider);
 }
 
 void EnRoom_Draw(Editor* editor, EnRoom* this, Split* split) {

@@ -14,3 +14,5 @@ check.sh
 *.zroom
 *.zscene
 settings.mk
+asm_linux.sh
+asm_win32.sh

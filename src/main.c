@@ -43,8 +43,6 @@ int main(void) {
 	editor->geo.passArg = editor;
 	editor->geo.taskTable = gTaskTable;
 	
-	printf_hex("ArrowD", gCursor_ArrowU_Data, 0x80, 0);
-	
 	Theme_Init(0);
 	GeoGrid_Init(&editor->geo, &editor->app.winDim, &editor->input, editor->vg);
 	Cursor_Init(&editor->cursor, &editor->app);
