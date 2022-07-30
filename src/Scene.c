@@ -13,8 +13,7 @@ void Scene_LoadScene(Scene* this, const char* file) {
 	MemFile_LoadFile(&this->file, file);
 	this->segment = this->file.data;
 	
-	// n64_freeTexelCache();
-	n64_clearShaderCache();
+	n64_clearCache();
 	Scene_ExecuteCommands(this, NULL);
 	
 	Calloc(this->room, sizeof(Room*) * 255);
@@ -44,7 +43,7 @@ void Scene_Free(Scene* this) {
 	Free(this->room);
 	this->numRoom = 0;
 	memset(this, 0, sizeof(*this));
-	n64_clearShaderCache();
+	n64_clearCache();
 }
 
 void Scene_ExecuteCommands(Scene* this, Room* room) {
@@ -68,6 +67,7 @@ void Scene_ExecuteCommands(Scene* this, Room* room) {
 		if (cmd->base.code == SCENE_CMD_ID_ALTERNATE_HEADER_LIST && this->setupHeader != 0) {
 		} else if (cmd->base.code < SCENE_CMD_ID_MAX) {
 			Log("[%02X] %08X [%s]", cmd->base.code, (u8*)cmd - segment, sSceneCmdHandlers_Name[cmd->base.code]);
+			
 			if (sSceneCmdHandlers[cmd->base.code])
 				sSceneCmdHandlers[cmd->base.code](this, room, cmd);
 			

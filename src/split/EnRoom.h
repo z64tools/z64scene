@@ -8,6 +8,7 @@ typedef struct {
 	ElButton buttonIndoor;
 	ElButton buttonFog;
 	ElCombo  comboBox;
+	ElButton buttonFPS;
 	ElSlider slider;
 } EnRoom;
 

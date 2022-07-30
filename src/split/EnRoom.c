@@ -16,8 +16,10 @@ void EnRoom_Init(Editor* editor, EnRoom* this, Split* split) {
 	Element_Name(&this->buttonFog, "Fog");
 	Element_Name(&this->comboBox, "Keep");
 	Element_Name(&this->envID, "EnvID");
+	Element_Name(&this->buttonFPS, "Limit FPS");
 	Element_Name(&this->slider, "FPS");
 	
+	Element_Button_SetValue(&this->buttonFPS, true, gLimitFPS);
 	Element_Button_SetValue(&this->buttonIndoor, true, false);
 	Element_Button_SetValue(&this->buttonFog, true, true);
 	
@@ -65,9 +67,10 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 	Element_Box(BOX_END);
 	// Element_Box(BOX_END);
 	
-	Element_Row(split, &this->slider, 1.0);
-	Element_DisplayName(&this->slider);
-	gFPS = Element_Slider(&this->slider);
+	Element_Row(split, &this->buttonFPS, 0.5);
+	gLimitFPS = Element_Button(&this->buttonFPS);
+	// Element_Condition(&this->slider, gLimitFPS);
+	// gFPS = Element_Slider(&this->slider);
 }
 
 void EnRoom_Draw(Editor* editor, EnRoom* this, Split* split) {

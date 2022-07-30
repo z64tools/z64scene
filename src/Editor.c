@@ -85,7 +85,6 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 	Editor* editor = GetUserCtx(window);
 	s32 getRoom = false;
 	
-	printf_info("DragNDrop: %d", count);
 	editor->state.drawBlock = true;
 	
 	for (s32 i = 0; i < count; i++) {
@@ -95,8 +94,9 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 			if (editor->scene.segment)
 				Scene_Free(&editor->scene);
 			
-			printf_info_align("DragLoad", file);
+			Time_Start(10);
 			Scene_LoadScene(&editor->scene, file);
+			printf_info("SceneLoad: %.2fms", Time_Get(10) * 1000);
 			getRoom = true;
 			break;
 		}
@@ -104,17 +104,19 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 	
 	if (!getRoom)
 		return;
+	s32 roomCount = 0;
 	
+	Time_Start(10);
 	for (s32 i = 0; i < count; i++) {
 		char* file = item[i];
 		
 		if (StrEndCase(file, ".zroom") || StrEndCase(file, ".zmap")) {
-			if (editor->scene.segment) {
-				printf_info_align("DragLoad", file);
+			roomCount++;
+			if (editor->scene.segment)
 				Scene_LoadRoom(&editor->scene, file);
-			}
 		}
 	}
+	printf_info("RoomLoad: [%d] %.2fms", roomCount, Time_Get(10) * 1000);
 	
 	editor->state.drawBlock = false;
 }

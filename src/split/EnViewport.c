@@ -74,24 +74,24 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
 	nvgFontBlur(vg, 1.0f);
 	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 	for (s32 i = 0; i < 2; i++)
-		nvgText(vg, 8, 8 + SPLIT_ELEM_Y_PADDING * row, msg, NULL);
+		nvgText(vg, 8, 8 + SPLIT_TEXT_H * row, msg, NULL);
 	
 	nvgFontBlur(vg, 0.0f);
 	nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
-	nvgText(vg, 8, 8 + SPLIT_ELEM_Y_PADDING * row, msg, NULL);
+	nvgText(vg, 8, 8 + SPLIT_TEXT_H * row, msg, NULL);
 	
 	nvgFontFace(vg, "dejavu-bold");
 	nvgFontBlur(vg, 1.0f);
 	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 	for (s32 i = 0; i < 2; i++)
-		nvgText(vg, 8 + 120, 8 + SPLIT_ELEM_Y_PADDING * row, xFmt(fmt, val), NULL);
+		nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
 	
 	nvgFontBlur(vg, 0.0f);
 	if (dangerValue)
 		nvgFillColor(vg, nvgHSLA(SQ(Clamp(val / dangerValue, 0, 1)) * 0.5f + 0.5f, 0.6, 0.6, 225));
 	else
 		nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
-	nvgText(vg, 8 + 120, 8 + SPLIT_ELEM_Y_PADDING * row, xFmt(fmt, val), NULL);
+	nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
 }
 
 void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
@@ -113,6 +113,7 @@ void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
 	ProfilerText(vg, 1, "N64 Render:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
 	ProfilerText(vg, 2, "View:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
 	ProfilerText(vg, 3, "Delta:", "%.2f", gDeltaTime, 0);
+	ProfilerText(vg, 4, "PixelRatio:", "%.2f", gPixelRatio, 0);
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */
