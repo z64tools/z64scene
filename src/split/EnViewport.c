@@ -30,6 +30,7 @@ static void Gizmo_Draw(Editor* editor, ViewContext* view, Vec3f pos) {
 			Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
 			Matrix_Push(); {
 				f32 scale = Math_Vec3f_DistXYZ(pos, view->currentCamera->eye) * 0.000015;
+				scale = 0.01; // testing depth
 				Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
 				
 				if (i == 0)
@@ -247,23 +248,27 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_draw(gPolyXluHead);
 	n64_set_culling(editor->render.culling);
 	
+	// Draw gizmo at mouse position in 3D space
 	{
-		GLfloat x = 0.5f; // TODO mouse coordinates
-		GLfloat y = 0.5f;
+		Input* inputCtx = &editor->input;
+		MouseInput* mouse = &inputCtx->mouse;
+		GLfloat x = mouse->pos.x;
+		GLfloat y = dim.y - mouse->pos.y + 27; // TODO GeoGrid offsets
 		GLfloat z;
-		float result[3];
+		Vec3f result;
 		int viewport[] = { 0, 0, dim.x, dim.y };
 		MtxF modelview;
 		
 		Matrix_MtxFMtxFMult(&this->view.modelMtx, &this->view.viewMtx, &modelview);
 		
 		glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
-		glhUnProjectf(x, y, z, (float*)&modelview, (float*)&this->view.projMtx, viewport, result);
+		glhUnProjectf(x, y, z, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&result);
+		
+		gPolyGuiDisp = gPolyGuiHead;
+		Gizmo_Draw(editor, &this->view, result);
+		gSPEndDisplayList(POLY_GUI_DISP++);
+		n64_draw(gPolyGuiHead);
 	}
-	gPolyGuiDisp = gPolyGuiHead;
-	Gizmo_Draw(editor, &this->view, Math_Vec3f_New(0, 0, 0));
-	gSPEndDisplayList(POLY_GUI_DISP++);
-	n64_draw(gPolyGuiHead);
 	
 	Profiler_O(0);
 }
