@@ -195,16 +195,19 @@ void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 Vec3f gRayStart = { 0 };
 Vec3f gRayEnd = { 0 };
 Vec3f gGizmoPos = { 0 };
-bool gIsRaycasting = false;
 float gRayNearest = FLT_MAX;
 
-void TmpLineTriangleTest(Vec3f PosA, Vec3f PosB, Vec3f PosC, Vec3f NormA, Vec3f NormB, Vec3f NormC) {
-	if (!gIsRaycasting)
-		return;
+static void Raycast(const void* posA, const void* posB, const void* posC, const void* normA, const void* normB, const void* normC) {
+	const Vec3f* PosA = posA;
+	const Vec3f* PosB = posB;
+	const Vec3f* PosC = posC;
+	const Vec3f* NormA = normA;
+	const Vec3f* NormB = normB;
+	const Vec3f* NormC = normC;
 	Vec3f intersection;
 	Triangle tri = {
-		.v = { PosA, PosB, PosC },
-		.n = { NormA, NormB, NormC }
+		.v = { *PosA, *PosB, *PosC },
+		.n = { *NormA, *NormB, *NormC }
 	};
 	
 	float t;
@@ -298,7 +301,7 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 #endif
 	
 	Profiler_I(0);
-	gIsRaycasting = true;
+	n64_set_triangleCallbackFunc(Raycast); // enable raycasting
 	gSPEndDisplayList(POLY_OPA_DISP++);
 	gSPEndDisplayList(POLY_XLU_DISP++);
 	Assert(POLY_OPA_DISP < &gPolyOpaHead[4096]);
@@ -306,7 +309,7 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_draw(gPolyOpaHead);
 	n64_draw(gPolyXluHead);
 	n64_set_culling(editor->render.culling);
-	gIsRaycasting = false;
+	n64_set_triangleCallbackFunc(0); // disable raycasting
 	
 	// Draw gizmo
 	gPolyGuiDisp = gPolyGuiHead;
