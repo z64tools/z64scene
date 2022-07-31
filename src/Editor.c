@@ -55,29 +55,8 @@ Editor* GetEditor(void) {
 	return sEditor;
 }
 
-static void Editor_TriCallback(s32 flag, const Vec3f* v0, const Vec3f* v1, const Vec3f* v2, const Vec3f* n0, const Vec3f* n1, const Vec3f* n2) {
-	Editor* editor = GetEditor();
-	Triangle* tri;
-	
-	if (flag == 0) {
-		editor->triCount = 0;
-		
-		return;
-	}
-	
-	tri = &editor->triHead[editor->triCount++];
-	memcpy(&tri->v[0], v0, sizeof(Vec3f));
-	memcpy(&tri->v[1], v1, sizeof(Vec3f));
-	memcpy(&tri->v[2], v2, sizeof(Vec3f));
-	memcpy(&tri->n[0], n0, sizeof(Vec3f));
-	memcpy(&tri->n[1], n1, sizeof(Vec3f));
-	memcpy(&tri->n[2], n2, sizeof(Vec3f));
-}
-
 void Editor_Init(Editor* editor) {
 	sEditor = editor;
-	// n64_set_triangle_buffer_callback((void*)Editor_TriCallback);
-	// editor->triHead = SysAlloc(sizeof(Triangle) * 4096);
 	editor->render.culling = true;
 }
 

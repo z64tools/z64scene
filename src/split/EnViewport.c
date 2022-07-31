@@ -209,10 +209,9 @@ static void Raycast(void* userData, const void* posA, const void* posB, const vo
 	Vec3f intersection;
 	Triangle tri = {
 		.v = { *PosA, *PosB, *PosC },
-		.n = { *NormA, *NormB, *NormC }
 	};
 	
-	if (Col3D_LineVsTriangle(&this->rayLine, &tri, &intersection, false))
+	if (Col3D_LineVsTriangle(&this->rayLine, &tri, &intersection, true, false))
 		this->gizmoPos = intersection;
 }
 
