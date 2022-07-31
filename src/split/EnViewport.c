@@ -1,4 +1,5 @@
 #include "EnViewport.h"
+#include <UnProject.h>
 
 void EnViewport_Init(Editor* editor, EnViewport* this, Split* split);
 void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split);
@@ -209,6 +210,20 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_draw(gPolyOpaHead);
 	n64_draw(gPolyXluHead);
 	n64_set_culling(editor->render.culling);
+	
+	{
+		GLfloat x = 0.5f; // TODO mouse coordinates
+		GLfloat y = 0.5f;
+		GLfloat z;
+		float result[3];
+		int viewport[] = { 0, 0, dim.x, dim.y };
+		MtxF modelview;
+		
+		Matrix_MtxFMtxFMult(&this->view.modelMtx, &this->view.viewMtx, &modelview);
+		
+		glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
+		glhUnProjectf(x, y, z, (float*)&modelview, (float*)&this->view.projMtx, viewport, result);
+	}
 	
 	Profiler_O(0);
 }
