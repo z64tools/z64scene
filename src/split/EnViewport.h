@@ -7,6 +7,9 @@ typedef struct {
 	ViewContext view;
 	SkelAnime   skelAnime;
 	s8 headerClick;
+	
+	RayLine rayLine;
+	Vec3f   gizmoPos;
 } EnViewport;
 
 extern SplitTask gEnViewportTask;

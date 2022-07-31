@@ -1,5 +1,4 @@
 #include "EnViewport.h"
-#include <UnProject.h>
 #include <float.h>
 
 #define INCBIN_PREFIX
@@ -16,7 +15,9 @@ SplitTask gEnViewportTask = DefineTask("Viewport", EnViewport);
 void EnViewport_Draw_Empty(Editor*, EnViewport*, Split*);
 void EnViewport_Draw_3DViewport(Editor*, EnViewport*, Split*);
 
-/* ───────────────────────────────────────────────────────────────────────── */
+// # # # # # # # # # # # # # # # # # # # #
+// #                                     #
+// # # # # # # # # # # # # # # # # # # # #
 
 // MemFile gNora;
 
@@ -157,7 +158,9 @@ void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
 	ProfilerText(vg, 3, "Delta:", "%.2f", gDeltaTime, 0);
 }
 
-/* ───────────────────────────────────────────────────────────────────────── */
+// # # # # # # # # # # # # # # # # # # # #
+// #                                     #
+// # # # # # # # # # # # # # # # # # # # #
 
 void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 	const char* txt = "z64scene";
@@ -192,13 +195,11 @@ void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 	);
 }
 
-Vec3f gRayStart = { 0 };
-Vec3f gRayEnd = { 0 };
-Vec3f gGizmoPos = { 0 };
 float gRayNearest = FLT_MAX;
 bool gFaceCullEnabled = true;
 
-static void Raycast(const void* posA, const void* posB, const void* posC, const void* normA, const void* normB, const void* normC) {
+static void Raycast(void* userData, const void* posA, const void* posB, const void* posC, const void* normA, const void* normB, const void* normC) {
+	EnViewport* this = userData;
 	const Vec3f* PosA = posA;
 	const Vec3f* PosB = posB;
 	const Vec3f* PosC = posC;
@@ -211,23 +212,8 @@ static void Raycast(const void* posA, const void* posB, const void* posC, const 
 		.n = { *NormA, *NormB, *NormC }
 	};
 	
-	float t;
-	bool isBackface;
-	if (Col3D_LineVsTriangle(gRayStart, gRayEnd, &tri, &intersection, &t, &isBackface))
-	{
-		if (gFaceCullEnabled)
-		{
-			if (isBackface)
-				return;
-			
-			// TODO support front-face culling as well, etc
-		}
-		if (t < gRayNearest)
-		{
-			gGizmoPos = intersection;
-			gRayNearest = t;
-		}
-	}
+	if (Col3D_LineVsTriangle(&this->rayLine, &tri, &intersection, false))
+		this->gizmoPos = intersection;
 }
 
 void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) {
@@ -235,7 +221,6 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 		split->rect.w,
 		split->rect.h
 	};
-	Vec3f gizmoPos = gGizmoPos;
 	
 	Log("Draw");
 	split->bg.useCustomBG = true;
@@ -244,39 +229,12 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	Profiler_I(1);
 	View_SetProjectionDimensions(&this->view, &dim);
 	View_Update(&this->view, &editor->input);
+	View_Raycast(&this->view, split->mousePos, split->dispRect, &this->rayLine);
 	Profiler_O(1);
 	
 	n64_setMatrix_model(&this->view.modelMtx);
 	n64_setMatrix_view(&this->view.viewMtx);
 	n64_setMatrix_projection(&this->view.projMtx);
-	
-	// Prepare raycast
-	{
-		Vec3f rayStart = { 0 };
-		Vec3f rayEnd = { 0 };
-		int viewport[] = { 0, 0, split->dispRect.w, split->dispRect.h };
-		MtxF modelview;
-		//MtxF view = this->view.modelMtx;
-		Vec2s mouse = split->mousePos;
-		mouse.y = split->dispRect.h - mouse.y;
-		
-		Matrix_MtxFMtxFMult(&this->view.modelMtx, &this->view.viewMtx, &modelview);
-		
-		//rayStart = (Vec3f){ view.xw * 1000, view.yw * 1000, view.zw * 1000 };
-		
-		glhUnProjectf(mouse.x, mouse.y, 0, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&rayStart);
-		glhUnProjectf(mouse.x, mouse.y, 1, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&rayEnd);
-		
-		gRayStart = rayStart;
-		gRayEnd = rayEnd;
-		gRayNearest = FLT_MAX;
-	}
-	
-#if 0
-	// Prepare raycast
-	gRayStart = this->view.currentCamera->eye;
-	gRayEnd = this->view.currentCamera->at;
-#endif
 	
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
@@ -310,7 +268,7 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 #endif
 	
 	Profiler_I(0);
-	n64_set_triangleCallbackFunc(Raycast); // enable raycasting
+	n64_set_triangleCallbackFunc(this, Raycast); // enable raycasting
 	gSPEndDisplayList(POLY_OPA_DISP++);
 	gSPEndDisplayList(POLY_XLU_DISP++);
 	Assert(POLY_OPA_DISP < &gPolyOpaHead[4096]);
@@ -318,11 +276,11 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_draw(gPolyOpaHead);
 	n64_draw(gPolyXluHead);
 	n64_set_culling(editor->render.culling);
-	n64_set_triangleCallbackFunc(0); // disable raycasting
+	n64_set_triangleCallbackFunc(0, 0); // disable raycasting
 	
 	// Draw gizmo
 	gPolyGuiDisp = gPolyGuiHead;
-	Gizmo_Draw(editor, &this->view, gizmoPos);
+	Gizmo_Draw(editor, &this->view, this->gizmoPos);
 	gSPEndDisplayList(POLY_GUI_DISP++);
 	n64_draw(gPolyGuiHead);
 	
