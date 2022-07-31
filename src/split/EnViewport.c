@@ -196,6 +196,7 @@ Vec3f gRayStart = { 0 };
 Vec3f gRayEnd = { 0 };
 Vec3f gGizmoPos = { 0 };
 float gRayNearest = FLT_MAX;
+bool gFaceCullEnabled = true;
 
 static void Raycast(const void* posA, const void* posB, const void* posC, const void* normA, const void* normB, const void* normC) {
 	const Vec3f* PosA = posA;
@@ -211,8 +212,16 @@ static void Raycast(const void* posA, const void* posB, const void* posC, const 
 	};
 	
 	float t;
-	if (Col3D_LineVsTriangle(gRayStart, gRayEnd, &tri, &intersection, &t))
+	bool isBackface;
+	if (Col3D_LineVsTriangle(gRayStart, gRayEnd, &tri, &intersection, &t, &isBackface))
 	{
+		if (gFaceCullEnabled)
+		{
+			if (isBackface)
+				return;
+			
+			// TODO support front-face culling as well, etc
+		}
 		if (t < gRayNearest)
 		{
 			gGizmoPos = intersection;
