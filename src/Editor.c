@@ -64,7 +64,6 @@ static void Editor_TriCallback(s32 flag, const Vec3f* v0, const Vec3f* v1, const
 		
 		return;
 	}
-	Log("Copy Triangle %d / 4096", editor->triCount);
 	
 	tri = &editor->triHead[editor->triCount++];
 	memcpy(&tri->v[0], v0, sizeof(Vec3f));

@@ -55,7 +55,7 @@ int main(void) {
 	printf_SetPrefix("");
 	Theme_Init(0);
 	
-	Calloc(editor, sizeof(Editor));
+	CallocX(editor);
 	editor->vg = Interface_Init("z64scene", &editor->app, &editor->input, editor, (void*)Editor_Update, (void*)Editor_Draw, Editor_DropCallback, 980, 480, 4);
 	
 	editor->geo.passArg = editor;

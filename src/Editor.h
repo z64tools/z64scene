@@ -24,7 +24,7 @@ typedef struct {
 } InterfaceContext;
 
 typedef struct {
-	u32 culling : 1;
+	u32   culling : 1;
 } RenderState;
 
 typedef struct Editor {

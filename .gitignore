@@ -16,3 +16,11 @@ check.sh
 settings.mk
 asm_linux.sh
 asm_win32.sh
+*.anim
+*.blend
+*.blend1
+*.mtlex
+*.objex
+*.skel
+*.txt
+!assets/3D/*.zobj
