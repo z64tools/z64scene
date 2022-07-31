@@ -250,19 +250,15 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	
 	// Draw gizmo at mouse position in 3D space
 	{
-		Input* inputCtx = &editor->input;
-		MouseInput* mouse = &inputCtx->mouse;
-		GLfloat x = mouse->pos.x;
-		GLfloat y = dim.y - mouse->pos.y + 27; // TODO GeoGrid offsets
-		GLfloat z;
 		Vec3f result;
-		int viewport[] = { 0, 0, dim.x, dim.y };
+		int viewport[] = { 0, 0, split->dispRect.w, split->dispRect.h };
 		MtxF modelview;
+		Vec3f pos = Math_Vec3f_New(split->mousePos.x, split->dispRect.h - split->mousePos.y, 0);
 		
 		Matrix_MtxFMtxFMult(&this->view.modelMtx, &this->view.viewMtx, &modelview);
 		
-		glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
-		glhUnProjectf(x, y, z, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&result);
+		glReadPixels(pos.x, pos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pos.z);
+		glhUnProjectf(pos.x, pos.y, pos.z, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&result);
 		
 		gPolyGuiDisp = gPolyGuiHead;
 		Gizmo_Draw(editor, &this->view, result);
