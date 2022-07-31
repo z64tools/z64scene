@@ -1,5 +1,9 @@
 #include "EnViewport.h"
 
+#define INCBIN_PREFIX
+#include <incbin.h>
+INCBIN(gGizmo_, "assets/3D/Gizmo.zobj");
+
 void EnViewport_Init(Editor* editor, EnViewport* this, Split* split);
 void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split);
 void EnViewport_Update(Editor* editor, EnViewport* this, Split* split);
@@ -13,6 +17,38 @@ void EnViewport_Draw_3DViewport(Editor*, EnViewport*, Split*);
 /* ───────────────────────────────────────────────────────────────────────── */
 
 // MemFile gNora;
+
+static Gfx gPolyGuiHead[1024];
+static Gfx* gPolyGuiDisp;
+#define POLY_GUI_DISP gPolyGuiDisp
+
+static void Gizmo_Draw(Editor* editor, ViewContext* view, Vec3f pos) {
+	for (s32 i = 0; i < 3; i++) {
+		gSPSegment(POLY_GUI_DISP++, 6, (void*)gGizmo_Data);
+		Matrix_Push(); {
+			Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
+			Matrix_Push(); {
+				f32 scale = Math_Vec3f_DistXYZ(pos, view->currentCamera->eye) * 0.000015;
+				Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
+				
+				if (i == 0)
+					gDPSetEnvColor(POLY_GUI_DISP++, 0xFF, 0x40, 0x40, 0xA0);
+				
+				if (i == 1) {
+					gDPSetEnvColor(POLY_GUI_DISP++, 0x40, 0xFF, 0x40, 0xA0);
+					Matrix_RotateX_s(DegToBin(90), MTXMODE_APPLY);
+				}
+				if (i == 2) {
+					gDPSetEnvColor(POLY_GUI_DISP++, 0x40, 0x40, 0xFF, 0xA0);
+					Matrix_RotateZ_s(DegToBin(90), MTXMODE_APPLY);
+				}
+				
+				gSPMatrix(POLY_GUI_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+				gSPDisplayList(POLY_GUI_DISP++, 0x060011E0);
+			} Matrix_Pop();
+		} Matrix_Pop();
+	}
+}
 
 void EnViewport_Init(Editor* editor, EnViewport* this, Split* split) {
 	View_Init(&this->view, &editor->input);
@@ -209,6 +245,11 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_draw(gPolyOpaHead);
 	n64_draw(gPolyXluHead);
 	n64_set_culling(editor->render.culling);
+	
+	gPolyGuiDisp = gPolyGuiHead;
+	Gizmo_Draw(editor, &this->view, Math_Vec3f_New(0, 0, 0));
+	gSPEndDisplayList(POLY_GUI_DISP++);
+	n64_draw(gPolyGuiHead);
 	
 	Profiler_O(0);
 }
