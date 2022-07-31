@@ -23,6 +23,10 @@ typedef struct {
 	PropEnum* propEndID;
 } InterfaceContext;
 
+typedef struct {
+	u32 culling : 1;
+} RenderState;
+
 typedef struct Editor {
 	AppInfo app;
 	void*   vg;
@@ -30,14 +34,9 @@ typedef struct Editor {
 	Cursor  cursor;
 	Input   input;
 	Scene   scene;
-	
-	struct {
-		u32 drawBlock : 1;
-	} state;
-	
+	RenderState render;
 	InterfaceContext interface;
-	
-	Triangle* triHead;
+	Triangle*   triHead;
 	u32 triCount;
 } Editor;
 

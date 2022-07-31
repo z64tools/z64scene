@@ -9,7 +9,9 @@ typedef struct {
 	ElButton buttonFog;
 	ElCombo  comboBox;
 	ElButton buttonFPS;
-	ElSlider slider;
+	ElButton buttonCulling;
+	
+	ElButton killScene;
 } EnRoom;
 
 extern SplitTask gEnRoomTask;

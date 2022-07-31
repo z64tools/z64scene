@@ -78,14 +78,13 @@ static void Editor_TriCallback(s32 flag, const Vec3f* v0, const Vec3f* v1, const
 void Editor_Init(Editor* editor) {
 	sEditor = editor;
 	// n64_set_triangle_buffer_callback((void*)Editor_TriCallback);
-	editor->triHead = SysAlloc(sizeof(Triangle) * 4096);
+	// editor->triHead = SysAlloc(sizeof(Triangle) * 4096);
+	editor->render.culling = true;
 }
 
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 	Editor* editor = GetUserCtx(window);
 	s32 getRoom = false;
-	
-	editor->state.drawBlock = true;
 	
 	for (s32 i = 0; i < count; i++) {
 		char* file = item[i];
@@ -117,8 +116,6 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 		}
 	}
 	printf_info("RoomLoad: [%d] %.2fms", roomCount, Time_Get(10) * 1000);
-	
-	editor->state.drawBlock = false;
 }
 
 void Editor_Update(Editor* editor) {

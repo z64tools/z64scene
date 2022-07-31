@@ -14,7 +14,6 @@ INCBIN(gCursor_Empty_, "assets/empty.ia16");
 INCBIN(gAppIcon_, "assets/icon32.rgba");
 
 typedef enum {
-	TAB_NULL,
 	TAB_ROOM,
 	TAB_3DVP,
 } SplitEnum;
@@ -22,9 +21,27 @@ typedef enum {
 #include <split/EnRoom.h>
 #include <split/EnViewport.h>
 
+void nothing() {
+}
+
+void draw_nothing(Editor* e, void* instance, Split* split) {
+	Element_Header(split, split->taskCombo, 128);
+	Element_Combo(split->taskCombo);
+}
+
+SplitTask empty = {
+	.taskName = "Empty",
+	.init = nothing,
+	.destroy = nothing,
+	.update = nothing,
+	.draw = (void*)draw_nothing,
+	.size = 30
+};
+
 SplitTask* gTaskTable[] = {
 	[TAB_ROOM] = &gEnRoomTask,
 	[TAB_3DVP] = &gEnViewportTask,
+	&empty
 };
 
 int main(void) {
@@ -36,15 +53,15 @@ int main(void) {
 	Log_Init();
 	printf_WinFix();
 	printf_SetPrefix("");
+	Theme_Init(0);
 	
 	Calloc(editor, sizeof(Editor));
 	editor->vg = Interface_Init("z64scene", &editor->app, &editor->input, editor, (void*)Editor_Update, (void*)Editor_Draw, Editor_DropCallback, 980, 480, 4);
 	
 	editor->geo.passArg = editor;
-	editor->geo.taskTable = gTaskTable;
-	
-	Theme_Init(0);
 	GeoGrid_Init(&editor->geo, &editor->app.winDim, &editor->input, editor->vg);
+	GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrayCount(gTaskTable));
+	
 	Cursor_Init(&editor->cursor, &editor->app);
 	Cursor_CreateCursor(CURSOR_ARROW_U, gCursor_ArrowU_Data, 24, 12, 12);
 	Cursor_CreateCursor(CURSOR_ARROW_D, gCursor_ArrowD_Data, 24, 12, 12);
@@ -62,7 +79,7 @@ int main(void) {
 		editor->geo.workRect.h
 	};
 	
-	GeoGrid_AddSplit(&editor->geo, "Viewport", &size)->id = TAB_3DVP;
+	GeoGrid_AddSplit(&editor->geo, "__split_L__", &size, TAB_3DVP);
 	
 	size = (Rectf32) {
 		size.w,
@@ -71,7 +88,7 @@ int main(void) {
 		editor->geo.workRect.h
 	};
 	
-	GeoGrid_AddSplit(&editor->geo, "Room", &size)->id = TAB_ROOM;
+	GeoGrid_AddSplit(&editor->geo, "__split_R__", &size, TAB_ROOM);
 	
 	// GeoGrid_Debug(true);
 	glfwSetWindowIcon(editor->app.window, 1, &icon);

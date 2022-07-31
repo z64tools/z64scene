@@ -29,6 +29,9 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	Input* inputCtx = &editor->input;
 	MouseInput* mouse = &inputCtx->mouse;
 	
+	Element_Header(split, split->taskCombo, 128);
+	Element_Combo(split->taskCombo);
+	
 	if (editor->scene.segment == NULL)
 		return;
 	
@@ -113,7 +116,6 @@ void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
 	ProfilerText(vg, 1, "N64 Render:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
 	ProfilerText(vg, 2, "View:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
 	ProfilerText(vg, 3, "Delta:", "%.2f", gDeltaTime, 0);
-	ProfilerText(vg, 4, "PixelRatio:", "%.2f", gPixelRatio, 0);
 }
 
 /* ───────────────────────────────────────────────────────────────────────── */
@@ -158,7 +160,6 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	};
 	
 	Log("Draw");
-	
 	split->bg.useCustomBG = true;
 	n64_graph_init();
 	
@@ -203,17 +204,11 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	Profiler_I(0);
 	gSPEndDisplayList(POLY_OPA_DISP++);
 	gSPEndDisplayList(POLY_XLU_DISP++);
-	
 	Assert(POLY_OPA_DISP < &gPolyOpaHead[4096]);
 	Assert(POLY_XLU_DISP < &gPolyXluHead[4096]);
-	
-	Log("OPA");
 	n64_draw(gPolyOpaHead);
-	
-	Log("XLU");
 	n64_draw(gPolyXluHead);
+	n64_set_culling(editor->render.culling);
 	
 	Profiler_O(0);
-	
-	Log("OK");
 }

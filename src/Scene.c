@@ -13,6 +13,7 @@ void Scene_LoadScene(Scene* this, const char* file) {
 	MemFile_LoadFile(&this->file, file);
 	this->segment = this->file.data;
 	
+	n64_set_culling(false);
 	n64_clearCache();
 	Scene_ExecuteCommands(this, NULL);
 	
