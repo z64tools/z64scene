@@ -1,5 +1,6 @@
 #include "EnViewport.h"
 #include <UnProject.h>
+#include <float.h>
 
 #define INCBIN_PREFIX
 #include <incbin.h>
@@ -194,16 +195,27 @@ void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 Vec3f gRayStart = { 0 };
 Vec3f gRayEnd = { 0 };
 Vec3f gGizmoPos = { 0 };
+bool gIsRaycasting = false;
+float gRayNearest = FLT_MAX;
 
 void TmpLineTriangleTest(Vec3f PosA, Vec3f PosB, Vec3f PosC, Vec3f NormA, Vec3f NormB, Vec3f NormC) {
+	if (!gIsRaycasting)
+		return;
 	Vec3f intersection;
 	Triangle tri = {
 		.v = { PosA, PosB, PosC },
 		.n = { NormA, NormB, NormC }
 	};
 	
-	if (Col3D_LineVsTriangle(gRayStart, gRayEnd, &tri, &intersection))
-		gGizmoPos = intersection;
+	float t;
+	if (Col3D_LineVsTriangle(gRayStart, gRayEnd, &tri, &intersection, &t))
+	{
+		if (t < gRayNearest)
+		{
+			gGizmoPos = intersection;
+			gRayNearest = t;
+		}
+	}
 }
 
 void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) {
@@ -226,7 +238,7 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_setMatrix_view(&this->view.viewMtx);
 	n64_setMatrix_projection(&this->view.projMtx);
 	
-#if 0
+	// Prepare raycast
 	{
 		Vec3f rayStart = { 0 };
 		Vec3f rayEnd = { 0 };
@@ -243,18 +255,16 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 		glhUnProjectf(mouse.x, mouse.y, 0, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&rayStart);
 		glhUnProjectf(mouse.x, mouse.y, 1, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&rayEnd);
 		
-		// test: ray 300 units up from world origin (should hit Fire Temple floor)
-		rayStart = (Vec3f) { 0 };
-		rayEnd = (Vec3f) { 0, 300, 0 };
-		
 		gRayStart = rayStart;
 		gRayEnd = rayEnd;
+		gRayNearest = FLT_MAX;
 	}
-#endif
 	
+#if 0
 	// Prepare raycast
 	gRayStart = this->view.currentCamera->eye;
 	gRayEnd = this->view.currentCamera->at;
+#endif
 	
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
@@ -288,6 +298,7 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 #endif
 	
 	Profiler_I(0);
+	gIsRaycasting = true;
 	gSPEndDisplayList(POLY_OPA_DISP++);
 	gSPEndDisplayList(POLY_XLU_DISP++);
 	Assert(POLY_OPA_DISP < &gPolyOpaHead[4096]);
@@ -295,7 +306,9 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_draw(gPolyOpaHead);
 	n64_draw(gPolyXluHead);
 	n64_set_culling(editor->render.culling);
+	gIsRaycasting = false;
 	
+	// Draw gizmo
 	gPolyGuiDisp = gPolyGuiHead;
 	Gizmo_Draw(editor, &this->view, gizmoPos);
 	gSPEndDisplayList(POLY_GUI_DISP++);
