@@ -191,11 +191,30 @@ void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 	);
 }
 
+Vec3f gRayStart = {0};
+Vec3f gRayEnd = {0};
+Vec3f gGizmoPos = {0};
+void TmpLineTriangleTest(Vec3f PosA, Vec3f PosB, Vec3f PosC, Vec3f NormA, Vec3f NormB, Vec3f NormC) {
+	LineF line = {gRayStart, gRayEnd};
+	Vec3f intersection;
+	Triangle tri[1] = {
+		{
+			.v = { PosA, PosB, PosC }
+			, .n = { NormA, NormB, NormC }
+		}
+	};
+	if (Col3D_LineVsPoly(line, tri, 1, &intersection))
+	{
+		fprintf(stderr, "line collision wow at {%f, %f, %f}\n", intersection.x, intersection.y, intersection.z);
+		gGizmoPos = intersection;
+	}
+}
 void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) {
 	Vec2s dim = {
 		split->rect.w,
 		split->rect.h
 	};
+	Vec3f gizmoPos = gGizmoPos;
 	
 	Log("Draw");
 	split->bg.useCustomBG = true;
@@ -209,6 +228,31 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_setMatrix_model(&this->view.modelMtx);
 	n64_setMatrix_view(&this->view.viewMtx);
 	n64_setMatrix_projection(&this->view.projMtx);
+	
+	// Prepare raycast
+	{
+		Vec3f rayStart = {0};
+		Vec3f rayEnd = {0};
+		int viewport[] = { 0, 0, split->dispRect.w, split->dispRect.h };
+		MtxF modelview;
+		//MtxF view = this->view.modelMtx;
+		Vec2s mouse = split->mousePos;
+		mouse.y = split->dispRect.h - mouse.y;
+		
+		Matrix_MtxFMtxFMult(&this->view.modelMtx, &this->view.viewMtx, &modelview);
+		
+		//rayStart = (Vec3f){ view.xw * 1000, view.yw * 1000, view.zw * 1000 };
+		
+		glhUnProjectf(mouse.x, mouse.y, 0, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&rayStart);
+		glhUnProjectf(mouse.x, mouse.y, 1, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&rayEnd);
+		
+		// test: ray 300 units up from world origin (should hit Fire Temple floor)
+		rayStart = (Vec3f){0};
+		rayEnd = (Vec3f){0, 300, 0};
+		
+		gRayStart = rayStart;
+		gRayEnd = rayEnd;
+	}
 	
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
@@ -250,7 +294,8 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	
 	// Draw gizmo at mouse position in 3D space
 	{
-		Vec3f result;
+		// old code using depth buffer magic
+		/*Vec3f result;
 		int viewport[] = { 0, 0, split->dispRect.w, split->dispRect.h };
 		MtxF modelview;
 		Vec3f pos = Math_Vec3f_New(split->mousePos.x, split->dispRect.h - split->mousePos.y, 0);
@@ -259,9 +304,10 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 		
 		glReadPixels(pos.x, pos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pos.z);
 		glhUnProjectf(pos.x, pos.y, pos.z, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&result);
+		gizmoPos = result;*/
 		
 		gPolyGuiDisp = gPolyGuiHead;
-		Gizmo_Draw(editor, &this->view, result);
+		Gizmo_Draw(editor, &this->view, gizmoPos);
 		gSPEndDisplayList(POLY_GUI_DISP++);
 		n64_draw(gPolyGuiHead);
 	}
