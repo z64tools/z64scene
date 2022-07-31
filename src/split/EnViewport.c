@@ -191,24 +191,21 @@ void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 	);
 }
 
-Vec3f gRayStart = {0};
-Vec3f gRayEnd = {0};
-Vec3f gGizmoPos = {0};
+Vec3f gRayStart = { 0 };
+Vec3f gRayEnd = { 0 };
+Vec3f gGizmoPos = { 0 };
+
 void TmpLineTriangleTest(Vec3f PosA, Vec3f PosB, Vec3f PosC, Vec3f NormA, Vec3f NormB, Vec3f NormC) {
-	LineF line = {gRayStart, gRayEnd};
 	Vec3f intersection;
-	Triangle tri[1] = {
-		{
-			.v = { PosA, PosB, PosC }
-			, .n = { NormA, NormB, NormC }
-		}
+	Triangle tri = {
+		.v = { PosA, PosB, PosC },
+		.n = { NormA, NormB, NormC }
 	};
-	if (Col3D_LineVsPoly(line, tri, 1, &intersection))
-	{
-		fprintf(stderr, "line collision wow at {%f, %f, %f}\n", intersection.x, intersection.y, intersection.z);
+	
+	if (Col3D_LineVsTriangle(gRayStart, gRayEnd, &tri, &intersection))
 		gGizmoPos = intersection;
-	}
 }
+
 void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) {
 	Vec2s dim = {
 		split->rect.w,
@@ -229,10 +226,10 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_setMatrix_view(&this->view.viewMtx);
 	n64_setMatrix_projection(&this->view.projMtx);
 	
-	// Prepare raycast
+#if 0
 	{
-		Vec3f rayStart = {0};
-		Vec3f rayEnd = {0};
+		Vec3f rayStart = { 0 };
+		Vec3f rayEnd = { 0 };
 		int viewport[] = { 0, 0, split->dispRect.w, split->dispRect.h };
 		MtxF modelview;
 		//MtxF view = this->view.modelMtx;
@@ -247,41 +244,48 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 		glhUnProjectf(mouse.x, mouse.y, 1, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&rayEnd);
 		
 		// test: ray 300 units up from world origin (should hit Fire Temple floor)
-		rayStart = (Vec3f){0};
-		rayEnd = (Vec3f){0, 300, 0};
+		rayStart = (Vec3f) { 0 };
+		rayEnd = (Vec3f) { 0, 300, 0 };
 		
 		gRayStart = rayStart;
 		gRayEnd = rayEnd;
 	}
+#endif
+	
+	// Prepare raycast
+	gRayStart = this->view.currentCamera->eye;
+	gRayEnd = this->view.currentCamera->at;
 	
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
 	
-	// Matrix_Push(); {
-	// 	gxSPSegment(POLY_OPA_DISP++, 0x6, gNora.data);
-	//
-	// 	gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
-	//
-	// 	Matrix_Scale(0.01f, 0.01f, 0.01f, MTXMODE_APPLY);
-	// 	Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
-	//
-	// 	gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-	//
-	// 	SkelAnime_Update(&this->skelAnime);
-	// 	SkelAnime_Draw(&this->skelAnime, SKELANIME_FLEX);
-	// } Matrix_Pop();
-	//
-	// Matrix_Push(); {
-	// 	gSegment[6] = this->zobj[1].data;
-	// 	gSPSegment(POLY_OPA_DISP++, 0x6, this->zobj[1].data);
-	//
-	// 	Matrix_Scale(0.01f, 0.01f, 0.01f, MTXMODE_APPLY);
-	// 	gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-	//
-	// 	gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
-	//
-	// 	gSPDisplayList(POLY_OPA_DISP++, 0x060017C0);
-	// } Matrix_Pop();
+#if 0
+	Matrix_Push(); {
+		gxSPSegment(POLY_OPA_DISP++, 0x6, gNora.data);
+		
+		gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
+		
+		Matrix_Scale(0.01f, 0.01f, 0.01f, MTXMODE_APPLY);
+		Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
+		
+		gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+		
+		SkelAnime_Update(&this->skelAnime);
+		SkelAnime_Draw(&this->skelAnime, SKELANIME_FLEX);
+	} Matrix_Pop();
+	
+	Matrix_Push(); {
+		gSegment[6] = this->zobj[1].data;
+		gSPSegment(POLY_OPA_DISP++, 0x6, this->zobj[1].data);
+		
+		Matrix_Scale(0.01f, 0.01f, 0.01f, MTXMODE_APPLY);
+		gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+		
+		gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
+		
+		gSPDisplayList(POLY_OPA_DISP++, 0x060017C0);
+	} Matrix_Pop();
+#endif
 	
 	Profiler_I(0);
 	gSPEndDisplayList(POLY_OPA_DISP++);
@@ -292,25 +296,10 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_draw(gPolyXluHead);
 	n64_set_culling(editor->render.culling);
 	
-	// Draw gizmo at mouse position in 3D space
-	{
-		// old code using depth buffer magic
-		/*Vec3f result;
-		int viewport[] = { 0, 0, split->dispRect.w, split->dispRect.h };
-		MtxF modelview;
-		Vec3f pos = Math_Vec3f_New(split->mousePos.x, split->dispRect.h - split->mousePos.y, 0);
-		
-		Matrix_MtxFMtxFMult(&this->view.modelMtx, &this->view.viewMtx, &modelview);
-		
-		glReadPixels(pos.x, pos.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pos.z);
-		glhUnProjectf(pos.x, pos.y, pos.z, (float*)&modelview, (float*)&this->view.projMtx, viewport, (float*)&result);
-		gizmoPos = result;*/
-		
-		gPolyGuiDisp = gPolyGuiHead;
-		Gizmo_Draw(editor, &this->view, gizmoPos);
-		gSPEndDisplayList(POLY_GUI_DISP++);
-		n64_draw(gPolyGuiHead);
-	}
+	gPolyGuiDisp = gPolyGuiHead;
+	Gizmo_Draw(editor, &this->view, gizmoPos);
+	gSPEndDisplayList(POLY_GUI_DISP++);
+	n64_draw(gPolyGuiHead);
 	
 	Profiler_O(0);
 }
