@@ -13,7 +13,6 @@ void Scene_LoadScene(Scene* this, const char* file) {
 	MemFile_LoadFile(&this->file, file);
 	this->segment = this->file.data;
 	
-	n64_set_culling(false);
 	n64_clearCache();
 	Scene_ExecuteCommands(this, NULL);
 	
@@ -39,6 +38,7 @@ void Scene_Free(Scene* this) {
 	MemFile_Free(&this->file);
 	for (s32 i = 0; i < this->numRoom; i++) {
 		MemFile_Free(&this->room[i]->file);
+		TriBuffer_Free(&this->room[i]->triBuf);
 		Free(this->room[i]);
 	}
 	Free(this->room);
@@ -147,6 +147,53 @@ void Scene_Draw(Scene* this) {
 	prevEnv = env;
 }
 
+static void Room_BuildTriBuf(void* userData, const n64_triangleCallbackData* triData) {
+	Room* this = userData;
+	Triangle* tri = &this->triBuf.head[this->triBuf.num];
+	
+	memcpy(tri->v, triData, sizeof(float) * 3 * 3);
+	tri->cullBackface = triData->cullBackface;
+	tri->cullFrontface = triData->cullFrontface;
+	this->triBuf.num++;
+	
+	if (this->triBuf.num == this->triBuf.max)
+		TriBuffer_Realloc(&this->triBuf);
+}
+
+void Scene_CacheBuild(Scene* this) {
+	MtxF mtx;
+	
+	Matrix_Push();
+	Matrix_Scale(1.0, 1.0, 1.0, MTXMODE_NEW);
+	Matrix_Get(&mtx);
+	Matrix_Pop();
+	
+	n64_setMatrix_model(&mtx);
+	n64_setMatrix_view(&mtx);
+	n64_setMatrix_projection(&mtx);
+	n64_set_culling(false);
+	
+	for (s32 i = 0; i < this->numRoom; i++) {
+		Room* room = this->room[i];
+		TriBuffer_Alloc(&room->triBuf, 256);
+		
+		n64_graph_init();
+		gSegment[2] = this->segment;
+		gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
+		gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
+		
+		Log("Room %d", i);
+		Room_Draw(this, room);
+		
+		n64_set_triangleCallbackFunc(room, Room_BuildTriBuf);
+		n64_draw_buffers();
+		
+		printf_info("Room%d TriCount: %d", i, room->triBuf.num);
+	}
+	
+	n64_set_triangleCallbackFunc(0, 0);
+}
+
 // # # # # # # # # # # # # # # # # # # # #
 // # Room                                #
 // # # # # # # # # # # # # # # # # # # # #
@@ -167,17 +214,19 @@ void Room_Draw(Scene* scene, Room* room) {
 	Matrix_Translate(0, 0, 0, MTXMODE_NEW);
 	
 	gSegment[3] = room->segment;
-	Log("Room Segment %X", room->segment);
 	gSPSegment(POLY_OPA_DISP++, 0x03, room->segment);
 	gSPSegment(POLY_XLU_DISP++, 0x03, room->segment);
-	
 	gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
 	gSPMatrix(POLY_XLU_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
 	
+	Matrix_Pop();
+	
+	Log("Type: %d", header->base.type);
 	if (header->base.type == 0) {
 		PolygonType0* polygon = &header->polygon0;
 		PolygonDlist* polygonDlist = SEGMENTED_TO_VIRTUAL(polygon->start);
 		
+		Log("PolyNum %d", polygon->num);
 		for (s32 i = 0; i < polygon->num; i++, polygonDlist++) {
 			if (polygonDlist->opa != 0)
 				gSPDisplayList(POLY_OPA_DISP++, polygonDlist->opa);
@@ -189,6 +238,7 @@ void Room_Draw(Scene* scene, Room* room) {
 		PolygonType2* polygon = &header->polygon2;
 		PolygonDlist2* polygonDlist = SEGMENTED_TO_VIRTUAL(polygon->start);
 		
+		Log("PolyNum %d", polygon->num);
 		for (s32 i = 0; i < polygon->num; i++, polygonDlist++) {
 			if (polygonDlist->opa != 0)
 				gSPDisplayList(POLY_OPA_DISP++, polygonDlist->opa);
@@ -197,8 +247,6 @@ void Room_Draw(Scene* scene, Room* room) {
 				gSPDisplayList(POLY_XLU_DISP++, polygonDlist->xlu);
 		}
 	}
-	
-	Matrix_Pop();
 }
 
 // # # # # # # # # # # # # # # # # # # # #

@@ -1,4 +1,5 @@
 #include <ExtLib.h>
+#include <ExtGui/Collision.h>
 
 typedef struct StructBE {
 	/* 0x00 */ u8  ambientColor[3];
@@ -12,9 +13,10 @@ typedef struct StructBE {
 } EnvLightSettings;
 
 typedef struct {
-	void*   segment;
-	MemFile file;
-	void*   mesh;
+	void*     segment;
+	MemFile   file;
+	void*     mesh;
+	TriBuffer triBuf;
 } Room;
 
 typedef struct {
@@ -31,6 +33,8 @@ typedef struct {
 	
 	u8  setupHeader;
 	struct Split* split;
+	
+	bool loadFlag;
 } Scene;
 
 void Scene_LoadScene(Scene* this, const char* file);
@@ -38,6 +42,7 @@ void Scene_LoadRoom(Scene* this, const char* file);
 void Scene_Free(Scene* this);
 void Scene_ExecuteCommands(Scene* this, Room* room);
 void Scene_Draw(Scene* this);
+void Scene_CacheBuild(Scene* this);
 
 void Room_Draw(Scene* scene, Room* room);
 

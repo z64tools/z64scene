@@ -24,7 +24,7 @@ typedef struct {
 } InterfaceContext;
 
 typedef struct {
-	u32   culling : 1;
+	u32 culling : 1;
 } RenderState;
 
 typedef struct Editor {
@@ -36,8 +36,6 @@ typedef struct Editor {
 	Scene   scene;
 	RenderState render;
 	InterfaceContext interface;
-	Triangle*   triHead;
-	u32 triCount;
 } Editor;
 
 ActorEntry* Actor_Add(Room* room, u16 id, u16 param, Vec3s pos, Vec3s rot);

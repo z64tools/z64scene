@@ -4,7 +4,7 @@
 #include <Editor.h>
 
 typedef struct {
-	ViewContext view;
+	View3D view;
 	SkelAnime   skelAnime;
 	s8 headerClick;
 	

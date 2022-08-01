@@ -25,7 +25,7 @@ static Gfx gPolyGuiHead[1024];
 static Gfx* gPolyGuiDisp;
 #define POLY_GUI_DISP gPolyGuiDisp
 
-static void Gizmo_Draw(Editor* editor, ViewContext* view, Vec3f pos) {
+static void Gizmo_Draw(Editor* editor, View3D* view, Vec3f pos) {
 	for (s32 i = 0; i < 3; i++) {
 		gSPSegment(POLY_GUI_DISP++, 6, (void*)gGizmo_Data);
 		Matrix_Push(); {
@@ -75,13 +75,11 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	if (editor->scene.segment == NULL)
 		return;
 	
-	if (split->mouseInHeader && mouse->click.press) {
+	if (split->mouseInHeader && mouse->click.press)
 		this->headerClick = true;
-	}
 	
-	if (this->headerClick == true && mouse->cursorAction == false) {
+	if (this->headerClick == true && mouse->cursorAction == false)
 		this->headerClick = false;
-	}
 	
 	if (this->view.setCamMove == false) {
 		this->view.cameraControl = false;
@@ -90,7 +88,26 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 			this->view.cameraControl = true;
 	}
 	
-// Cursor Wrapping
+	if (mouse->clickMid.press && Input_GetKey(inputCtx, KEY_LEFT_ALT)->hold) {
+		Vec3f o;
+		s32 r = 0;
+		
+		printf_info("RAY");
+		for (s32 i = 0; i < editor->scene.numRoom; i++) {
+			Vec3f p;
+			if (Col3D_LineVsTriBuffer(&this->rayLine, &editor->scene.room[i]->triBuf, &p)) {
+				r = true;
+				o = p;
+			}
+		}
+		
+		if (r) {
+			printf_info("Success");
+			View_MoveTo(&this->view, o);
+		}
+	}
+	
+	// Cursor Wrapping
 	if (this->view.setCamMove && this->view.cameraControl) {
 		s16 xMin = split->edge[EDGE_L]->pos;
 		s16 xMax = split->edge[EDGE_R]->pos;
@@ -154,7 +171,7 @@ void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
 	
 	ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(4), 0);
 	ProfilerText(vg, 1, "N64 Render:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
-	ProfilerText(vg, 2, "View:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
+	ProfilerText(vg, 2, "Col3D:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
 	ProfilerText(vg, 3, "Delta:", "%.2f", gDeltaTime, 0);
 }
 
@@ -195,41 +212,20 @@ void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 	);
 }
 
-float gRayNearest = FLT_MAX;
-bool gFaceCullEnabled = true;
-
-static void Raycast(void* userData, const void* posA, const void* posB, const void* posC, const void* normA, const void* normB, const void* normC) {
-	EnViewport* this = userData;
-	const Vec3f* PosA = posA;
-	const Vec3f* PosB = posB;
-	const Vec3f* PosC = posC;
-	const Vec3f* NormA = normA;
-	const Vec3f* NormB = normB;
-	const Vec3f* NormC = normC;
-	Vec3f intersection;
-	Triangle tri = {
-		.v = { *PosA, *PosB, *PosC },
-	};
-	
-	if (Col3D_LineVsTriangle(&this->rayLine, &tri, &intersection, true, false))
-		this->gizmoPos = intersection;
-}
-
 void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) {
 	Vec2s dim = {
 		split->rect.w,
 		split->rect.h
 	};
 	
-	Log("Draw");
 	split->bg.useCustomBG = true;
-	n64_graph_init();
 	
-	Profiler_I(1);
+	n64_graph_init();
+	n64_set_culling(editor->render.culling);
+	
 	View_SetProjectionDimensions(&this->view, &dim);
 	View_Update(&this->view, &editor->input);
 	View_Raycast(&this->view, split->mousePos, split->dispRect, &this->rayLine);
-	Profiler_O(1);
 	
 	n64_setMatrix_model(&this->view.modelMtx);
 	n64_setMatrix_view(&this->view.viewMtx);
@@ -267,21 +263,21 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 #endif
 	
 	Profiler_I(0);
-	n64_set_triangleCallbackFunc(this, Raycast); // enable raycasting
-	gSPEndDisplayList(POLY_OPA_DISP++);
-	gSPEndDisplayList(POLY_XLU_DISP++);
-	Assert(POLY_OPA_DISP < &gPolyOpaHead[4096]);
-	Assert(POLY_XLU_DISP < &gPolyXluHead[4096]);
-	n64_draw(gPolyOpaHead);
-	n64_draw(gPolyXluHead);
-	n64_set_culling(editor->render.culling);
-	n64_set_triangleCallbackFunc(0, 0); // disable raycasting
+	n64_draw_buffers();
+	Profiler_O(0);
 	
-	// Draw gizmo
+#if 0
+	Vec3f o;
+	
+	Profiler_I(1);
+	for (s32 i = 0; i < editor->scene.numRoom; i++)
+		if (Col3D_LineVsTriBuffer(&this->rayLine, &editor->scene.room[i]->triBuf, &o))
+			this->gizmoPos = o;
+	Profiler_O(1);
+	
 	gPolyGuiDisp = gPolyGuiHead;
 	Gizmo_Draw(editor, &this->view, this->gizmoPos);
 	gSPEndDisplayList(POLY_GUI_DISP++);
 	n64_draw(gPolyGuiHead);
-	
-	Profiler_O(0);
+#endif
 }

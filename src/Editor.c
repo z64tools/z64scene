@@ -62,8 +62,27 @@ void Editor_Init(Editor* editor) {
 
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 	Editor* editor = GetUserCtx(window);
-	s32 getRoom = false;
+	s32 hasRoom = false;
+	s32 hasScene = false;
+	s32 roomCount = 0;
+	s32 n = 0;
 	
+	for (s32 i = 0; i < count; i++) {
+		char* file = item[i];
+		
+		if (StrEndCase(file, ".zroom") || StrEndCase(file, ".zmap"))
+			hasRoom = true;
+		
+		if (StrEndCase(file, ".zscene")) {
+			hasScene = true;
+			n = i;
+		}
+	}
+	
+	if (!hasRoom || !hasScene)
+		return;
+	
+	printf_info("" PRNT_YELW "LOADING: " PRNT_BLUE "%s", item[n]);
 	for (s32 i = 0; i < count; i++) {
 		char* file = item[i];
 		
@@ -73,15 +92,10 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 			
 			Time_Start(10);
 			Scene_LoadScene(&editor->scene, file);
-			printf_info("SceneLoad: %.2fms", Time_Get(10) * 1000);
-			getRoom = true;
+			printf_info("SceneLoad:  " PRNT_REDD "%.2fms", Time_Get(10) * 1000);
 			break;
 		}
 	}
-	
-	if (!getRoom)
-		return;
-	s32 roomCount = 0;
 	
 	Time_Start(10);
 	for (s32 i = 0; i < count; i++) {
@@ -93,7 +107,11 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 				Scene_LoadRoom(&editor->scene, file);
 		}
 	}
-	printf_info("RoomLoad: [%d] %.2fms", roomCount, Time_Get(10) * 1000);
+	printf_info("RoomLoad:   " PRNT_REDD "%.2fms" PRNT_RSET " [%d]", Time_Get(10) * 1000, roomCount);
+	
+	Time_Start(10);
+	Scene_CacheBuild(&editor->scene);
+	printf_info("CacheBuild: " PRNT_REDD "%.2fms", Time_Get(10) * 1000);
 }
 
 void Editor_Update(Editor* editor) {
