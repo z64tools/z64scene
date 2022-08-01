@@ -92,7 +92,6 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 		Vec3f o;
 		s32 r = 0;
 		
-		printf_info("RAY");
 		for (s32 i = 0; i < editor->scene.numRoom; i++) {
 			Vec3f p;
 			if (Col3D_LineVsTriBuffer(&this->rayLine, &editor->scene.room[i]->triBuf, &p)) {
@@ -101,10 +100,8 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 			}
 		}
 		
-		if (r) {
-			printf_info("Success");
+		if (r)
 			View_MoveTo(&this->view, o);
-		}
 	}
 	
 	// Cursor Wrapping
@@ -122,7 +119,7 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	}
 	
 	if (editor->scene.segment) {
-		EnvLightSettings* env = editor->scene.env + editor->scene.setupEnv;
+		EnvLightSettings* env = editor->scene.env + editor->scene.render.envID;
 		memcpy(split->bg.color.c, env->fogColor, 3);
 		this->view.far = env->fogFar;
 	}
@@ -221,7 +218,7 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	split->bg.useCustomBG = true;
 	
 	n64_graph_init();
-	n64_set_culling(editor->render.culling);
+	n64_set_culling(editor->scene.render.culling);
 	
 	View_SetProjectionDimensions(&this->view, &dim);
 	View_Update(&this->view, &editor->input);

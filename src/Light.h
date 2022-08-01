@@ -1,4 +1,18 @@
+#ifndef __Z64_LIGHT_H__
+#define __Z64_LIGHT_H__
+
 #include <ExtLib.h>
+
+typedef struct StructBE {
+	/* 0x00 */ u8  ambientColor[3];
+	/* 0x03 */ s8  light1Dir[3];
+	/* 0x06 */ u8  light1Color[3];
+	/* 0x09 */ s8  light2Dir[3];
+	/* 0x0C */ u8  light2Color[3];
+	/* 0x0F */ u8  fogColor[3];
+	/* 0x12 */ s16 fogNear;
+	/* 0x14 */ s16 fogFar;
+} EnvLightSettings;
 
 typedef struct StructBE {
 	/* 0x0 */ s16 x;
@@ -34,3 +48,5 @@ void Light_SetLightInfo(LightInfo* info);
 void Light_SetDirLight(s8 dir[3], u8 col[3]);
 void Light_SetAmbLight(u8 col[3]);
 void Light_SetFog(s32 near, s32 far, u8 col[3]);
+
+#endif

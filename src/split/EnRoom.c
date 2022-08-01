@@ -13,17 +13,20 @@ void EnRoom_Init(Editor* editor, EnRoom* this, Split* split) {
 	Element_Combo_SetPropEnum(&this->comboBox, prop);
 	
 	Element_Name(&this->buttonIndoor, "Indoor");
-	Element_Name(&this->buttonFog, "Fog");
 	Element_Name(&this->comboBox, "Keep");
 	Element_Name(&this->envID, "EnvID");
-	Element_Name(&this->buttonFPS, "Limit FPS");
-	Element_Name(&this->buttonCulling, "Culling");
 	Element_Name(&this->killScene, "Unload Scene");
 	
+	Element_Name(&this->buttonFPS, "Limit FPS");
+	Element_Name(&this->buttonCulling, "Culling");
+	Element_Name(&this->buttonFog, "Fog");
+	Element_Name(&this->buttonColView, "Collision");
+	
+	Element_Button_SetValue(&this->buttonIndoor, true, editor->scene.indoorLight);
 	Element_Button_SetValue(&this->buttonFPS, true, gLimitFPS);
-	Element_Button_SetValue(&this->buttonCulling, true, editor->render.culling);
-	Element_Button_SetValue(&this->buttonIndoor, true, false);
-	Element_Button_SetValue(&this->buttonFog, true, true);
+	Element_Button_SetValue(&this->buttonCulling, true, editor->scene.render.culling);
+	Element_Button_SetValue(&this->buttonFog, true, editor->scene.render.fog);
+	Element_Button_SetValue(&this->buttonColView, true, editor->scene.render.collision);
 	
 	Element_Combo_SetPropEnum(&this->envID, editor->interface.propEndID);
 }
@@ -49,7 +52,7 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 		
 		Element_Row(split, &this->envID, 1.0);
 		Element_DisplayName(&this->envID);
-		editor->scene.setupEnv = Element_Combo(&this->envID);
+		editor->scene.render.envID = Element_Combo(&this->envID);
 		
 		Element_Row(split, NULL, 0.25, &this->buttonIndoor, 0.75);
 		Element_Button_SetValue(&this->buttonIndoor, true, editor->scene.indoorLight);
@@ -58,11 +61,20 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 	
 	Element_Box(BOX_START); {
 		Element_Row(split, Element_Text("Render"), 1.0);
+		Element_Row(split,  &this->buttonFPS, 0.5, &this->buttonCulling, 0.5);
+		Element_Row(split,  &this->buttonFog, 0.5, &this->buttonColView, 0.5);
 		
-		Element_Row(split, &this->buttonFog, 0.33333333, &this->buttonFPS, 0.33333333, &this->buttonCulling, 0.33333333);
-		editor->scene.useFog = Element_Button(&this->buttonFog);
+		Element_Button_SetValue(&this->buttonFog, true, editor->scene.render.fog);
+		editor->scene.render.fog = Element_Button(&this->buttonFog);
+		
+		Element_Button_SetValue(&this->buttonFPS, true, gLimitFPS);
 		gLimitFPS = Element_Button(&this->buttonFPS);
-		editor->render.culling = Element_Button(&this->buttonCulling);
+		
+		Element_Button_SetValue(&this->buttonCulling, true, editor->scene.render.culling);
+		editor->scene.render.culling = Element_Button(&this->buttonCulling);
+		
+		Element_Button_SetValue(&this->buttonColView, true, editor->scene.render.collision);
+		editor->scene.render.collision = Element_Button(&this->buttonColView);
 	} Element_Box(BOX_END);
 	
 	Element_Row(split, &this->killScene, 1.0);

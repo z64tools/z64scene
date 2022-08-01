@@ -57,7 +57,6 @@ Editor* GetEditor(void) {
 
 void Editor_Init(Editor* editor) {
 	sEditor = editor;
-	editor->render.culling = true;
 }
 
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {

@@ -6,10 +6,13 @@
 typedef struct {
 	ElCombo  envID;
 	ElButton buttonIndoor;
-	ElButton buttonFog;
 	ElCombo  comboBox;
+	
 	ElButton buttonFPS;
 	ElButton buttonCulling;
+	
+	ElButton buttonFog;
+	ElButton buttonColView;
 	
 	ElButton killScene;
 } EnRoom;

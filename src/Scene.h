@@ -1,58 +1,11 @@
+#ifndef __Z64_SCENE_H__
+#define __Z64_SCENE_H__
+
 #include <ExtLib.h>
 #include <ExtGui/Collision.h>
-
-typedef struct StructBE {
-	/* 0x00 */ u8  ambientColor[3];
-	/* 0x03 */ s8  light1Dir[3];
-	/* 0x06 */ u8  light1Color[3];
-	/* 0x09 */ s8  light2Dir[3];
-	/* 0x0C */ u8  light2Color[3];
-	/* 0x0F */ u8  fogColor[3];
-	/* 0x12 */ s16 fogNear;
-	/* 0x14 */ s16 fogFar;
-} EnvLightSettings;
-
-// bgcheck
-typedef struct StructBE {
-	u32 data[2];
-} SurfaceType;
-
-typedef struct StructBE {
-	/* 0x00 */ u16 type;
-	union {
-		u16 vtxData[3];
-		struct {
-			/* 0x02 */ u16 flags_vIA; // 0xE000 is poly exclusion flags (xpFlags), 0x1FFF is vtxId
-			/* 0x04 */ u16 flags_vIB; // 0xE000 is flags, 0x1FFF is vtxId
-									  // 0x2000 = poly IsConveyor surface
-			/* 0x06 */ u16 vIC;
-		};
-	};
-	/* 0x08 */ Vec3s normal; // Unit normal vector
-							 // Value ranges from -0x7FFF to 0x7FFF, representing -1.0 to 1.0; 0x8000 is invalid
-
-	/* 0x0E */ s16 dist; // Plane distance from origin along the normal
-} CollisionPoly; // size = 0x10
-
-typedef struct StructBE {
-	/* 0x00 */ Vec3s minBounds; // minimum coordinates of poly bounding box
-	/* 0x06 */ Vec3s maxBounds; // maximum coordinates of poly bounding box
-	/* 0x0C */ u16 numVertices;
-	/* 0x10 */ void32 vtxList32;
-	/* 0x14 */ u16 numPolygons;
-	/* 0x18 */ void32 polyList32;
-	/* 0x1C */ void32 surfaceTypeList32;
-	/* 0x20 */ void32 bgCamList32;
-	/* 0x24 */ u16 numWaterBoxes;
-	/* 0x28 */ void32 waterBoxe32s;
-	// Extras
-	Vec3s* vtxList;
-	CollisionPoly* polyList;
-	SurfaceType* surfaceTypeList;
-	//BgCamInfo* bgCamListP;
-	//WaterBox* waterBoxesP;
-} CollisionHeader; // original name: BGDataInfo
-// /bgcheck
+#include "Types.h"
+#include "BgCheck.h"
+#include "Light.h"
 
 typedef struct {
 	void*     segment;
@@ -62,22 +15,27 @@ typedef struct {
 } Room;
 
 typedef struct {
+	u32 envID;
+	u32 collision : 1;
+	u32 fog       : 1;
+	u32 culling   : 1;
+} SceneRenderState;
+
+typedef struct {
 	void*   segment;
 	MemFile file;
 	Room**  room;
+	CollisionMesh colMesh;
 	u32 numRoom;
 	
 	EnvLightSettings* env;
 	u32 numEnv;
-	u8  setupEnv;
 	u8  indoorLight;
-	u8  useFog;
 	
 	u8  setupHeader;
-	struct Split* split;
+	struct Split*    split;
 	
-	bool loadFlag;
-	CollisionHeader* colHeader;
+	SceneRenderState render;
 } Scene;
 
 void Scene_LoadScene(Scene* this, const char* file);
@@ -437,10 +395,10 @@ typedef struct StructBE {
 } PolygonType0; // size = 0xC
 
 typedef struct StructBE {
-	/* 0x00 */ Vec3s  pos;
-	/* 0x06 */ s16    unk_06;
-	/* 0x08 */ void32 opa;
-	/* 0x0C */ void32 xlu;
+	/* 0x00 */ Vec3s_BE pos;
+	/* 0x06 */ s16 unk_06;
+	/* 0x08 */ void32   opa;
+	/* 0x0C */ void32   xlu;
 } PolygonDlist2; // size = 0x8
 
 typedef struct StructBE {
@@ -457,3 +415,4 @@ typedef union StructBE {
 } MeshHeader; // "Ground Shape"
 
 #endif /* __FOLD_TYPES__ */
+#endif /* __Z64_SCENE_H__ */
