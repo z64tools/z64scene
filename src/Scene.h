@@ -8,11 +8,18 @@
 #include "Light.h"
 #include "Actor.h"
 
-typedef struct {
+typedef enum {
+	ROOM_CACHE_BUILD = 1 << 0,
+	ROOM_IS_CURRENT  = 1 << 1,
+} RoomState;
+
+typedef struct Room {
 	void*     segment;
 	MemFile   file;
 	void*     mesh;
 	TriBuffer triBuf;
+	Actor*    actorHead;
+	RoomState state;
 } Room;
 
 typedef struct {

@@ -9,7 +9,7 @@ typedef struct {
 	s8 headerClick;
 	
 	RayLine rayLine;
-	Vec3f   gizmoPos;
+	Vec3f   cubePos;
 } EnViewport;
 
 extern SplitTask gEnViewportTask;

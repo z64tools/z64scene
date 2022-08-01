@@ -41,6 +41,7 @@ void Scene_Free(Scene* this) {
 	for (s32 i = 0; i < this->numRoom; i++) {
 		MemFile_Free(&this->room[i]->file);
 		TriBuffer_Free(&this->room[i]->triBuf);
+		Actor_RemoveNodeList(this->room[i]);
 		Free(this->room[i]);
 	}
 	Free(this->room);
@@ -90,9 +91,6 @@ void Scene_Draw(Scene* this) {
 	
 	Assert(env != NULL);
 	
-	n64_set_onlyZmode(ZMODE_ALL);
-	n64_set_onlyGeoLayer(GEOLAYER_ALL);
-	
 	memcpy(l1n, env->light1Dir, 3);
 	memcpy(l2n, env->light2Dir, 3);
 	
@@ -130,6 +128,11 @@ void Scene_Draw(Scene* this) {
 	else
 		fogNear = env->fogNear & 0x3FF;
 	
+	Light_SetAmbLight(env->ambientColor);
+	Light_SetFog(fogNear, 0, env->fogColor);
+	Light_SetDirLight(l1n, env->light1Color);
+	Light_SetDirLight(l2n, env->light2Color);
+	
 	gSegment[2] = this->segment;
 	gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
 	gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
@@ -137,15 +140,10 @@ void Scene_Draw(Scene* this) {
 	if (prevEnv != env)
 		printf_hex("EnvLight", env, sizeof(*env), 0);
 	
-	Light_SetAmbLight(env->ambientColor);
-	Light_SetFog(fogNear, 0, env->fogColor);
-	Light_SetDirLight(l1n, env->light1Color);
-	Light_SetDirLight(l2n, env->light2Color);
-	
 	for (s32 i = 0; i < this->numRoom; i++) {
 		Log("Room %d", i);
 		
-		n64_graph_init();
+		n64_reset_buffers();
 		gSegment[2] = this->segment;
 		gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
 		gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
@@ -158,7 +156,7 @@ void Scene_Draw(Scene* this) {
 	prevEnv = env;
 	
 	if (this->render.collision) {
-		n64_graph_init();
+		n64_reset_buffers();
 		CollisionMesh_Draw(&this->colMesh);
 		n64_draw_buffers();
 	}
@@ -200,7 +198,10 @@ void Scene_CacheBuild(Scene* this) {
 		gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
 		
 		Log("Room %d", i);
+		
+		room->state |= ROOM_CACHE_BUILD;
 		Room_Draw(this, room);
+		room->state &= ~ROOM_CACHE_BUILD;
 		
 		n64_set_triangleCallbackFunc(room, Room_BuildTriBuf);
 		n64_draw_buffers();
@@ -219,9 +220,6 @@ void Room_Draw(Scene* scene, Room* room) {
 	MeshHeader* header = room->mesh;
 	
 	Assert(header != NULL);
-	
-	n64_set_onlyZmode(ZMODE_ALL);
-	n64_set_onlyGeoLayer(GEOLAYER_ALL);
 	
 	gSPDisplayList(POLY_OPA_DISP++, gSetupDList(0x19));
 	gDPSetEnvColor(POLY_OPA_DISP++, 0x80, 0x80, 0x80, 0x80);
@@ -265,6 +263,12 @@ void Room_Draw(Scene* scene, Room* room) {
 				gSPDisplayList(POLY_XLU_DISP++, polygonDlist->xlu);
 		}
 	}
+	
+	if (room->state & ROOM_CACHE_BUILD)
+		return;
+	
+	if (room->state & ROOM_IS_CURRENT)
+		Actor_UpdateAll(room);
 }
 
 // # # # # # # # # # # # # # # # # # # # #
@@ -285,8 +289,20 @@ static void Scene_CommandSpawnList(Scene* scene, Room* room, SceneCmd* cmd) {
 }
 
 static void Scene_CommandActorList(Scene* scene, Room* room, SceneCmd* cmd) {
+	ActorEntry* entry = SEGMENTED_TO_VIRTUAL(cmd->actorList.segment);
+	
 	// play->numSetupActors = cmd->actorList.num;
 	// play->setupActorList = SEGMENTED_TO_VIRTUAL(cmd->actorList.segment);
+	
+	for (s32 i = 0; i < cmd->actorList.num; i++, entry++) {
+		Actor_New(
+			room,
+			entry->id,
+			entry->param,
+			Math_Vec3s_New(UnfoldVec3(entry->pos)),
+			Math_Vec3s_New(UnfoldVec3(entry->rot))
+		);
+	}
 }
 
 static void Scene_CommandUnused2(Scene* scene, Room* room, SceneCmd* cmd) {

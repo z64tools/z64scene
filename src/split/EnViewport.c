@@ -19,20 +19,14 @@ void EnViewport_Draw_3DViewport(Editor*, EnViewport*, Split*);
 // #                                     #
 // # # # # # # # # # # # # # # # # # # # #
 
-// MemFile gNora;
-
-static Gfx gPolyGuiHead[1024];
-static Gfx* gPolyGuiDisp;
-#define POLY_GUI_DISP gPolyGuiDisp
-
 static void Gizmo_Draw(Editor* editor, View3D* view, Vec3f pos) {
+#if 0
 	for (s32 i = 0; i < 3; i++) {
 		gSPSegment(POLY_GUI_DISP++, 6, (void*)gGizmo_Data);
 		Matrix_Push(); {
 			Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
 			Matrix_Push(); {
-				f32 scale = Math_Vec3f_DistXYZ(pos, view->currentCamera->eye) * 0.000015;
-				scale = 0.01; // testing depth
+				f32 scale = Math_Vec3f_DistXYZ(pos, view->currentCamera->eye) * 0.00001f;
 				Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
 				
 				if (i == 0)
@@ -48,10 +42,11 @@ static void Gizmo_Draw(Editor* editor, View3D* view, Vec3f pos) {
 				}
 				
 				gSPMatrix(POLY_GUI_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-				gSPDisplayList(POLY_GUI_DISP++, 0x060011E0);
+				gSPDisplayList(POLY_GUI_DISP++, 0x06000840);
 			} Matrix_Pop();
 		} Matrix_Pop();
 	}
+#endif
 }
 
 void EnViewport_Init(Editor* editor, EnViewport* this, Split* split) {
@@ -63,6 +58,20 @@ void EnViewport_Init(Editor* editor, EnViewport* this, Split* split) {
 
 void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split) {
 	split->bg.useCustomBG = false;
+}
+
+static Room* EnViewport_RayRoom(Scene* scene, RayLine* ray) {
+	s32 id = -1;
+	Vec3f r;
+	
+	for (s32 i = 0; i < scene->numRoom; i++)
+		if (Col3D_LineVsTriBuffer(ray, &scene->room[i]->triBuf, &r))
+			id = i;
+	
+	if (id < 0)
+		return NULL;
+	
+	return scene->room[id];
 }
 
 void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
@@ -91,10 +100,11 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	if (mouse->clickMid.press && Input_GetKey(inputCtx, KEY_LEFT_ALT)->hold) {
 		Vec3f o;
 		s32 r = 0;
+		RayLine ray = this->rayLine;
 		
 		for (s32 i = 0; i < editor->scene.numRoom; i++) {
 			Vec3f p;
-			if (Col3D_LineVsTriBuffer(&this->rayLine, &editor->scene.room[i]->triBuf, &p)) {
+			if (Col3D_LineVsTriBuffer(&ray, &editor->scene.room[i]->triBuf, &p)) {
 				r = true;
 				o = p;
 			}
@@ -102,6 +112,23 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 		
 		if (r)
 			View_MoveTo(&this->view, o);
+	}
+	
+	if (Input_GetKey(inputCtx, KEY_LEFT_CONTROL)->hold && mouse->clickL.press) {
+		RayLine ray = this->rayLine;
+		Room* room = EnViewport_RayRoom(&editor->scene, &ray);
+		
+		if (room) {
+			printf_info("ROOM");
+			for (s32 i = 0; i < editor->scene.numRoom; i++) {
+				Room* tr = editor->scene.room[i];
+				
+				if (tr == room)
+					tr->state |= ROOM_IS_CURRENT;
+				else
+					tr->state &= ~ROOM_IS_CURRENT;
+			}
+		}
 	}
 	
 	// Cursor Wrapping
@@ -215,7 +242,7 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	
 	split->bg.useCustomBG = true;
 	
-	// n64_graph_init();
+	n64_graph_init();
 	n64_set_culling(editor->scene.render.culling);
 	
 	View_SetProjectionDimensions(&this->view, &dim);
@@ -257,20 +284,5 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 		
 		gSPDisplayList(POLY_OPA_DISP++, 0x060017C0);
 	} Matrix_Pop();
-#endif
-	
-#if 0
-	Vec3f o;
-	
-	Profiler_I(1);
-	for (s32 i = 0; i < editor->scene.numRoom; i++)
-		if (Col3D_LineVsTriBuffer(&this->rayLine, &editor->scene.room[i]->triBuf, &o))
-			this->gizmoPos = o;
-	Profiler_O(1);
-	
-	gPolyGuiDisp = gPolyGuiHead;
-	Gizmo_Draw(editor, &this->view, this->gizmoPos);
-	gSPEndDisplayList(POLY_GUI_DISP++);
-	n64_draw(gPolyGuiHead);
 #endif
 }

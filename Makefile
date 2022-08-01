@@ -53,8 +53,8 @@ clean:
 
 bin/linux/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
-bin/linux/%.o: %.c %.h $(HEADER) $(ExtLib_H)
-bin/linux/%.o: %.c $(HEADER) $(ExtLib_H)
+bin/linux/%.o: %.c %.h $(HEADER) $(ExtLib_H) $(ExtGui_H)
+bin/linux/%.o: %.c $(HEADER) $(ExtLib_H) $(ExtGui_H)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)]"
 	@gcc -c -o $@ $< $(OPT_LINUX) $(CFLAGS)
 
@@ -68,8 +68,8 @@ $(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_
 
 bin/win32/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
-bin/win32/%.o: %.c %.h $(HEADER) $(ExtLib_H)
-bin/win32/%.o: %.c $(HEADER) $(ExtLib_H)
+bin/win32/%.o: %.c %.h $(HEADER) $(ExtLib_H) $(ExtGui_H)
+bin/win32/%.o: %.c $(HEADER) $(ExtLib_H) $(ExtGui_H)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)]"
 	@i686-w64-mingw32.static-gcc -c -o $@ $< $(OPT_WIN32) $(CFLAGS) -D_WIN32
 
