@@ -88,6 +88,9 @@ void Scene_Draw(Scene* this) {
 	
 	Assert(env != NULL);
 	
+	n64_set_onlyZmode(ZMODE_ALL);
+	n64_set_onlyGeoLayer(GEOLAYER_ALL);
+	
 	memcpy(l1n, env->light1Dir, 3);
 	memcpy(l2n, env->light2Dir, 3);
 	
@@ -145,6 +148,135 @@ void Scene_Draw(Scene* this) {
 	Log("OK");
 	
 	prevEnv = env;
+	
+	// TODO fix endianness so we don't need these
+	u16 swapu16(u16 v) {
+		return (v >> 8) | ((v & 0xff) << 8);
+	}
+	s16 swaps16(s16 v) {
+		u16 v1 = v;
+		return (v1 >> 8) | ((v1 & 0xff) << 8);
+	}
+#if 1 // Quick collision drawing test
+	Matrix_Push(); if (this->colHeader) {
+		CollisionHeader* colHeader = this->colHeader;
+		static unsigned char simpleXlu[] = { // TODO use Gfx + macros
+			0xE7, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE2, 0x00, 0x00, 0x1C,
+			0x00, 0x50, 0x78, 0x48, 0xE3, 0x00, 0x12, 0x01, 0x00, 0x00, 0x20, 0x00,
+			0xFC, 0xFF, 0xFE, 0x04, 0xFF, 0xFE, 0xFB, 0xF8, 0xD9, 0xF0, 0xFD, 0xFE,
+			0x00, 0x20, 0x04, 0x04, 0xDF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+		};
+		static struct StructBE {
+			Vec3s pos;
+			u8 pad[10];
+		} *vBuf = 0;
+		static int vBufCount = 0;
+		static Gfx* tri = 0;
+		//static uint8_t *baked = 0;
+		//static unsigned bakedOfs = 0;
+		
+		// Allocate three vertices per triangle
+		if (vBufCount != colHeader->numPolygons * 3) {
+			Vec3s* vtxList = colHeader->vtxList;
+			u16 numVertices = colHeader->numVertices;
+			u16 numPolygons = colHeader->numPolygons;
+			Gfx* g;
+			int i;
+			int k;
+			int u;
+			
+			vBufCount = numPolygons * 3;
+			vBuf = realloc(vBuf, sizeof(*vBuf) * vBufCount);
+			memset(vBuf, -1, sizeof(*vBuf) * vBufCount);
+			
+			for (i = k = 0; i < numPolygons; ++i) {
+				CollisionPoly poly = colHeader->polyList[i];
+				for (u = 0; u < 3; ++u, ++k)
+					memcpy(&vBuf[k].pos, &vtxList[swapu16(poly.vtxData[u]) & 0x1fff], sizeof(*vtxList));
+			}
+			
+			// Allocate triangle list
+			// TODO unoptimized; 2 opcodes per triangle for now + a DF at the end
+			tri = realloc(tri, sizeof(*tri) * (2 * (numPolygons + 1)));
+			g = tri;
+			for (i = 0; i < numPolygons; ++i)
+			{
+				u32 vaddr = 0x06000000 | (i * 16 * 3);
+				gSPVertex(g++, vaddr, 3, 0);
+				gSP1Triangle(g++, 0, 1, 2, 0);
+			}
+			gSPEndDisplayList(g++);
+			
+			// output test zobj
+			if (false) {
+				FILE* test = fopen("test.zobj", "wb+");
+				/*for (i = 0; i < vBufCount; ++i) {
+					fputc(vBuf[i].pos.x >> 8, test);
+					fputc(vBuf[i].pos.x >> 0, test);
+					fputc(vBuf[i].pos.y >> 8, test);
+					fputc(vBuf[i].pos.y >> 0, test);
+					fputc(vBuf[i].pos.z >> 8, test);
+					fputc(vBuf[i].pos.z >> 0, test);
+					for (k = 0; k < 10; ++k)
+						fputc(0, test);
+				}*/
+				fwrite(vBuf, 1, sizeof(*vBuf) * vBufCount, test);
+				//bakedOfs = ftell(test);
+				fwrite(simpleXlu, 1, sizeof(simpleXlu) - 8, test);
+				/*for (i = 0; i < sizeof(*tri) * (2 * (numPolygons + 1)); ++i)
+				{
+					fputc(((uint8_t*)tri)[i], test);
+				}*/
+				fwrite(tri, 1, sizeof(*tri) * (2 * (numPolygons + 1)), test);
+				/*baked = malloc(ftell(test));
+				unsigned end = ftell(test);
+				fseek(test, 0, SEEK_SET);
+				fread(baked, 1, end, test);
+				fprintf(stderr, "%08x\n", *(u32*)(baked + 0x1A838));*/
+				fclose(test);
+			}
+			
+			// output wavefront obj
+			if (false) {
+				FILE* test = fopen("test.obj", "w");
+				for (i = 0; i < vBufCount; ++i)
+					fprintf(test, "v %d %d %d\n", swaps16(vBuf[i].pos.x), swaps16(vBuf[i].pos.y), swaps16(vBuf[i].pos.z));
+				//for (int i = 0; i < numVertices; ++i)
+				//	fprintf(test, "v %d %d %d\n", swap16(vtxList[i].x), swap16(vtxList[i].y), swap16(vtxList[i].z));
+				for (i = 0; i < numPolygons * 3; i += 3)
+					fprintf(test, "f %d %d %d\n", i + 1, i + 2, i + 3);
+				fclose(test);
+			}
+		}
+		
+		// material
+		gDPPipeSync(POLY_XLU_DISP++);
+		gDPSetRenderMode(POLY_XLU_DISP++, AA_EN | IM_RD | CVG_DST_CLAMP | ZMODE_DEC | CVG_X_ALPHA | ALPHA_CVG_SEL | FORCE_BL | GBL_c1(G_BL_CLR_IN, G_BL_A_IN, G_BL_CLR_MEM, G_BL_1MA), AA_EN | IM_RD | CVG_DST_CLAMP | ZMODE_DEC | CVG_X_ALPHA | ALPHA_CVG_SEL | FORCE_BL | GBL_c2(G_BL_CLR_IN, G_BL_A_IN, G_BL_CLR_MEM, G_BL_1MA));
+		gDPSetTextureFilter(POLY_XLU_DISP++, G_TF_BILERP);
+		gDPExtras(POLY_XLU_DISP++, 0, GX_POLYGONOFFSET);
+		gDPSetEnvColor(POLY_XLU_DISP++, 0xFF, 0xFF, 0xFF, 0x80);
+		gDPSetCombineLERP(POLY_XLU_DISP++, 0, 0, 0, ENVIRONMENT, 0, 0, 0, ENVIRONMENT, COMBINED, 0, SHADE, 0, 0, 0, 0, COMBINED);
+		gSPGeometryMode(POLY_XLU_DISP++, G_CULL_FRONT | G_FOG | G_LIGHTING | G_TEXTURE_GEN | G_TEXTURE_GEN_LINEAR, G_ZBUFFER | G_SHADE | G_CULL_BACK | G_SHADING_SMOOTH);
+		
+		// draw
+		gSPSegment(POLY_XLU_DISP++, 6, (void*)vBuf);
+		gSPDisplayList(POLY_XLU_DISP++, tri);
+		
+		// wireframe
+		gDPPipeSync(POLY_XLU_DISP++);
+		gDPSetEnvColor(POLY_XLU_DISP++, 0, 0, 0, 255);
+		gDPExtras(POLY_XLU_DISP++, 0, GX_WIREFRAME);
+		gSPDisplayList(POLY_XLU_DISP++, tri);
+		
+		// reset drawing state
+		gDPExtras(POLY_XLU_DISP++, GX_POLYGONOFFSET | GX_WIREFRAME, 0);
+		
+		/*gSPSegment(POLY_XLU_DISP++, 6, (void*)baked);
+		Matrix_Scale(0.01f, 0.01f, 0.01f, MTXMODE_APPLY);
+		gSPMatrix(POLY_XLU_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+		gSPDisplayList(POLY_XLU_DISP++, baked + bakedOfs);*/
+	} Matrix_Pop();
+#endif
 }
 
 static void Room_BuildTriBuf(void* userData, const n64_triangleCallbackData* triData) {
@@ -205,6 +337,7 @@ void Room_Draw(Scene* scene, Room* room) {
 	
 	n64_set_onlyZmode(ZMODE_ALL);
 	n64_set_onlyGeoLayer(GEOLAYER_ALL);
+	
 	gSPDisplayList(POLY_OPA_DISP++, gSetupDList(0x19));
 	gDPSetEnvColor(POLY_OPA_DISP++, 0x80, 0x80, 0x80, 0x80);
 	gSPDisplayList(POLY_XLU_DISP++, gSetupDList(0x19));
@@ -276,11 +409,14 @@ static void Scene_CommandUnused2(Scene* scene, Room* room, SceneCmd* cmd) {
 }
 
 static void Scene_CommandCollisionHeader(Scene* scene, Room* room, SceneCmd* cmd) {
-	// CollisionHeader* colHeader = SEGMENTED_TO_VIRTUAL(cmd->colHeader.segment);
-	//
-	// colHeader->vtxList = SEGMENTED_TO_VIRTUAL(colHeader->vtxList);
-	// colHeader->polyList = SEGMENTED_TO_VIRTUAL(colHeader->polyList);
-	// colHeader->surfaceTypeList = SEGMENTED_TO_VIRTUAL(colHeader->surfaceTypeList);
+	CollisionHeader* colHeader = SEGMENTED_TO_VIRTUAL(cmd->colHeader.segment);
+	
+	scene->colHeader = malloc(sizeof(*colHeader));
+	memcpy(scene->colHeader, colHeader, 0x2C);
+	colHeader = scene->colHeader;
+	colHeader->vtxList = SEGMENTED_TO_VIRTUAL(colHeader->vtxList32);
+	colHeader->polyList = SEGMENTED_TO_VIRTUAL(colHeader->polyList32);
+	colHeader->surfaceTypeList = SEGMENTED_TO_VIRTUAL(colHeader->surfaceTypeList32);
 	// colHeader->cameraDataList = SEGMENTED_TO_VIRTUAL(colHeader->cameraDataList);
 	// colHeader->waterBoxes = SEGMENTED_TO_VIRTUAL(colHeader->waterBoxes);
 	//

@@ -12,6 +12,48 @@ typedef struct StructBE {
 	/* 0x14 */ s16 fogFar;
 } EnvLightSettings;
 
+// bgcheck
+typedef struct StructBE {
+	u32 data[2];
+} SurfaceType;
+
+typedef struct StructBE {
+	/* 0x00 */ u16 type;
+	union {
+		u16 vtxData[3];
+		struct {
+			/* 0x02 */ u16 flags_vIA; // 0xE000 is poly exclusion flags (xpFlags), 0x1FFF is vtxId
+			/* 0x04 */ u16 flags_vIB; // 0xE000 is flags, 0x1FFF is vtxId
+									  // 0x2000 = poly IsConveyor surface
+			/* 0x06 */ u16 vIC;
+		};
+	};
+	/* 0x08 */ Vec3s normal; // Unit normal vector
+							 // Value ranges from -0x7FFF to 0x7FFF, representing -1.0 to 1.0; 0x8000 is invalid
+
+	/* 0x0E */ s16 dist; // Plane distance from origin along the normal
+} CollisionPoly; // size = 0x10
+
+typedef struct StructBE {
+	/* 0x00 */ Vec3s minBounds; // minimum coordinates of poly bounding box
+	/* 0x06 */ Vec3s maxBounds; // maximum coordinates of poly bounding box
+	/* 0x0C */ u16 numVertices;
+	/* 0x10 */ void32 vtxList32;
+	/* 0x14 */ u16 numPolygons;
+	/* 0x18 */ void32 polyList32;
+	/* 0x1C */ void32 surfaceTypeList32;
+	/* 0x20 */ void32 bgCamList32;
+	/* 0x24 */ u16 numWaterBoxes;
+	/* 0x28 */ void32 waterBoxe32s;
+	// Extras
+	Vec3s* vtxList;
+	CollisionPoly* polyList;
+	SurfaceType* surfaceTypeList;
+	//BgCamInfo* bgCamListP;
+	//WaterBox* waterBoxesP;
+} CollisionHeader; // original name: BGDataInfo
+// /bgcheck
+
 typedef struct {
 	void*     segment;
 	MemFile   file;
@@ -35,6 +77,7 @@ typedef struct {
 	struct Split* split;
 	
 	bool loadFlag;
+	CollisionHeader* colHeader;
 } Scene;
 
 void Scene_LoadScene(Scene* this, const char* file);

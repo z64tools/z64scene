@@ -22,5 +22,6 @@ asm_win32.sh
 *.mtlex
 *.objex
 *.skel
+*.obj
 *.txt
 !assets/3D/*.zobj
