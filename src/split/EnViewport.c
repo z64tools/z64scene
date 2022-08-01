@@ -127,7 +127,7 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 
 static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
 	nvgFontSize(vg, 12);
-	nvgFontFace(vg, "dejavu");
+	nvgFontFace(vg, "default");
 	nvgFontBlur(vg, 1.0f);
 	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 	for (s32 i = 0; i < 2; i++)
@@ -137,7 +137,7 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
 	nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
 	nvgText(vg, 8, 8 + SPLIT_TEXT_H * row, msg, NULL);
 	
-	nvgFontFace(vg, "dejavu-bold");
+	nvgFontFace(vg, "default-bold");
 	nvgFontBlur(vg, 1.0f);
 	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 	for (s32 i = 0; i < 2; i++)
@@ -184,9 +184,8 @@ void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 	nvgFontBlur(vg, 0.0);
 	
-	nvgFontFace(vg, "dejavu-light");
+	nvgFontFace(vg, "default-bold");
 	nvgFontSize(vg, 35);
-	nvgTextLetterSpacing(vg, 2.0f);
 	nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
 	nvgText(
 		vg,
@@ -196,10 +195,9 @@ void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 		NULL
 	);
 	
-	nvgFontFace(vg, "dejavu");
+	nvgFontFace(vg, "default");
 	nvgFontSize(vg, 15);
-	nvgTextLetterSpacing(vg, 0.0f);
-	nvgFillColor(vg, nvgHSLA(0, 0, 0.35, 255));
+	nvgFillColor(vg, Theme_GetColor(THEME_BASE, 255, 2.0f));
 	nvgText(
 		vg,
 		split->rect.w * 0.5,
