@@ -144,14 +144,24 @@ void Scene_Draw(Scene* this) {
 	
 	for (s32 i = 0; i < this->numRoom; i++) {
 		Log("Room %d", i);
+		
+		n64_graph_init();
+		gSegment[2] = this->segment;
+		gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
+		gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
+		
 		Room_Draw(this, this->room[i]);
+		n64_draw_buffers();
 	}
 	Log("OK");
 	
 	prevEnv = env;
 	
-	if (this->render.collision)
+	if (this->render.collision) {
+		n64_graph_init();
 		CollisionMesh_Draw(&this->colMesh);
+		n64_draw_buffers();
+	}
 }
 
 static void Room_BuildTriBuf(void* userData, const n64_triangleCallbackData* triData) {

@@ -9,17 +9,6 @@
 #include "Scene.h"
 
 typedef struct {
-	u16   index;
-	u16   param;
-	Vec3s pos;
-	Vec3s rot;
-} ActorEntry;
-
-typedef struct {
-	u16 index;
-} ObjectEntry;
-
-typedef struct {
 	PropEnum* propEndID;
 } InterfaceContext;
 
@@ -32,11 +21,6 @@ typedef struct Editor {
 	Scene   scene;
 	InterfaceContext interface;
 } Editor;
-
-ActorEntry* Actor_Add(Room* room, u16 id, u16 param, Vec3s pos, Vec3s rot);
-void Actor_Delete(Room* room, s32 actorIndex);
-ObjectEntry* Object_Add(Room* room, u16 id);
-void Object_Delete(Room* room, s32 objIndex);
 
 void* NewMtx();
 

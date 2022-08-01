@@ -217,7 +217,7 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	
 	split->bg.useCustomBG = true;
 	
-	n64_graph_init();
+	// n64_graph_init();
 	n64_set_culling(editor->scene.render.culling);
 	
 	View_SetProjectionDimensions(&this->view, &dim);
@@ -228,8 +228,10 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	n64_setMatrix_view(&this->view.viewMtx);
 	n64_setMatrix_projection(&this->view.projMtx);
 	
+	Profiler_I(0);
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
+	Profiler_O(0);
 	
 #if 0
 	Matrix_Push(); {
@@ -258,10 +260,6 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 		gSPDisplayList(POLY_OPA_DISP++, 0x060017C0);
 	} Matrix_Pop();
 #endif
-	
-	Profiler_I(0);
-	n64_draw_buffers();
-	Profiler_O(0);
 	
 #if 0
 	Vec3f o;

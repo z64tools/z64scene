@@ -6,6 +6,7 @@
 #include "Types.h"
 #include "BgCheck.h"
 #include "Light.h"
+#include "Actor.h"
 
 typedef struct {
 	void*     segment;
