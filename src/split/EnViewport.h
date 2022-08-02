@@ -4,8 +4,8 @@
 #include <Editor.h>
 
 typedef struct {
-	View3D view;
-	SkelAnime   skelAnime;
+	View3D    view;
+	SkelAnime skelAnime;
 	s8 headerClick;
 	
 	RayLine rayLine;
