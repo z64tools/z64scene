@@ -36,9 +36,9 @@ static void Actor_Draw(Actor* this) {
 	gSPSegment(POLY_OPA_DISP++, 6, (void*)gCube_Data);
 	gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
 	gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-	// gDPExtras(POLY_OPA_DISP++, 0, GX_OUTLINE);
-	gSPDisplayList(POLY_OPA_DISP++, 0x06000238);
-	// gDPExtras(POLY_OPA_DISP++, GX_OUTLINE, 0);
+	gXPOutline(POLY_OPA_DISP++, 0xFF, 0x40, 0x40, 0x80, 4);
+	gSPDisplayList(POLY_OPA_DISP++, 0x060001F0);
+	gXPClearOutline(POLY_OPA_DISP++);
 	
 	Matrix_Pop();
 	Matrix_Pop();
