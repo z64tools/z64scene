@@ -59,7 +59,7 @@ int main(void) {
 	editor->vg = Interface_Init("z64scene", &editor->app, &editor->input, editor, (void*)Editor_Update, (void*)Editor_Draw, Editor_DropCallback, 980, 480, 4);
 	
 	editor->geo.passArg = editor;
-	GeoGrid_Init(&editor->geo, &editor->app.winDim, &editor->input, editor->vg);
+	GeoGrid_Init(&editor->geo, &editor->app.wdim, &editor->input, editor->vg);
 	GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrayCount(gTaskTable));
 	
 	Cursor_Init(&editor->cursor, &editor->app);
@@ -90,10 +90,10 @@ int main(void) {
 	
 	GeoGrid_AddSplit(&editor->geo, "__split_R__", &size, TAB_ROOM);
 	
-	// GeoGrid_Debug(true);
 	glfwSetWindowIcon(editor->app.window, 1, &icon);
 	Editor_Init(editor);
 	Interface_Main(&editor->app);
+	Interface_Destroy(&editor->app);
 	
 	return 0;
 }

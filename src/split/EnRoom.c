@@ -84,6 +84,7 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 		editor->interface.propEndID = NULL;
 		Log("Free Scene");
 		Scene_Free(&editor->scene);
+		Interface_MessageWindow(&editor->app, "Nice", "Destroyed Current Scene!");
 	}
 	
 	Element_Combo_SetPropEnum(&this->envID, editor->interface.propEndID);
