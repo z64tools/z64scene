@@ -133,10 +133,10 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	
 	// Cursor Wrapping
 	if (this->view.setCamMove && this->view.cameraControl) {
-		s16 xMin = split->edge[EDGE_L]->pos;
-		s16 xMax = split->edge[EDGE_R]->pos;
-		s16 yMin = split->edge[EDGE_T]->pos;
-		s16 yMax = split->edge[EDGE_B]->pos;
+		s16 xMin = split->rect.x;
+		s16 xMax = split->rect.x + split->rect.w;
+		s16 yMin = split->rect.y;
+		s16 yMax = split->rect.y + split->rect.h;
 		
 		if (mouse->pos.x < xMin || mouse->pos.x > xMax)
 			Input_SetMousePos(&editor->input, WrapS(mouse->pos.x, xMin, xMax), MOUSE_KEEP_AXIS);
@@ -148,7 +148,11 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	if (editor->scene.segment) {
 		EnvLightSettings* env = editor->scene.env + editor->scene.render.envID;
 		memcpy(split->bg.color.c, env->fogColor, 3);
-		this->view.far = env->fogFar;
+		
+		if (editor->scene.render.fog)
+			this->view.far = env->fogFar;
+		else
+			this->view.far = 12800.0 + 6000;
 	}
 }
 

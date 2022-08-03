@@ -37,7 +37,7 @@ static void Actor_Draw(Actor* this) {
 	gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
 	gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
 	gXPOutline(POLY_OPA_DISP++, 0xFF, 0x40, 0x40, 0x80, 4);
-	gSPDisplayList(POLY_OPA_DISP++, 0x060001F0);
+	gSPDisplayList(POLY_OPA_DISP++, 0x06000820);
 	gXPClearOutline(POLY_OPA_DISP++);
 	
 	Matrix_Pop();
