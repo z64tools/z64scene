@@ -84,3 +84,114 @@ void Editor_Update(Editor* editor) {
 void Editor_Draw(Editor* editor) {
 	GeoGrid_Draw(&editor->geo);
 }
+
+// # # # # # # # # # # # # # # # # # # # #
+// # DataNode                            #
+// # # # # # # # # # # # # # # # # # # # #
+
+typedef union {
+	ActorList actor;
+	RoomMesh  mesh;
+	LightList lightList;
+} Data;
+
+void* DataNode_Copy(DataContext* ctx, SceneCmd* cmd) {
+	u32 size = 0;
+	u8 code = cmd->base.code;
+	u32 segment = cmd->base.data2;
+	DataNode* node = ctx->head[code];
+	Data* this;
+	void* ptr = gSegment[segment >> 24];
+	
+	switch (cmd->base.code) {
+		case SCENE_CMD_ID_ACTOR_LIST:
+			size = sizeof(ActorList);
+			break;
+			
+		case SCENE_CMD_ID_MESH_HEADER:
+			size = sizeof(RoomMesh);
+			break;
+			
+		case SCENE_CMD_ID_LIGHT_SETTINGS_LIST:
+			size = sizeof(LightList);
+			break;
+			
+		default:
+			printf_warning("DataNode_Copy: No support for code [%02X]", cmd->base.code);
+			
+			return NULL;
+	}
+	
+	while (node) {
+		if (node->segment == segment && node->pointer == ptr)
+			return node;
+		
+		node = node->next;
+	}
+	
+	Assert(segment != 0);
+	
+	Calloc(node, size);
+	Node_Add(ctx->head[code], node);
+	node->segment = segment;
+	node->pointer = ptr;
+	this = (void*)node;
+	
+	switch (code) {
+		case SCENE_CMD_ID_ACTOR_LIST:
+			this->actor.head = SysCalloc(sizeof(Actor) * 0xFF);
+			this->actor.num = cmd->actorList.num;
+			memcpy(
+				this->actor.head,
+				SEGMENTED_TO_VIRTUAL(segment),
+				sizeof(Actor) * this->actor.num
+			);
+			break;
+			
+		case SCENE_CMD_ID_MESH_HEADER:
+			this->mesh.header = SEGMENTED_TO_VIRTUAL(segment);
+			this->mesh.roomFile = gSegment[3];
+			break;
+			
+		case SCENE_CMD_ID_LIGHT_SETTINGS_LIST:
+			this->lightList.env = SysCalloc(sizeof(EnvLightSettings) * 0xFF);
+			this->lightList.num = cmd->lightSettingList.num;
+			memcpy(
+				this->lightList.env,
+				SEGMENTED_TO_VIRTUAL(cmd->lightSettingList.segment),
+				sizeof(EnvLightSettings) * this->lightList.num
+			);
+			this->lightList.enumProp = PropEnum_Init(0);
+			
+			for (s32 i = 0; i < this->lightList.num; i++)
+				PropEnum_Add(this->lightList.enumProp, xFmt("ENV %d", i));
+			
+			break;
+	}
+	
+	return node;
+}
+
+void DataNode_Free(DataContext* ctx, u8 code) {
+	DataNode** head = &ctx->head[code];
+	
+	while (*head) {
+		DataNode* node = *head;
+		Data* this = (void*)node;
+		
+		switch (code) {
+			case SCENE_CMD_ID_MESH_HEADER:
+				TriBuffer_Free(&this->mesh.triBuf);
+				break;
+			case SCENE_CMD_ID_ACTOR_LIST:
+				Free(this->actor.head);
+				break;
+			case SCENE_CMD_ID_LIGHT_SETTINGS_LIST:
+				PropEnum_Free(this->lightList.enumProp);
+				Free(this->lightList.env);
+				break;
+		}
+		
+		Node_Kill(*head, node);
+	}
+}

@@ -2,6 +2,8 @@
 #define __Z64_LIGHT_H__
 
 #include <ExtLib.h>
+#include <ExtGui/GeoGrid.h>
+#include "Types.h"
 
 typedef struct StructBE {
 	/* 0x00 */ u8  ambientColor[3];
@@ -13,6 +15,13 @@ typedef struct StructBE {
 	/* 0x12 */ s16 fogNear;
 	/* 0x14 */ s16 fogFar;
 } EnvLightSettings;
+
+typedef struct {
+	DataNode  data;
+	PropEnum* enumProp;
+	EnvLightSettings* env;
+	u32 num;
+} LightList;
 
 typedef struct StructBE {
 	/* 0x0 */ s16 x;
@@ -29,7 +38,7 @@ typedef struct StructBE {
 } LightDirectional; // size = 0x6
 
 typedef union StructBE {
-	LightPoint point;
+	LightPoint       point;
 	LightDirectional dir;
 } LightParams; // size = 0xC
 

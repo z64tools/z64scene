@@ -2,6 +2,7 @@
 #define __Z64_SCENE_H__
 
 #include <ExtLib.h>
+#include <ExtGui/GeoGrid.h>
 #include <ExtGui/Collision.h>
 #include "Types.h"
 #include "BgCheck.h"
@@ -10,40 +11,56 @@
 
 typedef enum {
 	ROOM_CACHE_BUILD = 1 << 0,
-	ROOM_IS_CURRENT  = 1 << 1,
+	ROOM_SELECTED    = 1 << 1,
 } RoomState;
 
-typedef struct Room {
-	void*     segment;
-	MemFile   file;
-	void*     mesh;
+typedef struct RoomMesh {
+	DataNode  data;
+	void*     header;
+	void*     roomFile;
 	TriBuffer triBuf;
-	Actor*    actorHead;
-	RoomState state;
+} RoomMesh;
+
+typedef struct {
+	RoomMesh*  mesh;
+	ActorList* actorList;
+	u8 indoorLight;
+} RoomHeader;
+
+typedef struct Room {
+	MemFile file;
+	void*   segment;
+	
+	RoomState  state;
+	RoomHeader header[0x10];
 } Room;
 
-typedef struct {
-	u32 envID;
-	u32 collision : 1;
-	u32 fog       : 1;
-	u32 culling   : 1;
-} SceneRenderState;
+typedef enum {
+	SCENE_DRAW_COLLISION = 1 << 0,
+	SCENE_DRAW_FOG       = 1 << 1,
+	SCENE_DRAW_CULLING   = 1 << 2,
+} SceneState;
 
 typedef struct {
-	void*   segment;
+	LightList* lightList;
+} SceneHeader;
+
+typedef struct {
 	MemFile file;
-	Room**  room;
+	void*   segment;
+	
+	SceneHeader header[0x10];
+	u8   numHeader;
+	u8   curHeader;
+	Room room[255];
+	u8   numRoom;
+	u8   curRoom;
+	u8   curEnv;
+	
+	SceneState state;
+	
+	DataContext   dataCtx;
 	CollisionMesh colMesh;
-	u32 numRoom;
-	
-	EnvLightSettings* env;
-	u32 numEnv;
-	u8  indoorLight;
-	
-	u8  setupHeader;
-	struct Split*    split;
-	
-	SceneRenderState render;
 } Scene;
 
 void Scene_LoadScene(Scene* this, const char* file);
@@ -53,9 +70,13 @@ void Scene_ExecuteCommands(Scene* this, Room* room);
 void Scene_Draw(Scene* this);
 void Scene_CacheBuild(Scene* this);
 
-void Room_Draw(Scene* scene, Room* room);
+SceneHeader* Scene_GetSceneHeader(Scene* this);
+RoomHeader* Scene_GetRoomHeader(Scene* this, u8 num);
+void Scene_SetState(Scene* this, SceneState state, bool set);
 
-#ifdef __SCENE_TYPES_H__
+void Room_Draw(RoomMesh* roomMesh);
+
+#ifndef __NO_SCENE_TYPES_H__
 
 typedef struct StructBE {
 	/* 0x00 */ u32 vromStart;
@@ -65,10 +86,10 @@ typedef struct StructBE {
 typedef struct StructBE {
 	/* 0x00 */ RomFile sceneFile;
 	/* 0x08 */ RomFile titleFile;
-	/* 0x10 */ u8 unk_10;
-	/* 0x11 */ u8 drawConfig;
-	/* 0x12 */ u8 unk_12;
-	/* 0x13 */ u8 unk_13;
+	/* 0x10 */ u8      unk_10;
+	/* 0x11 */ u8      drawConfig;
+	/* 0x12 */ u8      unk_12;
+	/* 0x13 */ u8      unk_13;
 } SceneTableEntry; // size = 0x14
 
 typedef struct StructBE {
@@ -78,32 +99,32 @@ typedef struct StructBE {
 } SCmdBase;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 data1;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     data1;
 	/* 0x04 */ void32 segment;
 } SCmdSpawnList;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 num;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     num;
 	/* 0x04 */ void32 segment;
 } SCmdActorList;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 data1;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     data1;
 	/* 0x04 */ void32 segment;
 } SCmdUnused02;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 data1;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     data1;
 	/* 0x04 */ void32 segment;
 } SCmdColHeader;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 num;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     num;
 	/* 0x04 */ void32 segment;
 } SCmdRoomList;
 
@@ -118,8 +139,8 @@ typedef struct StructBE {
 } SCmdWindSettings;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 data1;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     data1;
 	/* 0x04 */ void32 segment;
 } SCmdEntranceList;
 
@@ -136,38 +157,38 @@ typedef struct StructBE {
 } SCmdRoomBehavior;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 data1;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     data1;
 	/* 0x04 */ void32 segment;
 } SCmdMesh;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 num;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     num;
 	/* 0x04 */ void32 segment;
 } SCmdObjectList;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 num;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     num;
 	/* 0x04 */ void32 segment;
 } SCmdLightList;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 data1;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     data1;
 	/* 0x04 */ void32 segment;
 } SCmdPathList;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 num;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     num;
 	/* 0x04 */ void32 segment;
 } SCmdTransiActorList;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 num;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     num;
 	/* 0x04 */ void32 segment;
 } SCmdLightSettingList;
 
@@ -204,8 +225,8 @@ typedef struct StructBE {
 } SCmdEndMarker;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 data1;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     data1;
 	/* 0x04 */ void32 segment;
 } SCmdExitList;
 
@@ -225,14 +246,14 @@ typedef struct StructBE {
 } SCmdEchoSettings;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 data1;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     data1;
 	/* 0x04 */ void32 segment;
 } SCmdCutsceneData;
 
 typedef struct StructBE {
-	/* 0x00 */ u8 code;
-	/* 0x01 */ u8 data1;
+	/* 0x00 */ u8     code;
+	/* 0x01 */ u8     data1;
 	/* 0x04 */ void32 segment;
 } SCmdAltHeaders;
 
@@ -248,7 +269,7 @@ typedef struct StructBE {
 
 typedef struct StructBE {
 	MeshHeaderBase base;
-	u8 numEntries;
+	u8     numEntries;
 	void32 dListStart;
 	void32 dListEnd;
 } MeshHeader0;
@@ -266,35 +287,35 @@ typedef struct StructBE {
 
 typedef struct StructBE {
 	MeshHeader1Base base;
-	void32 imagePtr; // 0x08
-	u32    unknown; // 0x0C
-	u32    unknown2; // 0x10
-	u16    bgWidth; // 0x14
-	u16    bgHeight; // 0x16
-	u8  imageFormat;       // 0x18
-	u8  imageSize;         // 0x19
-	u16 imagePal;          // 0x1A
-	u16 imageFlip;         // 0x1C
+	void32 imagePtr;       // 0x08
+	u32    unknown;        // 0x0C
+	u32    unknown2;       // 0x10
+	u16    bgWidth;        // 0x14
+	u16    bgHeight;       // 0x16
+	u8     imageFormat;    // 0x18
+	u8     imageSize;      // 0x19
+	u16    imagePal;       // 0x1A
+	u16    imageFlip;      // 0x1C
 } MeshHeader1Single;
 
 typedef struct StructBE {
 	MeshHeader1Base base;
-	u8 bgCnt;
+	u8     bgCnt;
 	void32 bgRecordPtr;
 } MeshHeader1Multi;
 
 typedef struct StructBE {
-	u16    unknown; // 0x00
-	s8     bgID; // 0x02
+	u16    unknown;        // 0x00
+	s8     bgID;           // 0x02
 	void32 imagePtr; // 0x04
-	u32    unknown2; // 0x08
-	u32    unknown3; // 0x0C
-	u16    bgWidth; // 0x10
-	u16    bgHeight; // 0x12
-	u8     imageFmt; // 0x14
-	u8     imageSize; // 0x15
-	u16    imagePal; // 0x16
-	u16    imageFlip; // 0x18
+	u32    unknown2;       // 0x08
+	u32    unknown3;       // 0x0C
+	u16    bgWidth;        // 0x10
+	u16    bgHeight;       // 0x12
+	u8     imageFmt;       // 0x14
+	u8     imageSize;      // 0x15
+	u16    imagePal;       // 0x16
+	u16    imageFlip;      // 0x18
 } BackgroundRecord;
 
 typedef struct StructBE {
@@ -306,7 +327,7 @@ typedef struct StructBE {
 
 typedef struct StructBE {
 	MeshHeaderBase base;
-	u8 numEntries;
+	u8     numEntries;
 	void32 dListStart;
 	void32 dListEnd;
 } MeshHeader2;
@@ -323,12 +344,12 @@ typedef struct StructBE {
 } LightSettings; // size = 0x16
 
 typedef struct StructBE {
-	/* 0x00 */ u8 count; // number of points in the path
+	/* 0x00 */ u8     count; // number of points in the path
 	/* 0x04 */ void32 points; // Segment Address to the array of points
 } PointPath; // size = 0x8
 
 typedef union StructBE {
-	SCmdBase base;
+	SCmdBase             base;
 	SCmdSpawnList        spawnList;
 	SCmdActorList        actorList;
 	SCmdUnused02         unused02;
@@ -341,7 +362,7 @@ typedef union StructBE {
 	SCmdLightSettingList lightSettingList;
 	SCmdExitList         exitList;
 	SCmdColHeader        colHeader;
-	SCmdMesh mesh;
+	SCmdMesh             mesh;
 	SCmdSpecialFiles     specialFiles;
 	SCmdCutsceneData     cutsceneData;
 	SCmdRoomBehavior     roomBehavior;
@@ -397,21 +418,21 @@ typedef struct StructBE {
 
 typedef struct StructBE {
 	/* 0x00 */ PolygonBase base;
-	/* 0x01 */ u8 num;     // number of dlist entries
+	/* 0x01 */ u8     num; // number of dlist entries
 	/* 0x04 */ void32 start;
 	/* 0x08 */ void32 end;
 } PolygonType0; // size = 0xC
 
 typedef struct StructBE {
 	/* 0x00 */ Vec3s_BE pos;
-	/* 0x06 */ s16 unk_06;
+	/* 0x06 */ s16      unk_06;
 	/* 0x08 */ void32   opa;
 	/* 0x0C */ void32   xlu;
 } PolygonDlist2; // size = 0x8
 
 typedef struct StructBE {
 	/* 0x00 */ PolygonBase base;
-	/* 0x01 */ u8 num;     // number of dlist entries
+	/* 0x01 */ u8     num; // number of dlist entries
 	/* 0x04 */ void32 start;
 	/* 0x08 */ void32 end;
 } PolygonType2; // size = 0xC

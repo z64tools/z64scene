@@ -12,24 +12,17 @@ typedef struct {
 } Object;
 
 typedef struct StructBE {
-	u16 id;
+	u16      id;
 	Vec3s_BE pos, rot;
-	u16 param;
-} ActorEntry;
-
-typedef struct Actor {
-	struct Actor* next;
-	const char*   name;
-	u16     id;
-	u16     param;
-	Vec3s   pos;
-	Vec3s   rot;
-	Object* object;
-	f32     scale;
+	u16      param;
 } Actor;
 
-Actor* Actor_New(struct Room* room, u16 id, u16 param, Vec3s pos, Vec3s rot);
-void Actor_RemoveNodeList(struct Room* room);
-void Actor_UpdateAll(struct Room* room);
+typedef struct {
+	DataNode data;
+	Actor*   head;
+	u32      num;
+} ActorList;
+
+void Actor_Draw(Actor* this);
 
 #endif

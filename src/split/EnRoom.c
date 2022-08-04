@@ -8,6 +8,10 @@ void EnRoom_Draw(Editor* editor, EnRoom* this, Split* split);
 SplitTask gEnRoomTask = DefineTask("Room", EnRoom);
 
 void EnRoom_Init(Editor* editor, EnRoom* this, Split* split) {
+	Scene* scene = &editor->scene;
+	SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
+	RoomHeader* roomHeader = Scene_GetRoomHeader(scene, scene->curRoom);
+	
 	PropEnum* prop = PropEnum_InitList(0, "Field", "Dungeon");
 	
 	Element_Combo_SetPropEnum(&this->comboBox, prop);
@@ -22,13 +26,16 @@ void EnRoom_Init(Editor* editor, EnRoom* this, Split* split) {
 	Element_Name(&this->buttonFog, "Fog");
 	Element_Name(&this->buttonColView, "Collision");
 	
-	Element_Button_SetValue(&this->buttonIndoor, true, editor->scene.indoorLight);
+	Element_Button_SetValue(&this->buttonIndoor, true, roomHeader->indoorLight);
 	Element_Button_SetValue(&this->buttonFPS, true, gLimitFPS);
-	Element_Button_SetValue(&this->buttonCulling, true, editor->scene.render.culling);
-	Element_Button_SetValue(&this->buttonFog, true, editor->scene.render.fog);
-	Element_Button_SetValue(&this->buttonColView, true, editor->scene.render.collision);
+	Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
+	Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
+	Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
 	
-	Element_Combo_SetPropEnum(&this->envID, editor->interface.propEndID);
+	if (sceneHeader->lightList)
+		Element_Combo_SetPropEnum(&this->envID, sceneHeader->lightList->enumProp);
+	else
+		Element_Combo_SetPropEnum(&this->envID, NULL);
 }
 
 void EnRoom_Destroy(Editor* editor, EnRoom* this, Split* split) {
@@ -36,6 +43,10 @@ void EnRoom_Destroy(Editor* editor, EnRoom* this, Split* split) {
 }
 
 void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
+	Scene* scene = &editor->scene;
+	SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
+	RoomHeader* roomHeader = Scene_GetRoomHeader(scene, scene->curRoom);
+	
 	Element_Header(split, split->taskCombo, 128);
 	Element_Combo(split->taskCombo);
 	
@@ -52,11 +63,11 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 		
 		Element_Row(split, &this->envID, 1.0);
 		Element_DisplayName(&this->envID);
-		editor->scene.render.envID = Element_Combo(&this->envID);
+		scene->curEnv = Element_Combo(&this->envID);
 		
 		Element_Row(split, NULL, 0.25, &this->buttonIndoor, 0.75);
-		Element_Button_SetValue(&this->buttonIndoor, true, editor->scene.indoorLight);
-		editor->scene.indoorLight = Element_Button(&this->buttonIndoor);
+		Element_Button_SetValue(&this->buttonIndoor, true, roomHeader->indoorLight);
+		roomHeader->indoorLight = Element_Button(&this->buttonIndoor);
 	} Element_Box(BOX_END);
 	
 	Element_Box(BOX_START); {
@@ -64,30 +75,31 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 		Element_Row(split,  &this->buttonFPS, 0.5, &this->buttonCulling, 0.5);
 		Element_Row(split,  &this->buttonFog, 0.5, &this->buttonColView, 0.5);
 		
-		Element_Button_SetValue(&this->buttonFog, true, editor->scene.render.fog);
-		editor->scene.render.fog = Element_Button(&this->buttonFog);
+		Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
+		Scene_SetState(scene, SCENE_DRAW_FOG, Element_Button(&this->buttonFog));
 		
 		Element_Button_SetValue(&this->buttonFPS, true, gLimitFPS);
 		gLimitFPS = Element_Button(&this->buttonFPS);
 		
-		Element_Button_SetValue(&this->buttonCulling, true, editor->scene.render.culling);
-		editor->scene.render.culling = Element_Button(&this->buttonCulling);
+		Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
+		Scene_SetState(scene, SCENE_DRAW_CULLING, Element_Button(&this->buttonCulling));
 		
-		Element_Button_SetValue(&this->buttonColView, true, editor->scene.render.collision);
-		editor->scene.render.collision = Element_Button(&this->buttonColView);
+		Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
+		Scene_SetState(scene, SCENE_DRAW_COLLISION, Element_Button(&this->buttonColView));
 	} Element_Box(BOX_END);
 	
 	Element_Row(split, &this->killScene, 1.0);
+	
 	if (Element_Button(&this->killScene)) {
-		Log("Free PROP");
-		PropEnum_Free(editor->interface.propEndID);
-		editor->interface.propEndID = NULL;
-		Log("Free Scene");
 		Scene_Free(&editor->scene);
 		Interface_MessageWindow(&editor->app, "Nice", "Destroyed Current Scene!");
 	}
 	
-	Element_Combo_SetPropEnum(&this->envID, editor->interface.propEndID);
+	if (sceneHeader->lightList)
+		Element_Combo_SetPropEnum(&this->envID, sceneHeader->lightList->enumProp);
+	else
+		Element_Combo_SetPropEnum(&this->envID, NULL);
+	
 	Element_Condition(&this->envID, this->envID.prop != NULL);
 }
 

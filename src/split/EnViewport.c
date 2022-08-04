@@ -64,14 +64,17 @@ static Room* EnViewport_RayRoom(Scene* scene, RayLine* ray) {
 	s32 id = -1;
 	Vec3f r;
 	
-	for (s32 i = 0; i < scene->numRoom; i++)
-		if (Col3D_LineVsTriBuffer(ray, &scene->room[i]->triBuf, &r))
+	for (s32 i = 0; i < scene->numRoom; i++) {
+		RoomHeader* room = Scene_GetRoomHeader(scene, i);
+		
+		if (Col3D_LineVsTriBuffer(ray, &room->mesh->triBuf, &r))
 			id = i;
+	}
 	
 	if (id < 0)
 		return NULL;
 	
-	return scene->room[id];
+	return &scene->room[id];
 }
 
 void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
@@ -103,8 +106,10 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 		RayLine ray = this->rayLine;
 		
 		for (s32 i = 0; i < editor->scene.numRoom; i++) {
+			RoomHeader* room = Scene_GetRoomHeader(&editor->scene, i);
+			
 			Vec3f p;
-			if (Col3D_LineVsTriBuffer(&ray, &editor->scene.room[i]->triBuf, &p)) {
+			if (Col3D_LineVsTriBuffer(&ray, &room->mesh->triBuf, &p)) {
 				r = true;
 				o = p;
 			}
@@ -118,17 +123,8 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 		RayLine ray = this->rayLine;
 		Room* room = EnViewport_RayRoom(&editor->scene, &ray);
 		
-		if (room) {
-			printf_info("ROOM");
-			for (s32 i = 0; i < editor->scene.numRoom; i++) {
-				Room* tr = editor->scene.room[i];
-				
-				if (tr == room)
-					tr->state |= ROOM_IS_CURRENT;
-				else
-					tr->state &= ~ROOM_IS_CURRENT;
-			}
-		}
+		if (room)
+			room->state ^= ROOM_SELECTED;
 	}
 	
 	// Cursor Wrapping
@@ -145,15 +141,16 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 			Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(mouse->pos.y, yMin, yMax));
 	}
 	
-	if (editor->scene.segment) {
-		EnvLightSettings* env = editor->scene.env + editor->scene.render.envID;
-		memcpy(split->bg.color.c, env->fogColor, 3);
-		
-		if (editor->scene.render.fog)
-			this->view.far = env->fogFar;
-		else
-			this->view.far = 12800.0 + 6000;
-	}
+	Log("Environment");
+	SceneHeader* header = Scene_GetSceneHeader(&editor->scene);
+	EnvLightSettings* env = header->lightList->env + editor->scene.curEnv;
+	
+	memcpy(split->bg.color.c, env->fogColor, 3);
+	
+	if (editor->scene.state & SCENE_DRAW_FOG)
+		this->view.far = env->fogFar;
+	else
+		this->view.far = 12800.0 + 6000;
 }
 
 static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
@@ -247,7 +244,7 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	split->bg.useCustomBG = true;
 	
 	n64_graph_init();
-	n64_set_culling(editor->scene.render.culling);
+	n64_set_culling(editor->scene.state & SCENE_DRAW_CULLING);
 	
 	View_SetProjectionDimensions(&this->view, &dim);
 	View_Update(&this->view, &editor->input);

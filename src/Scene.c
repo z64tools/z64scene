@@ -1,4 +1,3 @@
-#define __SCENE_TYPES_H__
 #include "Editor.h"
 #include "BgCheck.h"
 
@@ -9,49 +8,60 @@ char* sSceneCmdHandlers_Name[SCENE_CMD_ID_MAX];
 // # Scene                               #
 // # # # # # # # # # # # # # # # # # # # #
 
+static void Scene_SetHeaderNum(Scene* this) {
+	SceneCmd* cmd = gSegment[2] = this->segment;
+	
+	this->numHeader = 1;
+	
+	for (;; cmd++) {
+		if (cmd->base.code == SCENE_CMD_ID_ALTERNATE_HEADER_LIST) {
+			break;
+		}
+		
+		if (cmd->base.code == SCENE_CMD_ID_END)
+			return;
+	}
+}
+
 void Scene_LoadScene(Scene* this, const char* file) {
-	Log("Load File [%s]", file);
 	MemFile_LoadFile(&this->file, file);
 	this->segment = this->file.data;
 	
-	n64_clearCache();
+	Scene_SetHeaderNum(this);
 	Scene_ExecuteCommands(this, NULL);
 	
-	Calloc(this->room, sizeof(Room*) * 255);
-	
-	this->render.fog = true;
+	this->state |= SCENE_DRAW_FOG;
 }
 
 void Scene_LoadRoom(Scene* this, const char* file) {
-	Room* room;
+	Room* room = &this->room[this->numRoom++];
 	
-	Log("Load File [%s]", file);
-	Calloc(room, sizeof(Room));
 	MemFile_LoadFile(&room->file, file);
 	room->segment = room->file.data;
 	
 	Scene_ExecuteCommands(this, room);
-	
-	this->room[this->numRoom++] = room;
 }
 
 void Scene_Free(Scene* this) {
-	MemFile_Free(&this->file);
-	CollisionMesh_Free(&this->colMesh);
-	for (s32 i = 0; i < this->numRoom; i++) {
-		MemFile_Free(&this->room[i]->file);
-		TriBuffer_Free(&this->room[i]->triBuf);
-		Actor_RemoveNodeList(this->room[i]);
-		Free(this->room[i]);
+	Log("Free Room MemFiles");
+	for (s32 i = 0; i < this->numRoom; i++)
+		MemFile_Free(&this->room[i].file);
+	
+	Log("Free DataNodes");
+	for (s32 i = 0; i < SCENE_CMD_ID_MAX; i++) {
+		DataNode_Free(&this->dataCtx, i);
+		Assert(this->dataCtx.head[i] == NULL);
 	}
-	Free(this->room);
-	this->numRoom = 0;
+	
+	CollisionMesh_Free(&this->colMesh);
+	MemFile_Free(&this->file);
 	memset(this, 0, sizeof(*this));
 	n64_clearCache();
 }
 
 void Scene_ExecuteCommands(Scene* this, Room* room) {
 	u8* segment;
+	SceneCmd* cmd;
 	
 	gSegment[2] = this->segment;
 	gSegment[3] = room ? room->segment : NULL;
@@ -64,12 +74,8 @@ void Scene_ExecuteCommands(Scene* this, Room* room) {
 		Log("" PRNT_BLUE "ROOM" PRNT_RSET ": [%s]", room->file.info.name);
 	}
 	
-	for (SceneCmd* cmd = (void*)segment; cmd->base.code != SCENE_CMD_ID_END ; cmd++) {
-		if (cmd->base.code == SCENE_CMD_ID_END)
-			break;
-		
-		if (cmd->base.code == SCENE_CMD_ID_ALTERNATE_HEADER_LIST && this->setupHeader != 0) {
-		} else if (cmd->base.code < SCENE_CMD_ID_MAX) {
+	for (cmd = (void*)segment; cmd->base.code != SCENE_CMD_ID_END; cmd++) {
+		if (cmd->base.code < SCENE_CMD_ID_MAX) {
 			Log("[%02X] %08X [%s]", cmd->base.code, (u8*)cmd - segment, sSceneCmdHandlers_Name[cmd->base.code]);
 			
 			if (sSceneCmdHandlers[cmd->base.code])
@@ -81,23 +87,24 @@ void Scene_ExecuteCommands(Scene* this, Room* room) {
 	}
 }
 
-void Scene_Draw(Scene* this) {
-	static EnvLightSettings* prevEnv;
-	EnvLightSettings* env = this->env + this->render.envID;
+static void Scene_Light(Scene* this) {
+	RoomHeader* roomHeader = Scene_GetRoomHeader(this, this->curRoom);
+	SceneHeader* sceneHeader = Scene_GetSceneHeader(this);
+	EnvLightSettings* env = sceneHeader->lightList->env;
 	s8 l1n[3], l2n[3];
 	u16 fogNear;
-	
-	Log("Begin");
+	u8 curEnv = this->curEnv;
 	
 	Assert(env != NULL);
 	
+	env += curEnv;
 	memcpy(l1n, env->light1Dir, 3);
 	memcpy(l2n, env->light2Dir, 3);
 	
-	if (this->indoorLight == false && this->render.envID < 4) {
+	if (roomHeader->indoorLight == false && curEnv < 4) {
 		u16 time;
 		
-		switch (this->render.envID) {
+		switch (curEnv) {
 			case 0:
 				time = 0x6000;
 				break;
@@ -123,24 +130,24 @@ void Scene_Draw(Scene* this) {
 		l2n[2] = -l1n[2];
 	}
 	
-	if (this->render.fog == false)
-		fogNear = 1000;
-	else
+	if (this->state & SCENE_DRAW_FOG)
 		fogNear = env->fogNear & 0x3FF;
+	else
+		fogNear = 1000;
 	
 	Light_SetAmbLight(env->ambientColor);
 	Light_SetFog(fogNear, 0, env->fogColor);
 	Light_SetDirLight(l1n, env->light1Color);
 	Light_SetDirLight(l2n, env->light2Color);
-	
-	gSegment[2] = this->segment;
-	gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
-	gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
-	
-	if (prevEnv != env)
-		printf_hex("EnvLight", env, sizeof(*env), 0);
+}
+
+void Scene_Draw(Scene* this) {
+	Log("Begin");
+	Scene_Light(this);
 	
 	for (s32 i = 0; i < this->numRoom; i++) {
+		Room* room = &this->room[i];
+		RoomHeader* roomHeader = &room->header[this->curHeader];
 		Log("Room %d", i);
 		
 		n64_reset_buffers();
@@ -148,14 +155,17 @@ void Scene_Draw(Scene* this) {
 		gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
 		gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
 		
-		Room_Draw(this, this->room[i]);
+		Room_Draw(roomHeader->mesh);
+		
+		if (roomHeader->actorList && room->state & ROOM_SELECTED)
+			for (s32 j = 0; j < roomHeader->actorList->num; j++)
+				Actor_Draw(&roomHeader->actorList->head[j]);
+		
 		n64_draw_buffers();
 	}
 	Log("OK");
 	
-	prevEnv = env;
-	
-	if (this->render.collision) {
+	if (this->state & SCENE_DRAW_COLLISION) {
 		n64_reset_buffers();
 		CollisionMesh_Draw(&this->colMesh);
 		n64_draw_buffers();
@@ -163,7 +173,7 @@ void Scene_Draw(Scene* this) {
 }
 
 static void Room_BuildTriBuf(void* userData, const n64_triangleCallbackData* triData) {
-	Room* this = userData;
+	RoomMesh* this = userData;
 	Triangle* tri = &this->triBuf.head[this->triBuf.num];
 	
 	memcpy(tri->v, triData, sizeof(float) * 3 * 3);
@@ -177,6 +187,7 @@ static void Room_BuildTriBuf(void* userData, const n64_triangleCallbackData* tri
 
 void Scene_CacheBuild(Scene* this) {
 	MtxF mtx;
+	RoomMesh* mesh = (void*)this->dataCtx.head[SCENE_CMD_ID_MESH_HEADER];
 	
 	Matrix_Push();
 	Matrix_Scale(1.0, 1.0, 1.0, MTXMODE_NEW);
@@ -188,38 +199,49 @@ void Scene_CacheBuild(Scene* this) {
 	n64_setMatrix_projection(&mtx);
 	n64_set_culling(false);
 	
-	for (s32 i = 0; i < this->numRoom; i++) {
-		Room* room = this->room[i];
-		TriBuffer_Alloc(&room->triBuf, 256);
+	while (mesh) {
+		TriBuffer_Alloc(&mesh->triBuf, 256);
 		
 		n64_graph_init();
 		gSegment[2] = this->segment;
 		gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
 		gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
 		
-		Log("Room %d", i);
+		Room_Draw(mesh);
 		
-		room->state |= ROOM_CACHE_BUILD;
-		Room_Draw(this, room);
-		room->state &= ~ROOM_CACHE_BUILD;
-		
-		n64_set_triangleCallbackFunc(room, Room_BuildTriBuf);
+		n64_set_triangleCallbackFunc(mesh, Room_BuildTriBuf);
 		n64_draw_buffers();
 		
-		printf_info("Room%d TriCount: %d", i, room->triBuf.num);
+		printf_info("Room TriCount: %d", mesh->triBuf.num);
+		
+		mesh = (void*)mesh->data.next;
 	}
 	
 	n64_set_triangleCallbackFunc(0, 0);
+}
+
+SceneHeader* Scene_GetSceneHeader(Scene* this) {
+	return &this->header[this->curHeader];
+}
+
+RoomHeader* Scene_GetRoomHeader(Scene* this, u8 num) {
+	return &this->room[num].header[this->curHeader];
+}
+
+void Scene_SetState(Scene* this, SceneState state, bool set) {
+	if (set)
+		this->state |= state;
+	else
+		this->state &= ~state;
 }
 
 // # # # # # # # # # # # # # # # # # # # #
 // # Room                                #
 // # # # # # # # # # # # # # # # # # # # #
 
-void Room_Draw(Scene* scene, Room* room) {
-	MeshHeader* header = room->mesh;
-	
-	Assert(header != NULL);
+void Room_Draw(RoomMesh* roomMesh) {
+	MeshHeader* header = roomMesh->header;
+	void* segment = roomMesh->roomFile;
 	
 	gSPDisplayList(POLY_OPA_DISP++, gSetupDList(0x19));
 	gDPSetEnvColor(POLY_OPA_DISP++, 0x80, 0x80, 0x80, 0x80);
@@ -229,9 +251,9 @@ void Room_Draw(Scene* scene, Room* room) {
 	Matrix_Push();
 	Matrix_Translate(0, 0, 0, MTXMODE_NEW);
 	
-	gSegment[3] = room->segment;
-	gSPSegment(POLY_OPA_DISP++, 0x03, room->segment);
-	gSPSegment(POLY_XLU_DISP++, 0x03, room->segment);
+	gSegment[3] = segment;
+	gSPSegment(POLY_OPA_DISP++, 0x03, segment);
+	gSPSegment(POLY_XLU_DISP++, 0x03, segment);
 	gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
 	gSPMatrix(POLY_XLU_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
 	
@@ -263,12 +285,6 @@ void Room_Draw(Scene* scene, Room* room) {
 				gSPDisplayList(POLY_XLU_DISP++, polygonDlist->xlu);
 		}
 	}
-	
-	if (room->state & ROOM_CACHE_BUILD)
-		return;
-	
-	if (room->state & ROOM_IS_CURRENT)
-		Actor_UpdateAll(room);
 }
 
 // # # # # # # # # # # # # # # # # # # # #
@@ -289,20 +305,9 @@ static void Scene_CommandSpawnList(Scene* scene, Room* room, SceneCmd* cmd) {
 }
 
 static void Scene_CommandActorList(Scene* scene, Room* room, SceneCmd* cmd) {
-	ActorEntry* entry = SEGMENTED_TO_VIRTUAL(cmd->actorList.segment);
+	RoomHeader* header = &room->header[scene->curHeader];
 	
-	// play->numSetupActors = cmd->actorList.num;
-	// play->setupActorList = SEGMENTED_TO_VIRTUAL(cmd->actorList.segment);
-	
-	for (s32 i = 0; i < cmd->actorList.num; i++, entry++) {
-		Actor_New(
-			room,
-			entry->id,
-			entry->param,
-			Math_Vec3s_New(UnfoldVec3(entry->pos)),
-			Math_Vec3s_New(UnfoldVec3(entry->rot))
-		);
-	}
+	header->actorList = DataNode_Copy(&scene->dataCtx, cmd);
 }
 
 static void Scene_CommandUnused2(Scene* scene, Room* room, SceneCmd* cmd) {
@@ -347,11 +352,9 @@ static void Scene_CommandRoomBehavior(Scene* scene, Room* room, SceneCmd* cmd) {
 }
 
 static void Scene_CommandMeshHeader(Scene* scene, Room* room, SceneCmd* cmd) {
-	if (room == NULL)
-		printf_warning("Scene_CommandMeshHeader: No Room Provided...");
+	RoomHeader* header = &room->header[scene->curHeader];
 	
-	else
-		room->mesh = SEGMENTED_TO_VIRTUAL(cmd->mesh.segment);
+	header->mesh = DataNode_Copy(&scene->dataCtx, cmd);
 }
 
 static void Scene_CommandObjectList(Scene* scene, Room* room, SceneCmd* cmd) {
@@ -428,27 +431,23 @@ static void Scene_CommandTransitionActorList(Scene* scene, Room* room, SceneCmd*
 }
 
 static void Scene_CommandLightSettingsList(Scene* scene, Room* room, SceneCmd* cmd) {
-	Editor* editor = GetEditor();
-	InterfaceContext* interface = &editor->interface;
+	SceneHeader* header = &scene->header[scene->curHeader];
 	
-	scene->numEnv = cmd->lightSettingList.num;
-	scene->env = SEGMENTED_TO_VIRTUAL(cmd->lightSettingList.segment);
-	Log("Light List: %08X", (u8*)scene->env - (u8*)scene->segment);
-	
-	if (interface->propEndID)
-		PropEnum_Free(interface->propEndID);
-	
-	interface->propEndID = PropEnum_Init(0);
-	for (s32 i = 0; i < editor->scene.numEnv; i++)
-		PropEnum_Add(interface->propEndID, xFmt("Env %d", i));
+	header->lightList = DataNode_Copy(&scene->dataCtx, cmd);
 }
 
 static void Scene_CommandSkyboxSettings(Scene* scene, Room* room, SceneCmd* cmd) {
-	// play->skyboxId = cmd->skyboxSettings.skyboxId;
-	// play->envCtx.skyboxConfig = play->envCtx.changeSkyboxNextConfig = cmd->skyboxSettings.unk_05;
-	// play->envCtx.lightMode = cmd->skyboxSettings.unk_06;
-	
-	scene->indoorLight = cmd->skyboxSettings.unk_06;
+	if (room) {
+		RoomHeader* header = &room->header[scene->curHeader];
+		
+		Assert(scene->curHeader < ArrayCount(room->header));
+		
+		// play->skyboxId = cmd->skyboxSettings.skyboxId;
+		// play->envCtx.skyboxConfig = play->envCtx.changeSkyboxNextConfig = cmd->skyboxSettings.unk_05;
+		// play->envCtx.lightMode = cmd->skyboxSettings.unk_06;
+		
+		header->indoorLight = cmd->skyboxSettings.unk_06;
+	}
 }
 
 static void Scene_CommandSkyboxDisables(Scene* scene, Room* room, SceneCmd* cmd) {
