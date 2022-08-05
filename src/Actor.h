@@ -24,7 +24,8 @@ typedef enum {
 
 typedef struct {
 	u16   id;
-	Vec3s pos, rot;
+	Vec3f pos;
+	Vec3s rot;
 	u16   param;
 	
 	Vec3f      offset;
