@@ -4,6 +4,7 @@
 #define INCBIN_PREFIX
 #include <incbin.h>
 INCBIN(gGizmo_, "assets/3D/Gizmo.zobj");
+INCBIN(gSpot_, "assets/3D/Spot.zobj");
 
 void EnViewport_Init(Editor* editor, EnViewport* this, Split* split);
 void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split);
@@ -12,62 +13,91 @@ void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split);
 
 SplitTask gEnViewportTask = DefineTask("Viewport", EnViewport);
 
-void EnViewport_Draw_Empty(Editor*, EnViewport*, Split*);
-void EnViewport_Draw_3DViewport(Editor*, EnViewport*, Split*);
-
 // # # # # # # # # # # # # # # # # # # # #
 // #                                     #
 // # # # # # # # # # # # # # # # # # # # #
 
-static void Gizmo_Draw(Editor* editor, View3D* view, Vec3f pos) {
-#if 0
+static void EnViewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
+	Matrix_Push();
+	Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
+	
+	Matrix_Push();
+	Matrix_Scale(0.01 * scale, 0.01 * scale, 0.01 * scale, MTXMODE_APPLY);
+	
+	gSPSegment(POLY_OPA_DISP++, 6, (void*)gSpot_Data);
+	gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), color.a * 255);
+	gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+	gSPDisplayList(POLY_OPA_DISP++, 0x06007730);
+	
+	Matrix_Pop();
+	Matrix_Pop();
+}
+
+static void EnViewport_Gizmo(Editor* editor, EnViewport* this, Vec3f pos) {
+	View3D* view = &this->view;
+	Cylinder cyl[3];
+	Vec3f mul[2] = {
+		0, 100 * 100, 0,
+		0, 240 * 100, 0,
+	};
+	
 	for (s32 i = 0; i < 3; i++) {
-		gSPSegment(POLY_GUI_DISP++, 6, (void*)gGizmo_Data);
+		gSPSegment(POLY_OPA_DISP++, 6, (void*)gGizmo_Data);
 		Matrix_Push(); {
 			Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
 			Matrix_Push(); {
+				NVGcolor color = nvgHSL(i / 3.0, 0.5, 0.5);
 				f32 scale = Math_Vec3f_DistXYZ(pos, view->currentCamera->eye) * 0.00001f;
 				Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
 				
 				if (i == 0)
-					gDPSetEnvColor(POLY_GUI_DISP++, 0xFF, 0x40, 0x40, 0xA0);
+					gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), this->gfocus[i] * 0x80 + 0x7F);
 				
 				if (i == 1) {
-					gDPSetEnvColor(POLY_GUI_DISP++, 0x40, 0xFF, 0x40, 0xA0);
+					gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), this->gfocus[i] * 0x80 + 0x7F);
 					Matrix_RotateX_s(DegToBin(90), MTXMODE_APPLY);
 				}
 				if (i == 2) {
-					gDPSetEnvColor(POLY_GUI_DISP++, 0x40, 0x40, 0xFF, 0xA0);
+					gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), this->gfocus[i] * 0x80 + 0x7F);
 					Matrix_RotateZ_s(DegToBin(90), MTXMODE_APPLY);
 				}
 				
-				gSPMatrix(POLY_GUI_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-				gSPDisplayList(POLY_GUI_DISP++, 0x06000840);
+				Matrix_Push();
+				Matrix_MultVec3f(&mul[0], &cyl[i].start);
+				Matrix_MultVec3f(&mul[1], &cyl[i].end);
+				cyl[i].r = Math_Vec3f_DistXYZ(pos, view->currentCamera->eye) * 0.02f;
+				Matrix_Pop();
+				
+				gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+				gSPDisplayList(POLY_OPA_DISP++, 0x06000840);
 			} Matrix_Pop();
 		} Matrix_Pop();
 	}
-#endif
-}
-
-void EnViewport_Init(Editor* editor, EnViewport* this, Split* split) {
-	View_Init(&this->view, &editor->input);
 	
-	// MemFile_LoadFile(&gNora, "Nora.zobj");
-	// SkelAnime_Init(&gNora, &this->skelAnime, 0x0600D978, 0x0600EF44);
+	for (s32 i = 0; i < 3; i++) {
+		RayLine ray = this->rayLine;
+		
+		this->gfocus[i] = false;
+		if (Col3D_LineVsCylinder(&ray, &cyl[i])) {
+			printf_info("CYL HIT");
+			this->gfocus[i] = true;
+		}
+	}
+	
+	for (s32 i = 0; i < 3; i++) {
+		EnViewport_DrawSpot(cyl[i].start, cyl[i].r, Theme_GetColor(THEME_PRIM, 40 + 120 * this->gfocus[i], 1.0f));
+		EnViewport_DrawSpot(cyl[i].end, cyl[i].r, Theme_GetColor(THEME_PRIM, 40 + 120 * this->gfocus[i], 1.25f));
+	}
 }
 
-void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split) {
-	split->bg.useCustomBG = false;
-}
-
-static Room* EnViewport_RayRoom(Scene* scene, RayLine* ray) {
+static Room* EnViewport_RayRooms(Scene* scene, RayLine* ray) {
 	s32 id = -1;
 	Vec3f r;
 	
 	for (s32 i = 0; i < scene->numRoom; i++) {
 		RoomHeader* room = Scene_GetRoomHeader(scene, i);
 		
-		if (Col3D_LineVsTriBuffer(ray, &room->mesh->triBuf, &r))
+		if (Col3D_LineVsTriBuffer(ray, &room->mesh->triBuf, &r, NULL))
 			id = i;
 	}
 	
@@ -77,26 +107,14 @@ static Room* EnViewport_RayRoom(Scene* scene, RayLine* ray) {
 	return &scene->room[id];
 }
 
-void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
+static void EnViewport_CameraUpdate(Editor* editor, EnViewport* this, Split* split) {
 	Input* inputCtx = &editor->input;
 	MouseInput* mouse = &inputCtx->mouse;
-	
-	Element_Header(split, split->taskCombo, 128);
-	Element_Combo(split->taskCombo);
-	
-	if (editor->scene.segment == NULL)
-		return;
-	
-	if (split->mouseInHeader && mouse->click.press)
-		this->headerClick = true;
-	
-	if (this->headerClick == true && mouse->cursorAction == false)
-		this->headerClick = false;
 	
 	if (this->view.setCamMove == false) {
 		this->view.cameraControl = false;
 		
-		if (split->blockMouse == false && split->mouseInSplit)
+		if (split->blockMouse == false && editor->geo.state.noClickInput == false && split->mouseInSplit)
 			this->view.cameraControl = true;
 	}
 	
@@ -108,11 +126,8 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 		for (s32 i = 0; i < editor->scene.numRoom; i++) {
 			RoomHeader* room = Scene_GetRoomHeader(&editor->scene, i);
 			
-			Vec3f p;
-			if (Col3D_LineVsTriBuffer(&ray, &room->mesh->triBuf, &p)) {
+			if (Col3D_LineVsTriBuffer(&ray, &room->mesh->triBuf, &o, NULL))
 				r = true;
-				o = p;
-			}
 		}
 		
 		if (r)
@@ -121,7 +136,7 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	
 	if (Input_GetKey(inputCtx, KEY_LEFT_CONTROL)->hold && mouse->clickL.press) {
 		RayLine ray = this->rayLine;
-		Room* room = EnViewport_RayRoom(&editor->scene, &ray);
+		Room* room = EnViewport_RayRooms(&editor->scene, &ray);
 		
 		if (room)
 			room->state ^= ROOM_SELECTED;
@@ -140,17 +155,6 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 		if (mouse->pos.y < yMin || mouse->pos.y > yMax)
 			Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(mouse->pos.y, yMin, yMax));
 	}
-	
-	Log("Environment");
-	SceneHeader* header = Scene_GetSceneHeader(&editor->scene);
-	EnvLightSettings* env = header->lightList->env + editor->scene.curEnv;
-	
-	memcpy(split->bg.color.c, env->fogColor, 3);
-	
-	if (editor->scene.state & SCENE_DRAW_FOG)
-		this->view.far = env->fogFar;
-	else
-		this->view.far = 12800.0 + 6000;
 }
 
 static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
@@ -179,32 +183,88 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
 	nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
 }
 
-void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
-	void* vg = editor->vg;
+static void EnViewport_UpdateActors(Editor* editor, EnViewport* this, Split* split) {
+	RayLine ray = this->rayLine;
+	ActorList* list = (void*)editor->scene.dataCtx.head[SCENE_CMD_ID_ACTOR_LIST];
+	Input* input = &editor->input;
+	Actor* selectedActor = NULL;
 	
-	Profiler_O(4);
-	Profiler_I(4);
+	if (!Input_GetMouse(input, MOUSE_R)->press)
+		return;
 	
-	if (editor->scene.segment == NULL)
-		EnViewport_Draw_Empty(editor, this, split);
-	else
-		EnViewport_Draw_3DViewport(editor, this, split);
+	this->curActor = NULL;
 	
-	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-	nvgFontSize(vg, 15);
-	nvgTextLetterSpacing(vg, 0.0f);
+	while (list) {
+		Actor* actor = list->head;
+		for (s32 i = 0; i < list->num; i++, actor++) {
+			veccpy(&actor->sph.pos, &actor->pos);
+			actor->sph.pos.y += 10.0f;
+			actor->sph.r = 30;
+			
+			if (Col3D_LineVsSphere(&ray, &actor->sph))
+				selectedActor = actor;
+		}
+		
+		list = (void*)list->data.next;
+	}
 	
-	ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(4), 0);
-	ProfilerText(vg, 1, "N64 Render:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
-	ProfilerText(vg, 2, "Col3D:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
-	ProfilerText(vg, 3, "Delta:", "%.2f", gDeltaTime, 0);
+	if (!Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
+		list = (void*)editor->scene.dataCtx.head[SCENE_CMD_ID_ACTOR_LIST];
+		
+		while (list) {
+			Actor* actor = list->head;
+			for (s32 i = 0; i < list->num; i++, actor++) {
+				actor->state &= ~ACTOR_SELECTED;
+			}
+			
+			list = (void*)list->data.next;
+		}
+	}
+	
+	if (selectedActor) {
+		this->curActor = selectedActor;
+		selectedActor->state |= ACTOR_SELECTED;
+	}
 }
 
 // # # # # # # # # # # # # # # # # # # # #
 // #                                     #
 // # # # # # # # # # # # # # # # # # # # #
 
-void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
+void EnViewport_Init(Editor* editor, EnViewport* this, Split* split) {
+	View_Init(&this->view, &editor->input);
+	
+	// MemFile_LoadFile(&gNora, "Nora.zobj");
+	// SkelAnime_Init(&gNora, &this->skelAnime, 0x0600D978, 0x0600EF44);
+}
+
+void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split) {
+	split->bg.useCustomBG = false;
+}
+
+void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
+	SceneHeader* header;
+	EnvLightSettings* env;
+	
+	Element_Header(split, split->taskCombo, 128);
+	Element_Combo(split->taskCombo);
+	
+	if (editor->scene.segment == NULL)
+		return;
+	
+	header = Scene_GetSceneHeader(&editor->scene);
+	env = header->lightList->env + editor->scene.curEnv;
+	memcpy(split->bg.color.c, env->fogColor, 3);
+	
+	if (editor->scene.state & SCENE_DRAW_FOG)
+		this->view.far = env->fogFar;
+	else
+		this->view.far = 12800.0 + 6000;
+	
+	EnViewport_CameraUpdate(editor, this, split);
+}
+
+static void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 	const char* txt = "z64scene";
 	void* vg = editor->vg;
 	
@@ -235,7 +295,7 @@ void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
 	);
 }
 
-void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) {
+static void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) {
 	Vec2s dim = {
 		split->rect.w,
 		split->rect.h
@@ -248,7 +308,8 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	
 	View_SetProjectionDimensions(&this->view, &dim);
 	View_Update(&this->view, &editor->input);
-	View_Raycast(&this->view, split->mousePos, split->dispRect, &this->rayLine);
+	this->rayLine = View_Raycast(&this->view, split->mousePos, split->dispRect);
+	EnViewport_UpdateActors(editor, this, split);
 	
 	n64_setMatrix_model(&this->view.modelMtx);
 	n64_setMatrix_view(&this->view.viewMtx);
@@ -258,6 +319,12 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
 	Profiler_O(0);
+	
+	if (this->curActor) {
+		n64_reset_buffers();
+		EnViewport_Gizmo(editor, this, Math_Vec3f_New(UnfoldVec3(this->curActor->pos)));
+		n64_draw_buffers();
+	}
 	
 #if 0
 	Matrix_Push(); {
@@ -286,4 +353,25 @@ void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) 
 		gSPDisplayList(POLY_OPA_DISP++, 0x060017C0);
 	} Matrix_Pop();
 #endif
+}
+
+void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
+	void* vg = editor->vg;
+	
+	Profiler_O(4);
+	Profiler_I(4);
+	
+	if (editor->scene.segment == NULL)
+		EnViewport_Draw_Empty(editor, this, split);
+	else
+		EnViewport_Draw_3DViewport(editor, this, split);
+	
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+	nvgFontSize(vg, 15);
+	nvgTextLetterSpacing(vg, 0.0f);
+	
+	ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(4), 0);
+	ProfilerText(vg, 1, "N64 Render:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
+	ProfilerText(vg, 2, "Col3D:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
+	ProfilerText(vg, 3, "Delta:", "%.2f", gDeltaTime, 0);
 }

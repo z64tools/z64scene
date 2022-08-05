@@ -137,15 +137,28 @@ void* DataNode_Copy(DataContext* ctx, SceneCmd* cmd) {
 	node->pointer = ptr;
 	this = (void*)node;
 	
+	Actor* actor;
+	ActorEntry* entry;
+	
 	switch (code) {
 		case SCENE_CMD_ID_ACTOR_LIST:
-			this->actor.head = SysCalloc(sizeof(Actor) * 0xFF);
+			actor = this->actor.head = SysCalloc(sizeof(Actor) * 0xFF);
 			this->actor.num = cmd->actorList.num;
-			memcpy(
-				this->actor.head,
-				SEGMENTED_TO_VIRTUAL(segment),
-				sizeof(Actor) * this->actor.num
-			);
+			entry = SEGMENTED_TO_VIRTUAL(cmd->actorList.segment);
+			
+			for (s32 i = 0; i < cmd->actorList.num; i++, actor++, entry++) {
+				actor->id = entry->id;
+				actor->param = entry->param;
+				
+				actor->pos.x = entry->pos.x;
+				actor->pos.y = entry->pos.y;
+				actor->pos.z = entry->pos.z;
+				
+				actor->rot.x = entry->rot.x;
+				actor->rot.y = entry->rot.y;
+				actor->rot.z = entry->rot.z;
+			}
+			
 			break;
 			
 		case SCENE_CMD_ID_MESH_HEADER:

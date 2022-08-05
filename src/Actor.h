@@ -2,6 +2,7 @@
 #define __Z64_ACTOR_H__
 #include <ExtLib.h>
 #include <ExtGui/Math.h>
+#include <ExtGui/Collision.h>
 #include "Types.h"
 
 struct Room;
@@ -15,6 +16,20 @@ typedef struct StructBE {
 	u16      id;
 	Vec3s_BE pos, rot;
 	u16      param;
+} ActorEntry;
+
+typedef enum {
+	ACTOR_SELECTED = 1 << 0,
+} ActorState;
+
+typedef struct {
+	u16   id;
+	Vec3s pos, rot;
+	u16   param;
+	
+	Vec3f      offset;
+	ActorState state;
+	Sphere     sph;
 } Actor;
 
 typedef struct {
@@ -24,5 +39,6 @@ typedef struct {
 } ActorList;
 
 void Actor_Draw(Actor* this);
+void ActorList_Draw(ActorList* list);
 
 #endif

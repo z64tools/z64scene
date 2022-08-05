@@ -10,6 +10,10 @@ typedef struct {
 	
 	RayLine rayLine;
 	Vec3f   cubePos;
+	
+	Actor* curActor;
+	
+	u8       gfocus[3];
 } EnViewport;
 
 extern SplitTask gEnViewportTask;

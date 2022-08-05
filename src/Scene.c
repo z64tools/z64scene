@@ -142,28 +142,22 @@ static void Scene_Light(Scene* this) {
 }
 
 void Scene_Draw(Scene* this) {
-	Log("Begin");
 	Scene_Light(this);
 	
 	for (s32 i = 0; i < this->numRoom; i++) {
 		Room* room = &this->room[i];
 		RoomHeader* roomHeader = &room->header[this->curHeader];
-		Log("Room %d", i);
 		
+		Log("Room %d", i);
 		n64_reset_buffers();
 		gSegment[2] = this->segment;
 		gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
 		gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
 		
 		Room_Draw(roomHeader->mesh);
-		
-		if (roomHeader->actorList && room->state & ROOM_SELECTED)
-			for (s32 j = 0; j < roomHeader->actorList->num; j++)
-				Actor_Draw(&roomHeader->actorList->head[j]);
-		
+		ActorList_Draw(roomHeader->actorList);
 		n64_draw_buffers();
 	}
-	Log("OK");
 	
 	if (this->state & SCENE_DRAW_COLLISION) {
 		n64_reset_buffers();
@@ -259,12 +253,10 @@ void Room_Draw(RoomMesh* roomMesh) {
 	
 	Matrix_Pop();
 	
-	Log("Type: %d", header->base.type);
 	if (header->base.type == 0) {
 		PolygonType0* polygon = &header->polygon0;
 		PolygonDlist* polygonDlist = SEGMENTED_TO_VIRTUAL(polygon->start);
 		
-		Log("PolyNum %d", polygon->num);
 		for (s32 i = 0; i < polygon->num; i++, polygonDlist++) {
 			if (polygonDlist->opa != 0)
 				gSPDisplayList(POLY_OPA_DISP++, polygonDlist->opa);
@@ -276,7 +268,6 @@ void Room_Draw(RoomMesh* roomMesh) {
 		PolygonType2* polygon = &header->polygon2;
 		PolygonDlist2* polygonDlist = SEGMENTED_TO_VIRTUAL(polygon->start);
 		
-		Log("PolyNum %d", polygon->num);
 		for (s32 i = 0; i < polygon->num; i++, polygonDlist++) {
 			if (polygonDlist->opa != 0)
 				gSPDisplayList(POLY_OPA_DISP++, polygonDlist->opa);
