@@ -205,20 +205,6 @@ static void EnViewport_CameraUpdate(Editor* editor, EnViewport* this, Split* spl
 		if (room)
 			room->state ^= ROOM_SELECTED;
 	}
-	
-	// Cursor Wrapping
-	if (this->view.setCamMove && this->view.cameraControl) {
-		s16 xMin = split->rect.x;
-		s16 xMax = split->rect.x + split->rect.w;
-		s16 yMin = split->rect.y;
-		s16 yMax = split->rect.y + split->rect.h;
-		
-		if (mouse->pos.x < xMin || mouse->pos.x > xMax)
-			Input_SetMousePos(&editor->input, WrapS(mouse->pos.x, xMin, xMax), MOUSE_KEEP_AXIS);
-		
-		if (mouse->pos.y < yMin || mouse->pos.y > yMax)
-			Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(mouse->pos.y, yMin, yMax));
-	}
 }
 
 static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
@@ -321,6 +307,7 @@ void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split) {
 void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	SceneHeader* header;
 	EnvLightSettings* env;
+	MouseInput* mouse = &editor->input.mouse;
 	
 	Element_Header(split, split->taskCombo, 128);
 	Element_Combo(split->taskCombo);
@@ -338,6 +325,22 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 		this->view.far = 12800.0 + 6000;
 	
 	EnViewport_CameraUpdate(editor, this, split);
+	
+	// Cursor Wrapping
+	if (this->gizmo.moveLock)
+		return;
+	if ((this->view.setCamMove && this->view.cameraControl) || memcmp(this->glock, "\0\0\0", 3)) {
+		s16 xMin = split->rect.x;
+		s16 xMax = split->rect.x + split->rect.w;
+		s16 yMin = split->rect.y;
+		s16 yMax = split->rect.y + split->rect.h;
+		
+		if (mouse->pos.x < xMin || mouse->pos.x > xMax)
+			Input_SetMousePos(&editor->input, WrapS(mouse->pos.x, xMin, xMax), MOUSE_KEEP_AXIS);
+		
+		if (mouse->pos.y < yMin || mouse->pos.y > yMax)
+			Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(mouse->pos.y, yMin, yMax));
+	}
 }
 
 static void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
