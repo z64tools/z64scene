@@ -18,12 +18,12 @@ void Actor_Draw(Actor* this) {
 			gSPSegment(POLY_OPA_DISP++, 6, (void*)gCube_Data);
 			
 			if (this->state & ACTOR_SELECTED)
-				gDPSetEnvColor(POLY_OPA_DISP++, 0x40, 0x40, 0xFF, 0xFF);
+				gDPSetEnvColor(POLY_OPA_DISP++, 0x40, 0xA0, 0xF0, 0xFF);
 			else
 				gDPSetEnvColor(POLY_OPA_DISP++, 0xC0, 0xC0, 0xC0, 0xFF);
 			
 			gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-			gSPDisplayList(POLY_OPA_DISP++, 0x06000820);
+			gSPDisplayList(POLY_OPA_DISP++, 0x06000E30);
 		} Matrix_Pop();
 	} Matrix_Pop();
 }

@@ -261,8 +261,8 @@ static void EnViewport_UpdateActors(Editor* editor, EnViewport* this, Split* spl
 		return;
 	
 	// Process rooms so that we do not grab actors behind walls
-	EnViewport_RayRooms(&editor->scene, &ray, NULL);
-	printf_info("N %.2f", ray.nearest);
+	if (EnViewport_RayRooms(&editor->scene, &ray, NULL))
+		ray.nearest += 20.0f;
 	
 	while (list) {
 		Actor* actor = list->head;
@@ -288,9 +288,8 @@ static void EnViewport_UpdateActors(Editor* editor, EnViewport* this, Split* spl
 		
 		while (list) {
 			Actor* actor = list->head;
-			for (s32 i = 0; i < list->num; i++, actor++) {
+			for (s32 i = 0; i < list->num; i++, actor++)
 				actor->state &= ~ACTOR_SELECTED;
-			}
 			
 			list = (void*)list->data.next;
 		}
@@ -385,8 +384,8 @@ static void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* 
 	
 	View_SetProjectionDimensions(&this->view, &dim);
 	View_Update(&this->view, &editor->input);
-	this->prevRay = this->rayLine;
 	this->rayLine = View_Raycast(&this->view, split->mousePos, split->dispRect);
+	EnViewport_UpdateActors(editor, this, split);
 	
 	n64_setMatrix_model(&this->view.modelMtx);
 	n64_setMatrix_view(&this->view.viewMtx);
@@ -396,8 +395,6 @@ static void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* 
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
 	Profiler_O(0);
-	
-	EnViewport_UpdateActors(editor, this, split);
 	
 	if (this->curActor) {
 		n64_reset_buffers();

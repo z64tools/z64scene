@@ -15,7 +15,6 @@ typedef struct {
 	SkelAnime skelAnime;
 	s8 headerClick;
 	
-	RayLine prevRay;
 	RayLine rayLine;
 	Vec3f   cubePos;
 	
