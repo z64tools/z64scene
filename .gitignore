@@ -25,3 +25,4 @@ asm_win32.sh
 *.obj
 *.txt
 !assets/3D/*.zobj
+ExtLib/
