@@ -20,16 +20,12 @@ SplitTask gEnViewportTask = DefineTask("Viewport", EnViewport);
 static void EnViewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
 	Matrix_Push();
 	Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
-	
-	Matrix_Push();
 	Matrix_Scale(0.01 * scale, 0.01 * scale, 0.01 * scale, MTXMODE_APPLY);
 	
 	gSPSegment(POLY_OPA_DISP++, 6, (void*)gSpot_Data);
 	gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), color.a * 255);
 	gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
 	gSPDisplayList(POLY_OPA_DISP++, 0x06007730);
-	
-	Matrix_Pop();
 	Matrix_Pop();
 }
 
@@ -50,61 +46,74 @@ static Room* EnViewport_RayRooms(Scene* scene, RayLine* ray, Vec3f* out) {
 }
 
 static void EnViewport_Gizmo(Editor* editor, EnViewport* this) {
+	Gizmo* gizmo = &this->gizmo;
 	View3D* view = &this->view;
 	Cylinder cyl[3];
 	Vec3f mul[2] = {
 		0, 100 * 100, 0,
-		0, 240 * 100, 0,
+		0, 230 * 100, 0,
 	};
 	
 	for (s32 i = 0; i < 3; i++) {
-		gSPSegment(POLY_OPA_DISP++, 6, (void*)gGizmo_Data);
-		Matrix_Push(); {
-			Matrix_Translate(UnfoldVec3(this->gizmo.pos), MTXMODE_APPLY);
+		if (memcmp(this->glock, "\0\0\0", 3)) {
+			if (this->glock[i]) {
+				// Draw line
+			}
+		} else {
+			gSPSegment(POLY_OPA_DISP++, 6, (void*)gGizmo_Data);
 			Matrix_Push(); {
-				NVGcolor color = nvgHSL(i / 3.0, 0.6, 0.6);
-				f32 scale = Math_Vec3f_DistXYZ(this->gizmo.pos, view->currentCamera->eye) * 0.00001f;
-				Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
-				
-				if (i == 0)
-					gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), this->gfocus[i] * 0x80 + 0x7F);
-				
-				if (i == 1) {
-					gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), this->gfocus[i] * 0x80 + 0x7F);
-					Matrix_RotateX_s(DegToBin(90), MTXMODE_APPLY);
-				}
-				if (i == 2) {
-					gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), this->gfocus[i] * 0x80 + 0x7F);
-					Matrix_RotateZ_s(DegToBin(90), MTXMODE_APPLY);
-				}
-				
-				Matrix_Push();
-				Matrix_MultVec3f(&mul[0], &cyl[i].start);
-				Matrix_MultVec3f(&mul[1], &cyl[i].end);
-				cyl[i].r = Math_Vec3f_DistXYZ(this->gizmo.pos, view->currentCamera->eye) * 0.02f;
-				Matrix_Pop();
-				
-				gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-				gSPDisplayList(POLY_OPA_DISP++, 0x060006D0);
+				Matrix_Translate(UnfoldVec3(gizmo->pos), MTXMODE_APPLY);
+				Matrix_Push(); {
+					NVGcolor color = nvgHSL(i / 3.0, 0.5 + 0.2 * this->gfocus[i], 0.5 + 0.2 * this->gfocus[i]);
+					f32 scale = Math_Vec3f_DistXYZ(gizmo->pos, view->currentCamera->eye) * 0.00001f;
+					Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
+					
+					if (i == 0) {
+						gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), 0xFF);
+					}
+					
+					if (i == 1) {
+						gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), 0xFF);
+						Matrix_RotateX_d(90, MTXMODE_APPLY);
+					}
+					if (i == 2) {
+						gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), 0xFF);
+						Matrix_RotateZ_d(90, MTXMODE_APPLY);
+					}
+					
+					Matrix_Push();
+					Matrix_MultVec3f(&mul[0], &cyl[i].start);
+					Matrix_MultVec3f(&mul[1], &cyl[i].end);
+					cyl[i].r = Math_Vec3f_DistXYZ(gizmo->pos, view->currentCamera->eye) * 0.02f;
+					Matrix_Pop();
+					
+					gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+					gSPDisplayList(POLY_OPA_DISP++, 0x060006D0);
+				} Matrix_Pop();
 			} Matrix_Pop();
-		} Matrix_Pop();
+			
+			EnViewport_DrawSpot(cyl[i].start, cyl[i].r, nvgRGBA(255, 255, 255, 255));
+			EnViewport_DrawSpot(cyl[i].end, cyl[i].r, nvgRGBA(255, 255, 255, 255));
+		}
 	}
 	
 	if (!memcmp(this->glock, "\0\0\0", 3)) {
 		u8 oneHit = 0;
+		RayLine ray = this->rayLine;
 		
 		for (s32 i = 0; i < 3; i++) {
-			RayLine ray = this->rayLine;
-			
+			Vec3f p;
 			this->gfocus[i] = false;
-			if (Col3D_LineVsCylinder(&ray, &cyl[i], NULL)) {
+			
+			if (Col3D_LineVsCylinder(&ray, &cyl[i], &p)) {
 				this->gfocus[i] = true;
 				oneHit = true;
+				EnViewport_DrawSpot(p, 1.0f, nvgRGBA(255, 0, 0, 255));
 			}
 		}
 		
 		if (Input_GetKey(&editor->input, KEY_G)->press) {
-			this->gizmo.moveLock = true;
+			gizmo->moveLock = true;
 			this->gfocus[0] = this->gfocus[1] = this->gfocus[2] = true;
 			oneHit = true;
 		}
@@ -112,11 +121,11 @@ static void EnViewport_Gizmo(Editor* editor, EnViewport* this) {
 		if (!oneHit)
 			return;
 		
-		if (!this->gizmo.moveLock && Input_GetMouse(&editor->input, MOUSE_L)->press == false)
+		if (!gizmo->moveLock && Input_GetMouse(&editor->input, MOUSE_L)->press == false)
 			return;
 	}
 	
-	if (this->gizmo.moveLock) {
+	if (gizmo->moveLock) {
 		if (Input_GetMouse(&editor->input, MOUSE_ANY)->press)
 			goto reset;
 	} else if (Input_GetMouse(&editor->input, MOUSE_L)->hold == false)
@@ -125,8 +134,8 @@ static void EnViewport_Gizmo(Editor* editor, EnViewport* this) {
 	while (0) {
 reset:
 		memset(this->glock, 0, 3);
-		this->gizmo.moveLock = false;
-		this->gizmo.ppos = this->gizmo.pos;
+		gizmo->moveLock = false;
+		gizmo->ppos = gizmo->pos;
 		
 		return;
 	}
@@ -137,14 +146,17 @@ reset:
 		RayLine r = this->rayLine;
 		Vec3f p;
 		
-		if (EnViewport_RayRooms(&editor->scene, &r, &p))
-			this->gizmo.pos = p;
+		if (EnViewport_RayRooms(&editor->scene, &r, &p)) {
+			gizmo->pos.x = rintf(p.x);
+			gizmo->pos.y = rintf(p.y);
+			gizmo->pos.z = rintf(p.z);
+		}
 	} else {
 	}
 	
-	this->gizmo.vel = Math_Vec3f_Sub(this->gizmo.pos, this->gizmo.ppos);
+	gizmo->vel = Math_Vec3f_Sub(gizmo->pos, gizmo->ppos);
 	
-	if (this->gizmo.vel.y || this->gizmo.vel.x || this->gizmo.vel.z) {
+	if (gizmo->vel.y || gizmo->vel.x || gizmo->vel.z) {
 		ActorList* head = (void*)editor->scene.dataCtx.head[SCENE_CMD_ID_ACTOR_LIST];
 		
 		while (head) {
@@ -154,16 +166,16 @@ reset:
 				if (!(actor->state & ACTOR_SELECTED))
 					continue;
 				
-				actor->pos.x += this->gizmo.vel.x;
-				actor->pos.y += this->gizmo.vel.y;
-				actor->pos.z += this->gizmo.vel.z;
+				actor->pos.x += gizmo->vel.x;
+				actor->pos.y += gizmo->vel.y;
+				actor->pos.z += gizmo->vel.z;
 			}
 			
 			head = (void*)head->data.next;
 		}
 	}
 	
-	this->gizmo.ppos = this->gizmo.pos;
+	gizmo->ppos = gizmo->pos;
 }
 
 static void EnViewport_CameraUpdate(Editor* editor, EnViewport* this, Split* split) {
@@ -207,32 +219,6 @@ static void EnViewport_CameraUpdate(Editor* editor, EnViewport* this, Split* spl
 	}
 }
 
-static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
-	nvgFontSize(vg, 12);
-	nvgFontFace(vg, "default");
-	nvgFontBlur(vg, 1.0f);
-	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-	for (s32 i = 0; i < 2; i++)
-		nvgText(vg, 8, 8 + SPLIT_TEXT_H * row, msg, NULL);
-	
-	nvgFontBlur(vg, 0.0f);
-	nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
-	nvgText(vg, 8, 8 + SPLIT_TEXT_H * row, msg, NULL);
-	
-	nvgFontFace(vg, "default-bold");
-	nvgFontBlur(vg, 1.0f);
-	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-	for (s32 i = 0; i < 2; i++)
-		nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
-	
-	nvgFontBlur(vg, 0.0f);
-	if (dangerValue)
-		nvgFillColor(vg, nvgHSLA(SQ(Clamp(val / dangerValue, 0, 1)) * 0.5f + 0.5f, 0.6, 0.6, 225));
-	else
-		nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
-	nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
-}
-
 static void EnViewport_UpdateActors(Editor* editor, EnViewport* this, Split* split) {
 	RayLine ray = this->rayLine;
 	ActorList* list = (void*)editor->scene.dataCtx.head[SCENE_CMD_ID_ACTOR_LIST];
@@ -258,7 +244,7 @@ static void EnViewport_UpdateActors(Editor* editor, EnViewport* this, Split* spl
 			
 			veccpy(&actor->sph.pos, &actor->pos);
 			actor->sph.pos.y += 10.0f;
-			actor->sph.r = 30;
+			actor->sph.r = 20;
 			
 			if (Col3D_LineVsSphere(&ray, &actor->sph, &p))
 				selectedActor = actor;
@@ -341,6 +327,32 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 		if (mouse->pos.y < yMin || mouse->pos.y > yMax)
 			Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(mouse->pos.y, yMin, yMax));
 	}
+}
+
+static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
+	nvgFontSize(vg, 12);
+	nvgFontFace(vg, "default");
+	nvgFontBlur(vg, 1.0f);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	for (s32 i = 0; i < 2; i++)
+		nvgText(vg, 8, 8 + SPLIT_TEXT_H * row, msg, NULL);
+	
+	nvgFontBlur(vg, 0.0f);
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
+	nvgText(vg, 8, 8 + SPLIT_TEXT_H * row, msg, NULL);
+	
+	nvgFontFace(vg, "default-bold");
+	nvgFontBlur(vg, 1.0f);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	for (s32 i = 0; i < 2; i++)
+		nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
+	
+	nvgFontBlur(vg, 0.0f);
+	if (dangerValue)
+		nvgFillColor(vg, nvgHSLA(SQ(Clamp(val / dangerValue, 0, 1)) * 0.5f + 0.5f, 0.6, 0.6, 225));
+	else
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
+	nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
 }
 
 static void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
