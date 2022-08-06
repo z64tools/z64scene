@@ -24,7 +24,8 @@ PRNT_RSET := \e[m
 
 .PHONY: default \
 		win32 \
-		linux
+		linux \
+		format
 
 default: linux
 linux: $(RELEASE_EXECUTABLE_LINUX)
@@ -46,6 +47,9 @@ clean:
 	rm -f $(SOURCE_O_LINUX)
 	rm -f $(SOURCE_O_WIN32)
 	rm -f -R bin
+
+format:
+	@cd z64viewer && ./format.sh
 
 # # # # # # # # # # # # # # # # # # # #
 # LINUX BUILD                         #
