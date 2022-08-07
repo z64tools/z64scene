@@ -15,8 +15,8 @@ typedef struct {
 	ElButton buttonColView;
 	
 	ElButton killScene;
-} EnRoom;
+} Settings;
 
-extern SplitTask gEnRoomTask;
+extern SplitTask gSettingsTask;
 
 #endif

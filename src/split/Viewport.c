@@ -1,4 +1,4 @@
-#include "EnViewport.h"
+#include "Viewport.h"
 #include <float.h>
 
 #define INCBIN_PREFIX
@@ -6,18 +6,25 @@
 INCBIN(gGizmo_, "assets/3D/Gizmo.zobj");
 INCBIN(gSpot_, "assets/3D/Spot.zobj");
 
-void EnViewport_Init(Editor* editor, EnViewport* this, Split* split);
-void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split);
-void EnViewport_Update(Editor* editor, EnViewport* this, Split* split);
-void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split);
+void Viewport_Init(Editor* editor, Viewport* this, Split* split);
+void Viewport_Destroy(Editor* editor, Viewport* this, Split* split);
+void Viewport_Update(Editor* editor, Viewport* this, Split* split);
+void Viewport_Draw(Editor* editor, Viewport* this, Split* split);
 
-SplitTask gEnViewportTask = DefineTask("Viewport", EnViewport);
+SplitTask gViewportTask = {
+	.taskName = "Viewport",
+	.init     = (void*)Viewport_Init,
+	.destroy  = (void*)Viewport_Destroy,
+	.update   = (void*)Viewport_Update,
+	.draw     = (void*)Viewport_Draw,
+	.size     = sizeof(Viewport)
+};
 
 // # # # # # # # # # # # # # # # # # # # #
 // #                                     #
 // # # # # # # # # # # # # # # # # # # # #
 
-static void EnViewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
+static void Viewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
 	Matrix_Push();
 	Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
 	Matrix_Scale(0.01 * scale, 0.01 * scale, 0.01 * scale, MTXMODE_APPLY);
@@ -29,7 +36,7 @@ static void EnViewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
 	Matrix_Pop();
 }
 
-static Room* EnViewport_RayRooms(Scene* scene, RayLine* ray, Vec3f* out) {
+static Room* Viewport_RayRooms(Scene* scene, RayLine* ray, Vec3f* out) {
 	s32 id = -1;
 	
 	for (s32 i = 0; i < scene->numRoom; i++) {
@@ -45,7 +52,7 @@ static Room* EnViewport_RayRooms(Scene* scene, RayLine* ray, Vec3f* out) {
 	return &scene->room[id];
 }
 
-static void EnViewport_Gizmo(Editor* editor, EnViewport* this) {
+static void Viewport_Gizmo(Editor* editor, Viewport* this) {
 	Gizmo* gizmo = &this->gizmo;
 	View3D* view = &this->view;
 	Cylinder cyl[3];
@@ -91,9 +98,6 @@ static void EnViewport_Gizmo(Editor* editor, EnViewport* this) {
 					gSPDisplayList(POLY_OPA_DISP++, 0x060006D0);
 				} Matrix_Pop();
 			} Matrix_Pop();
-			
-			EnViewport_DrawSpot(cyl[i].start, cyl[i].r, nvgRGBA(255, 255, 255, 255));
-			EnViewport_DrawSpot(cyl[i].end, cyl[i].r, nvgRGBA(255, 255, 255, 255));
 		}
 	}
 	
@@ -108,7 +112,6 @@ static void EnViewport_Gizmo(Editor* editor, EnViewport* this) {
 			if (Col3D_LineVsCylinder(&ray, &cyl[i], &p)) {
 				this->gfocus[i] = true;
 				oneHit = true;
-				EnViewport_DrawSpot(p, 1.0f, nvgRGBA(255, 0, 0, 255));
 			}
 		}
 		
@@ -146,7 +149,7 @@ reset:
 		RayLine r = this->rayLine;
 		Vec3f p;
 		
-		if (EnViewport_RayRooms(&editor->scene, &r, &p)) {
+		if (Viewport_RayRooms(&editor->scene, &r, &p)) {
 			gizmo->pos.x = rintf(p.x);
 			gizmo->pos.y = rintf(p.y);
 			gizmo->pos.z = rintf(p.z);
@@ -178,7 +181,7 @@ reset:
 	gizmo->ppos = gizmo->pos;
 }
 
-static void EnViewport_CameraUpdate(Editor* editor, EnViewport* this, Split* split) {
+static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) {
 	Input* inputCtx = &editor->input;
 	MouseInput* mouse = &inputCtx->mouse;
 	
@@ -212,28 +215,25 @@ static void EnViewport_CameraUpdate(Editor* editor, EnViewport* this, Split* spl
 	
 	if (Input_GetKey(inputCtx, KEY_LEFT_CONTROL)->hold && mouse->clickL.press) {
 		RayLine ray = this->rayLine;
-		Room* room = EnViewport_RayRooms(&editor->scene, &ray, NULL);
+		Room* room = Viewport_RayRooms(&editor->scene, &ray, NULL);
 		
 		if (room)
 			room->state ^= ROOM_SELECTED;
 	}
 }
 
-static void EnViewport_UpdateActors(Editor* editor, EnViewport* this, Split* split) {
+static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) {
 	RayLine ray = this->rayLine;
 	ActorList* list = (void*)editor->scene.dataCtx.head[SCENE_CMD_ID_ACTOR_LIST];
 	Input* input = &editor->input;
 	Actor* selectedActor = NULL;
 	Vec3f p;
 	
-	if (memcmp(this->gfocus, "\0\0\0", 3))
-		return;
-	
-	if (!Input_GetMouse(input, MOUSE_L)->press)
+	if (memcmp(this->gfocus, "\0\0\0", 3) || !Input_GetMouse(input, MOUSE_L)->press)
 		return;
 	
 	// Process rooms so that we do not grab actors behind walls
-	if (EnViewport_RayRooms(&editor->scene, &ray, NULL))
+	if (Viewport_RayRooms(&editor->scene, &ray, NULL))
 		ray.nearest += 20.0f;
 	
 	while (list) {
@@ -252,7 +252,6 @@ static void EnViewport_UpdateActors(Editor* editor, EnViewport* this, Split* spl
 		
 		list = (void*)list->data.next;
 	}
-	printf_info("N %.2f", ray.nearest);
 	
 	if (!Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
 		this->curActor = NULL;
@@ -279,18 +278,18 @@ static void EnViewport_UpdateActors(Editor* editor, EnViewport* this, Split* spl
 // #                                     #
 // # # # # # # # # # # # # # # # # # # # #
 
-void EnViewport_Init(Editor* editor, EnViewport* this, Split* split) {
+void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
 	View_Init(&this->view, &editor->input);
 	
 	// MemFile_LoadFile(&gNora, "Nora.zobj");
 	// SkelAnime_Init(&gNora, &this->skelAnime, 0x0600D978, 0x0600EF44);
 }
 
-void EnViewport_Destroy(Editor* editor, EnViewport* this, Split* split) {
+void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
 	split->bg.useCustomBG = false;
 }
 
-void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
+void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
 	SceneHeader* header;
 	EnvLightSettings* env;
 	MouseInput* mouse = &editor->input.mouse;
@@ -310,7 +309,7 @@ void EnViewport_Update(Editor* editor, EnViewport* this, Split* split) {
 	else
 		this->view.far = 12800.0 + 6000;
 	
-	EnViewport_CameraUpdate(editor, this, split);
+	Viewport_CameraUpdate(editor, this, split);
 	
 	// Cursor Wrapping
 	if (this->gizmo.moveLock)
@@ -355,7 +354,7 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
 	nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
 }
 
-static void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split) {
+static void Viewport_Draw_Empty(Editor* editor, Viewport* this, Split* split) {
 	const char* txt = "z64scene";
 	void* vg = editor->vg;
 	
@@ -386,36 +385,39 @@ static void EnViewport_Draw_Empty(Editor* editor, EnViewport* this, Split* split
 	);
 }
 
-static void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* split) {
+static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
 	Vec2s dim = {
 		split->rect.w,
 		split->rect.h
 	};
 	
 	split->bg.useCustomBG = true;
-	
 	n64_graph_init();
 	n64_set_culling(editor->scene.state & SCENE_DRAW_CULLING);
 	
 	View_SetProjectionDimensions(&this->view, &dim);
 	View_Update(&this->view, &editor->input);
 	this->rayLine = View_Raycast(&this->view, split->mousePos, split->dispRect);
-	EnViewport_UpdateActors(editor, this, split);
 	
 	n64_setMatrix_model(&this->view.modelMtx);
 	n64_setMatrix_view(&this->view.viewMtx);
 	n64_setMatrix_projection(&this->view.projMtx);
+}
+
+static void Viewport_Draw_3DViewport(Editor* editor, Viewport* this, Split* split) {
+	Viewport_InitDraw(editor, this, split);
 	
 	Profiler_I(0);
+	
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
-	Profiler_O(0);
 	
-	if (this->curActor) {
-		n64_reset_buffers();
-		EnViewport_Gizmo(editor, this);
-		n64_draw_buffers();
-	}
+	if (this->curActor)
+		Viewport_Gizmo(editor, this);
+	Viewport_UpdateActors(editor, this, split);
+	n64_draw_buffers();
+	
+	Profiler_O(0);
 	
 #if 0
 	Matrix_Push(); {
@@ -446,16 +448,16 @@ static void EnViewport_Draw_3DViewport(Editor* editor, EnViewport* this, Split* 
 #endif
 }
 
-void EnViewport_Draw(Editor* editor, EnViewport* this, Split* split) {
+void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
 	void* vg = editor->vg;
 	
 	Profiler_O(4);
 	Profiler_I(4);
 	
 	if (editor->scene.segment == NULL)
-		EnViewport_Draw_Empty(editor, this, split);
+		Viewport_Draw_Empty(editor, this, split);
 	else
-		EnViewport_Draw_3DViewport(editor, this, split);
+		Viewport_Draw_3DViewport(editor, this, split);
 	
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 	nvgFontSize(vg, 15);

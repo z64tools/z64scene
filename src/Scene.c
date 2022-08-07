@@ -149,18 +149,15 @@ void Scene_Draw(Scene* this) {
 		RoomHeader* roomHeader = &room->header[this->curHeader];
 		
 		Log("Room %d", i);
-		n64_reset_buffers();
 		gSegment[2] = this->segment;
 		gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
 		gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
 		
 		Room_Draw(roomHeader->mesh);
-		ActorList_Draw(roomHeader->actorList);
 		n64_draw_buffers();
 	}
 	
 	if (this->state & SCENE_DRAW_COLLISION) {
-		n64_reset_buffers();
 		CollisionMesh_Draw(&this->colMesh);
 		n64_draw_buffers();
 	}

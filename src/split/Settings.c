@@ -1,13 +1,20 @@
-#include "EnRoom.h"
+#include "Settings.h"
 
-void EnRoom_Init(Editor* editor, EnRoom* this, Split* split);
-void EnRoom_Destroy(Editor* editor, EnRoom* this, Split* split);
-void EnRoom_Update(Editor* editor, EnRoom* this, Split* split);
-void EnRoom_Draw(Editor* editor, EnRoom* this, Split* split);
+void Settings_Init(Editor* editor, Settings* this, Split* split);
+void Settings_Destroy(Editor* editor, Settings* this, Split* split);
+void Settings_Update(Editor* editor, Settings* this, Split* split);
+void Settings_Draw(Editor* editor, Settings* this, Split* split);
 
-SplitTask gEnRoomTask = DefineTask("Room", EnRoom);
+SplitTask gSettingsTask = {
+	.taskName = "Properties",
+	.init     = (void*)Settings_Init,
+	.destroy  = (void*)Settings_Destroy,
+	.update   = (void*)Settings_Update,
+	.draw     = (void*)Settings_Draw,
+	.size     = sizeof(Settings)
+};
 
-void EnRoom_Init(Editor* editor, EnRoom* this, Split* split) {
+void Settings_Init(Editor* editor, Settings* this, Split* split) {
 	Scene* scene = &editor->scene;
 	SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
 	RoomHeader* roomHeader = Scene_GetRoomHeader(scene, scene->curRoom);
@@ -38,11 +45,11 @@ void EnRoom_Init(Editor* editor, EnRoom* this, Split* split) {
 		Element_Combo_SetPropEnum(&this->envID, NULL);
 }
 
-void EnRoom_Destroy(Editor* editor, EnRoom* this, Split* split) {
+void Settings_Destroy(Editor* editor, Settings* this, Split* split) {
 	PropEnum_Free(this->comboBox.prop);
 }
 
-void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
+void Settings_Update(Editor* editor, Settings* this, Split* split) {
 	Scene* scene = &editor->scene;
 	SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
 	RoomHeader* roomHeader = Scene_GetRoomHeader(scene, scene->curRoom);
@@ -103,5 +110,5 @@ void EnRoom_Update(Editor* editor, EnRoom* this, Split* split) {
 	Element_Condition(&this->envID, this->envID.prop != NULL);
 }
 
-void EnRoom_Draw(Editor* editor, EnRoom* this, Split* split) {
+void Settings_Draw(Editor* editor, Settings* this, Split* split) {
 }

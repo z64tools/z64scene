@@ -24,8 +24,8 @@ typedef struct {
 	u8 glock[3];
 	
 	Gizmo gizmo;
-} EnViewport;
+} Viewport;
 
-extern SplitTask gEnViewportTask;
+extern SplitTask gViewportTask;
 
 #endif

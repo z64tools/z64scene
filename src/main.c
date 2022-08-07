@@ -18,8 +18,8 @@ typedef enum {
 	TAB_3DVP,
 } SplitEnum;
 
-#include <split/EnRoom.h>
-#include <split/EnViewport.h>
+#include <split/Settings.h>
+#include <split/Viewport.h>
 
 void nothing() {
 }
@@ -39,8 +39,8 @@ SplitTask empty = {
 };
 
 SplitTask* gTaskTable[] = {
-	[TAB_ROOM] = &gEnRoomTask,
-	[TAB_3DVP] = &gEnViewportTask,
+	[TAB_ROOM] = &gSettingsTask,
+	[TAB_3DVP] = &gViewportTask,
 	&empty
 };
 
