@@ -1,7 +1,7 @@
 include setup.mk
 
-CFLAGS          = -Wall -Wno-switch -DEXTLIB=200 -DNDEBUG -I z64viewer/include/ -I src/
-CFLAGS_MAIN     = -Wall -Wno-switch -DNDEBUG
+CFLAGS          = -Wall -Wno-switch -Wno-unused-function -DEXTLIB=200 -DNDEBUG -I z64viewer/include/ -I src/
+CFLAGS_MAIN     = -Wall -Wno-switch -Wno-unused-function -DNDEBUG
 OPT_WIN32      := -Ofast
 OPT_LINUX      := -Ofast
 SOURCE_C        = $(shell find src/* -type f -name '*.c')

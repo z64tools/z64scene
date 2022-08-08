@@ -21,7 +21,7 @@ typedef struct RoomMesh {
 	TriBuffer triBuf;
 } RoomMesh;
 
-typedef struct {
+typedef struct RoomHeader {
 	RoomMesh*  mesh;
 	ActorList* actorList;
 	u8 indoorLight;

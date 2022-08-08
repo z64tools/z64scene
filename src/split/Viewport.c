@@ -24,6 +24,15 @@ SplitTask gViewportTask = {
 // #                                     #
 // # # # # # # # # # # # # # # # # # # # #
 
+static Gfx* gVOPAHead;
+static Gfx* gVOPADisp;
+static Gfx* gVXLUHead;
+static Gfx* gVXLUDisp;
+static s32 gInstance;
+
+#define POLY_VOPA_DISP gVOPADisp
+#define POLY_VXLU_DISP gVXLUDisp
+
 static void Viewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
 	Matrix_Push();
 	Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
@@ -52,7 +61,18 @@ static Room* Viewport_RayRooms(Scene* scene, RayLine* ray, Vec3f* out) {
 	return &scene->room[id];
 }
 
-static void Viewport_Gizmo(Editor* editor, Viewport* this) {
+static void ResetGizmo(Viewport* this) {
+	Gizmo* gizmo = &this->gizmo;
+	
+	gizmo->lock.state = GIZMO_AXIS_ALL_FALSE;
+	gizmo->moveLock = false;
+	gizmo->ppos = gizmo->pos;
+}
+
+static void Viewport_Gizmo(Editor* editor, Viewport* this, Split* split) {
+	Vec3f up = { 0, 1, 0 };
+	Vec3f right = { 1, 0, 0 };
+	Vec3f front = { 0, 0, 1 };
 	Gizmo* gizmo = &this->gizmo;
 	View3D* view = &this->view;
 	Cylinder cyl[3];
@@ -62,29 +82,25 @@ static void Viewport_Gizmo(Editor* editor, Viewport* this) {
 	};
 	
 	for (s32 i = 0; i < 3; i++) {
-		if (memcmp(this->glock, "\0\0\0", 3)) {
-			if (this->glock[i]) {
-				// Draw line
-			}
-		} else {
-			gSPSegment(POLY_OPA_DISP++, 6, (void*)gGizmo_Data);
+		if (!gizmo->lock.state) {
+			gSPSegment(POLY_VOPA_DISP++, 6, (void*)gGizmo_Data);
 			Matrix_Push(); {
 				Matrix_Translate(UnfoldVec3(gizmo->pos), MTXMODE_APPLY);
 				Matrix_Push(); {
-					NVGcolor color = nvgHSL(i / 3.0, 0.5 + 0.2 * this->gfocus[i], 0.5 + 0.2 * this->gfocus[i]);
+					NVGcolor color = nvgHSL(i / 3.0, 0.5 + 0.2 * gizmo->focus.axis[i], 0.5 + 0.2 * gizmo->focus.axis[i]);
 					f32 scale = Math_Vec3f_DistXYZ(gizmo->pos, view->currentCamera->eye) * 0.00001f;
 					Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
 					
-					if (i == 0) {
-						gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), 0xFF);
+					if (i == 1) {
+						gDPSetEnvColor(POLY_VOPA_DISP++, UnfoldNVGcolor(color), 0xFF);
 					}
 					
-					if (i == 1) {
-						gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), 0xFF);
+					if (i == 2) {
+						gDPSetEnvColor(POLY_VOPA_DISP++, UnfoldNVGcolor(color), 0xFF);
 						Matrix_RotateX_d(90, MTXMODE_APPLY);
 					}
-					if (i == 2) {
-						gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), 0xFF);
+					if (i == 0) {
+						gDPSetEnvColor(POLY_VOPA_DISP++, UnfoldNVGcolor(color), 0xFF);
 						Matrix_RotateZ_d(90, MTXMODE_APPLY);
 					}
 					
@@ -94,30 +110,30 @@ static void Viewport_Gizmo(Editor* editor, Viewport* this) {
 					cyl[i].r = Math_Vec3f_DistXYZ(gizmo->pos, view->currentCamera->eye) * 0.02f;
 					Matrix_Pop();
 					
-					gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-					gSPDisplayList(POLY_OPA_DISP++, 0x060006D0);
+					gSPMatrix(POLY_VOPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+					gSPDisplayList(POLY_VOPA_DISP++, 0x060006D0);
 				} Matrix_Pop();
 			} Matrix_Pop();
 		}
 	}
 	
-	if (!memcmp(this->glock, "\0\0\0", 3)) {
+	if (gizmo->lock.state == 0) {
 		u8 oneHit = 0;
-		RayLine ray = this->rayLine;
+		RayLine ray = View_GetCursorRayLine(&this->view);
 		
 		for (s32 i = 0; i < 3; i++) {
 			Vec3f p;
-			this->gfocus[i] = false;
+			gizmo->focus.axis[i] = false;
 			
 			if (Col3D_LineVsCylinder(&ray, &cyl[i], &p)) {
-				this->gfocus[i] = true;
+				gizmo->focus.axis[i] = true;
 				oneHit = true;
 			}
 		}
 		
 		if (Input_GetKey(&editor->input, KEY_G)->press) {
 			gizmo->moveLock = true;
-			this->gfocus[0] = this->gfocus[1] = this->gfocus[2] = true;
+			gizmo->focus.state = GIZMO_AXIS_ALL_TRUE;
 			oneHit = true;
 		}
 		
@@ -126,27 +142,48 @@ static void Viewport_Gizmo(Editor* editor, Viewport* this) {
 		
 		if (!gizmo->moveLock && Input_GetMouse(&editor->input, MOUSE_L)->press == false)
 			return;
+	} else {
+		if (Input_GetKey(&editor->input, KEY_X)->press) {
+			if (gizmo->focus.y || gizmo->focus.z) {
+				gizmo->focus.state = GIZMO_AXIS_ALL_FALSE;
+				gizmo->focus.x = true;
+			} else
+				gizmo->focus.state = GIZMO_AXIS_ALL_TRUE;
+		}
+		if (Input_GetKey(&editor->input, KEY_Y)->press) {
+			if (gizmo->focus.x || gizmo->focus.z) {
+				gizmo->focus.state = GIZMO_AXIS_ALL_FALSE;
+				gizmo->focus.y = true;
+			} else
+				gizmo->focus.state = GIZMO_AXIS_ALL_TRUE;
+		}
+		if (Input_GetKey(&editor->input, KEY_Z)->press) {
+			if (gizmo->focus.x || gizmo->focus.y) {
+				gizmo->focus.state = GIZMO_AXIS_ALL_FALSE;
+				gizmo->focus.z = true;
+			} else
+				gizmo->focus.state = GIZMO_AXIS_ALL_TRUE;
+		}
 	}
 	
 	if (gizmo->moveLock) {
-		if (Input_GetMouse(&editor->input, MOUSE_ANY)->press)
-			goto reset;
-	} else if (Input_GetMouse(&editor->input, MOUSE_L)->hold == false)
-		goto reset;
-	
-	while (0) {
-reset:
-		memset(this->glock, 0, 3);
-		gizmo->moveLock = false;
-		gizmo->ppos = gizmo->pos;
-		
-		return;
+		if (Input_GetMouse(&editor->input, MOUSE_ANY)->press) {
+			ResetGizmo(this);
+			
+			return;
+		}
+	} else {
+		if (Input_GetMouse(&editor->input, MOUSE_L)->hold == false) {
+			ResetGizmo(this);
+			
+			return;
+		}
 	}
 	
-	memcpy(this->glock, this->gfocus, 3);
+	gizmo->lock = gizmo->focus;
 	
 	if (Input_GetKey(&editor->input, KEY_LEFT_CONTROL)->hold) {
-		RayLine r = this->rayLine;
+		RayLine r = View_GetCursorRayLine(&this->view);
 		Vec3f p;
 		
 		if (Viewport_RayRooms(&editor->scene, &r, &p)) {
@@ -155,6 +192,29 @@ reset:
 			gizmo->pos.z = rintf(p.z);
 		}
 	} else {
+		MouseInput* m = &editor->input.mouse;
+		f32 dist = View_DepthFactor(view, &gizmo->pos) / View_DimFactor(view) * 1.65;
+		Vec3f mvel = Math_Vec3f_New(-m->vel.x, -m->vel.y, 0);
+		mvel = View_OrientDirToView(view, &mvel);
+		
+		if (gizmo->lock.state == GIZMO_AXIS_ALL_TRUE) {
+			this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
+		} else {
+			if (gizmo->lock.x) {
+				mvel = Math_Vec3f_Project(mvel, right);
+				this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
+			}
+			
+			if (gizmo->lock.y) {
+				mvel = Math_Vec3f_Project(mvel, up);
+				this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
+			}
+			
+			if (gizmo->lock.z) {
+				mvel = Math_Vec3f_Project(mvel, front);
+				this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
+			}
+		}
 	}
 	
 	gizmo->vel = Math_Vec3f_Sub(gizmo->pos, gizmo->ppos);
@@ -179,57 +239,121 @@ reset:
 	}
 	
 	gizmo->ppos = gizmo->pos;
+	
+	if (gizmo->lock.state && gizmo->lock.state != GIZMO_AXIS_ALL_TRUE) {
+		void* vg = editor->vg;
+		Rect r = split->rect;
+		
+		r.x = r.y = 16;
+		r.w -= 32;
+		r.h -= 32;
+		
+		if (gizmo->lock.x) {
+			Vec3f a = Math_Vec3f_Add(gizmo->pos, Math_Vec3f_MulVal(right, 100.0f));
+			Vec3f b = Math_Vec3f_Add(gizmo->pos, Math_Vec3f_MulVal(right, -100.0f));
+			Vec2f a2d = View_Vec3fToScreenSpace(view, &a);
+			Vec2f b2d = View_Vec3fToScreenSpace(view, &b);
+			
+			nvgBeginPath(vg);
+			nvgStrokeColor(vg, nvgHSLA(0.000, 0.5, 0.5, 120));
+			nvgStrokeWidth(vg, 1.0f);
+			nvgMoveTo(vg, UnfoldVec2(a2d));
+			nvgLineTo(vg, UnfoldVec2(b2d));
+			nvgStroke(vg);
+			printf_info("%.0f %.0f", a.x, a.y);
+		}
+		
+		if (gizmo->lock.y) {
+			Vec3f a = Math_Vec3f_Add(gizmo->pos, Math_Vec3f_MulVal(up, 100.0f));
+			Vec3f b = Math_Vec3f_Add(gizmo->pos, Math_Vec3f_MulVal(up, -100.0f));
+			Vec2f a2d = View_Vec3fToScreenSpace(view, &a);
+			Vec2f b2d = View_Vec3fToScreenSpace(view, &b);
+			
+			nvgBeginPath(vg);
+			nvgStrokeColor(vg, nvgHSLA(0.333, 0.5, 0.5, 120));
+			nvgStrokeWidth(vg, 1.0f);
+			nvgMoveTo(vg, UnfoldVec2(a2d));
+			nvgLineTo(vg, UnfoldVec2(b2d));
+			nvgStroke(vg);
+			printf_info("%.0f %.0f", a.x, a.y);
+		}
+		
+		if (gizmo->lock.z) {
+			Vec3f a = Math_Vec3f_Add(gizmo->pos, Math_Vec3f_MulVal(front, 100.0f));
+			Vec3f b = Math_Vec3f_Add(gizmo->pos, Math_Vec3f_MulVal(front, -100.0f));
+			Vec2f a2d = View_Vec3fToScreenSpace(view, &a);
+			Vec2f b2d = View_Vec3fToScreenSpace(view, &b);
+			
+			nvgBeginPath(vg);
+			nvgStrokeColor(vg, nvgHSLA(0.666, 0.5, 0.5, 120));
+			nvgStrokeWidth(vg, 1.0f);
+			nvgMoveTo(vg, UnfoldVec2(a2d));
+			nvgLineTo(vg, UnfoldVec2(b2d));
+			nvgStroke(vg);
+			printf_info("%.0f %.0f", a.x, a.y);
+		}
+	}
 }
 
 static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) {
 	Input* inputCtx = &editor->input;
 	MouseInput* mouse = &inputCtx->mouse;
+	Gizmo* gizmo = &this->gizmo;
+	View3D* view = &this->view;
+	s32 cond = split->blockMouse == false && editor->geo.state.noClickInput == false && split->mouseInSplit;
 	
-	if (this->view.setCamMove == false) {
-		this->view.cameraControl = false;
-		
-		if (split->blockMouse == false && editor->geo.state.noClickInput == false && split->mouseInSplit)
-			this->view.cameraControl = true;
+	if (!Input_GetMouse(inputCtx, MOUSE_ANY)->hold && !cond)
+		view->cameraControl = false;
+	
+	if (!view->cameraControl) {
+		if (cond) {
+			if (View_CheckControlKeys(inputCtx))
+				view->cameraControl = true;
+		}
 	}
 	
-	for (s32 i = 0; i < 3; i++) {
-		if (this->glock[i])
-			this->view.cameraControl = false;
-	}
+	if (gizmo->lock.state)
+		view->cameraControl = false;
 	
-	if (mouse->clickMid.press && Input_GetKey(inputCtx, KEY_LEFT_ALT)->hold) {
-		Vec3f o;
-		s32 r = 0;
-		RayLine ray = this->rayLine;
-		
-		for (s32 i = 0; i < editor->scene.numRoom; i++) {
-			RoomHeader* room = Scene_GetRoomHeader(&editor->scene, i);
+	if (view->isControlled)
+		view->cameraControl = true;
+	
+	if (split->mouseInSplit) {
+		if (mouse->clickMid.press && Input_GetKey(inputCtx, KEY_LEFT_ALT)->hold) {
+			Vec3f o;
+			s32 r = 0;
+			RayLine ray = View_GetCursorRayLine(&this->view);
 			
-			if (Col3D_LineVsTriBuffer(&ray, &room->mesh->triBuf, &o, NULL))
-				r = true;
+			for (s32 i = 0; i < editor->scene.numRoom; i++) {
+				RoomHeader* room = Scene_GetRoomHeader(&editor->scene, i);
+				
+				if (Col3D_LineVsTriBuffer(&ray, &room->mesh->triBuf, &o, NULL))
+					r = true;
+			}
+			
+			if (r)
+				View_MoveTo(&this->view, o);
 		}
 		
-		if (r)
-			View_MoveTo(&this->view, o);
-	}
-	
-	if (Input_GetKey(inputCtx, KEY_LEFT_CONTROL)->hold && mouse->clickL.press) {
-		RayLine ray = this->rayLine;
-		Room* room = Viewport_RayRooms(&editor->scene, &ray, NULL);
-		
-		if (room)
-			room->state ^= ROOM_SELECTED;
+		if (Input_GetKey(inputCtx, KEY_LEFT_CONTROL)->hold && mouse->clickL.press) {
+			RayLine ray = View_GetCursorRayLine(&this->view);
+			Room* room = Viewport_RayRooms(&editor->scene, &ray, NULL);
+			
+			if (room)
+				room->state ^= ROOM_SELECTED;
+		}
 	}
 }
 
 static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) {
-	RayLine ray = this->rayLine;
+	RayLine ray = View_GetCursorRayLine(&this->view);
 	ActorList* list = (void*)editor->scene.dataCtx.head[SCENE_CMD_ID_ACTOR_LIST];
 	Input* input = &editor->input;
 	Actor* selectedActor = NULL;
+	Gizmo* gizmo = &this->gizmo;
 	Vec3f p;
 	
-	if (memcmp(this->gfocus, "\0\0\0", 3) || !Input_GetMouse(input, MOUSE_L)->press)
+	if (gizmo->lock.state || !Input_GetMouse(input, MOUSE_L)->press)
 		return;
 	
 	// Process rooms so that we do not grab actors behind walls
@@ -259,8 +383,12 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
 		
 		while (list) {
 			Actor* actor = list->head;
-			for (s32 i = 0; i < list->num; i++, actor++)
+			for (s32 i = 0; i < list->num; i++, actor++) {
 				actor->state &= ~ACTOR_SELECTED;
+				
+				for (s32 j = 0; j < 3; j++)
+					actor->pos.axis[j] = rint(actor->pos.axis[j]);
+			}
 			
 			list = (void*)list->data.next;
 		}
@@ -283,16 +411,27 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
 	
 	// MemFile_LoadFile(&gNora, "Nora.zobj");
 	// SkelAnime_Init(&gNora, &this->skelAnime, 0x0600D978, 0x0600EF44);
+	
+	if (gInstance++ == 0) {
+		gVOPAHead = SysAlloc(sizeof(Gfx) * 4096);
+		gVXLUHead = SysAlloc(sizeof(Gfx) * 4096);
+	}
 }
 
 void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
 	split->bg.useCustomBG = false;
+	
+	if (--gInstance == 0) {
+		Free(gVOPAHead);
+		Free(gVXLUHead);
+	}
 }
 
 void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
 	SceneHeader* header;
 	EnvLightSettings* env;
 	MouseInput* mouse = &editor->input.mouse;
+	Gizmo* gizmo = &this->gizmo;
 	
 	Element_Header(split, split->taskCombo, 128);
 	Element_Combo(split->taskCombo);
@@ -300,6 +439,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
 	if (editor->scene.segment == NULL)
 		return;
 	
+	Viewport_CameraUpdate(editor, this, split);
 	header = Scene_GetSceneHeader(&editor->scene);
 	env = header->lightList->env + editor->scene.curEnv;
 	memcpy(split->bg.color.c, env->fogColor, 3);
@@ -309,12 +449,8 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
 	else
 		this->view.far = 12800.0 + 6000;
 	
-	Viewport_CameraUpdate(editor, this, split);
-	
 	// Cursor Wrapping
-	if (this->gizmo.moveLock)
-		return;
-	if ((this->view.setCamMove && this->view.cameraControl) || memcmp(this->glock, "\0\0\0", 3)) {
+	if ((this->view.cameraControl && editor->input.mouse.click.hold) || gizmo->lock.state) {
 		s16 xMin = split->rect.x;
 		s16 xMax = split->rect.x + split->rect.w;
 		s16 yMin = split->rect.y;
@@ -354,7 +490,19 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
 	nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
 }
 
-static void Viewport_Draw_Empty(Editor* editor, Viewport* this, Split* split) {
+static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
+	split->bg.useCustomBG = true;
+	n64_graph_init();
+	n64_set_culling(editor->scene.state & SCENE_DRAW_CULLING);
+	
+	View_Update(&this->view, &editor->input, split);
+	
+	n64_setMatrix_model(&this->view.modelMtx);
+	n64_setMatrix_view(&this->view.viewMtx);
+	n64_setMatrix_projection(&this->view.projMtx);
+}
+
+static void Viewport_DrawInfo(Editor* editor, Viewport* this, Split* split) {
 	const char* txt = "z64scene";
 	void* vg = editor->vg;
 	
@@ -385,39 +533,35 @@ static void Viewport_Draw_Empty(Editor* editor, Viewport* this, Split* split) {
 	);
 }
 
-static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
-	Vec2s dim = {
-		split->rect.w,
-		split->rect.h
-	};
+static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) {
+	Scene* scene = &editor->scene;
 	
-	split->bg.useCustomBG = true;
-	n64_graph_init();
-	n64_set_culling(editor->scene.state & SCENE_DRAW_CULLING);
-	
-	View_SetProjectionDimensions(&this->view, &dim);
-	View_Update(&this->view, &editor->input);
-	this->rayLine = View_Raycast(&this->view, split->mousePos, split->dispRect);
-	
-	n64_setMatrix_model(&this->view.modelMtx);
-	n64_setMatrix_view(&this->view.viewMtx);
-	n64_setMatrix_projection(&this->view.projMtx);
-}
-
-static void Viewport_Draw_3DViewport(Editor* editor, Viewport* this, Split* split) {
 	Viewport_InitDraw(editor, this, split);
 	
 	Profiler_I(0);
 	
+	gVOPADisp = gVOPAHead;
+	gVXLUDisp = gVXLUHead;
+	Assert(POLY_VXLU_DISP && POLY_VOPA_DISP);
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
 	
+	Log("Draw/Update: Gizmo & Actor");
 	if (this->curActor)
-		Viewport_Gizmo(editor, this);
+		Viewport_Gizmo(editor, this, split);
 	Viewport_UpdateActors(editor, this, split);
+	
+	for (s32 i = 0; i < scene->numRoom; i++)
+		Actor_Draw_RoomHeader(Scene_GetRoomHeader(scene, i));
+	
 	n64_draw_buffers();
 	
 	Profiler_O(0);
+	
+	gSPEndDisplayList(POLY_VOPA_DISP++);
+	gSPEndDisplayList(POLY_VXLU_DISP++);
+	n64_draw(gVOPAHead);
+	n64_draw(gVXLUHead);
 	
 #if 0
 	Matrix_Push(); {
@@ -455,9 +599,9 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
 	Profiler_I(4);
 	
 	if (editor->scene.segment == NULL)
-		Viewport_Draw_Empty(editor, this, split);
+		Viewport_DrawInfo(editor, this, split);
 	else
-		Viewport_Draw_3DViewport(editor, this, split);
+		Viewport_DrawViewport(editor, this, split);
 	
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 	nvgFontSize(vg, 15);

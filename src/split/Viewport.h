@@ -3,11 +3,30 @@
 
 #include <Editor.h>
 
+typedef enum {
+	GIZMO_AXIS_ALL_TRUE  = 0x00010101,
+	GIZMO_AXIS_ALL_FALSE = 0x00000000,
+} GizmoState;
+
 typedef struct {
-	Vec3f pos;
-	Vec3f ppos;
-	Vec3f vel;
-	u8    moveLock;
+	union {
+		struct {
+			u8 x;
+			u8 y;
+			u8 z;
+		};
+		GizmoState state;
+		u8  axis[3];
+	};
+} GizmoAxis;
+
+typedef struct {
+	Vec3f     pos;
+	Vec3f     ppos;
+	Vec3f     vel;
+	u8        moveLock;
+	GizmoAxis focus;
+	GizmoAxis lock;
 } Gizmo;
 
 typedef struct {
@@ -15,13 +34,8 @@ typedef struct {
 	SkelAnime skelAnime;
 	s8 headerClick;
 	
-	RayLine rayLine;
-	Vec3f   cubePos;
-	
+	Vec3f  cubePos;
 	Actor* curActor;
-	
-	u8 gfocus[3];
-	u8 glock[3];
 	
 	Gizmo gizmo;
 } Viewport;

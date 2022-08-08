@@ -6,6 +6,7 @@
 #include "Types.h"
 
 struct Room;
+struct RoomHeader;
 
 typedef struct {
 	MemFile file;
@@ -40,6 +41,6 @@ typedef struct {
 } ActorList;
 
 void Actor_Draw(Actor* this);
-void ActorList_Draw(ActorList* list);
+void Actor_Draw_RoomHeader(struct RoomHeader* );
 
 #endif

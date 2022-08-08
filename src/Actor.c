@@ -23,12 +23,16 @@ void Actor_Draw(Actor* this) {
 				gDPSetEnvColor(POLY_OPA_DISP++, 0xC0, 0xC0, 0xC0, 0xFF);
 			
 			gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-			gSPDisplayList(POLY_OPA_DISP++, 0x06000E30);
+			gSPDisplayList(POLY_OPA_DISP++, 0x06000980);
 		} Matrix_Pop();
 	} Matrix_Pop();
 }
 
-void ActorList_Draw(ActorList* list) {
+void Actor_Draw_RoomHeader(RoomHeader* header) {
+	Assert(header != NULL);
+	
+	ActorList* list = header->actorList;
+	
 	if (list == NULL)
 		return;
 	Actor* this = list->head;
