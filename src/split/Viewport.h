@@ -2,34 +2,7 @@
 #define __EN_3D_VIEWPORT__
 
 #include <Editor.h>
-
-typedef enum {
-	GIZMO_AXIS_ALL_TRUE  = 0x00010101,
-	GIZMO_AXIS_ALL_FALSE = 0x00000000,
-} GizmoState;
-
-typedef struct {
-	union {
-		struct {
-			u8 x;
-			u8 y;
-			u8 z;
-		};
-		GizmoState state;
-		u8 axis[3];
-	};
-} GizmoAxis;
-
-typedef struct {
-	Vec3f     pos;
-	Vec3f     ppos;
-	Vec3f     vel;
-	Vec3f     initpos;
-	u8        moveLock;
-	u8        release;
-	GizmoAxis focus;
-	GizmoAxis lock;
-} Gizmo;
+#include <Gizmo.h>
 
 typedef struct {
 	View3D    view;

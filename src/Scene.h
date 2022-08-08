@@ -75,6 +75,7 @@ RoomHeader* Scene_GetRoomHeader(Scene* this, u8 num);
 void Scene_SetState(Scene* this, SceneState state, bool set);
 
 void Room_Draw(RoomMesh* roomMesh);
+Room* Room_Raycast(Scene* scene, RayLine* ray, Vec3f* out);
 
 #ifndef __NO_SCENE_TYPES_H__
 

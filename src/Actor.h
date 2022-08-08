@@ -27,6 +27,7 @@ typedef struct {
 	u16   id;
 	Vec3f pos;
 	Vec3s rot;
+	Vec3s orot;
 	u16   param;
 	
 	Vec3f      offset;

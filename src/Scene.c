@@ -275,6 +275,22 @@ void Room_Draw(RoomMesh* roomMesh) {
 	}
 }
 
+Room* Room_Raycast(Scene* scene, RayLine* ray, Vec3f* out) {
+	s32 id = -1;
+	
+	for (s32 i = 0; i < scene->numRoom; i++) {
+		RoomHeader* room = Scene_GetRoomHeader(scene, i);
+		
+		if (Col3D_LineVsTriBuffer(ray, &room->mesh->triBuf, out, NULL))
+			id = i;
+	}
+	
+	if (id < 0)
+		return NULL;
+	
+	return &scene->room[id];
+}
+
 // # # # # # # # # # # # # # # # # # # # #
 // # Commands                            #
 // # # # # # # # # # # # # # # # # # # # #
