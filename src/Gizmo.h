@@ -44,8 +44,10 @@ typedef struct {
 	
 	bool pressLock;
 	bool release;
+	bool resetRot;
 	GizmoAction action;
 } Gizmo;
 
 void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp);
 void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input);
+bool Gizmo_IsBusy(Gizmo* this);

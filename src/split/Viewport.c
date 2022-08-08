@@ -49,13 +49,12 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
 	MouseInput* mouse = &inputCtx->mouse;
 	Gizmo* gizmo = &this->gizmo;
 	View3D* view = &this->view;
-	s32 cond = split->blockMouse == false && editor->geo.state.noClickInput == false && split->mouseInSplit;
 	
-	if (!Input_GetMouse(inputCtx, MOUSE_ANY)->hold && !cond)
+	if (!Input_GetMouse(inputCtx, MOUSE_ANY)->hold && split->inputAccess)
 		view->cameraControl = false;
 	
 	if (!view->cameraControl) {
-		if (cond) {
+		if (split->inputAccess) {
 			if (View_CheckControlKeys(inputCtx))
 				view->cameraControl = true;
 		}
@@ -99,13 +98,9 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
 	ActorList* list = (void*)editor->scene.dataCtx.head[SCENE_CMD_ID_ACTOR_LIST];
 	Input* input = &editor->input;
 	Actor* selectedActor = NULL;
-	Gizmo* gizmo = &this->gizmo;
 	Vec3f p;
 	
-	if (gizmo->release == true)
-		return;
-	
-	if (gizmo->lock.state || !Input_GetMouse(input, MOUSE_L)->press)
+	if (Gizmo_IsBusy(&this->gizmo) || !Input_GetMouse(input, MOUSE_L)->press)
 		return;
 	
 	// Process rooms so that we do not grab actors behind walls
