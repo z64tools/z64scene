@@ -67,6 +67,7 @@ static void ResetGizmo(Viewport* this) {
 	gizmo->lock.state = GIZMO_AXIS_ALL_FALSE;
 	gizmo->moveLock = false;
 	gizmo->ppos = gizmo->pos;
+	gizmo->release = true;
 }
 
 static void Viewport_Gizmo(Editor* editor, Viewport* this, Split* split) {
@@ -81,6 +82,9 @@ static void Viewport_Gizmo(Editor* editor, Viewport* this, Split* split) {
 		0, 230 * 100, 0,
 	};
 	
+	gizmo->release = false;
+	
+	// Draw Gizmo
 	for (s32 i = 0; i < 3; i++) {
 		if (!gizmo->lock.state) {
 			gSPSegment(POLY_VOPA_DISP++, 6, (void*)gGizmo_Data);
@@ -133,13 +137,13 @@ static void Viewport_Gizmo(Editor* editor, Viewport* this, Split* split) {
 		
 		if (Input_GetKey(&editor->input, KEY_G)->press) {
 			gizmo->moveLock = true;
+			gizmo->initpos = gizmo->pos;
 			gizmo->focus.state = GIZMO_AXIS_ALL_TRUE;
 			oneHit = true;
 		}
 		
 		if (!oneHit)
 			return;
-		
 		if (!gizmo->moveLock && Input_GetMouse(&editor->input, MOUSE_L)->press == false)
 			return;
 	} else {
@@ -147,6 +151,7 @@ static void Viewport_Gizmo(Editor* editor, Viewport* this, Split* split) {
 			if (gizmo->focus.y || gizmo->focus.z) {
 				gizmo->focus.state = GIZMO_AXIS_ALL_FALSE;
 				gizmo->focus.x = true;
+				gizmo->pos = gizmo->initpos;
 			} else
 				gizmo->focus.state = GIZMO_AXIS_ALL_TRUE;
 		}
@@ -154,6 +159,7 @@ static void Viewport_Gizmo(Editor* editor, Viewport* this, Split* split) {
 			if (gizmo->focus.x || gizmo->focus.z) {
 				gizmo->focus.state = GIZMO_AXIS_ALL_FALSE;
 				gizmo->focus.y = true;
+				gizmo->pos = gizmo->initpos;
 			} else
 				gizmo->focus.state = GIZMO_AXIS_ALL_TRUE;
 		}
@@ -161,6 +167,7 @@ static void Viewport_Gizmo(Editor* editor, Viewport* this, Split* split) {
 			if (gizmo->focus.x || gizmo->focus.y) {
 				gizmo->focus.state = GIZMO_AXIS_ALL_FALSE;
 				gizmo->focus.z = true;
+				gizmo->pos = gizmo->initpos;
 			} else
 				gizmo->focus.state = GIZMO_AXIS_ALL_TRUE;
 		}
@@ -181,8 +188,9 @@ static void Viewport_Gizmo(Editor* editor, Viewport* this, Split* split) {
 	}
 	
 	gizmo->lock = gizmo->focus;
+	bool ctrlHold = Input_GetKey(&editor->input, KEY_LEFT_CONTROL)->hold;
 	
-	if (Input_GetKey(&editor->input, KEY_LEFT_CONTROL)->hold) {
+	if (ctrlHold && gizmo->lock.state == GIZMO_AXIS_ALL_TRUE) {
 		RayLine r = View_GetCursorRayLine(&this->view);
 		Vec3f p;
 		
@@ -193,26 +201,42 @@ static void Viewport_Gizmo(Editor* editor, Viewport* this, Split* split) {
 		}
 	} else {
 		MouseInput* m = &editor->input.mouse;
-		f32 dist = View_DepthFactor(view, &gizmo->pos) / View_DimFactor(view) * 1.65;
+		f32 dist = View_DepthFactor(view, &gizmo->pos) * 2 / View_DimFactor(view) * 1.65;
 		Vec3f mvel = Math_Vec3f_New(-m->vel.x, -m->vel.y, 0);
 		mvel = View_OrientDirToView(view, &mvel);
 		
 		if (gizmo->lock.state == GIZMO_AXIS_ALL_TRUE) {
 			this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
 		} else {
-			if (gizmo->lock.x) {
-				mvel = Math_Vec3f_Project(mvel, right);
-				this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
-			}
-			
-			if (gizmo->lock.y) {
-				mvel = Math_Vec3f_Project(mvel, up);
-				this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
-			}
-			
-			if (gizmo->lock.z) {
-				mvel = Math_Vec3f_Project(mvel, front);
-				this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
+			RayLine r = View_GetCursorRayLine(&this->view);
+			Vec3f p;
+			if (ctrlHold && Viewport_RayRooms(&editor->scene, &r, &p)) {
+				if (gizmo->lock.x) {
+					this->gizmo.pos.x = Math_Vec3f_Project(p, right).x;
+				}
+				
+				if (gizmo->lock.y) {
+					this->gizmo.pos.y = Math_Vec3f_Project(p, up).y;
+				}
+				
+				if (gizmo->lock.z) {
+					this->gizmo.pos.z = Math_Vec3f_Project(p, front).z;
+				}
+			} else {
+				if (gizmo->lock.x) {
+					mvel = Math_Vec3f_Project(mvel, right);
+					this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
+				}
+				
+				if (gizmo->lock.y) {
+					mvel = Math_Vec3f_Project(mvel, up);
+					this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
+				}
+				
+				if (gizmo->lock.z) {
+					mvel = Math_Vec3f_Project(mvel, front);
+					this->gizmo.pos = Math_Vec3f_Add(this->gizmo.pos, Math_Vec3f_MulVal(mvel, dist));
+				}
 			}
 		}
 	}
@@ -353,6 +377,9 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
 	Gizmo* gizmo = &this->gizmo;
 	Vec3f p;
 	
+	if (gizmo->release == true)
+		return;
+	
 	if (gizmo->lock.state || !Input_GetMouse(input, MOUSE_L)->press)
 		return;
 	
@@ -397,7 +424,7 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
 	if (selectedActor) {
 		this->curActor = selectedActor;
 		selectedActor->state |= ACTOR_SELECTED;
-		this->gizmo.ppos = this->gizmo.pos = Math_Vec3f_New(UnfoldVec3(this->curActor->pos));
+		this->gizmo.initpos = this->gizmo.ppos = this->gizmo.pos = Math_Vec3f_New(UnfoldVec3(this->curActor->pos));
 		this->gizmo.vel = Math_Vec3f_New(0, 0, 0);
 	}
 }

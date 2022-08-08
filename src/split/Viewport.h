@@ -16,7 +16,7 @@ typedef struct {
 			u8 z;
 		};
 		GizmoState state;
-		u8  axis[3];
+		u8 axis[3];
 	};
 } GizmoAxis;
 
@@ -24,7 +24,9 @@ typedef struct {
 	Vec3f     pos;
 	Vec3f     ppos;
 	Vec3f     vel;
+	Vec3f     initpos;
 	u8        moveLock;
+	u8        release;
 	GizmoAxis focus;
 	GizmoAxis lock;
 } Gizmo;
