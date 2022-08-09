@@ -5,6 +5,9 @@
 #include <incbin.h>
 INCBIN(gGizmo_, "assets/3D/Gizmo.zobj");
 
+#define gGizmo_GizmoDL 0x060006D0
+#define gGizmo_LineDL  0x06000C60
+
 static void ResetGizmo(Gizmo* this) {
 	this->lock.state = GIZMO_AXIS_ALL_FALSE;
 	this->pressLock = false;
@@ -52,7 +55,7 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
 				this->cyl[i].r = Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) * 0.02f;
 				
 				gSPMatrix((*disp)++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-				gSPDisplayList((*disp)++, 0x060006D0);
+				gSPDisplayList((*disp)++, gGizmo_GizmoDL);
 			} Matrix_Pop();
 		}
 	}
@@ -64,13 +67,17 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
 		for (s32 i = 0; i < 3; i++) {
 			if (!this->lock.axis[i])
 				continue;
-			Vec3f aI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], 100));
-			Vec3f bI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], -100));
-			Vec2f aO = View_GetScreenPos(view, aI);
-			Vec2f bO = View_GetScreenPos(view, bI);
+			Vec3f aI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], 10000));
+			Vec3f bI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], -10000));
+			Vec2f aO, bO;
+			
+			View_ClipPointIntoView(view, &aI, Math_Vec3f_Invert(mxo[i]));
+			View_ClipPointIntoView(view, &bI, mxo[i]);
+			aO = View_GetScreenPos(view, aI);
+			bO = View_GetScreenPos(view, bI);
 			
 			nvgBeginPath(vg);
-			nvgStrokeColor(vg, nvgHSLA(i / 3.0, 0.5, 0.5, 120));
+			nvgStrokeColor(vg, nvgHSLA(i / 3.0, 0.5, 0.5, 255));
 			nvgStrokeWidth(vg, 2.0f);
 			nvgMoveTo(vg, UnfoldVec2(aO));
 			nvgLineTo(vg, UnfoldVec2(bO));

@@ -29,13 +29,15 @@ void Actor_Draw(Actor* this) {
 }
 
 void Actor_Draw_RoomHeader(RoomHeader* header) {
+	ActorList* list = header->actorList;
+	Actor* this = list->head;
+	
 	Assert(header != NULL);
 	
-	ActorList* list = header->actorList;
-	
+	list = header->actorList;
 	if (list == NULL)
 		return;
-	Actor* this = list->head;
+	this = list->head;
 	
 	for (s32 i = 0; i < list->num; i++, this++)
 		Actor_Draw(this);

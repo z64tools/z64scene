@@ -95,6 +95,8 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 void Editor_Update(Editor* editor) {
 	GeoGrid_Update(&editor->geo);
 	Cursor_Update(&editor->cursor);
+	Profiler_O(PROFILER_FPS);
+	Profiler_I(PROFILER_FPS);
 }
 
 void Editor_Draw(Editor* editor) {

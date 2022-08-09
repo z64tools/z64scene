@@ -237,6 +237,38 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
 	nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
 }
 
+static void ProfilerText2(void* vg, s32 row, const char* msg, const char* fmt, ...) {
+	char* txt;
+	va_list va;
+	
+	va_start(va, fmt);
+	vasprintf(&txt, fmt, va);
+	va_end(va);
+	
+	nvgFontSize(vg, 12);
+	nvgFontFace(vg, "default");
+	nvgFontBlur(vg, 1.0f);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	for (s32 i = 0; i < 2; i++)
+		nvgText(vg, 8, 8 + SPLIT_TEXT_H * row, msg, NULL);
+	
+	nvgFontBlur(vg, 0.0f);
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
+	nvgText(vg, 8, 8 + SPLIT_TEXT_H * row, msg, NULL);
+	
+	nvgFontFace(vg, "default-bold");
+	nvgFontBlur(vg, 1.0f);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	for (s32 i = 0; i < 2; i++)
+		nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, txt, NULL);
+	
+	nvgFontBlur(vg, 0.0f);
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
+	nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, txt, NULL);
+	
+	Free(txt);
+}
+
 static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
 	split->bg.useCustomBG = true;
 	n64_graph_init();
@@ -292,18 +324,20 @@ static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) 
 	Assert(POLY_VXLU_DISP && POLY_VOPA_DISP);
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
+	Profiler_O(0);
 	
+	Profiler_I(2);
 	Log("Draw/Update: Gizmo & Actor");
 	if (this->curActor)
 		Gizmo_Update(&this->gizmo, scene, &this->view, &editor->input);
 	Viewport_UpdateActors(editor, this, split);
+	Profiler_O(2);
 	
+	Profiler_I(1);
 	for (s32 i = 0; i < scene->numRoom; i++)
 		Actor_Draw_RoomHeader(Scene_GetRoomHeader(scene, i));
-	
 	n64_draw_buffers();
-	
-	Profiler_O(0);
+	Profiler_O(1);
 	
 	if (this->curActor)
 		Gizmo_Draw(&this->gizmo, &this->view, &POLY_VOPA_DISP);
@@ -345,9 +379,6 @@ static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) 
 void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
 	void* vg = editor->vg;
 	
-	Profiler_O(4);
-	Profiler_I(4);
-	
 	if (editor->scene.segment == NULL)
 		Viewport_DrawInfo(editor, this, split);
 	else
@@ -357,8 +388,11 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
 	nvgFontSize(vg, 15);
 	nvgTextLetterSpacing(vg, 0.0f);
 	
-	ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(4), 0);
-	ProfilerText(vg, 1, "N64 Render:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
-	ProfilerText(vg, 2, "Col3D:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
-	ProfilerText(vg, 3, "Delta:", "%.2f", gDeltaTime, 0);
+	ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(PROFILER_FPS), 0);
+	ProfilerText(vg, 1, "Total:", "%.2fms", Profiler_Time(0xF0) * 1000.0f, 16.0f);
+	ProfilerText(vg, 2, "Scene Draw:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
+	ProfilerText(vg, 3, "Actor Draw:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
+	ProfilerText(vg, 4, "Gizmo Update:", "%.2fms", Profiler_Time(2) * 1000.f, 16.0f);
+	ProfilerText(vg, 5, "n64:", "%.2fms", Profiler_Time(8) * 1000.f, 16.0f);
+	ProfilerText(vg, 6, "Delta:", "%.2f", gDeltaTime, 0);
 }

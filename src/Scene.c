@@ -150,10 +150,10 @@ void Scene_Draw(Scene* this) {
 	Scene_Light(this);
 	
 	if (animOoT->wait == false) {
-		Time_Start(0x65);
+		Time_Start(TIME_SCENE_ANIM);
 		animOoT->wait = true;
 	} else {
-		if (Time_Get(0x65) > 1.0f / 20.0f) {
+		if (Time_Get(TIME_SCENE_ANIM) > 1.0f / 20.0f) {
 			animOoT->wait = false;
 			animOoT->frame++;
 		}

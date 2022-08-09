@@ -8,6 +8,14 @@
 #include "Light.h"
 #include "Scene.h"
 
+typedef enum {
+	TIME_SCENE_ANIM = 0x40,
+} TimeSlot;
+
+typedef enum {
+	PROFILER_FPS = 4,
+} ProfilerSlot;
+
 typedef struct Editor {
 	AppInfo app;
 	void*   vg;
