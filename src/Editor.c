@@ -74,6 +74,22 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 	Time_Start(10);
 	Scene_CacheBuild(&editor->scene);
 	printf_info("CacheBuild: " PRNT_REDD "%.2fms", Time_Get(10) * 1000);
+	
+	editor->scene.animOoT.index = 0;
+	for (s32 i = 0; i < count; i++) {
+		if (StrEndCase(item[i], ".cfg")) {
+			MemFile cfg = MemFile_Initialize();
+			
+			MemFile_LoadFile_String(&cfg, item[i]);
+			
+			if (Config_Variable(cfg.str, "scene_func_id"))
+				editor->scene.animOoT.index = Config_GetInt(&cfg, "scene_func_id");
+			
+			MemFile_Free(&cfg);
+		}
+	}
+	
+	printf_info("SceneAnim: %d", editor->scene.animOoT.index);
 }
 
 void Editor_Update(Editor* editor) {

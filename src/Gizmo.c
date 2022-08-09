@@ -106,11 +106,14 @@ static void Gizmo_Move(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 		RayLine mouseRay = View_GetCursorRayLine(view);
 		
 		if (this->lock.state == GIZMO_AXIS_ALL_TRUE) {
-			Log("Free Move");
+			Log("View Move");
 			Vec3f nextRayN = Math_Vec3f_LineSegDir(nextRay.start, nextRay.end);
-			f32 dist = Math_Vec3f_DistXYZ(curRay.start, this->pos);
+			f32 nextDist = Math_Vec3f_DistXYZ(nextRay.start, nextRay.end);
+			f32 curDist = Math_Vec3f_DistXYZ(curRay.start, curRay.end);
+			f32 pointDist = Math_Vec3f_DistXYZ(curRay.start, this->pos);
+			f32 distRatio = nextDist / curDist;
 			
-			this->pos = Math_Vec3f_Add(nextRay.start, Math_Vec3f_MulVal(nextRayN, dist));
+			this->pos = Math_Vec3f_Add(nextRay.start, Math_Vec3f_MulVal(nextRayN, pointDist * distRatio));
 		} else {
 			Log("Axis Move");
 			Vec3f p;
@@ -261,7 +264,8 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 			if (this->focus.y || this->focus.z) {
 				this->focus.state = GIZMO_AXIS_ALL_FALSE;
 				this->focus.x = true;
-				this->pos = this->initpos;
+				this->pos.y = this->initpos.y;
+				this->pos.z = this->initpos.z;
 			} else
 				this->focus.state = GIZMO_AXIS_ALL_TRUE;
 		}
@@ -269,7 +273,8 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 			if (this->focus.x || this->focus.z) {
 				this->focus.state = GIZMO_AXIS_ALL_FALSE;
 				this->focus.y = true;
-				this->pos = this->initpos;
+				this->pos.x = this->initpos.x;
+				this->pos.z = this->initpos.z;
 			} else
 				this->focus.state = GIZMO_AXIS_ALL_TRUE;
 		}
@@ -277,7 +282,8 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 			if (this->focus.x || this->focus.y) {
 				this->focus.state = GIZMO_AXIS_ALL_FALSE;
 				this->focus.z = true;
-				this->pos = this->initpos;
+				this->pos.x = this->initpos.x;
+				this->pos.y = this->initpos.y;
 			} else
 				this->focus.state = GIZMO_AXIS_ALL_TRUE;
 		}

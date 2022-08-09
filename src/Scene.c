@@ -101,12 +101,14 @@ static void Scene_Light(Scene* this) {
 	memcpy(l1n, env->light1Dir, 3);
 	memcpy(l2n, env->light2Dir, 3);
 	
+	this->animOoT.nightFlag = false;
 	if (roomHeader->indoorLight == false && curEnv < 4) {
 		u16 time;
 		
 		switch (curEnv) {
 			case 0:
 				time = 0x6000;
+				this->animOoT.nightFlag = true;
 				break;
 				
 			case 1:
@@ -119,6 +121,7 @@ static void Scene_Light(Scene* this) {
 				
 			case 3:
 				time = 0xFFFF;
+				this->animOoT.nightFlag = true;
 				break;
 		}
 		
@@ -142,7 +145,19 @@ static void Scene_Light(Scene* this) {
 }
 
 void Scene_Draw(Scene* this) {
+	AnimOoT* animOoT = &this->animOoT;
+	
 	Scene_Light(this);
+	
+	if (animOoT->wait == false) {
+		Time_Start(0x65);
+		animOoT->wait = true;
+	} else {
+		if (Time_Get(0x65) > 1.0f / 20.0f) {
+			animOoT->wait = false;
+			animOoT->frame++;
+		}
+	}
 	
 	for (s32 i = 0; i < this->numRoom; i++) {
 		Room* room = &this->room[i];
@@ -152,6 +167,9 @@ void Scene_Draw(Scene* this) {
 		gSegment[2] = this->segment;
 		gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
 		gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
+		
+		if (sSceneDrawConfigs[this->animOoT.index])
+			sSceneDrawConfigs[this->animOoT.index](&this->animOoT);
 		
 		Room_Draw(roomHeader->mesh);
 		n64_draw_buffers();

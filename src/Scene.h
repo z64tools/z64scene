@@ -46,6 +46,13 @@ typedef struct {
 } SceneHeader;
 
 typedef struct {
+	u32  index;
+	u32  frame;
+	bool nightFlag;
+	bool wait;
+} AnimOoT;
+
+typedef struct {
 	MemFile file;
 	void*   segment;
 	
@@ -61,7 +68,11 @@ typedef struct {
 	
 	DataContext   dataCtx;
 	CollisionMesh colMesh;
+	
+	AnimOoT animOoT;
 } Scene;
+
+extern void (*sSceneDrawConfigs[53])(AnimOoT* this);
 
 void Scene_LoadScene(Scene* this, const char* file);
 void Scene_LoadRoom(Scene* this, const char* file);
