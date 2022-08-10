@@ -4,6 +4,9 @@
 #include <incbin.h>
 INCBIN(gCube_, "assets/3D/Cube.zobj");
 
+#define gCubeDL    0x06000990
+#define gCubeLodDL 0x06000BF0
+
 void Actor_Draw(Actor* this, View3D* view) {
 	Vec3f pos = Math_Vec3f_Add(Math_Vec3f_New(UnfoldVec3(this->pos)), this->offset);
 	
@@ -26,7 +29,11 @@ void Actor_Draw(Actor* this, View3D* view) {
 				gDPSetEnvColor(POLY_OPA_DISP++, 0xC0, 0xC0, 0xC0, 0xFF);
 			
 			gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-			gSPDisplayList(POLY_OPA_DISP++, 0x06000980);
+			
+			if (Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) < 500.0f)
+				gSPDisplayList(POLY_OPA_DISP++, gCubeDL);
+			else
+				gSPDisplayList(POLY_OPA_DISP++, gCubeLodDL);
 		} Matrix_Pop();
 	} Matrix_Pop();
 }
