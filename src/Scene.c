@@ -157,7 +157,7 @@ static void Scene_Light(Scene* this) {
 	Light_SetDirLight(l2n, env->light2Color);
 }
 
-void Scene_Draw(Scene* this) {
+void Scene_Draw(Scene* this, View3D* view) {
 	AnimOoT* animOoT = &this->animOoT;
 	
 	Scene_Light(this);
@@ -185,6 +185,7 @@ void Scene_Draw(Scene* this) {
 			sSceneDrawConfigs[this->animOoT.index](&this->animOoT);
 		
 		Room_Draw(roomHeader->mesh);
+		Actor_Draw_RoomHeader(roomHeader, view);
 		n64_draw_buffers();
 	}
 	

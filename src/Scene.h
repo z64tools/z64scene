@@ -79,7 +79,7 @@ void Scene_LoadScene(Scene* this, const char* file);
 void Scene_LoadRoom(Scene* this, const char* file);
 void Scene_Free(Scene* this);
 void Scene_ExecuteCommands(Scene* this, Room* room);
-void Scene_Draw(Scene* this);
+void Scene_Draw(Scene* this, View3D* view);
 void Scene_CacheBuild(Scene* this);
 
 SceneHeader* Scene_GetSceneHeader(Scene* this);

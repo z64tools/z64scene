@@ -283,6 +283,22 @@ static void ProfilerText2(void* vg, s32 row, const char* msg, const char* fmt, .
 	Free(txt);
 }
 
+static bool N64_CullingCallback(void* userData, const n64_cullingCallbackData* vtx, u32 numVtx) {
+	View3D* view = userData;
+	
+	if (view->ortho)
+		return false;
+	
+	for (s32 i = 0; i < numVtx; i++, vtx++) {
+		if (!View_PointInScreen(userData, Math_Vec3f_New(vtx->x, vtx->y, vtx->z)))
+			continue;
+		
+		return false;
+	}
+	
+	return true;
+}
+
 static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
 	split->bg.useCustomBG = true;
 	n64_graph_init();
@@ -293,6 +309,7 @@ static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
 	n64_setMatrix_model(&this->view.modelMtx);
 	n64_setMatrix_view(&this->view.viewMtx);
 	n64_setMatrix_projection(&this->view.projMtx);
+	n64_set_cullingCallbackFunc(&this->view, N64_CullingCallback);
 }
 
 static void Viewport_DrawInfo(Editor* editor, Viewport* this, Split* split) {
@@ -326,48 +343,24 @@ static void Viewport_DrawInfo(Editor* editor, Viewport* this, Split* split) {
 	);
 }
 
-static bool N64_CullingCallback(void* userData, const n64_cullingCallbackData* vtx, u32 numVtx) {
-	for (s32 i = 0; i < numVtx; i++, vtx++) {
-		if (!View_PointInScreen(userData, Math_Vec3f_New(vtx->x, vtx->y, vtx->z)))
-			continue;
-		
-		return false;
-	}
-	
-	return true;
-}
-
 static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) {
 	Scene* scene = &editor->scene;
 	
 	Viewport_InitDraw(editor, this, split);
 	
-	Profiler_I(0);
-	
 	gVOPADisp = gVOPAHead;
 	gVXLUDisp = gVXLUHead;
-	Assert(POLY_VXLU_DISP && POLY_VOPA_DISP);
-	
-	n64_set_cullingCallbackFunc(&this->view, N64_CullingCallback);
-	if (editor->scene.segment)
-		Scene_Draw(&editor->scene);
-	Profiler_O(0);
 	
 	Profiler_I(2);
-	Log("Draw/Update: Gizmo & Actor");
-	if (this->curActor)
-		Gizmo_Update(&this->gizmo, scene, &this->view, &editor->input);
+	if (this->curActor) Gizmo_Update(&this->gizmo, scene, &this->view, &editor->input);
 	Viewport_UpdateActors(editor, this, split);
 	Profiler_O(2);
 	
-	Profiler_I(1);
-	for (s32 i = 0; i < scene->numRoom; i++)
-		Actor_Draw_RoomHeader(Scene_GetRoomHeader(scene, i), &this->view);
-	n64_draw_buffers();
-	Profiler_O(1);
+	Profiler_I(0);
+	Scene_Draw(&editor->scene, &this->view);
+	Profiler_O(0);
 	
-	if (this->curActor)
-		Gizmo_Draw(&this->gizmo, &this->view, &POLY_VOPA_DISP);
+	if (this->curActor) Gizmo_Draw(&this->gizmo, &this->view, &POLY_VOPA_DISP);
 	
 	gSPEndDisplayList(POLY_VOPA_DISP++);
 	gSPEndDisplayList(POLY_VXLU_DISP++);
@@ -418,8 +411,7 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
 	ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(PROFILER_FPS), 0);
 	ProfilerText(vg, 1, "Total:", "%.2fms", Profiler_Time(0xF0) * 1000.0f, 16.0f);
 	ProfilerText(vg, 2, "Scene Draw:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
-	ProfilerText(vg, 3, "Actor Draw:", "%.2fms", Profiler_Time(1) * 1000.f, 16.0f);
-	ProfilerText(vg, 4, "Gizmo Update:", "%.2fms", Profiler_Time(2) * 1000.f, 16.0f);
-	ProfilerText(vg, 5, "n64:", "%.2fms", Profiler_Time(8) * 1000.f, 16.0f);
-	ProfilerText(vg, 6, "Delta:", "%.2f", gDeltaTime, 0);
+	ProfilerText(vg, 3, "Gizmo Update:", "%.2fms", Profiler_Time(2) * 1000.f, 16.0f);
+	ProfilerText(vg, 4, "n64:", "%.2fms", Profiler_Time(8) * 1000.f, 16.0f);
+	ProfilerText(vg, 5, "Delta:", "%.2f", gDeltaTime, 0);
 }
