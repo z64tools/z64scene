@@ -399,6 +399,7 @@ static void Scene_DrawConfigGreatFairyFountain(AnimOoT* this) {
 
 static void Scene_DrawConfigGraveExitLightShining(AnimOoT* this) {
 	gSPSegment(POLY_XLU_DISP++, 0x08, Gfx_TexScroll( 0, this->frame % 64, 256, 16));
+	gSPSegment(POLY_OPA_DISP++, 0x08, Gfx_TexScroll( 0, this->frame % 64, 256, 16));
 	
 	gDPPipeSync(POLY_XLU_DISP++);
 	gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
