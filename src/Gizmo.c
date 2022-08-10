@@ -8,12 +8,19 @@ INCBIN(gGizmo_, "assets/3D/Gizmo.zobj");
 #define gGizmo_GizmoDL 0x060006D0
 #define gGizmo_LineDL  0x06000C60
 
-static void ResetGizmo(Gizmo* this) {
+static void Gizmo_Reset(Gizmo* this) {
 	this->lock.state = GIZMO_AXIS_ALL_FALSE;
 	this->pressLock = false;
 	this->ppos = this->pos;
 	this->release = true;
 	this->action = GIZMO_ACTION_NULL;
+}
+
+bool Gizmo_IsBusy(Gizmo* this) {
+	if (this->release || this->lock.state)
+		return true;
+	
+	return false;
 }
 
 void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
@@ -34,8 +41,9 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
 			
 			gSPSegment((*disp)++, 6, (void*)gGizmo_Data);
 			Matrix_Push(); {
-				Matrix_Translate(UnfoldVec3(this->pos), MTXMODE_APPLY);
+				Matrix_Translate(UnfoldVec3(this->pos), MTXMODE_NEW);
 				Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
+				Matrix_Mult(&this->mtx, MTXMODE_APPLY);
 				
 				if (i == 1) {
 					gDPSetEnvColor((*disp)++, UnfoldNVGcolor(color), 0xFF);
@@ -67,6 +75,7 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
 		for (s32 i = 0; i < 3; i++) {
 			if (!this->lock.axis[i])
 				continue;
+			
 			Vec3f aI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], 10000));
 			Vec3f bI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], -10000));
 			Vec2f aO, bO;
@@ -126,15 +135,22 @@ static void Gizmo_Move(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 			Vec3f p;
 			
 			if (ctrlHold && Room_Raycast(scene, &mouseRay, &p)) {
-				for (s32 i = 0; i < 3; i++)
-					if (this->lock.axis[i])
-						this->pos.axis[i] = p.axis[i];
+				for (s32 i = 0; i < 3; i++) {
+					if (!this->lock.axis[i])
+						continue;
+					Vec3f off = Math_Vec3f_Project(Math_Vec3f_Sub(p, this->pos), mxo[i]);
+					
+					this->pos = Math_Vec3f_Add(this->pos, off);
+				}
 			} else {
 				for (s32 i = 0; i < 3; i++) {
 					if (this->lock.axis[i]) {
-						Vec3f dir = Math_Vec3f_Add(this->pos, mxo[i]);
-						
-						this->pos = Math_Vec3f_ClosestPointOfLine(nextRay.start, nextRay.end, this->pos, dir);
+						this->pos = Math_Vec3f_ClosestPointOnRay(
+							nextRay.start,
+							nextRay.end,
+							this->pos,
+							Math_Vec3f_Add(this->pos, mxo[i])
+						);
 						break;
 					}
 				}
@@ -219,6 +235,7 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 	
 	// Reset for now, utilize for local space later
 	Matrix_Clear(&this->mtx);
+	
 	this->release = false;
 	this->resetRot = false;
 	
@@ -244,7 +261,7 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 			oneHit = true;
 			
 			if (alt)
-				this->resetRot = true;
+				this->pos = Math_Vec3f_New(0, 0, 0);
 		}
 		
 		if (Input_GetKey(input, KEY_R)->press) {
@@ -256,15 +273,17 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 			this->pressLock = true;
 			this->ppos = this->initpos = this->pos;
 			this->pyaw = yaw;
+			this->degr = 0;
 			this->focus.state = GIZMO_AXIS_ALL_TRUE;
 			oneHit = true;
 			
-			if (alt) {
-				this->pos = Math_Vec3f_New(0, 0, 0);
-			}
+			if (alt)
+				this->resetRot = true;
 		}
 		
-		if ((!this->pressLock && Input_GetMouse(input, MOUSE_L)->press == false) || !oneHit)
+		if (!this->pressLock && Input_GetMouse(input, MOUSE_L)->press == false)
+			return;
+		if (!oneHit)
 			return;
 	} else {
 		if (Input_GetKey(input, KEY_X)->press) {
@@ -312,14 +331,7 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 	
 	if (alt && oneHit) {
 reset_gizmo:
-		Log("Gizmo Reset");
-		ResetGizmo(this);
+		printf_info("Gizmo Reset");
+		Gizmo_Reset(this);
 	}
-}
-
-bool Gizmo_IsBusy(Gizmo* this) {
-	if (this->release || this->lock.state)
-		return true;
-	
-	return false;
 }

@@ -50,8 +50,13 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
 	Gizmo* gizmo = &this->gizmo;
 	View3D* view = &this->view;
 	
-	if (!Input_GetMouse(inputCtx, MOUSE_ANY)->hold && split->inputAccess)
+	if (!View_CheckControlKeys(inputCtx) && !split->inputAccess)
 		view->cameraControl = false;
+	
+	if (Input_GetMouse(inputCtx, MOUSE_ANY)->press && !split->inputAccess){
+		view->cameraControl = false;
+		return;
+	}
 	
 	if (!view->cameraControl) {
 		if (split->inputAccess) {
@@ -155,6 +160,7 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
 
 void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
 	View_Init(&this->view, &editor->input);
+	editor->scene.state |= SCENE_DRAW_CULLING;
 	
 	// MemFile_LoadFile(&gNora, "Nora.zobj");
 	// SkelAnime_Init(&gNora, &this->skelAnime, 0x0600D978, 0x0600EF44);
@@ -197,6 +203,9 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
 		this->view.far = 12800.0 + 6000;
 	
 	// Cursor Wrapping
+	if (Input_GetMouse(&editor->input, MOUSE_ANY)->press)
+		return;
+	
 	if ((this->view.cameraControl && editor->input.mouse.click.hold) || gizmo->lock.state) {
 		s16 xMin = split->rect.x;
 		s16 xMax = split->rect.x + split->rect.w;
@@ -335,7 +344,7 @@ static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) 
 	
 	Profiler_I(1);
 	for (s32 i = 0; i < scene->numRoom; i++)
-		Actor_Draw_RoomHeader(Scene_GetRoomHeader(scene, i));
+		Actor_Draw_RoomHeader(Scene_GetRoomHeader(scene, i), &this->view.projViewMtx);
 	n64_draw_buffers();
 	Profiler_O(1);
 	

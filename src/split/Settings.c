@@ -38,6 +38,7 @@ void Settings_Init(Editor* editor, Settings* this, Split* split) {
 	Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
 	Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
 	Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
+	Element_Slider_SetParams(&this->slider, 0, 5.0, "float");
 	
 	if (sceneHeader->lightList)
 		Element_Combo_SetPropEnum(&this->envID, sceneHeader->lightList->enumProp);
@@ -52,7 +53,6 @@ void Settings_Destroy(Editor* editor, Settings* this, Split* split) {
 void Settings_Update(Editor* editor, Settings* this, Split* split) {
 	Scene* scene = &editor->scene;
 	SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
-	RoomHeader* roomHeader = Scene_GetRoomHeader(scene, scene->curRoom);
 	
 	Element_Header(split, split->taskCombo, 128);
 	Element_Combo(split->taskCombo);
@@ -73,8 +73,8 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
 		scene->curEnv = Element_Combo(&this->envID);
 		
 		Element_Row(split, NULL, 0.25, &this->buttonIndoor, 0.75);
-		Element_Button_SetValue(&this->buttonIndoor, true, roomHeader->indoorLight);
-		roomHeader->indoorLight = Element_Button(&this->buttonIndoor);
+		Element_Button_SetValue(&this->buttonIndoor, true, scene->indoorLight);
+		scene->indoorLight = Element_Button(&this->buttonIndoor);
 	} Element_Box(BOX_END);
 	
 	Element_Box(BOX_START); {
@@ -108,6 +108,9 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
 		Element_Combo_SetPropEnum(&this->envID, NULL);
 	
 	Element_Condition(&this->envID, this->envID.prop != NULL);
+	
+	Element_Row(split, &this->slider, 1.0);
+	Element_Slider(&this->slider);
 }
 
 void Settings_Draw(Editor* editor, Settings* this, Split* split) {

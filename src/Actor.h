@@ -41,7 +41,7 @@ typedef struct {
 	u32      num;
 } ActorList;
 
-void Actor_Draw(Actor* this);
-void Actor_Draw_RoomHeader(struct RoomHeader* );
+void Actor_Draw(Actor* this, MtxF* projView);
+void Actor_Draw_RoomHeader(struct RoomHeader*, MtxF* projView);
 
 #endif

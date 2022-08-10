@@ -33,7 +33,7 @@ typedef struct {
 	Vec3f vel;
 	Vec3f initpos;
 	
-	f64 degr;
+	f32 degr;
 	s16 pyaw;
 	
 	GizmoAxis focus;

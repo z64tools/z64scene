@@ -88,7 +88,7 @@ void Scene_ExecuteCommands(Scene* this, Room* room) {
 }
 
 static void Scene_Light(Scene* this) {
-	RoomHeader* roomHeader = Scene_GetRoomHeader(this, this->curRoom);
+	// RoomHeader* roomHeader = Scene_GetRoomHeader(this, this->curRoom);
 	SceneHeader* sceneHeader = Scene_GetSceneHeader(this);
 	EnvLightSettings* env = sceneHeader->lightList->env;
 	s8 l1n[3], l2n[3];
@@ -102,7 +102,7 @@ static void Scene_Light(Scene* this) {
 	memcpy(l2n, env->light2Dir, 3);
 	
 	this->animOoT.nightFlag = false;
-	if (roomHeader->indoorLight == false && curEnv < 4) {
+	if (this->indoorLight == false && curEnv < 4) {
 		u16 time;
 		
 		switch (curEnv) {
@@ -469,7 +469,8 @@ static void Scene_CommandSkyboxSettings(Scene* scene, Room* room, SceneCmd* cmd)
 		// play->envCtx.lightMode = cmd->skyboxSettings.unk_06;
 		
 		header->indoorLight = cmd->skyboxSettings.unk_06;
-	}
+	} else
+		scene->indoorLight = cmd->skyboxSettings.unk_06;
 }
 
 static void Scene_CommandSkyboxDisables(Scene* scene, Room* room, SceneCmd* cmd) {

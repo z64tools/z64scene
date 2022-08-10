@@ -63,6 +63,7 @@ typedef struct {
 	u8   numRoom;
 	u8   curRoom;
 	u8   curEnv;
+	u8   indoorLight;
 	
 	SceneState state;
 	

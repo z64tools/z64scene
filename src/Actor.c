@@ -4,8 +4,14 @@
 #include <incbin.h>
 INCBIN(gCube_, "assets/3D/Cube.zobj");
 
-void Actor_Draw(Actor* this) {
+void Actor_Draw(Actor* this, MtxF* projView) {
 	Vec3f pos = Math_Vec3f_Add(Math_Vec3f_New(UnfoldVec3(this->pos)), this->offset);
+	Vec4f spos;
+	
+	Matrix_MultVec3fToVec4f_Ext(&pos, &spos, projView);
+	
+	if (spos.w <= 0.0f)
+		return;
 	
 	Matrix_Push(); {
 		Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
@@ -28,7 +34,7 @@ void Actor_Draw(Actor* this) {
 	} Matrix_Pop();
 }
 
-void Actor_Draw_RoomHeader(RoomHeader* header) {
+void Actor_Draw_RoomHeader(RoomHeader* header, MtxF* projView) {
 	ActorList* list = header->actorList;
 	Actor* this = list->head;
 	
@@ -40,5 +46,5 @@ void Actor_Draw_RoomHeader(RoomHeader* header) {
 	this = list->head;
 	
 	for (s32 i = 0; i < list->num; i++, this++)
-		Actor_Draw(this);
+		Actor_Draw(this, projView);
 }
