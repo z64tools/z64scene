@@ -50,11 +50,17 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
 	Gizmo* gizmo = &this->gizmo;
 	View3D* view = &this->view;
 	
+	if (Input_GetMouse(inputCtx, MOUSE_ANY)->hold && this->lockCameraAccess)
+		return;
+	this->lockCameraAccess = false;
+	
 	if (!View_CheckControlKeys(inputCtx) && !split->inputAccess)
 		view->cameraControl = false;
 	
-	if (Input_GetMouse(inputCtx, MOUSE_ANY)->press && !split->inputAccess){
+	if (Input_GetMouse(inputCtx, MOUSE_ANY)->press && !split->inputAccess) {
 		view->cameraControl = false;
+		this->lockCameraAccess = true;
+		
 		return;
 	}
 	
@@ -160,7 +166,6 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
 
 void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
 	View_Init(&this->view, &editor->input);
-	editor->scene.state |= SCENE_DRAW_CULLING;
 	
 	// MemFile_LoadFile(&gNora, "Nora.zobj");
 	// SkelAnime_Init(&gNora, &this->skelAnime, 0x0600D978, 0x0600EF44);
@@ -321,6 +326,17 @@ static void Viewport_DrawInfo(Editor* editor, Viewport* this, Split* split) {
 	);
 }
 
+static bool N64_CullingCallback(void* userData, const n64_cullingCallbackData* vtx, u32 numVtx) {
+	for (s32 i = 0; i < numVtx; i++, vtx++) {
+		if (!View_PointInScreen(userData, Math_Vec3f_New(vtx->x, vtx->y, vtx->z)))
+			continue;
+		
+		return false;
+	}
+	
+	return true;
+}
+
 static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) {
 	Scene* scene = &editor->scene;
 	
@@ -331,6 +347,8 @@ static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) 
 	gVOPADisp = gVOPAHead;
 	gVXLUDisp = gVXLUHead;
 	Assert(POLY_VXLU_DISP && POLY_VOPA_DISP);
+	
+	n64_set_cullingCallbackFunc(&this->view, N64_CullingCallback);
 	if (editor->scene.segment)
 		Scene_Draw(&editor->scene);
 	Profiler_O(0);
@@ -344,7 +362,7 @@ static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) 
 	
 	Profiler_I(1);
 	for (s32 i = 0; i < scene->numRoom; i++)
-		Actor_Draw_RoomHeader(Scene_GetRoomHeader(scene, i), &this->view.projViewMtx);
+		Actor_Draw_RoomHeader(Scene_GetRoomHeader(scene, i), &this->view);
 	n64_draw_buffers();
 	Profiler_O(1);
 	

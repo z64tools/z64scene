@@ -7,7 +7,7 @@
 typedef struct {
 	View3D    view;
 	SkelAnime skelAnime;
-	s8 headerClick;
+	bool lockCameraAccess;
 	
 	Vec3f  cubePos;
 	Actor* curActor;

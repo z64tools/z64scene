@@ -8,6 +8,19 @@ char* sSceneCmdHandlers_Name[SCENE_CMD_ID_MAX];
 // # Scene                               #
 // # # # # # # # # # # # # # # # # # # # #
 
+static void N64_TriangleCallback(void* userData, const n64_triangleCallbackData* triData) {
+	RoomMesh* this = userData;
+	Triangle* tri = &this->triBuf.head[this->triBuf.num];
+	
+	memcpy(tri->v, triData, sizeof(float) * 3 * 3);
+	tri->cullBackface = triData->cullBackface;
+	tri->cullFrontface = triData->cullFrontface;
+	this->triBuf.num++;
+	
+	if (this->triBuf.num == this->triBuf.max)
+		TriBuffer_Realloc(&this->triBuf);
+}
+
 static void Scene_SetHeaderNum(Scene* this) {
 	SceneCmd* cmd = gSegment[2] = this->segment;
 	
@@ -30,7 +43,7 @@ void Scene_LoadScene(Scene* this, const char* file) {
 	Scene_SetHeaderNum(this);
 	Scene_ExecuteCommands(this, NULL);
 	
-	this->state |= SCENE_DRAW_FOG;
+	this->state |= SCENE_DRAW_FOG | SCENE_DRAW_CULLING;
 }
 
 void Scene_LoadRoom(Scene* this, const char* file) {
@@ -181,19 +194,6 @@ void Scene_Draw(Scene* this) {
 	}
 }
 
-static void Room_BuildTriBuf(void* userData, const n64_triangleCallbackData* triData) {
-	RoomMesh* this = userData;
-	Triangle* tri = &this->triBuf.head[this->triBuf.num];
-	
-	memcpy(tri->v, triData, sizeof(float) * 3 * 3);
-	tri->cullBackface = triData->cullBackface;
-	tri->cullFrontface = triData->cullFrontface;
-	this->triBuf.num++;
-	
-	if (this->triBuf.num == this->triBuf.max)
-		TriBuffer_Realloc(&this->triBuf);
-}
-
 void Scene_CacheBuild(Scene* this) {
 	MtxF mtx;
 	RoomMesh* mesh = (void*)this->dataCtx.head[SCENE_CMD_ID_MESH_HEADER];
@@ -218,7 +218,7 @@ void Scene_CacheBuild(Scene* this) {
 		
 		Room_Draw(mesh);
 		
-		n64_set_triangleCallbackFunc(mesh, Room_BuildTriBuf);
+		n64_set_triangleCallbackFunc(mesh, N64_TriangleCallback);
 		n64_draw_buffers();
 		
 		printf_info("Room TriCount: %d", mesh->triBuf.num);

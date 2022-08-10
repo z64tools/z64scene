@@ -3,6 +3,7 @@
 #include <ExtLib.h>
 #include <ExtGui/Math.h>
 #include <ExtGui/Collision.h>
+#include <ExtGui/View.h>
 #include "Types.h"
 
 struct Room;
@@ -41,7 +42,7 @@ typedef struct {
 	u32      num;
 } ActorList;
 
-void Actor_Draw(Actor* this, MtxF* projView);
-void Actor_Draw_RoomHeader(struct RoomHeader*, MtxF* projView);
+void Actor_Draw(Actor* this, View3D* view);
+void Actor_Draw_RoomHeader(struct RoomHeader*, View3D* view);
 
 #endif
