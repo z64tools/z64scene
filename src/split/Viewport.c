@@ -1,9 +1,7 @@
 #include "Viewport.h"
 #include <float.h>
 
-#define INCBIN_PREFIX
-#include <incbin.h>
-INCBIN(gSpot_, "assets/3D/Spot.zobj");
+extern DataFile gSpot;
 
 void Viewport_Init(Editor* editor, Viewport* this, Split* split);
 void Viewport_Destroy(Editor* editor, Viewport* this, Split* split);
@@ -37,7 +35,7 @@ static void Viewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
 	Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
 	Matrix_Scale(0.01 * scale, 0.01 * scale, 0.01 * scale, MTXMODE_APPLY);
 	
-	gSPSegment(POLY_OPA_DISP++, 6, (void*)gSpot_Data);
+	gSPSegment(POLY_OPA_DISP++, 6, (void*)gSpot.data);
 	gDPSetEnvColor(POLY_OPA_DISP++, UnfoldNVGcolor(color), color.a * 255);
 	gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
 	gSPDisplayList(POLY_OPA_DISP++, 0x06007730);

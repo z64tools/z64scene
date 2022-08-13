@@ -1,17 +1,14 @@
 #include "Editor.h"
 
-#define INCBIN_PREFIX
-#include <incbin.h>
-
-INCBIN(gCursor_ArrowU_, "assets/arrow_up.ia16");
-INCBIN(gCursor_ArrowL_, "assets/arrow_left.ia16");
-INCBIN(gCursor_ArrowD_, "assets/arrow_down.ia16");
-INCBIN(gCursor_ArrowR_, "assets/arrow_right.ia16");
-INCBIN(gCursor_ArrowH_, "assets/arrow_horizontal.ia16");
-INCBIN(gCursor_ArrowV_, "assets/arrow_vertical.ia16");
-INCBIN(gCursor_Crosshair_, "assets/crosshair.ia16");
-INCBIN(gCursor_Empty_, "assets/empty.ia16");
-INCBIN(gAppIcon_, "assets/icon32.rgba");
+extern DataFile gAppIcon;
+extern DataFile gCursor_ArrowUp;
+extern DataFile gCursor_ArrowDown;
+extern DataFile gCursor_ArrowLeft;
+extern DataFile gCursor_ArrowRight;
+extern DataFile gCursor_ArrowHorizontal;
+extern DataFile gCursor_ArrowVertical;
+extern DataFile gCursor_Crosshair;
+extern DataFile gCursor_Empty;
 
 typedef enum {
 	TAB_ROOM,
@@ -47,7 +44,7 @@ SplitTask* gTaskTable[] = {
 int main(void) {
 	Editor* editor;
 	GLFWimage icon = {
-		128, 128, (void*)gAppIcon_Data
+		128, 128, gAppIcon.data
 	};
 	
 	Log_Init();
@@ -71,17 +68,17 @@ int main(void) {
 	GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrayCount(gTaskTable));
 	
 	Cursor_Init(&editor->cursor, &editor->app);
-	Cursor_CreateCursor(CURSOR_ARROW_U, gCursor_ArrowU_Data, 24, 12, 12);
-	Cursor_CreateCursor(CURSOR_ARROW_D, gCursor_ArrowD_Data, 24, 12, 12);
-	Cursor_CreateCursor(CURSOR_ARROW_L, gCursor_ArrowL_Data, 24, 12, 12);
-	Cursor_CreateCursor(CURSOR_ARROW_R, gCursor_ArrowR_Data, 24, 12, 12);
-	Cursor_CreateCursor(CURSOR_ARROW_H, gCursor_ArrowH_Data, 32, 16, 16);
-	Cursor_CreateCursor(CURSOR_ARROW_V, gCursor_ArrowV_Data, 32, 16, 16);
+	Cursor_CreateCursor(CURSOR_ARROW_U, gCursor_ArrowUp.data, 24, 12, 12);
+	Cursor_CreateCursor(CURSOR_ARROW_D, gCursor_ArrowDown.data, 24, 12, 12);
+	Cursor_CreateCursor(CURSOR_ARROW_L, gCursor_ArrowLeft.data, 24, 12, 12);
+	Cursor_CreateCursor(CURSOR_ARROW_R, gCursor_ArrowRight.data, 24, 12, 12);
+	Cursor_CreateCursor(CURSOR_ARROW_H, gCursor_ArrowHorizontal.data, 32, 16, 16);
+	Cursor_CreateCursor(CURSOR_ARROW_V, gCursor_ArrowVertical.data, 32, 16, 16);
 	Cursor_CreateCursor(
-		CURSOR_CROSSHAIR, gCursor_Crosshair_Data, 40, 19,
+		CURSOR_CROSSHAIR, gCursor_Crosshair.data, 40, 19,
 		20
 	);
-	Cursor_CreateCursor(CURSOR_EMPTY, gCursor_Empty_Data, 16, 0, 0);
+	Cursor_CreateCursor(CURSOR_EMPTY, gCursor_Empty.data, 16, 0, 0);
 	
 	Rectf32 size = {
 		editor->geo.workRect.x,

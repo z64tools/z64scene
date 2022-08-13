@@ -1,8 +1,6 @@
 #include <Editor.h>
 
-#define INCBIN_PREFIX
-#include <incbin.h>
-INCBIN(gCube_, "assets/3D/Cube.zobj");
+extern DataFile gCube;
 
 #define gCubeDL    0x06000990
 #define gCubeLodDL 0x06000BF0
@@ -21,7 +19,7 @@ void Actor_Draw(Actor* this, View3D* view) {
 			Matrix_RotateX_s(this->rot.x + this->orot.x, MTXMODE_APPLY);
 			Matrix_RotateZ_s(this->rot.z + this->orot.z, MTXMODE_APPLY);
 			
-			gSPSegment(POLY_OPA_DISP++, 6, (void*)gCube_Data);
+			gSPSegment(POLY_OPA_DISP++, 6, (void*)gCube.data);
 			
 			if (this->state & ACTOR_SELECTED)
 				gDPSetEnvColor(POLY_OPA_DISP++, 0x40, 0xA0, 0xF0, 0xFF);

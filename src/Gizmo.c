@@ -1,9 +1,7 @@
 #include <Editor.h>
 #include <Gizmo.h>
 
-#define INCBIN_PREFIX
-#include <incbin.h>
-INCBIN(gGizmo_, "assets/3D/Gizmo.zobj");
+extern DataFile gGizmo;
 
 #define gGizmo_GizmoDL 0x060006D0
 #define gGizmo_LineDL  0x06000C60
@@ -39,7 +37,7 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
 			NVGcolor color = nvgHSL(i / 3.0, 0.5 + 0.2 * this->focus.axis[i], 0.5 + 0.2 * this->focus.axis[i]);
 			f32 scale = Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) * 0.00001f;
 			
-			gSPSegment((*disp)++, 6, (void*)gGizmo_Data);
+			gSPSegment((*disp)++, 6, (void*)gGizmo.data);
 			Matrix_Push(); {
 				Matrix_Translate(UnfoldVec3(this->pos), MTXMODE_NEW);
 				Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
