@@ -1,14 +1,14 @@
 #include <Editor.h>
 #include <n64.h>
 
-static Gfx* Gfx_TexScroll(u32 x2, u32 y2, s32 width2, s32 height2) {
+static Gfx* Gfx_TexScroll(u32 x, u32 y, s32 w, s32 h) {
 	Gfx* displayList = n64_graph_alloc(3 * sizeof(Gfx));
 	
-	x2 %= 2048;
-	y2 %= 2048;
+	x %= 2048;
+	y %= 2048;
 	
 	gDPTileSync(displayList);
-	gDPSetTileSize(displayList + 3, 0, x2, y2, (x2 + ((width2 - 1) << 2)), (y2 + ((height2 - 1) << 2)));
+	gDPSetTileSize(displayList + 3, 0, x, y, (x + ((w - 1) << 2)), (y + ((h - 1) << 2)));
 	gSPEndDisplayList(displayList + 4);
 	
 	return displayList;

@@ -577,59 +577,59 @@ static void Scene_CommandMiscSettings(Scene* scene, Room* room, SceneCmd* cmd) {
 }
 
 void (*sSceneCmdHandlers[SCENE_CMD_ID_MAX])(Scene*, Room*, SceneCmd*) = {
-	Scene_CommandSpawnList, // SCENE_CMD_ID_SPAWN_LIST
-	Scene_CommandActorList, // SCENE_CMD_ID_ACTOR_LIST
-	Scene_CommandUnused2,  // SCENE_CMD_ID_UNUSED_2
-	Scene_CommandCollisionHeader, // SCENE_CMD_ID_COLLISION_HEADER
-	Scene_CommandRoomList, // SCENE_CMD_ID_ROOM_LIST
-	Scene_CommandWindSettings, // SCENE_CMD_ID_WIND_SETTINGS
-	Scene_CommandEntranceList, // SCENE_CMD_ID_ENTRANCE_LIST
-	Scene_CommandSpecialFiles, // SCENE_CMD_ID_SPECIAL_FILES
-	Scene_CommandRoomBehavior, // SCENE_CMD_ID_ROOM_BEHAVIOR
-	Scene_CommandUndefined9, // SCENE_CMD_ID_UNDEFINED_9
-	Scene_CommandMeshHeader, // SCENE_CMD_ID_MESH_HEADER
-	Scene_CommandObjectList, // SCENE_CMD_ID_OBJECT_LIST
-	Scene_CommandLightList, // SCENE_CMD_ID_LIGHT_LIST
-	Scene_CommandPathList, // SCENE_CMD_ID_PATH_LIST
-	Scene_CommandTransitionActorList, // SCENE_CMD_ID_TRANSITION_ACTOR_LIST
-	Scene_CommandLightSettingsList, // SCENE_CMD_ID_LIGHT_SETTINGS_LIST
-	Scene_CommandTimeSettings, // SCENE_CMD_ID_TIME_SETTINGS
-	Scene_CommandSkyboxSettings, // SCENE_CMD_ID_SKYBOX_SETTINGS
-	Scene_CommandSkyboxDisables, // SCENE_CMD_ID_SKYBOX_DISABLES
-	Scene_CommandExitList, // SCENE_CMD_ID_EXIT_LIST
-	NULL,                  // SCENE_CMD_ID_END
-	Scene_CommandSoundSettings, // SCENE_CMD_ID_SOUND_SETTINGS
-	Scene_CommandEchoSettings, // SCENE_CMD_ID_ECHO_SETTINGS
-	Scene_CommandCutsceneData, // SCENE_CMD_ID_CUTSCENE_DATA
-	NULL, // SCENE_CMD_ID_ALTERNATE_HEADER_LIST
-	Scene_CommandMiscSettings, // SCENE_CMD_ID_MISC_SETTINGS
+	/* SCENE_CMD_ID_SPAWN_LIST            */ Scene_CommandSpawnList,
+	/* SCENE_CMD_ID_ACTOR_LIST            */ Scene_CommandActorList,
+	/* SCENE_CMD_ID_UNUSED_2              */ Scene_CommandUnused2,
+	/* SCENE_CMD_ID_COLLISION_HEADER      */ Scene_CommandCollisionHeader,
+	/* SCENE_CMD_ID_ROOM_LIST             */ Scene_CommandRoomList,
+	/* SCENE_CMD_ID_WIND_SETTINGS         */ Scene_CommandWindSettings,
+	/* SCENE_CMD_ID_ENTRANCE_LIST         */ Scene_CommandEntranceList,
+	/* SCENE_CMD_ID_SPECIAL_FILES         */ Scene_CommandSpecialFiles,
+	/* SCENE_CMD_ID_ROOM_BEHAVIOR         */ Scene_CommandRoomBehavior,
+	/* SCENE_CMD_ID_UNDEFINED_9           */ Scene_CommandUndefined9,
+	/* SCENE_CMD_ID_MESH_HEADER           */ Scene_CommandMeshHeader,
+	/* SCENE_CMD_ID_OBJECT_LIST           */ Scene_CommandObjectList,
+	/* SCENE_CMD_ID_LIGHT_LIST            */ Scene_CommandLightList,
+	/* SCENE_CMD_ID_PATH_LIST             */ Scene_CommandPathList,
+	/* SCENE_CMD_ID_TRANSITION_ACTOR_LIST */ Scene_CommandTransitionActorList,
+	/* SCENE_CMD_ID_LIGHT_SETTINGS_LIST   */ Scene_CommandLightSettingsList,
+	/* SCENE_CMD_ID_TIME_SETTINGS         */ Scene_CommandTimeSettings,
+	/* SCENE_CMD_ID_SKYBOX_SETTINGS       */ Scene_CommandSkyboxSettings,
+	/* SCENE_CMD_ID_SKYBOX_DISABLES       */ Scene_CommandSkyboxDisables,
+	/* SCENE_CMD_ID_EXIT_LIST             */ Scene_CommandExitList,
+	/* SCENE_CMD_ID_END                   */ NULL,
+	/* SCENE_CMD_ID_SOUND_SETTINGS        */ Scene_CommandSoundSettings,
+	/* SCENE_CMD_ID_ECHO_SETTINGS         */ Scene_CommandEchoSettings,
+	/* SCENE_CMD_ID_CUTSCENE_DATA         */ Scene_CommandCutsceneData,
+	/* SCENE_CMD_ID_ALTERNATE_HEADER_LIST */ NULL,
+	/* SCENE_CMD_ID_MISC_SETTINGS         */ Scene_CommandMiscSettings,
 };
 
 char* sSceneCmdHandlers_Name[SCENE_CMD_ID_MAX] = {
-	"Scene_CommandSpawnList", // SCENE_CMD_ID_SPAWN_LIST
-	"Scene_CommandActorList", // SCENE_CMD_ID_ACTOR_LIST
-	"Scene_CommandUnused2", // SCENE_CMD_ID_UNUSED_2
-	"Scene_CommandCollisionHeader", // SCENE_CMD_ID_COLLISION_HEADER
-	"Scene_CommandRoomList", // SCENE_CMD_ID_ROOM_LIST
-	"Scene_CommandWindSettings", // SCENE_CMD_ID_WIND_SETTINGS
-	"Scene_CommandEntranceList", // SCENE_CMD_ID_ENTRANCE_LIST
-	"Scene_CommandSpecialFiles", // SCENE_CMD_ID_SPECIAL_FILES
-	"Scene_CommandRoomBehavior", // SCENE_CMD_ID_ROOM_BEHAVIOR
-	"Scene_CommandUndefined9", // SCENE_CMD_ID_UNDEFINED_9
-	"Scene_CommandMeshHeader", // SCENE_CMD_ID_MESH_HEADER
-	"Scene_CommandObjectList", // SCENE_CMD_ID_OBJECT_LIST
-	"Scene_CommandLightList", // SCENE_CMD_ID_LIGHT_LIST
-	"Scene_CommandPathList", // SCENE_CMD_ID_PATH_LIST
-	"Scene_CommandTransitionActorList", // SCENE_CMD_ID_TRANSITION_ACTOR_LIST
-	"Scene_CommandLightSettingsList", // SCENE_CMD_ID_LIGHT_SETTINGS_LIST
-	"Scene_CommandTimeSettings", // SCENE_CMD_ID_TIME_SETTINGS
-	"Scene_CommandSkyboxSettings", // SCENE_CMD_ID_SKYBOX_SETTINGS
-	"Scene_CommandSkyboxDisables", // SCENE_CMD_ID_SKYBOX_DISABLES
-	"Scene_CommandExitList", // SCENE_CMD_ID_EXIT_LIST
-	"NULL",                // SCENE_CMD_ID_END
-	"Scene_CommandSoundSettings", // SCENE_CMD_ID_SOUND_SETTINGS
-	"Scene_CommandEchoSettings", // SCENE_CMD_ID_ECHO_SETTINGS
-	"Scene_CommandCutsceneData", // SCENE_CMD_ID_CUTSCENE_DATA
-	"SetupIndex", // SCENE_CMD_ID_ALTERNATE_HEADER_LIST
-	"Scene_CommandMiscSettings", // SCENE_CMD_ID_MISC_SETTINGS
+	/* SCENE_CMD_ID_SPAWN_LIST            */ "Scene_CommandSpawnList",
+	/* SCENE_CMD_ID_ACTOR_LIST            */ "Scene_CommandActorList",
+	/* SCENE_CMD_ID_UNUSED_2              */ "Scene_CommandUnused2",
+	/* SCENE_CMD_ID_COLLISION_HEADER      */ "Scene_CommandCollisionHeader",
+	/* SCENE_CMD_ID_ROOM_LIST             */ "Scene_CommandRoomList",
+	/* SCENE_CMD_ID_WIND_SETTINGS         */ "Scene_CommandWindSettings",
+	/* SCENE_CMD_ID_ENTRANCE_LIST         */ "Scene_CommandEntranceList",
+	/* SCENE_CMD_ID_SPECIAL_FILES         */ "Scene_CommandSpecialFiles",
+	/* SCENE_CMD_ID_ROOM_BEHAVIOR         */ "Scene_CommandRoomBehavior",
+	/* SCENE_CMD_ID_UNDEFINED_9           */ "Scene_CommandUndefined9",
+	/* SCENE_CMD_ID_MESH_HEADER           */ "Scene_CommandMeshHeader",
+	/* SCENE_CMD_ID_OBJECT_LIST           */ "Scene_CommandObjectList",
+	/* SCENE_CMD_ID_LIGHT_LIST            */ "Scene_CommandLightList",
+	/* SCENE_CMD_ID_PATH_LIST             */ "Scene_CommandPathList",
+	/* SCENE_CMD_ID_TRANSITION_ACTOR_LIST */ "Scene_CommandTransitionActorList",
+	/* SCENE_CMD_ID_LIGHT_SETTINGS_LIST   */ "Scene_CommandLightSettingsList",
+	/* SCENE_CMD_ID_TIME_SETTINGS         */ "Scene_CommandTimeSettings",
+	/* SCENE_CMD_ID_SKYBOX_SETTINGS       */ "Scene_CommandSkyboxSettings",
+	/* SCENE_CMD_ID_SKYBOX_DISABLES       */ "Scene_CommandSkyboxDisables",
+	/* SCENE_CMD_ID_EXIT_LIST             */ "Scene_CommandExitList",
+	/* SCENE_CMD_ID_END                   */ "NULL",
+	/* SCENE_CMD_ID_SOUND_SETTINGS        */ "Scene_CommandSoundSettings",
+	/* SCENE_CMD_ID_ECHO_SETTINGS         */ "Scene_CommandEchoSettings",
+	/* SCENE_CMD_ID_CUTSCENE_DATA         */ "Scene_CommandCutsceneData",
+	/* SCENE_CMD_ID_ALTERNATE_HEADER_LIST */ "SetupIndex",
+	/* SCENE_CMD_ID_MISC_SETTINGS         */ "Scene_CommandMiscSettings",
 };

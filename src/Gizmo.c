@@ -190,8 +190,6 @@ static void Gizmo_Rotate(Gizmo* this, Scene* scene, View3D* view, Input* input) 
 	s32 new = yaw - this->pyaw;
 	
 	this->degr += BinToDeg(new);
-	printf_info("%.2f", this->degr);
-	
 	this->degr = WrapF(this->degr, -180.f, 180.f);
 	
 	if (this->lock.state == GIZMO_AXIS_ALL_TRUE) {
@@ -331,7 +329,6 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 	
 	if (alt && oneHit) {
 reset_gizmo:
-		printf_info("Gizmo Reset");
 		Gizmo_Reset(this);
 	}
 }

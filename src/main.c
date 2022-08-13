@@ -31,11 +31,11 @@ void draw_nothing(Editor* e, void* instance, Split* split) {
 
 SplitTask empty = {
 	.taskName = "Empty",
-	.init = nothing,
-	.destroy = nothing,
-	.update = nothing,
-	.draw = (void*)draw_nothing,
-	.size = 30
+	.init     = nothing,
+	.destroy  = nothing,
+	.update   = nothing,
+	.draw     = (void*)draw_nothing,
+	.size     = 30
 };
 
 SplitTask* gTaskTable[] = {
@@ -56,10 +56,18 @@ int main(void) {
 	Theme_Init(0);
 	
 	CallocX(editor);
-	editor->vg = Interface_Init("z64scene", &editor->app, &editor->input, editor, (void*)Editor_Update, (void*)Editor_Draw, Editor_DropCallback, 980, 480, 4);
+	editor->vg = Interface_Init(
+		"z64scene", &editor->app, &editor->input,
+		editor, (void*)Editor_Update,
+		(void*)Editor_Draw, Editor_DropCallback,
+		980, 480, 4
+	);
 	
 	editor->geo.passArg = editor;
-	GeoGrid_Init(&editor->geo, &editor->app.wdim, &editor->input, editor->vg);
+	GeoGrid_Init(
+		&editor->geo, &editor->app.wdim, &editor->input,
+		editor->vg
+	);
 	GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrayCount(gTaskTable));
 	
 	Cursor_Init(&editor->cursor, &editor->app);
@@ -69,7 +77,10 @@ int main(void) {
 	Cursor_CreateCursor(CURSOR_ARROW_R, gCursor_ArrowR_Data, 24, 12, 12);
 	Cursor_CreateCursor(CURSOR_ARROW_H, gCursor_ArrowH_Data, 32, 16, 16);
 	Cursor_CreateCursor(CURSOR_ARROW_V, gCursor_ArrowV_Data, 32, 16, 16);
-	Cursor_CreateCursor(CURSOR_CROSSHAIR, gCursor_Crosshair_Data, 40, 19, 20);
+	Cursor_CreateCursor(
+		CURSOR_CROSSHAIR, gCursor_Crosshair_Data, 40, 19,
+		20
+	);
 	Cursor_CreateCursor(CURSOR_EMPTY, gCursor_Empty_Data, 16, 0, 0);
 	
 	Rectf32 size = {
