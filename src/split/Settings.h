@@ -4,7 +4,6 @@
 #include <Editor.h>
 
 typedef struct {
-	ElCombo  envID;
 	ElButton buttonIndoor;
 	ElCombo  comboBox;
 	
@@ -16,7 +15,7 @@ typedef struct {
 	
 	ElButton killScene;
 	
-	ElSlider slider;
+	ElContainer cont;
 } Settings;
 
 extern SplitTask gSettingsTask;

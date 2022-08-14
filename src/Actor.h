@@ -16,7 +16,8 @@ typedef struct {
 
 typedef struct StructBE {
 	u16      id;
-	Vec3s_BE pos, rot;
+	Vec3s_BE pos;
+	Vec3s_BE rot;
 	u16      param;
 } ActorEntry;
 

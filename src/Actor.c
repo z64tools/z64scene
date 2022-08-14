@@ -15,9 +15,9 @@ void Actor_Draw(Actor* this, View3D* view) {
 		Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
 		Matrix_Push(); {
 			Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
-			Matrix_RotateY_s(this->rot.y + this->orot.y, MTXMODE_APPLY);
-			Matrix_RotateX_s(this->rot.x + this->orot.x, MTXMODE_APPLY);
-			Matrix_RotateZ_s(this->rot.z + this->orot.z, MTXMODE_APPLY);
+			Matrix_RotateY_s(this->rot.y, MTXMODE_APPLY);
+			Matrix_RotateX_s(this->rot.x, MTXMODE_APPLY);
+			Matrix_RotateZ_s(this->rot.z, MTXMODE_APPLY);
 			
 			gSPSegment(POLY_OPA_DISP++, 6, (void*)gCube.data);
 			

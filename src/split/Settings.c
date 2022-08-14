@@ -25,7 +25,7 @@ void Settings_Init(Editor* editor, Settings* this, Split* split) {
 	
 	Element_Name(&this->buttonIndoor, "Indoor");
 	Element_Name(&this->comboBox, "Keep");
-	Element_Name(&this->envID, "EnvID");
+	Element_Name(&this->cont, "EnvID");
 	Element_Name(&this->killScene, "Unload Scene");
 	
 	Element_Name(&this->buttonFPS, "Limit FPS");
@@ -38,12 +38,11 @@ void Settings_Init(Editor* editor, Settings* this, Split* split) {
 	Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
 	Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
 	Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
-	Element_Slider_SetParams(&this->slider, 0, 5.0, "float");
 	
 	if (sceneHeader->lightList)
-		Element_Combo_SetPropEnum(&this->envID, sceneHeader->lightList->enumProp);
+		Element_Container_SetPropEnumAndHeight(&this->cont, sceneHeader->lightList->enumProp, 4);
 	else
-		Element_Combo_SetPropEnum(&this->envID, NULL);
+		Element_Container_SetPropEnumAndHeight(&this->cont, NULL, 4);
 }
 
 void Settings_Destroy(Editor* editor, Settings* this, Split* split) {
@@ -68,9 +67,9 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
 		Element_DisplayName(&this->comboBox);
 		Element_Combo(&this->comboBox);
 		
-		Element_Row(split, &this->envID, 1.0);
-		Element_DisplayName(&this->envID);
-		scene->curEnv = Element_Combo(&this->envID);
+		Element_Row(split, &this->cont, 1.0);
+		Element_DisplayName(&this->cont);
+		scene->curEnv = Element_Container(&this->cont);
 		
 		Element_Row(split, NULL, 0.25, &this->buttonIndoor, 0.75);
 		Element_Button_SetValue(&this->buttonIndoor, true, scene->indoorLight);
@@ -102,15 +101,13 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
 		Interface_MessageWindow(&editor->app, "Nice", "Destroyed Current Scene!");
 	}
 	
-	if (sceneHeader->lightList)
-		Element_Combo_SetPropEnum(&this->envID, sceneHeader->lightList->enumProp);
-	else
-		Element_Combo_SetPropEnum(&this->envID, NULL);
+	if (sceneHeader->lightList) {
+		Element_Container_SetPropEnumAndHeight(&this->cont, sceneHeader->lightList->enumProp, 6);
+	} else {
+		Element_Container_SetPropEnumAndHeight(&this->cont, NULL, 6);
+	}
 	
-	Element_Condition(&this->envID, this->envID.prop != NULL);
-	
-	Element_Row(split, &this->slider, 1.0);
-	Element_Slider(&this->slider);
+	Element_Condition(&this->cont, this->cont.prop != NULL);
 }
 
 void Settings_Draw(Editor* editor, Settings* this, Split* split) {

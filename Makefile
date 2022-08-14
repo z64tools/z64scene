@@ -64,6 +64,11 @@ format:
 # LINUX BUILD                         #
 # # # # # # # # # # # # # # # # # # # #
 
+define DFC_LINUX
+	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
+	@$(DataFileCompiler) -cc gcc -i $< -o $@
+endef
+
 bin/linux/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
 bin/linux/%.o: %.c %.h $(HEADER) $(ExtLib_H) $(ExtGui_H)
@@ -72,16 +77,11 @@ bin/linux/%.o: %.c $(HEADER) $(ExtLib_H) $(ExtGui_H)
 	@gcc -c -o $@ $< $(OPT_LINUX) $(CFLAGS)
 	
 bin/linux/%.o: %.ia16 $(DataFileCompiler)
-	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
-	@$(DataFileCompiler) -cc gcc -i $< -o $@
-	
+	$(DFC_LINUX)
 bin/linux/%.o: %.rgba $(DataFileCompiler)
-	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
-	@$(DataFileCompiler) -cc gcc -i $< -o $@
-	
+	$(DFC_LINUX)
 bin/linux/%.o: %.zobj $(DataFileCompiler)
-	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
-	@$(DataFileCompiler) -cc gcc -i $< -o $@
+	$(DFC_LINUX)
 
 $(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O) $(ASSETS_O_LINUX)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
@@ -91,6 +91,11 @@ $(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_
 # WIN32 BUILD                         #
 # # # # # # # # # # # # # # # # # # # #
 
+define DFC_WIN32
+	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
+	@$(DataFileCompiler) -cc i686-w64-mingw32.static-gcc -i $< -o $@
+endef
+
 bin/win32/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
 bin/win32/%.o: %.c %.h $(HEADER) $(ExtLib_H) $(ExtGui_H)
@@ -99,16 +104,11 @@ bin/win32/%.o: %.c $(HEADER) $(ExtLib_H) $(ExtGui_H)
 	@i686-w64-mingw32.static-gcc -c -o $@ $< $(OPT_WIN32) $(CFLAGS) -D_WIN32
 	
 bin/win32/%.o: %.ia16 $(DataFileCompiler)
-	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
-	@$(DataFileCompiler) -cc i686-w64-mingw32.static-gcc -i $< -o $@
-	
+	$(DFC_WIN32)
 bin/win32/%.o: %.rgba $(DataFileCompiler)
-	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
-	@$(DataFileCompiler) -cc i686-w64-mingw32.static-gcc -i $< -o $@
-	
+	$(DFC_WIN32)
 bin/win32/%.o: %.zobj $(DataFileCompiler)
-	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
-	@$(DataFileCompiler) -cc i686-w64-mingw32.static-gcc -i $< -o $@
+	$(DFC_WIN32)
 
 bin/win32/icon.o: src/icon.rc src/icon.ico
 	@i686-w64-mingw32.static-windres -o $@ $<
