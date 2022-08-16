@@ -41,7 +41,7 @@ SplitTask* gTaskTable[] = {
 	&empty
 };
 
-int main(void) {
+int XMain(argc, argv) {
 	Editor* editor;
 	GLFWimage icon = {
 		128, 128, gAppIcon.data
@@ -87,7 +87,7 @@ int main(void) {
 		editor->geo.workRect.h
 	};
 	
-	GeoGrid_AddSplit(&editor->geo, "__split_L__", &size, TAB_3DVP);
+	GeoGrid_AddSplit(&editor->geo, &size, TAB_3DVP);
 	
 	size = (Rectf32) {
 		size.w,
@@ -96,7 +96,7 @@ int main(void) {
 		editor->geo.workRect.h
 	};
 	
-	GeoGrid_AddSplit(&editor->geo, "__split_R__", &size, TAB_ROOM);
+	GeoGrid_AddSplit(&editor->geo, &size, TAB_ROOM);
 	
 	glfwSetWindowIcon(editor->app.window, 1, &icon);
 	Editor_Init(editor);

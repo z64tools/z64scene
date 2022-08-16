@@ -36,16 +36,16 @@ typedef struct {
 	f32 degr;
 	s16 pyaw;
 	
-	GizmoAxis focus;
-	GizmoAxis lock;
-	Cylinder  cyl[3];
-	
-	MtxF mtx;
-	
-	bool pressLock;
-	bool release;
-	bool resetRot;
+	GizmoAxis   focus;
+	GizmoAxis   lock;
+	Cylinder    cyl[3];
+	MtxF        mtx;
 	GizmoAction action;
+	struct {
+		bool pressLock : 1;
+		bool release   : 1;
+		bool resetRot  : 1;
+	};
 } Gizmo;
 
 void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp);

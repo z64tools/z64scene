@@ -277,10 +277,13 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 				this->resetRot = true;
 		}
 		
+		if (Input_GetKey(input, KEY_KP_0)->press)
+			View_MoveTo(view, this->pos);
 		if (!this->pressLock && Input_GetMouse(input, MOUSE_L)->press == false)
 			return;
 		if (!oneHit)
 			return;
+		
 	} else {
 		if (Input_GetKey(input, KEY_X)->press) {
 			if (this->focus.y || this->focus.z) {
