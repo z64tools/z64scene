@@ -1,8 +1,8 @@
 #ifndef __Z64_LIGHT_H__
 #define __Z64_LIGHT_H__
 
-#include <ExtLib.h>
-#include <ExtGui/GeoGrid.h>
+#include <ext_lib.h>
+#include <ext_geogrid.h>
 #include "Types.h"
 
 typedef struct StructBE {

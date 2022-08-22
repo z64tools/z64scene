@@ -1,7 +1,7 @@
 #ifndef __Z64_TYPES_H__
 #define __Z64_TYPES_H__
 
-#include <ExtLib.h>
+#include <ext_lib.h>
 
 typedef struct StructBE {
 	s16 x, y, z;

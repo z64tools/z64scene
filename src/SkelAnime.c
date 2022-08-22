@@ -15,8 +15,8 @@ void SkelAnime_Init(MemFile* memFile, SkelAnime* this, u32 skeleton, u32 animati
 	this->skeleton = skeleton;
 	this->animation = animation;
 	this->limbCount = skel->limbCount + 1;
-	Calloc(this->jointTable, this->limbCount * sizeof(Vec3s));
-	Calloc(this->morphTable, this->limbCount * sizeof(Vec3s));
+	this->jointTable = Calloc(this->limbCount * sizeof(Vec3s));
+	this->morphTable = Calloc(this->limbCount * sizeof(Vec3s));
 	
 	printf_info_align("skeleton", "%08X", skeleton);
 	printf_info_align("jointTable", "%08X", this->jointTable);

@@ -1,9 +1,9 @@
 #ifndef __EDITOR_H__
 #define __EDITOR_H__
 
-#include <ExtLib.h>
-#include <ExtGui/Interface.h>
-#include <ExtGui/Collision.h>
+#include <ext_lib.h>
+#include <ext_interface.h>
+#include <ext_collision.h>
 #include "SkelAnime.h"
 #include "Light.h"
 #include "Scene.h"

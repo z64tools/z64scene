@@ -1502,11 +1502,11 @@ static void32 sZorasDomainEntranceTextures[] = {
 };
 
 static void Scene_DrawConfigSpot07(AnimOoT* this) {
-	u32 var;
+	u32 x;
 	
-	var = 127 - (this->frame * 1) % 128;
+	x = 127 - (this->frame * 1) % 128;
 	
-	gSPSegment(POLY_OPA_DISP++, 0x0C, Gfx_TwoTexScroll( 0, 0, 0, 64, 32, 1, 0, var, 64, 32));
+	gSPSegment(POLY_OPA_DISP++, 0x0C, Gfx_TwoTexScroll( 0, 0, 0, 64, 32, 1, 0, x, 64, 32));
 	
 	gDPPipeSync(POLY_OPA_DISP++);
 	gDPSetEnvColor(POLY_OPA_DISP++, 128, 128, 128, 128);

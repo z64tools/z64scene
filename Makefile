@@ -1,7 +1,6 @@
 include setup.mk
 
-CFLAGS          = -Wall -Wno-switch -Wno-unused-function -DEXTLIB=200 -DNDEBUG -I z64viewer/include/ -I src/
-CFLAGS_MAIN     = -Wall -Wno-switch -Wno-unused-function -DNDEBUG
+CFLAGS          = -Wall -Wno-switch -Wno-unused-function -DEXTLIB=210 -DNDEBUG -I z64viewer/include/ -I src/
 OPT_WIN32      := -Ofast
 OPT_LINUX      := -Ofast
 SOURCE_C        = $(shell find src/* -type f -name '*.c')
@@ -48,7 +47,7 @@ $(shell mkdir -p bin/ $(foreach dir, \
 	$(dir $(SOURCE_O_WIN32)) \
 	, $(dir)))
 
-include $(PATH_EXTLIB)/ExtLib.mk
+include $(PATH_EXTLIB)/ext_lib.mk
 
 clean:
 	rm -f $(RELEASE_EXECUTABLE_LINUX)
@@ -59,6 +58,13 @@ clean:
 
 format:
 	@cd z64viewer && ./format.sh
+	
+# # # # # # # # # # # # # # # # # # # #
+# Dependency Include                  #
+# # # # # # # # # # # # # # # # # # # #
+
+-include $(SOURCE_O_LINUX:.o=.d)
+-include $(SOURCE_O_WIN32:.o=.d)
 
 # # # # # # # # # # # # # # # # # # # #
 # LINUX BUILD                         #
@@ -71,10 +77,10 @@ endef
 
 bin/linux/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
-bin/linux/%.o: %.c %.h $(HEADER) $(ExtLib_H) $(ExtGui_H)
-bin/linux/%.o: %.c $(HEADER) $(ExtLib_H) $(ExtGui_H)
+bin/linux/%.o: %.c
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)]"
 	@gcc -c -o $@ $< $(OPT_LINUX) $(CFLAGS)
+	$(GD_LINUX)
 	
 bin/linux/%.o: %.ia16 $(DataFileCompiler)
 	$(DFC_LINUX)
@@ -85,7 +91,7 @@ bin/linux/%.o: %.zobj $(DataFileCompiler)
 
 $(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O) $(ASSETS_O_LINUX)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
-	@gcc -o $@ $^ -lm -ldl -pthread $(OPT_LINUX) $(CFLAGS_MAIN) $(ExtGui_Linux_Flags)
+	@gcc -o $@ $^ -lm -ldl -pthread $(OPT_LINUX) $(CFLAGS) $(ExtGui_Linux_Flags)
 
 # # # # # # # # # # # # # # # # # # # #
 # WIN32 BUILD                         #
@@ -98,10 +104,10 @@ endef
 
 bin/win32/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
-bin/win32/%.o: %.c %.h $(HEADER) $(ExtLib_H) $(ExtGui_H)
-bin/win32/%.o: %.c $(HEADER) $(ExtLib_H) $(ExtGui_H)
+bin/win32/%.o: %.c
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)]"
 	@i686-w64-mingw32.static-gcc -c -o $@ $< $(OPT_WIN32) $(CFLAGS) -D_WIN32 -municode
+	$(GD_WIN32)
 	
 bin/win32/%.o: %.ia16 $(DataFileCompiler)
 	$(DFC_WIN32)
@@ -115,4 +121,4 @@ bin/win32/icon.o: src/icon.rc src/icon.ico
 
 $(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O) $(ASSETS_O_WIN32)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
-	@i686-w64-mingw32.static-gcc -o $@ $^ -lm -pthread $(OPT_WIN32) $(CFLAGS_MAIN) -D_WIN32 -municode $(ExtGui_Win32_Flags)
+	@i686-w64-mingw32.static-gcc -o $@ $^ -lm -pthread $(OPT_WIN32) $(CFLAGS) -D_WIN32 -municode $(ExtGui_Win32_Flags)

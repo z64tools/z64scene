@@ -101,11 +101,10 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
 		Interface_MessageWindow(&editor->app, "Nice", "Destroyed Current Scene!");
 	}
 	
-	if (sceneHeader->lightList) {
+	if (sceneHeader->lightList)
 		Element_Container_SetPropEnumAndHeight(&this->cont, sceneHeader->lightList->enumProp, 6);
-	} else {
+	else
 		Element_Container_SetPropEnumAndHeight(&this->cont, NULL, 6);
-	}
 	
 	Element_Condition(&this->cont, this->cont.prop != NULL);
 }

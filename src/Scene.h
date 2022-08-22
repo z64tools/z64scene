@@ -1,9 +1,9 @@
 #ifndef __Z64_SCENE_H__
 #define __Z64_SCENE_H__
 
-#include <ExtLib.h>
-#include <ExtGui/GeoGrid.h>
-#include <ExtGui/Collision.h>
+#include <ext_lib.h>
+#include <ext_geogrid.h>
+#include <ext_collision.h>
 #include "Types.h"
 #include "BgCheck.h"
 #include "Light.h"

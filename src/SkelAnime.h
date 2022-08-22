@@ -1,8 +1,8 @@
 #ifndef __Z64_SKELANIME_H__
 #define __Z64_SKELANIME_H__
 
-#include <ExtGui/Math.h>
-#include <ExtGui/Matrix.h>
+#include <ext_math.h>
+#include <ext_matrix.h>
 #include <n64.h>
 
 typedef struct {

@@ -1,7 +1,7 @@
 #ifndef __Z64_BGCHECK_H__
 #define __Z64_BGCHECK_H__
 
-#include <ExtLib.h>
+#include <ext_lib.h>
 #include "Types.h"
 #include "n64.h"
 

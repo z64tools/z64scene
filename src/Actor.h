@@ -1,9 +1,9 @@
 #ifndef __Z64_ACTOR_H__
 #define __Z64_ACTOR_H__
-#include <ExtLib.h>
-#include <ExtGui/Math.h>
-#include <ExtGui/Collision.h>
-#include <ExtGui/View.h>
+#include <ext_lib.h>
+#include <ext_math.h>
+#include <ext_collision.h>
+#include <ext_view.h>
 #include "Types.h"
 
 struct Room;

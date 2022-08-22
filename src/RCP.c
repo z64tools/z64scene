@@ -1,4 +1,3 @@
-#include <ExtGui/Math.h>
 #include <n64.h>
 
 unsigned char sGfxRCP[] = {

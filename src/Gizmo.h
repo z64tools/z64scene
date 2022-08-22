@@ -1,7 +1,7 @@
-#include <ExtTypes.h>
-#include <ExtGui/Math.h>
-#include <ExtGui/Input.h>
-#include <ExtGui/View.h>
+#include <ext_type.h>
+#include <ext_math.h>
+#include <ext_input.h>
+#include <ext_view.h>
 #include <Scene.h>
 
 typedef enum {

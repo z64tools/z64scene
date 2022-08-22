@@ -41,18 +41,14 @@ SplitTask* gTaskTable[] = {
 	&empty
 };
 
-int XMain(argc, argv) {
-	Editor* editor;
+int UnicodeMain(argc, argv) {
+	Editor* editor = Calloc(sizeof(*editor));
 	GLFWimage icon = {
 		128, 128, gAppIcon.data
 	};
 	
-	Log_Init();
-	printf_WinFix();
-	printf_SetPrefix("");
 	Theme_Init(0);
 	
-	CallocX(editor);
 	editor->vg = Interface_Init(
 		"z64scene", &editor->app, &editor->input,
 		editor, (void*)Editor_Update,

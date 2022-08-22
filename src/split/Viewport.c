@@ -169,8 +169,8 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
 	// SkelAnime_Init(&gNora, &this->skelAnime, 0x0600D978, 0x0600EF44);
 	
 	if (gInstance++ == 0) {
-		gVOPAHead = SysAlloc(sizeof(Gfx) * 4096);
-		gVXLUHead = SysAlloc(sizeof(Gfx) * 4096);
+		gVOPAHead = Alloc(sizeof(Gfx) * 4096);
+		gVXLUHead = Alloc(sizeof(Gfx) * 4096);
 	}
 }
 

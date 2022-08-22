@@ -149,7 +149,7 @@ void* DataNode_Copy(DataContext* ctx, SceneCmd* cmd) {
 	
 	Assert(segment != 0);
 	
-	Calloc(node, size);
+	node = Calloc(size);
 	Node_Add(ctx->head[code], node);
 	node->segment = segment;
 	node->pointer = ptr;
@@ -160,7 +160,7 @@ void* DataNode_Copy(DataContext* ctx, SceneCmd* cmd) {
 	
 	switch (code) {
 		case SCENE_CMD_ID_ACTOR_LIST:
-			actor = this->actor.head = SysCalloc(sizeof(Actor) * 0xFF);
+			actor = this->actor.head = Calloc(sizeof(Actor) * 0xFF);
 			this->actor.num = cmd->actorList.num;
 			entry = SEGMENTED_TO_VIRTUAL(cmd->actorList.segment);
 			
@@ -185,7 +185,7 @@ void* DataNode_Copy(DataContext* ctx, SceneCmd* cmd) {
 			break;
 			
 		case SCENE_CMD_ID_LIGHT_SETTINGS_LIST:
-			this->lightList.env = SysCalloc(sizeof(EnvLightSettings) * 0xFF);
+			this->lightList.env = Calloc(sizeof(EnvLightSettings) * 0xFF);
 			this->lightList.num = cmd->lightSettingList.num;
 			memcpy(
 				this->lightList.env,
