@@ -20,16 +20,6 @@ SOURCE_O_WIN32 += $(foreach f,$(ASSETS_IA16:.ia16=.o),bin/win32/$f) \
 				$(foreach f,$(ASSETS_RGBA:.rgba=.o),bin/win32/$f) \
 				$(foreach f,$(ASSETS_ZOBJ:.zobj=.o),bin/win32/$f)
 
-PRNT_DGRY := \e[90;2m
-PRNT_GRAY := \e[0;90m
-PRNT_REDD := \e[0;91m
-PRNT_GREN := \e[0;92m
-PRNT_YELW := \e[0;93m
-PRNT_BLUE := \e[0;94m
-PRNT_PRPL := \e[0;95m
-PRNT_CYAN := \e[0;96m
-PRNT_RSET := \e[m
-
 .PHONY: default \
 		win32 \
 		linux \
