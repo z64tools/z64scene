@@ -56,8 +56,11 @@ clean:
 	rm -f $(SOURCE_O_WIN32)
 	rm -f -R bin
 
-format:
+format-z64viewer:
 	@cd z64viewer && ./format.sh
+
+format:
+	@uncrustify -c uncrustify.cfg --replace --no-backup $i
 	
 # # # # # # # # # # # # # # # # # # # #
 # Dependency Include                  #

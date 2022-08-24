@@ -221,7 +221,7 @@ static void Gizmo_Rotate(Gizmo* this, Scene* scene, View3D* view, Input* input) 
 }
 
 void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
-	void (*gizmoActionFunc[])(Gizmo*, Scene*, View3D*, Input*) = {
+	void (* gizmoActionFunc[])(Gizmo*, Scene*, View3D*, Input*) = {
 		NULL,
 		Gizmo_Move,
 		Gizmo_Rotate,

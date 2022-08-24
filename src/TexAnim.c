@@ -2075,7 +2075,7 @@ static void Scene_DrawConfigBesitu(AnimOoT* this) {
 	gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-void (*sSceneDrawConfigs[53])(AnimOoT* this) = {
+void (* sSceneDrawConfigs[53])(AnimOoT* this) = {
 	/* 0  */ NULL, // SDC_DEFAULT
 	/* 1  */ Scene_DrawConfigSpot00,
 	/* 2  */ Scene_DrawConfigSpot01,

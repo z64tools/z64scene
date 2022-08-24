@@ -1,7 +1,7 @@
 #include "Editor.h"
 #include "BgCheck.h"
 
-void (*sSceneCmdHandlers[SCENE_CMD_ID_MAX])(Scene*, Room*, SceneCmd*);
+void (* sSceneCmdHandlers[SCENE_CMD_ID_MAX])(Scene*, Room*, SceneCmd*);
 char* sSceneCmdHandlers_Name[SCENE_CMD_ID_MAX];
 
 // # # # # # # # # # # # # # # # # # # # #
@@ -576,7 +576,7 @@ static void Scene_CommandMiscSettings(Scene* scene, Room* room, SceneCmd* cmd) {
 	// }
 }
 
-void (*sSceneCmdHandlers[SCENE_CMD_ID_MAX])(Scene*, Room*, SceneCmd*) = {
+void (* sSceneCmdHandlers[SCENE_CMD_ID_MAX])(Scene*, Room*, SceneCmd*) = {
 	/* SCENE_CMD_ID_SPAWN_LIST            */ Scene_CommandSpawnList,
 	/* SCENE_CMD_ID_ACTOR_LIST            */ Scene_CommandActorList,
 	/* SCENE_CMD_ID_UNUSED_2              */ Scene_CommandUnused2,
