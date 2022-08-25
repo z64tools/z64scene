@@ -22,8 +22,7 @@ SOURCE_O_WIN32 += $(foreach f,$(ASSETS_IA16:.ia16=.o),bin/win32/$f) \
 
 .PHONY: default \
 		win32 \
-		linux \
-		format
+		linux
 
 default: linux
 linux: $(RELEASE_EXECUTABLE_LINUX)
@@ -48,9 +47,6 @@ clean:
 
 format-z64viewer:
 	@cd z64viewer && ./format.sh
-
-format:
-	@uncrustify -c uncrustify.cfg --replace --no-backup $i
 	
 # # # # # # # # # # # # # # # # # # # #
 # Dependency Include                  #
