@@ -1,6 +1,9 @@
-include setup.mk
+ifeq (,$(wildcard settings.mk))
+  $(error Please run ./setup.sh to automatically install ExtLib)
+endif
+include settings.mk
 
-CFLAGS          = -Wall -Wno-switch -Wno-unused-function -DEXTLIB=210 -DNDEBUG -I z64viewer/include/ -I src/
+CFLAGS          = -Wall -Wno-switch -Wno-unused-function -DEXTLIB=212 -DNDEBUG -I z64viewer/include/ -I src/
 OPT_WIN32      := -Ofast
 OPT_LINUX      := -Ofast
 SOURCE_C        = $(shell find src/* -type f -name '*.c')
@@ -59,11 +62,6 @@ format-z64viewer:
 # LINUX BUILD                         #
 # # # # # # # # # # # # # # # # # # # #
 
-define DFC_LINUX
-	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
-	@$(DataFileCompiler) -cc gcc -i $< -o $@
-endef
-
 bin/linux/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
 bin/linux/%.o: %.c
@@ -72,24 +70,22 @@ bin/linux/%.o: %.c
 	$(GD_LINUX)
 	
 bin/linux/%.o: %.ia16 $(DataFileCompiler)
-	$(DFC_LINUX)
+	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
+	@$(DataFileCompiler) --cc gcc --i $< --o $@
 bin/linux/%.o: %.rgba $(DataFileCompiler)
-	$(DFC_LINUX)
+	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
+	@$(DataFileCompiler) --cc gcc --i $< --o $@
 bin/linux/%.o: %.zobj $(DataFileCompiler)
-	$(DFC_LINUX)
+	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
+	@$(DataFileCompiler) --cc gcc --i $< --o $@
 
 $(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O) $(ASSETS_O_LINUX)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
-	@gcc -o $@ $^ -lm -ldl -pthread $(OPT_LINUX) $(CFLAGS) $(ExtGui_Linux_Flags)
+	@gcc -o $@ $^ $(XFLAGS) $(CFLAGS)
 
 # # # # # # # # # # # # # # # # # # # #
 # WIN32 BUILD                         #
 # # # # # # # # # # # # # # # # # # # #
-
-define DFC_WIN32
-	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
-	@$(DataFileCompiler) -cc i686-w64-mingw32.static-gcc -i $< -o $@
-endef
 
 bin/win32/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
@@ -99,15 +95,15 @@ bin/win32/%.o: %.c
 	$(GD_WIN32)
 	
 bin/win32/%.o: %.ia16 $(DataFileCompiler)
-	$(DFC_WIN32)
+	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
+	@$(DataFileCompiler) --cc i686-w64-mingw32.static-gcc --i $< --o $@
 bin/win32/%.o: %.rgba $(DataFileCompiler)
-	$(DFC_WIN32)
+	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
+	@$(DataFileCompiler) --cc i686-w64-mingw32.static-gcc --i $< --o $@
 bin/win32/%.o: %.zobj $(DataFileCompiler)
-	$(DFC_WIN32)
-
-bin/win32/icon.o: src/icon.rc src/icon.ico
-	@i686-w64-mingw32.static-windres -o $@ $<
+	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
+	@$(DataFileCompiler) --cc i686-w64-mingw32.static-gcc --i $< --o $@
 
 $(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O) $(ASSETS_O_WIN32)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
-	@i686-w64-mingw32.static-gcc -o $@ $^ -lm -pthread $(OPT_WIN32) $(CFLAGS) -D_WIN32 -municode $(ExtGui_Win32_Flags)
+	@i686-w64-mingw32.static-gcc -o $@ $^ $(XFLAGS) $(CFLAGS) -D_WIN32 -municode

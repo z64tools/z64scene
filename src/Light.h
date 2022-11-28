@@ -18,7 +18,7 @@ typedef struct StructBE {
 
 typedef struct {
 	DataNode  data;
-	PropEnum* enumProp;
+	PropList* enumProp;
 	EnvLightSettings* env;
 	u32 num;
 } LightList;

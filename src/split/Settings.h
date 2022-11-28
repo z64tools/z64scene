@@ -4,18 +4,21 @@
 #include <Editor.h>
 
 typedef struct {
-	ElButton buttonIndoor;
-	ElCombo  comboBox;
-	
-	ElButton buttonFPS;
-	ElButton buttonCulling;
-	
-	ElButton buttonFog;
-	ElButton buttonColView;
-	
-	ElButton killScene;
-	
-	ElContainer cont;
+    ElButton buttonIndoor;
+    ElCombo  comboBox;
+    
+    ElButton buttonFPS;
+    ElButton buttonCulling;
+    
+    ElButton buttonFog;
+    ElButton buttonColView;
+    
+    ElButton killScene;
+    
+    ElColor envColA;
+    ElColor envColB;
+    
+    ElContainer cont;
 } Settings;
 
 extern SplitTask gSettingsTask;

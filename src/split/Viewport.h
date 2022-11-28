@@ -5,14 +5,14 @@
 #include <Gizmo.h>
 
 typedef struct {
-	View3D    view;
-	SkelAnime skelAnime;
-	bool lockCameraAccess;
-	
-	Vec3f  cubePos;
-	Actor* curActor;
-	
-	Gizmo gizmo;
+    View3D    view;
+    SkelAnime skelAnime;
+    bool      lockCameraAccess;
+    
+    Vec3f  cubePos;
+    Actor* curActor;
+    
+    Gizmo gizmo;
 } Viewport;
 
 extern SplitTask gViewportTask;
