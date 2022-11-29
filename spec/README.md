@@ -1,4 +1,22 @@
-# Data Types
+# Format
+
+z64scene would uses `.zsp` (**z**elda **s**cene **p**roject) as the format
+that stores the necessary data for the scene.
+
+This file would actually be just a `.zip` file that contains the `.zscene`
+and `.zroom` files. On top of that it would also have `.toml` config file
+that is provided by `z64scene`.
+
+Reason for packing all this into one file is to avoid user confusion and
+renaming the format only to avoid more confusion. Better not have people
+messing with this data unless they want to.
+
+Possibly we will look into having `export as individual files` option.
+
+
+# config.toml
+
+Table Types
 
 ```toml
 [spawn_list]
