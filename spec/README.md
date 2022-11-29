@@ -79,7 +79,7 @@ object_list = [
 		fog_far   = 12800
 
 [time]
-	time = GLOBAL
+	time = "GLOBAL"
 	# or a specific time
 	time = 12.00
 	
