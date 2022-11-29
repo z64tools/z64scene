@@ -58,6 +58,7 @@ int UnicodeMain(argc, argv) {
     Editor_Init(editor);
     Interface_Main(&editor->app);
     Interface_Destroy(&editor->app);
+    Editor_Destroy(editor);
     
     return 0;
 }

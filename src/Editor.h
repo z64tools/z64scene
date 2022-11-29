@@ -8,6 +8,8 @@
 #include "Light.h"
 #include "Scene.h"
 
+extern VectorGfx gVecGfx_EyeOpen;
+
 typedef enum {
 	TIME_SCENE_ANIM = 0x40,
 } TimeSlot;
@@ -29,6 +31,7 @@ void* NewMtx();
 
 Editor* GetEditor(void);
 void Editor_Init(Editor* editor);
+void Editor_Destroy(Editor* editor);
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]);
 void Editor_Update(Editor* editor);
 void Editor_Draw(Editor* editor);

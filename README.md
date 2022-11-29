@@ -11,7 +11,7 @@ HLE Zelda 64 scene editor in modern OpenGL
   - 3D Viewport
     - Option to show camera position based on cutscene timeline?
   - Layers
-    - Rooms, Actors
+    - Room, Actors
   - Flag Viewer
     - List all flags, customize names
     - Bottom part of this subscreen could show in which rooms currently selected flag is used.

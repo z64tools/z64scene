@@ -45,18 +45,21 @@ static void Viewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
 
 static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) {
     Input* inputCtx = &editor->input;
-    MouseInput* mouse = &inputCtx->mouse;
+    CursorInput* cursor = &inputCtx->cursor;
     Gizmo* gizmo = &this->gizmo;
     View3D* view = &this->view;
     
-    if (Input_GetMouse(inputCtx, MOUSE_ANY)->hold && this->lockCameraAccess)
+    if (Input_GetMouse(inputCtx, CLICK_ANY)->hold && this->lockCameraAccess)
         return;
     this->lockCameraAccess = false;
     
     if (!View_CheckControlKeys(inputCtx) && !split->inputAccess)
         view->cameraControl = false;
     
-    if (Input_GetMouse(inputCtx, MOUSE_ANY)->press && !split->inputAccess) {
+    if (Input_GetKey(inputCtx, KEY_LEFT_CONTROL)->hold)
+        view->cameraControl = false;
+    
+    if (Input_GetMouse(inputCtx, CLICK_ANY)->press && !split->inputAccess) {
         view->cameraControl = false;
         this->lockCameraAccess = true;
         
@@ -77,7 +80,7 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
         view->cameraControl = true;
     
     if (split->mouseInSplit) {
-        if (mouse->clickMid.press && Input_GetKey(inputCtx, KEY_LEFT_ALT)->hold) {
+        if (cursor->clickMid.press && Input_GetKey(inputCtx, KEY_LEFT_ALT)->hold) {
             Vec3f o;
             s32 r = 0;
             RayLine ray = View_GetCursorRayLine(&this->view);
@@ -93,7 +96,7 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
                 View_MoveTo(&this->view, o);
         }
         
-        if (Input_GetKey(inputCtx, KEY_LEFT_CONTROL)->hold && mouse->clickL.press) {
+        if (Input_GetKey(inputCtx, KEY_LEFT_CONTROL)->hold && cursor->clickL.press) {
             RayLine ray = View_GetCursorRayLine(&this->view);
             Room* room = Room_Raycast(&editor->scene, &ray, NULL);
             
@@ -110,7 +113,7 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
     Actor* selectedActor = NULL;
     Vec3f p;
     
-    if (Gizmo_IsBusy(&this->gizmo) || !Input_GetMouse(input, MOUSE_L)->press)
+    if (Gizmo_IsBusy(&this->gizmo) || !Input_GetMouse(input, CLICK_L)->press)
         return;
     
     // Process rooms so that we do not grab actors behind walls
@@ -119,6 +122,7 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
     
     while (list) {
         Actor* actor = list->head;
+        
         for (s32 i = 0; i < list->num; i++, actor++) {
             if (actor->state & ACTOR_SELECTED)
                 continue;
@@ -140,6 +144,7 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
         
         while (list) {
             Actor* actor = list->head;
+            
             for (s32 i = 0; i < list->num; i++, actor++) {
                 actor->state &= ~ACTOR_SELECTED;
                 
@@ -170,10 +175,12 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
         gVOPAHead = Alloc(sizeof(Gfx) * 4096);
         gVXLUHead = Alloc(sizeof(Gfx) * 4096);
     }
+    
+    Element_Name(&this->resetCam, "Reset Camera");
 }
 
 void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
-    split->bg.useCustomBG = false;
+    split->bg.useCustomPaint = false;
     
     if (--gInstance == 0) {
         Free(gVOPAHead);
@@ -184,19 +191,27 @@ void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
 void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     SceneHeader* header;
     EnvLightSettings* env;
-    MouseInput* mouse = &editor->input.mouse;
+    CursorInput* cursor = &editor->input.cursor;
     Gizmo* gizmo = &this->gizmo;
     
-    Element_Header(split, split->taskCombo, 128);
+    Element_Header(split, split->taskCombo, 128, &this->resetCam, 128);
     Element_Combo(split->taskCombo);
     
-    if (editor->scene.segment == NULL)
+    if (Element_Button(&this->resetCam)) {
+        printf_info("Reset Camera");
+        View_MoveTo(&this->view, Math_Vec3f_New(0, 0, 0));
+        View_RotTo(&this->view, Math_Vec3s_New(0, 0, 0));
+        this->view.cameraControl = true;
+    }
+    
+    if (editor->scene.segment == NULL) {
+        split->bg.useCustomPaint = false;
         return;
+    }
     
     Viewport_CameraUpdate(editor, this, split);
     header = Scene_GetSceneHeader(&editor->scene);
     env = header->lightList->env + editor->scene.curEnv;
-    memcpy(split->bg.color.c, env->fogColor, 3);
     
     if (editor->scene.state & SCENE_DRAW_FOG)
         this->view.far = env->fogFar;
@@ -204,21 +219,60 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
         this->view.far = 12800.0 + 6000;
     
     // Cursor Wrapping
-    if (Input_GetMouse(&editor->input, MOUSE_ANY)->press)
+    if (Input_GetMouse(&editor->input, CLICK_ANY)->press)
         return;
     
-    if ((this->view.cameraControl && editor->input.mouse.click.hold) || gizmo->lock.state) {
+    if ((this->view.cameraControl && editor->input.cursor.clickAny.hold) || gizmo->lock.state) {
         s16 xMin = split->rect.x;
         s16 xMax = split->rect.x + split->rect.w;
         s16 yMin = split->rect.y;
         s16 yMax = split->rect.y + split->rect.h;
         
-        if (mouse->pos.x < xMin || mouse->pos.x > xMax)
-            Input_SetMousePos(&editor->input, WrapS(mouse->pos.x, xMin, xMax), MOUSE_KEEP_AXIS);
+        if (cursor->pos.x < xMin || cursor->pos.x > xMax)
+            Input_SetMousePos(&editor->input, WrapS(cursor->pos.x, xMin, xMax), MOUSE_KEEP_AXIS);
         
-        if (mouse->pos.y < yMin || mouse->pos.y > yMax)
-            Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(mouse->pos.y, yMin, yMax));
+        if (cursor->pos.y < yMin || cursor->pos.y > yMax)
+            Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(cursor->pos.y, yMin, yMax));
     }
+    
+    f32 hue;
+    f32 mul;
+    
+    switch (editor->scene.curEnv) {
+        case 0:
+            if (!editor->scene.indoorLight) {
+                hue = 10 / 360.0f;
+                mul = 0.75f;
+                break;
+            }
+        case 1:
+            if (!editor->scene.indoorLight) {
+                hue = 194 / 360.0f;
+                mul = 1.0f;
+                break;
+            }
+        case 2:
+            if (!editor->scene.indoorLight) {
+                hue = 12 / 360.0f;
+                mul = 0.75f;
+                break;
+            }
+        case 3:
+            if (!editor->scene.indoorLight) {
+                hue = 242 / 360.0f;
+                mul = 0.5f;
+                break;
+            }
+        default: (void)0;
+            HSL8 hsl = Color_GetHSL(env->light1Color[0], env->light1Color[1], env->light1Color[2]);
+            hue = hsl.h;
+            mul = hsl.l;
+            break;
+    }
+    
+    split->bg.paint = nvgLinearGradient(editor->vg, 0, 0, 0, split->rect.h,
+            nvgHSL(hue, 0.75f * mul, 0.80f * mul),
+            nvgHSL(hue, 0.50f * mul, 0.50f * mul));
 }
 
 static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
@@ -248,7 +302,6 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
 }
 
 static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
-    split->bg.useCustomBG = true;
     n64_graph_init();
     n64_set_culling(editor->scene.state & SCENE_DRAW_CULLING);
     
@@ -280,7 +333,6 @@ static void Viewport_DrawInfo(Editor* editor, Viewport* this, Split* split) {
     const char* txt = "z64scene";
     void* vg = editor->vg;
     
-    split->bg.useCustomBG = false;
     nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
     nvgFontBlur(vg, 0.0);
     
@@ -372,10 +424,10 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
     nvgFontSize(vg, 15);
     nvgTextLetterSpacing(vg, 0.0f);
     
-    ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(PROFILER_FPS), 0);
-    ProfilerText(vg, 1, "Total:", "%.2fms", Profiler_Time(0xF0) * 1000.0f, 16.0f);
-    ProfilerText(vg, 2, "Scene Draw:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
-    ProfilerText(vg, 3, "Gizmo Update:", "%.2fms", Profiler_Time(2) * 1000.f, 16.0f);
-    ProfilerText(vg, 4, "n64:", "%.2fms", Profiler_Time(8) * 1000.f, 16.0f);
-    ProfilerText(vg, 5, "Delta:", "%.2f", gDeltaTime, 0);
+    // ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(PROFILER_FPS), 0);
+    // ProfilerText(vg, 1, "Total:", "%.2fms", Profiler_Time(0xF0) * 1000.0f, 16.0f);
+    // ProfilerText(vg, 2, "Scene Draw:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
+    // ProfilerText(vg, 3, "Gizmo Update:", "%.2fms", Profiler_Time(2) * 1000.f, 16.0f);
+    // ProfilerText(vg, 4, "n64:", "%.2fms", Profiler_Time(8) * 1000.f, 16.0f);
+    // ProfilerText(vg, 5, "Delta:", "%.2f", gDeltaTime, 0);
 }

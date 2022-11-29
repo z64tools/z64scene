@@ -12,6 +12,8 @@ typedef struct {
     Vec3f  cubePos;
     Actor* curActor;
     
+    ElButton resetCam;
+    
     Gizmo gizmo;
 } Viewport;
 

@@ -114,7 +114,7 @@ static void Gizmo_Move(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 	} else {
 		Log("Other");
 		Vec2f gizmoScreenSpace = View_GetScreenPos(view, this->pos);
-		Vec2f mv = Math_Vec2f_New(UnfoldVec2(input->mouse.vel));
+		Vec2f mv = Math_Vec2f_New(UnfoldVec2(input->cursor.vel));
 		RayLine curRay = View_GetPointRayLine(view,  gizmoScreenSpace);
 		RayLine nextRay = View_GetPointRayLine(view,  Math_Vec2f_Add(gizmoScreenSpace, mv));
 		RayLine mouseRay = View_GetCursorRayLine(view);
@@ -183,7 +183,7 @@ static void Gizmo_Move(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 static void Gizmo_Rotate(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 	bool step = Input_GetKey(input, KEY_LEFT_CONTROL)->hold;
 	Vec2f sp = View_GetScreenPos(view, this->pos);
-	Vec2f mp = Math_Vec2f_New(UnfoldVec2(input->mouse.pos));
+	Vec2f mp = Math_Vec2f_New(UnfoldVec2(input->cursor.pos));
 	s16 yaw = Math_Vec2f_Yaw(sp, mp);
 	s32 new = yaw - this->pyaw;
 	
@@ -262,7 +262,7 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 		
 		if (Input_GetKey(input, KEY_R)->press) {
 			Vec2f sp = View_GetScreenPos(view, this->pos);
-			Vec2f mp = Math_Vec2f_New(UnfoldVec2(input->mouse.pos));
+			Vec2f mp = Math_Vec2f_New(UnfoldVec2(input->cursor.pos));
 			s16 yaw = Math_Vec2f_Yaw(sp, mp);
 			
 			this->action = GIZMO_ACTION_ROTATE;
@@ -279,7 +279,7 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 		
 		if (Input_GetKey(input, KEY_KP_0)->press)
 			View_MoveTo(view, this->pos);
-		if (!this->pressLock && Input_GetMouse(input, MOUSE_L)->press == false)
+		if (!this->pressLock && Input_GetMouse(input, CLICK_L)->press == false)
 			return;
 		if (!oneHit)
 			return;
@@ -315,10 +315,10 @@ void Gizmo_Update(Gizmo* this, Scene* scene, View3D* view, Input* input) {
 	}
 	
 	if (this->pressLock) {
-		if (Input_GetMouse(input, MOUSE_ANY)->press)
+		if (Input_GetMouse(input, CLICK_ANY)->press)
 			goto reset_gizmo;
 	} else {
-		if (Input_GetMouse(input, MOUSE_L)->hold == false)
+		if (Input_GetMouse(input, CLICK_L)->hold == false)
 			goto reset_gizmo;
 	}
 	

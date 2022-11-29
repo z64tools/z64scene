@@ -5,7 +5,6 @@
 
 typedef struct {
     ElButton buttonIndoor;
-    ElCombo  comboBox;
     
     ElButton buttonFPS;
     ElButton buttonCulling;
@@ -15,8 +14,13 @@ typedef struct {
     
     ElButton killScene;
     
+    ElColor envAmbient;
+    ElColor envFogColor;
     ElColor envColA;
     ElColor envColB;
+    
+    ElSlider fogNear;
+    ElSlider fogFar;
     
     ElContainer cont;
 } Settings;

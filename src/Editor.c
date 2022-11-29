@@ -14,12 +14,28 @@ static Editor* sEditor;
 // # EDITOR                              #
 // # # # # # # # # # # # # # # # # # # # #
 
+VectorGfx gVecGfx_EyeOpen;
+
+static void Editor_InitIcons(Editor* editor) {
+    extern DataFile gIcon_EyeOpen;
+    
+    VectorGfx_New(&gVecGfx_EyeOpen, gIcon_EyeOpen.data, 10.0f);
+}
+
 Editor* GetEditor(void) {
     return sEditor;
 }
 
 void Editor_Init(Editor* editor) {
     sEditor = editor;
+    
+    Editor_InitIcons(editor);
+}
+
+void Editor_Destroy(Editor* editor) {
+    VectorGfx_Free(&gVecGfx_EyeOpen);
+    
+    Free(editor);
 }
 
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {

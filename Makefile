@@ -4,8 +4,8 @@ endif
 include settings.mk
 
 CFLAGS          = -Wall -Wno-switch -Wno-unused-function -DEXTLIB=212 -DNDEBUG -I z64viewer/include/ -I src/
-OPT_WIN32      := -Ofast
-OPT_LINUX      := -Ofast
+OPT_WIN32      := -O1
+OPT_LINUX      := -O1
 SOURCE_C        = $(shell find src/* -type f -name '*.c')
 SOURCE_C       += $(shell find z64viewer/src/* -type f -name '*.c')
 SOURCE_O_LINUX  = $(foreach f,$(SOURCE_C:.c=.o),bin/linux/$f)
@@ -16,12 +16,15 @@ RELEASE_EXECUTABLE_WIN32 := app_win32/z64scene.exe
 ASSETS_IA16    := $(shell find assets/* -type f -name '*.ia16')
 ASSETS_RGBA    := $(shell find assets/* -type f -name '*.rgba')
 ASSETS_ZOBJ    := $(shell find assets/* -type f -name '*.zobj')
+ASSETS_SVG     := $(shell find assets/* -type f -name '*.svg')
 SOURCE_O_LINUX += $(foreach f,$(ASSETS_IA16:.ia16=.o),bin/linux/$f) \
 				$(foreach f,$(ASSETS_RGBA:.rgba=.o),bin/linux/$f) \
-				$(foreach f,$(ASSETS_ZOBJ:.zobj=.o),bin/linux/$f)
+				$(foreach f,$(ASSETS_ZOBJ:.zobj=.o),bin/linux/$f) \
+				$(foreach f,$(ASSETS_SVG:.svg=.o),bin/linux/$f)
 SOURCE_O_WIN32 += $(foreach f,$(ASSETS_IA16:.ia16=.o),bin/win32/$f) \
 				$(foreach f,$(ASSETS_RGBA:.rgba=.o),bin/win32/$f) \
-				$(foreach f,$(ASSETS_ZOBJ:.zobj=.o),bin/win32/$f)
+				$(foreach f,$(ASSETS_ZOBJ:.zobj=.o),bin/win32/$f) \
+				$(foreach f,$(ASSETS_SVG:.svg=.o),bin/win32/$f)
 
 .PHONY: default \
 		win32 \
@@ -78,6 +81,9 @@ bin/linux/%.o: %.rgba $(DataFileCompiler)
 bin/linux/%.o: %.zobj $(DataFileCompiler)
 	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
 	@$(DataFileCompiler) --cc gcc --i $< --o $@
+bin/linux/%.o: %.svg $(DataFileCompiler)
+	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
+	@$(DataFileCompiler) --cc gcc --i $< --o $@
 
 $(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O) $(ASSETS_O_LINUX)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
@@ -101,6 +107,9 @@ bin/win32/%.o: %.rgba $(DataFileCompiler)
 	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
 	@$(DataFileCompiler) --cc i686-w64-mingw32.static-gcc --i $< --o $@
 bin/win32/%.o: %.zobj $(DataFileCompiler)
+	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
+	@$(DataFileCompiler) --cc i686-w64-mingw32.static-gcc --i $< --o $@
+bin/win32/%.o: %.svg $(DataFileCompiler)
 	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
 	@$(DataFileCompiler) --cc i686-w64-mingw32.static-gcc --i $< --o $@
 
