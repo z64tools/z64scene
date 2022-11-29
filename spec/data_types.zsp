@@ -1,0 +1,111 @@
+[spawn_list]
+	[[spawn_list.entry]]
+		id = 0
+		pos = [ 0, 0, 0 ]
+		rot = [ 0, 0, 0 ]
+		var = 0
+
+[actor_list]
+	[[actor_list.entry]]
+		id = 0
+		pos = [ 0, 0, 0 ]
+		rot = [ 0, 0, 0 ]
+		var = 0
+
+[wind]
+	axis     = [ 0, 0, 0 ]
+	strength = 0
+
+[entrance_list]
+	[[entrance_list.entry]]
+		spawn = 0
+		room  = 0
+
+[special_files]
+	navi_msg    = "dungeon"
+	keep_object = 0
+
+[room_behaviour]
+	behaviour          = 0
+	link_behaviour     = 0
+	lens_mode          = true
+	disable_warp_songs = true
+
+object_list = [
+	0, 0, 0, 0
+]
+
+[light_list]
+	[[light_list.entry]]
+		type   = "dir" # "dir" / "point"
+		vector = [ 0, 0, 0 ]
+		color  = [ 0, 0, 0 ]
+		# these are processed only if "point"
+		radius = 0
+		glow   = false
+
+[path_list]
+	[[path_list.entry]]
+		list = [
+			[ 0, 0, 0 ],
+			[ 0, 0, 0 ],
+			[ 0, 0, 0 ],
+		]
+
+[transition_actor_list]
+	[[transition_actor_list.entry]]
+		front_room = 0
+		front_cam  = 0
+		back_room  = 0
+		back_cam   = 0
+		
+		id         = 0
+		pos        = [ 0, 0, 0 ]
+		rot_y      = 0
+		var        = 0
+
+[env_light_list]
+	[[env_light_list.entry]]
+		ambient   = { 255, 255, 255 }
+		normal_a  = { 255, 255, 255 }
+		color_a   = { 255, 255, 255 }
+		normal_b  = { 255, 255, 255 }
+		color_b   = { 255, 255, 255 }
+		fog_color = { 255, 255, 255 }
+		fog_near  = 1000
+		fog_far   = 12800
+
+[time]
+	time = GLOBAL
+	# or a specific time
+	time = 12.00
+	
+	speed = 1
+
+[skybox]
+	type       = 0
+	config     = 0
+	light_mode = 0
+
+[skybox_disables]
+	disable_sky      = true
+	disable_sun_moon = true
+
+exit_list = [
+	0, 0, 0, 0
+]
+
+[sound]
+	spec_id    = 0
+	sfx_seq_id = 0
+	bgm_seq_id = 0
+
+[echo]
+	echo = 0
+
+[cutscene]
+	# TODO
+
+[misc]
+	scene_cam_type = 0
+	area           = 0
