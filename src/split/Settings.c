@@ -14,9 +14,73 @@ SplitTask gSettingsTask = {
     .size     = sizeof(Settings)
 };
 
+bool PropListCallback(PropList* prop, PropListChange action, s32 id) {
+    Scene* scene = prop->udata1;
+    SceneHeader* header = Scene_GetSceneHeader(scene);
+    LightList* lightList = header->lightList;
+    static EnvLightSettings detached;
+    
+    Block(void, AddDefaultLight, (s32 id)) {
+        lightList->env[id].ambientColor[0] = 0x40;
+        lightList->env[id].ambientColor[1] = 0x40;
+        lightList->env[id].ambientColor[2] = 0x40;
+        
+        lightList->env[id].light1Color[0] = 0xC0;
+        lightList->env[id].light1Color[1] = 0xC0;
+        lightList->env[id].light1Color[2] = 0xC0;
+        lightList->env[id].light1Dir[0] = 0x49;
+        lightList->env[id].light1Dir[1] = 0x49;
+        lightList->env[id].light1Dir[2] = 0x49;
+        
+        lightList->env[id].light2Color[0] = 0x20;
+        lightList->env[id].light2Color[1] = 0x20;
+        lightList->env[id].light2Color[2] = 0x20;
+        lightList->env[id].light2Dir[0] = 0xB7;
+        lightList->env[id].light2Dir[1] = 0xB7;
+        lightList->env[id].light2Dir[2] = 0xB7;
+        
+        lightList->env[id].fogColor[0] = 0x80;
+        lightList->env[id].fogColor[1] = 0x80;
+        lightList->env[id].fogColor[2] = 0x80;
+        lightList->env[id].fogNear = 0x3E0;
+        lightList->env[id].fogFar = 0x3200;
+    };
+    
+    switch (action) {
+        case PROP_ADD:
+            AddDefaultLight(lightList->num);
+            lightList->num++;
+            
+            break;
+        case PROP_INSERT:
+            AddDefaultLight(lightList->num);
+            lightList->num++;
+            ArrMoveR(lightList->env, id, lightList->num - id);
+            break;
+        case PROP_REMOVE:
+            ArrMoveL(lightList->env, id, lightList->num - id);
+            lightList->num--;
+            break;
+        case PROP_DETACH:
+            detached = lightList->env[id];
+            ArrMoveL(lightList->env, id, lightList->num - id);
+            lightList->num--;
+            break;
+        case PROP_RETACH:
+            lightList->num++;
+            ArrMoveR(lightList->env, id, lightList->num - id);
+            lightList->env[id] = detached;
+            break;
+        case PROP_DESTROY_DETACH:
+            break;
+    }
+    
+    return true;
+}
+
 void Settings_Init(Editor* editor, Settings* this, Split* split) {
     Scene* scene = &editor->scene;
-    SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
+    // SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
     RoomHeader* roomHeader = Scene_GetRoomHeader(scene, scene->curRoom);
     
     Element_Name(&this->envAmbient, "Ambient");
@@ -45,10 +109,7 @@ void Settings_Init(Editor* editor, Settings* this, Split* split) {
     Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
     Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
     
-    if (sceneHeader->lightList)
-        Element_Container_SetPropList(&this->cont, sceneHeader->lightList->enumProp, 4);
-    else
-        Element_Container_SetPropList(&this->cont, NULL, 4);
+    Element_Container_SetPropList(&this->cont, NULL, 8);
 }
 
 void Settings_Destroy(Editor* editor, Settings* this, Split* split) {
@@ -57,7 +118,6 @@ void Settings_Destroy(Editor* editor, Settings* this, Split* split) {
 void Settings_Update(Editor* editor, Settings* this, Split* split) {
     Scene* scene = &editor->scene;
     SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
-    PropList* lightEnum = NULL;
     u32 envNum = scene->curEnv;
     EnvLightSettings* envSettings = sceneHeader && sceneHeader->lightList &&
         sceneHeader->lightList->env ? &sceneHeader->lightList->env[envNum] : NULL;
@@ -70,10 +130,12 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     Element_Condition(&this->buttonIndoor, editor->scene.segment != NULL);
     Element_Condition(&this->killScene, editor->scene.segment != NULL);
     
-    Element_Condition(&this->fogNear, envSettings != NULL);
-    Element_Condition(&this->fogFar, envSettings != NULL);
+    PropList* envList = NULL;
     
     if (envSettings) {
+        envList = &sceneHeader->lightList->list;
+        PropList_SetOnChangeCallback(envList, PropListCallback, &editor->scene, 0);
+        
         Element_Color_SetColor(&this->envAmbient, envSettings->ambientColor);
         Element_Color_SetColor(&this->envColA, envSettings->light1Color);
         Element_Color_SetColor(&this->envColB, envSettings->light2Color);
@@ -87,6 +149,9 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Element_Color_SetColor(&this->envColB, NULL);
         Element_Color_SetColor(&this->envFogColor, NULL);
     }
+    
+    Element_Container_SetPropList(&this->cont, envList, 8);
+    Element_Condition(&this->cont, this->cont.prop != NULL);
     
     Element_Box(BOX_START); {
         Element_Row(split, &this->cont, 1.0f);
@@ -147,20 +212,13 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     
     Element_Row(split, &this->killScene, 1.0);
     if (Element_Button(&this->killScene)) {
-        Scene_Free(&editor->scene);
+        Scene_Kill(&editor->scene);
         
         Element_Color_SetColor(&this->envAmbient, NULL);
         Element_Color_SetColor(&this->envColA, NULL);
         Element_Color_SetColor(&this->envColB, NULL);
         Element_Color_SetColor(&this->envFogColor, NULL);
     }
-    
-    if (sceneHeader->lightList)
-        lightEnum = sceneHeader->lightList->enumProp;
-    
-    Element_Container_SetPropList(&this->cont, lightEnum, 6);
-    
-    Element_Condition(&this->cont, this->cont.prop != NULL);
 }
 
 void Settings_Draw(Editor* editor, Settings* this, Split* split) {

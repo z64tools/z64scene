@@ -42,6 +42,10 @@ void Scene_LoadRoom(Scene* this, const char* file) {
     Scene_ExecuteCommands(this, room);
 }
 
+void Scene_Kill(Scene* this) {
+    this->kill = true;
+}
+
 void Scene_Free(Scene* this) {
     Log("Free Room MemFiles");
     for (s32 i = 0; i < this->numRoom; i++)

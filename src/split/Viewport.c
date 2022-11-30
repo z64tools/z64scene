@@ -45,7 +45,7 @@ static void Viewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
 
 static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) {
     Input* inputCtx = &editor->input;
-    CursorInput* cursor = &inputCtx->cursor;
+    Cursor* cursor = &inputCtx->cursor;
     Gizmo* gizmo = &this->gizmo;
     View3D* view = &this->view;
     
@@ -191,7 +191,7 @@ void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
 void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     SceneHeader* header;
     EnvLightSettings* env;
-    CursorInput* cursor = &editor->input.cursor;
+    Cursor* cursor = &editor->input.cursor;
     Gizmo* gizmo = &this->gizmo;
     
     Element_Header(split, split->taskCombo, 128, &this->resetCam, 128);
@@ -218,7 +218,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     else
         this->view.far = 12800.0 + 6000;
     
-    // Cursor Wrapping
+    // CursorIcon Wrapping
     if (Input_GetMouse(&editor->input, CLICK_ANY)->press)
         return;
     

@@ -22,7 +22,7 @@ typedef struct Editor {
 	AppInfo app;
 	void*   vg;
 	GeoGrid geo;
-	Cursor  cursor;
+	CursorIcon  cursor;
 	Input   input;
 	Scene   scene;
 } Editor;

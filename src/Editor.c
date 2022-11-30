@@ -39,7 +39,7 @@ void Editor_Destroy(Editor* editor) {
 }
 
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
-    Editor* editor = GetUserCtx(window);
+    Editor* editor = GET_CONTEXT(window);
     s32 hasRoom = false;
     s32 hasScene = false;
     s32 roomCount = 0;
@@ -109,6 +109,9 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 }
 
 void Editor_Update(Editor* editor) {
+    if (editor->scene.kill)
+        Scene_Free(&editor->scene);
+    
     GeoGrid_Update(&editor->geo);
     Cursor_Update(&editor->cursor);
     Profiler_O(PROFILER_FPS);
@@ -201,17 +204,16 @@ void* DataNode_Copy(DataContext* ctx, SceneCmd* cmd) {
             break;
             
         case SCENE_CMD_ID_LIGHT_SETTINGS_LIST:
-            this->lightList.env = Calloc(sizeof(EnvLightSettings) * 0xFF);
             this->lightList.num = cmd->lightSettingList.num;
             memcpy(
                 this->lightList.env,
                 SEGMENTED_TO_VIRTUAL(cmd->lightSettingList.segment),
                 sizeof(EnvLightSettings) * this->lightList.num
             );
-            this->lightList.enumProp = PropList_Init(0);
+            this->lightList.list = PropList_Init(0);
             
             for (s32 i = 0; i < this->lightList.num; i++)
-                PropList_Add(this->lightList.enumProp, xFmt("ENV %d", i));
+                PropList_Add(&this->lightList.list, xFmt("Env%02X", i));
             
             break;
     }
@@ -234,8 +236,7 @@ void DataNode_Free(DataContext* ctx, u8 code) {
                 Free(this->actor.head);
                 break;
             case SCENE_CMD_ID_LIGHT_SETTINGS_LIST:
-                PropList_Free(this->lightList.enumProp);
-                Free(this->lightList.env);
+                PropList_Free(&this->lightList.list);
                 break;
         }
         

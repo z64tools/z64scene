@@ -71,12 +71,15 @@ typedef struct {
 	CollisionMesh colMesh;
 	
 	AnimOoT animOoT;
+    
+    bool kill;
 } Scene;
 
 extern void (*sSceneDrawConfigs[53])(AnimOoT* this);
 
 void Scene_LoadScene(Scene* this, const char* file);
 void Scene_LoadRoom(Scene* this, const char* file);
+void Scene_Kill(Scene* this);
 void Scene_Free(Scene* this);
 void Scene_ExecuteCommands(Scene* this, Room* room);
 void Scene_Draw(Scene* this, View3D* view);
