@@ -16,13 +16,6 @@ typedef struct StructBE {
     /* 0x14 */ s16 fogFar;
 } EnvLightSettings;
 
-typedef struct {
-    DataNode data;
-    PropList list;
-    EnvLightSettings env[255];
-    u32 num;
-} LightList;
-
 typedef struct StructBE {
     /* 0x0 */ s16 x;
     /* 0x2 */ s16 y;

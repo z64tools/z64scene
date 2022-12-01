@@ -37,16 +37,6 @@ void Actor_Draw(Actor* this, View3D* view) {
 }
 
 void Actor_Draw_RoomHeader(RoomHeader* header, View3D* view) {
-    ActorList* list = header->actorList;
-    Actor* this = list->head;
-    
-    Assert(header != NULL);
-    
-    list = header->actorList;
-    if (list == NULL)
-        return;
-    this = list->head;
-    
-    for (s32 i = 0; i < list->num; i++, this++)
-        Actor_Draw(this, view);
+    for (var i = 0; i < header->actorList.num; i++)
+        Actor_Draw(&header->actorList.entry[i], view);
 }

@@ -36,9 +36,6 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]);
 void Editor_Update(Editor* editor);
 void Editor_Draw(Editor* editor);
 
-void* DataNode_Copy(DataContext* ctx, SceneCmd* cmd);
-void DataNode_Free(DataContext* ctx, u8 code);
-
 extern Gfx* gSetupDL;
 #define gSetupDList(x) & gSetupDL[6 * x]
 

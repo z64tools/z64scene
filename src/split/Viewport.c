@@ -101,17 +101,18 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
             Room* room = Room_Raycast(&editor->scene, &ray, NULL);
             
             if (room)
-                room->state ^= ROOM_SELECTED;
+                editor->scene.curRoom = room->id;
         }
     }
 }
 
 static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) {
     RayLine ray = View_GetCursorRayLine(&this->view);
-    ActorList* list = (void*)editor->scene.dataCtx.head[SCENE_CMD_ID_ACTOR_LIST];
     Input* input = &editor->input;
     Actor* selectedActor = NULL;
     Vec3f p;
+    Scene* scene = &editor->scene;
+    RoomHeader* room = &scene->room[scene->curRoom].header[scene->curHeader];
     
     if (Gizmo_IsBusy(&this->gizmo) || !Input_GetMouse(input, CLICK_L)->press)
         return;
@@ -120,39 +121,29 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
     if (Room_Raycast(&editor->scene, &ray, NULL))
         ray.nearest += 20.0f;
     
-    while (list) {
-        Actor* actor = list->head;
+    for (var i = 0; i < room->actorList.num; i++) {
+        Actor* actor = &room->actorList.entry[i];
         
-        for (s32 i = 0; i < list->num; i++, actor++) {
-            if (actor->state & ACTOR_SELECTED)
-                continue;
-            
-            veccpy(&actor->sph.pos, &actor->pos);
-            actor->sph.pos.y += 10.0f;
-            actor->sph.r = 20;
-            
-            if (Col3D_LineVsSphere(&ray, &actor->sph, &p))
-                selectedActor = actor;
-        }
+        if (actor->state & ACTOR_SELECTED)
+            continue;
         
-        list = (void*)list->data.next;
+        veccpy(&actor->sph.pos, &actor->pos);
+        actor->sph.pos.y += 10.0f;
+        actor->sph.r = 20;
+        
+        if (Col3D_LineVsSphere(&ray, &actor->sph, &p))
+            selectedActor = actor;
     }
     
     if (!Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
         this->curActor = NULL;
-        list = (void*)editor->scene.dataCtx.head[SCENE_CMD_ID_ACTOR_LIST];
         
-        while (list) {
-            Actor* actor = list->head;
+        for (var i = 0; i < room->actorList.num; i++) {
+            Actor* actor = &room->actorList.entry[i];
+            actor->state &= ~ACTOR_SELECTED;
             
-            for (s32 i = 0; i < list->num; i++, actor++) {
-                actor->state &= ~ACTOR_SELECTED;
-                
-                for (s32 j = 0; j < 3; j++)
-                    actor->pos.axis[j] = rint(actor->pos.axis[j]);
-            }
-            
-            list = (void*)list->data.next;
+            for (s32 j = 0; j < 3; j++)
+                actor->pos.axis[j] = rint(actor->pos.axis[j]);
         }
     }
     
@@ -190,10 +181,10 @@ void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
 
 void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     SceneHeader* header;
-    EnvLightSettings* env;
     Cursor* cursor = &editor->input.cursor;
     Gizmo* gizmo = &this->gizmo;
     
+    Log("Viewer");
     Element_Header(split, split->taskCombo, 128, &this->resetCam, 128);
     Element_Combo(split->taskCombo);
     
@@ -211,10 +202,9 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     
     Viewport_CameraUpdate(editor, this, split);
     header = Scene_GetSceneHeader(&editor->scene);
-    env = header->lightList->env + editor->scene.curEnv;
     
     if (editor->scene.state & SCENE_DRAW_FOG)
-        this->view.far = env->fogFar;
+        this->view.far = header->envList.entry[editor->scene.curEnv].fogFar;
     else
         this->view.far = 12800.0 + 6000;
     
@@ -234,45 +224,6 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
         if (cursor->pos.y < yMin || cursor->pos.y > yMax)
             Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(cursor->pos.y, yMin, yMax));
     }
-    
-    f32 hue;
-    f32 mul;
-    
-    switch (editor->scene.curEnv) {
-        case 0:
-            if (!editor->scene.indoorLight) {
-                hue = 10 / 360.0f;
-                mul = 0.75f;
-                break;
-            }
-        case 1:
-            if (!editor->scene.indoorLight) {
-                hue = 194 / 360.0f;
-                mul = 1.0f;
-                break;
-            }
-        case 2:
-            if (!editor->scene.indoorLight) {
-                hue = 12 / 360.0f;
-                mul = 0.75f;
-                break;
-            }
-        case 3:
-            if (!editor->scene.indoorLight) {
-                hue = 242 / 360.0f;
-                mul = 0.5f;
-                break;
-            }
-        default: (void)0;
-            HSL8 hsl = Color_GetHSL(env->light1Color[0], env->light1Color[1], env->light1Color[2]);
-            hue = hsl.h;
-            mul = hsl.l;
-            break;
-    }
-    
-    split->bg.paint = nvgLinearGradient(editor->vg, 0, 0, 0, split->rect.h,
-            nvgHSL(hue, 0.75f * mul, 0.80f * mul),
-            nvgHSL(hue, 0.50f * mul, 0.50f * mul));
 }
 
 static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
