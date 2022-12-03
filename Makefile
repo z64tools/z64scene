@@ -3,7 +3,7 @@ ifeq (,$(wildcard settings.mk))
 endif
 include settings.mk
 
-CFLAGS          = -Wall -Wno-switch -Wno-unused-function -DEXTLIB=212 -DNDEBUG -I z64viewer/include/ -I src/
+CFLAGS          = -Wall -Wno-switch -Wno-unused-function -DEXTLIB=220 -DNDEBUG -I z64viewer/include/ -I src/
 OPT_WIN32      := -O1
 OPT_LINUX      := -O1
 SOURCE_C        = $(shell find src/* -type f -name '*.c')

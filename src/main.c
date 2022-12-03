@@ -13,24 +13,10 @@ extern DataFile gCursor_Empty;
 #include <split/task_init.h>
 
 int UnicodeMain(argc, argv) {
-    Toml* t = New(Toml);
-    
-    Toml_LoadFile(t, "spec/test.zsp");
-    Toml_SaveFile(t, "spec/test.zsp");
-    Toml_Free(t);
-    Free(t);
-    return 0;
-    
     Editor* editor = Calloc(sizeof(*editor));
     GLFWimage icon = {
         128, 128, gAppIcon.data
     };
-    
-    for (var i = 0; i < Toml_ArrayCount(t, "wind[]") + 1; i++)
-        for (var a = 0; a < Toml_ArrayCount(t, "wind[%d].axis[]", i); a++)
-            printf_info("%d, ", Toml_GetInt(t, "wind[%d].axis[%d]", i, a));
-    
-    return 0;
     
     Theme_Init(0);
     
