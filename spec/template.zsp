@@ -1,24 +1,3 @@
-# Format
-
-z64scene would uses `.zsp` (**z**elda **s**cene **p**roject) as the format
-that stores the necessary data for the scene.
-
-This file would actually be just a `.zip` file that contains the `.zscene`
-and `.zroom` files. On top of that it would also have `.toml` config file
-that is provided by `z64scene`.
-
-Reason for packing all this into one file is to avoid user confusion and
-renaming the format only to avoid more confusion. Better not have people
-messing with this data unless they want to.
-
-Possibly we will look into having `export as individual files` option.
-
-
-# config.toml
-
-Table Types
-
-```toml
 [spawn_list]
 	[[spawn_list.entry]]
 		id = 0
@@ -34,12 +13,12 @@ Table Types
 		var = 0
 
 [wind]
-	axis     = [ 0, 0, 0 ]
-	strength = 0
+	axis     = [ 0, 4, 0 ]
+	strength = 5
 
 [entrance_list]
 	[[entrance_list.entry]]
-		spawn = 0
+		spawn = 24
 		room  = 0
 
 [special_files]
@@ -72,6 +51,7 @@ Table Types
 			[ 0, 0, 0 ],
 			[ 0, 0, 0 ],
 			[ 0, 0, 0 ],
+			[ 0, 0, 0 ],
 		]
 
 [transition_actor_list]
@@ -88,19 +68,19 @@ Table Types
 
 [env_light_list]
 	[[env_light_list.entry]]
-		ambient   = { 255, 255, 255 }
-		normal_a  = { 255, 255, 255 }
-		color_a   = { 255, 255, 255 }
-		normal_b  = { 255, 255, 255 }
-		color_b   = { 255, 255, 255 }
-		fog_color = { 255, 255, 255 }
+		ambient   = [ 255, 255, 255 ]
+		normal_a  = [ 255, 255, 255 ]
+		color_a   = [ 255, 255, 255 ]
+		normal_b  = [ 255, 255, 255 ]
+		color_b   = [ 255, 255, 255 ]
+		fog_color = [ 255, 255, 255 ]
 		fog_near  = 1000
 		fog_far   = 12800
 
 [time]
 	time = "GLOBAL"
 	# or a specific time
-	time = 12.00
+	# time = 12.00
 	
 	speed = 1
 
@@ -132,4 +112,3 @@ Table Types
 [misc]
 	scene_cam_type = 0
 	area           = 0
-```

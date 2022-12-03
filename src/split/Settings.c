@@ -121,7 +121,7 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     EnvLightSettings* envSettings = &sceneHeader->envList.entry[scene->curEnv];
     
     Log("Settings");
-    Element_Header(split, split->taskCombo, 128);
+    Element_Header(split, split->taskCombo, 92);
     Element_Combo(split->taskCombo);
     
     Element_RowY(SPLIT_ELEM_X_PADDING * 2);

@@ -41,6 +41,9 @@ typedef struct RoomMesh {
     
     u8*       segment;
     TriBuffer triBuf;
+    
+    Vec3f center;
+    f32   size;
 } RoomMesh;
 
 typedef struct RoomHeader {
@@ -137,6 +140,11 @@ typedef struct {
     SceneHeader header[0x10];
     Room room[32];
     
+    struct {
+        ElCombo  roomCombo;
+        PropList roomList;
+    } ui;
+    
     u8 numHeader;
     u8 curHeader;
     
@@ -169,6 +177,8 @@ void Scene_CacheBuild(Scene* this);
 SceneHeader* Scene_GetSceneHeader(Scene* this);
 RoomHeader* Scene_GetRoomHeader(Scene* this, u8 num);
 void Scene_SetState(Scene* this, SceneState state, bool set);
+
+void Scene_SetRoom(Scene* this, s32 roomID);
 
 void Room_Draw(RoomMesh* roomMesh);
 Room* Room_Raycast(Scene* scene, RayLine* ray, Vec3f* out);

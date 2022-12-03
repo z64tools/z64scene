@@ -44,22 +44,22 @@ static void Viewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
 #endif
 
 static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) {
-    Input* inputCtx = &editor->input;
-    Cursor* cursor = &inputCtx->cursor;
+    Input* input = &editor->input;
     Gizmo* gizmo = &this->gizmo;
     View3D* view = &this->view;
+    Scene* scene = &editor->scene;
     
-    if (Input_GetMouse(inputCtx, CLICK_ANY)->hold && this->lockCameraAccess)
+    if (Input_GetMouse(input, CLICK_ANY)->hold && this->lockCameraAccess)
         return;
     this->lockCameraAccess = false;
     
-    if (!View_CheckControlKeys(inputCtx) && !split->inputAccess)
+    if (!View_CheckControlKeys(input) && !split->inputAccess)
         view->cameraControl = false;
     
-    if (Input_GetKey(inputCtx, KEY_LEFT_CONTROL)->hold)
+    if (Input_GetKey(input, KEY_LEFT_CONTROL)->hold)
         view->cameraControl = false;
     
-    if (Input_GetMouse(inputCtx, CLICK_ANY)->press && !split->inputAccess) {
+    if (Input_GetMouse(input, CLICK_ANY)->press && !split->inputAccess) {
         view->cameraControl = false;
         this->lockCameraAccess = true;
         
@@ -68,7 +68,7 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
     
     if (!view->cameraControl) {
         if (split->inputAccess) {
-            if (View_CheckControlKeys(inputCtx))
+            if (View_CheckControlKeys(input))
                 view->cameraControl = true;
         }
     }
@@ -80,7 +80,16 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
         view->cameraControl = true;
     
     if (split->mouseInSplit) {
-        if (cursor->clickMid.press && Input_GetKey(inputCtx, KEY_LEFT_ALT)->hold) {
+        if (Input_GetKey(input, KEY_KP_DECIMAL)->press) {
+            RoomHeader* room = Scene_GetRoomHeader(scene, scene->curRoom);
+            s16 yaw = Math_Vec3f_Yaw(this->view.currentCamera->eye, room->mesh->center);
+            
+            View_MoveTo(&this->view, room->mesh->center);
+            View_ZoomTo(&this->view, room->mesh->size);
+            View_RotTo(&this->view, Math_Vec3s_New(DegToBin(45), yaw, 0));
+        }
+        
+        if (Input_GetMouse(input, CLICK_M)->press && Input_GetKey(input, KEY_LEFT_ALT)->hold) {
             Vec3f o;
             s32 r = 0;
             RayLine ray = View_GetCursorRayLine(&this->view);
@@ -96,12 +105,12 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
                 View_MoveTo(&this->view, o);
         }
         
-        if (Input_GetKey(inputCtx, KEY_LEFT_CONTROL)->hold && cursor->clickL.press) {
+        if (Input_GetMouse(input, CLICK_L)->dual) {
             RayLine ray = View_GetCursorRayLine(&this->view);
             Room* room = Room_Raycast(&editor->scene, &ray, NULL);
             
             if (room)
-                editor->scene.curRoom = room->id;
+                Scene_SetRoom(&editor->scene, room->id);
         }
     }
 }
@@ -168,6 +177,7 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
     }
     
     Element_Name(&this->resetCam, "Reset Camera");
+    this->resetCam.align = ALIGN_LEFT;
 }
 
 void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
@@ -184,15 +194,17 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     Cursor* cursor = &editor->input.cursor;
     Gizmo* gizmo = &this->gizmo;
     
+    // Scene* scene = &editor->scene;
+    
     Log("Viewer");
-    Element_Header(split, split->taskCombo, 128, &this->resetCam, 128);
+    Element_Header(split, split->taskCombo, 98, &this->resetCam, 98);
     Element_Combo(split->taskCombo);
     
     if (Element_Button(&this->resetCam)) {
         printf_info("Reset Camera");
         View_MoveTo(&this->view, Math_Vec3f_New(0, 0, 0));
         View_RotTo(&this->view, Math_Vec3s_New(0, 0, 0));
-        this->view.cameraControl = true;
+        // this->view.cameraControl = true;
     }
     
     if (editor->scene.segment == NULL) {
@@ -200,7 +212,11 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
         return;
     }
     
-    Viewport_CameraUpdate(editor, this, split);
+    if (Input_GetKey(&editor->input, KEY_LEFT_CONTROL)->hold)
+        this->view.mode = CAM_MODE_ORBIT;
+    else
+        this->view.mode = CAM_MODE_ALL,
+        Viewport_CameraUpdate(editor, this, split);
     header = Scene_GetSceneHeader(&editor->scene);
     
     if (editor->scene.state & SCENE_DRAW_FOG)
@@ -242,14 +258,14 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
     nvgFontBlur(vg, 1.0f);
     nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
     for (s32 i = 0; i < 2; i++)
-        nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
+        nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, x_fmt(fmt, val), NULL);
     
     nvgFontBlur(vg, 0.0f);
     if (dangerValue)
         nvgFillColor(vg, nvgHSLA(SQ(Clamp(val / dangerValue, 0, 1)) * 0.5f + 0.5f, 0.6, 0.6, 225));
     else
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
-    nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, xFmt(fmt, val), NULL);
+    nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, x_fmt(fmt, val), NULL);
 }
 
 static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {

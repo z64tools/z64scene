@@ -1,6 +1,7 @@
 #include "Editor.h"
 #include "BgCheck.h"
 
+#if 1
 typedef struct StructBE {
     /* 0x00 */ u32 vromStart;
     /* 0x04 */ u32 vromEnd;
@@ -366,8 +367,61 @@ typedef union StructBE {
     PolygonType2 polygon2;
 } MeshHeader; // "Ground Shape"
 
-void (* sSceneCmdHandlers[SCENE_CMD_ID_MAX])(Scene*, RoomHeader*, SceneCmd*);
-char* sSceneCmdHandlers_Name[SCENE_CMD_ID_MAX];
+static void Scene_Cmd00_SpawnList(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd01_ActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd03_CollisionHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd04_RoomList(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd05_Wind(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd06_EntranceList(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd07_SpecialFiles(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd08_RoomBehaviour(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd0A_MeshHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd0B_ObjectList(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd0C_LightList(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd0D_PathList(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd0E_TransActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd0F_EnvList(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd10_Time(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd11_Skybox(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd12_SkyboxDisables(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd13_ExitList(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd15_Sound(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd16_Echo(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd17_Cutscene(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+static void Scene_Cmd19_Misc(Scene* scene, RoomHeader* room, SceneCmd* cmd);
+#endif
+
+struct {
+    void (*func)(Scene*, RoomHeader*, SceneCmd*);
+    const char* name;
+} sSceneCmds[] = {
+    [0x00] = Scene_Cmd00_SpawnList,       "Scene_Cmd00_SpawnList",
+    [0x01] = Scene_Cmd01_ActorList,       "Scene_Cmd01_ActorList",
+    [0x02] = NULL,                        "NULL",
+    [0x03] = Scene_Cmd03_CollisionHeader, "Scene_Cmd03_CollisionHeader",
+    [0x04] = Scene_Cmd04_RoomList,        "Scene_Cmd04_RoomList",
+    [0x05] = Scene_Cmd05_Wind,            "Scene_Cmd05_Wind",
+    [0x06] = Scene_Cmd06_EntranceList,    "Scene_Cmd06_EntranceList",
+    [0x07] = Scene_Cmd07_SpecialFiles,    "Scene_Cmd07_SpecialFiles",
+    [0x08] = Scene_Cmd08_RoomBehaviour,   "Scene_Cmd08_RoomBehaviour",
+    [0x09] = NULL,                        "NULL",
+    [0x0A] = Scene_Cmd0A_MeshHeader,      "Scene_Cmd0A_MeshHeader",
+    [0x0B] = Scene_Cmd0B_ObjectList,      "Scene_Cmd0B_ObjectList",
+    [0x0C] = Scene_Cmd0C_LightList,       "Scene_Cmd0C_LightList",
+    [0x0D] = Scene_Cmd0D_PathList,        "Scene_Cmd0D_PathList",
+    [0x0E] = Scene_Cmd0E_TransActorList,  "Scene_Cmd0E_TransActorList",
+    [0x0F] = Scene_Cmd0F_EnvList,         "Scene_Cmd0F_EnvList",
+    [0x10] = Scene_Cmd10_Time,            "Scene_Cmd10_Time",
+    [0x11] = Scene_Cmd11_Skybox,          "Scene_Cmd11_Skybox",
+    [0x12] = Scene_Cmd12_SkyboxDisables,  "Scene_Cmd12_SkyboxDisables",
+    [0x13] = Scene_Cmd13_ExitList,        "Scene_Cmd13_ExitList",
+    [0x14] = NULL,                        (PRNT_REDD "Terminate"),
+    [0x15] = Scene_Cmd15_Sound,           "Scene_Cmd15_Sound",
+    [0x16] = Scene_Cmd16_Echo,            "Scene_Cmd16_Echo",
+    [0x17] = Scene_Cmd17_Cutscene,        "Scene_Cmd17_Cutscene",
+    [0x18] = NULL,                        (PRNT_REDD "Header"),
+    [0x19] = Scene_Cmd19_Misc,            "Scene_Cmd19_Misc",
+};
 
 // # # # # # # # # # # # # # # # # # # # #
 // # Scene                               #
@@ -387,10 +441,10 @@ static void Scene_ExecuteCommands(Scene* this, RoomHeader* room) {
     
     for (cmd = (void*)segment; cmd->base.code != SCENE_CMD_ID_END; cmd++) {
         if (cmd->base.code < SCENE_CMD_ID_MAX) {
-            Log("[%02X] %08X [%s]", cmd->base.code, (u8*)cmd - segment, sSceneCmdHandlers_Name[cmd->base.code]);
+            Log("[%02X] %08X [%s]", cmd->base.code, (u8*)cmd - segment, sSceneCmds[cmd->base.code].name);
             
-            if (sSceneCmdHandlers[cmd->base.code])
-                sSceneCmdHandlers[cmd->base.code](this, room, cmd);
+            if (sSceneCmds[cmd->base.code].func)
+                sSceneCmds[cmd->base.code].func(this, room, cmd);
             
             else if (cmd->base.code != SCENE_CMD_ID_ALTERNATE_HEADER_LIST)
                 printf_warning("SceneCmd %02X", cmd->base.code);
@@ -413,14 +467,32 @@ static void Scene_SetHeaderNum(Scene* this) {
     }
 }
 
+static bool Scene_OnRoomChange(PropList* list, PropListChange type, s32 index) {
+    Scene* this = list->udata1;
+    
+    switch (type) {
+        case PROP_SET:
+            this->curRoom = index;
+            
+            break;
+        case PROP_GET:
+            break;
+    }
+    
+    return true;
+}
+
 void Scene_Init(Scene* this) {
     
     // Init `Room` struct ID
     for (var i = 0; i < ArrayCount(this->room); i++) {
-        u32* id = &this->room[i];
+        u32* id = (u32*)&this->room[i];
         
         *id = i;
     }
+    
+    Element_Combo_SetPropList(&this->ui.roomCombo, &this->ui.roomList);
+    PropList_SetOnChangeCallback(&this->ui.roomList, Scene_OnRoomChange, this, NULL);
 }
 
 void Scene_LoadScene(Scene* this, const char* file) {
@@ -450,6 +522,8 @@ void Scene_LoadRoom(Scene* this, const char* file) {
     MemFile_Free(&mem);
     
     Scene_ExecuteCommands(this, room);
+    
+    PropList_Add(&this->ui.roomList, x_fmt("Room%02X", this->numRoom - 1));
 }
 
 void Scene_Kill(Scene* this) {
@@ -457,16 +531,22 @@ void Scene_Kill(Scene* this) {
 }
 
 void Scene_Free(Scene* this) {
-    Log("Free RoomHeader MemFiles");
-    for (s32 i = 0; i < this->mesh.num; i++) {
-        TriBuffer_Free(&this->mesh.entry[i].triBuf);
-        Free(this->mesh.entry[i].segment);
+    for (var i = 0; i < this->mesh.num; i++) {
+        RoomMesh* mesh = &this->mesh.entry[i];
+        
+        TriBuffer_Free(&mesh->triBuf);
+        Free(mesh->segment);
+        Free(mesh->disp.opa);
+        Free(mesh->disp.xlu);
     }
     
     CollisionMesh_Free(&this->colMesh);
     Free(this->segment);
+    PropList_Free(&this->ui.roomList);
+    
     memset(this, 0, sizeof(*this));
     n64_clearCache();
+    Scene_Init(this);
 }
 
 static void Scene_Light(Scene* this) {
@@ -605,6 +685,33 @@ void Scene_CacheBuild(Scene* this) {
         n64_draw_buffers();
         
         printf_info("RoomHeader TriCount: %d", mesh->triBuf.num);
+        
+        BoundBox box;
+        f64 x = 0.0, y = 0.0, z = 0.0;
+        
+        for (var j = 0; j < mesh->triBuf.num; j++) {
+            Triangle* tri = &mesh->triBuf.head[j];
+            
+            if (j == 0) {
+                box = BoundBox_New(tri->v[0]);
+                BoundBox_Adjust(&box, tri->v[1]);
+                BoundBox_Adjust(&box, tri->v[2]);
+            } else {
+                BoundBox_Adjust(&box, tri->v[0]);
+                BoundBox_Adjust(&box, tri->v[1]);
+                BoundBox_Adjust(&box, tri->v[2]);
+            }
+            
+            x += (tri->v[0].x + tri->v[1].x + tri->v[2].x) / 3;
+            y += (tri->v[0].y + tri->v[1].y + tri->v[2].y) / 3;
+            z += (tri->v[0].z + tri->v[1].z + tri->v[2].z) / 3;
+        }
+        
+        mesh->center.x = x / mesh->triBuf.num;
+        mesh->center.y = y / mesh->triBuf.num;
+        mesh->center.z = z / mesh->triBuf.num;
+        mesh->size = (box.xMax - box.xMin) + (box.yMax - box.yMin) + (box.zMax - box.zMin);
+        mesh->size /= 3.0f;
     }
     
     n64_set_triangleCallbackFunc(0, 0);
@@ -623,6 +730,10 @@ void Scene_SetState(Scene* this, SceneState state, bool set) {
         this->state |= state;
     else
         this->state &= ~state;
+}
+
+void Scene_SetRoom(Scene* this, s32 roomID) {
+    PropList_Set(&this->ui.roomList, roomID);
 }
 
 // # # # # # # # # # # # # # # # # # # # #
@@ -675,20 +786,22 @@ Room* Room_Raycast(Scene* scene, RayLine* ray, Vec3f* out) {
 // # Commands                            #
 // # # # # # # # # # # # # # # # # # # # #
 
-static void Scene_CommandSpawnList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // ActorEntry* linkEntry = play->linkActorEntry =
-    //  (ActorEntry*)SEGMENTED_TO_VIRTUAL(cmd->spawnList.segment) + play->setupEntranceList[play->curSpawn].spawn;
-    // s16 linkObjectId;
-//
-    // play->linkAgeOnLoad = ((void)0, gSaveContext.linkAge);
-    //
-    // linkObjectId = gLinkObjectIds[((void)0, gSaveContext.linkAge)];
-    //
-    // gActorOverlayTable[linkEntry->id].initInfo->objectId = linkObjectId;
-    // Object_Spawn(&play->objectCtx, linkObjectId);
+static void Scene_Cmd00_SpawnList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+    ActorEntry* entryList = SEGMENTED_TO_VIRTUAL(cmd->spawnList.segment);
+    SceneHeader* hdr = &scene->header[scene->curHeader];
+    SpawnActor* spawn = hdr->spawnList.entry;
+    
+    for (s32 i = 0; i < cmd->actorList.num; i++) {
+        spawn[i].actor.id = entryList[i].id;
+        spawn[i].actor.param = entryList[i].param;
+        spawn[i].actor.pos = Math_Vec3f_New(UnfoldVec3(entryList[i].pos));
+        spawn[i].actor.rot = Math_Vec3s_New(UnfoldVec3(entryList[i].rot));
+    }
+    
+    hdr->spawnList.num = cmd->actorList.num;
 }
 
-static void Scene_CommandActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd01_ActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     ActorEntry* entryList = SEGMENTED_TO_VIRTUAL(cmd->actorList.segment);
     Actor* actor = room->actorList.entry;
     
@@ -702,11 +815,7 @@ static void Scene_CommandActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd
     room->actorList.num = cmd->actorList.num;
 }
 
-static void Scene_CommandUnused2(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // play->unk_11DFC = SEGMENTED_TO_VIRTUAL(cmd->unused02.segment);
-}
-
-static void Scene_CommandCollisionHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd03_CollisionHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     CollisionHeader* col = MemDup(SEGMENTED_TO_VIRTUAL(cmd->colHeader.segment), sizeof(CollisionHeader));
     
     col->vtxList = SEGMENTED_TO_VIRTUAL(col->vtxList32);
@@ -716,16 +825,28 @@ static void Scene_CommandCollisionHeader(Scene* scene, RoomHeader* room, SceneCm
     Free(col);
 }
 
-static void Scene_CommandRoomList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd04_RoomList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // play->numRooms = cmd->roomList.num;
     // play->roomList = SEGMENTED_TO_VIRTUAL(cmd->roomList.segment);
 }
 
-static void Scene_CommandEntranceList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd05_Wind(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+    // s8 x = cmd->windSettings.x;
+    // s8 y = cmd->windSettings.y;
+    // s8 z = cmd->windSettings.z;
+    //
+    // play->envCtx.windDirection.x = x;
+    // play->envCtx.windDirection.y = y;
+    // play->envCtx.windDirection.z = z;
+    //
+    // play->envCtx.windSpeed = cmd->windSettings.unk_07;
+}
+
+static void Scene_Cmd06_EntranceList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // play->setupEntranceList = SEGMENTED_TO_VIRTUAL(cmd->entranceList.segment);
 }
 
-static void Scene_CommandSpecialFiles(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd07_SpecialFiles(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // if (cmd->specialFiles.keepObjectId != OBJECT_INVALID) {
     //  play->objectCtx.subKeepIndex = Object_Spawn(&play->objectCtx, cmd->specialFiles.keepObjectId);
     //  gSegments[5] = VIRTUAL_TO_PHYSICAL(play->objectCtx.status[play->objectCtx.subKeepIndex].segment);
@@ -736,14 +857,14 @@ static void Scene_CommandSpecialFiles(Scene* scene, RoomHeader* room, SceneCmd* 
     // }
 }
 
-static void Scene_CommandRoomBehavior(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd08_RoomBehaviour(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // play->roomCtx.curRoom.behaviorType1 = cmd->roomBehavior.gpFlag1;
     // play->roomCtx.curRoom.behaviorType2 = cmd->roomBehavior.gpFlag2 & 0xFF;
     // play->roomCtx.curRoom.lensMode = (cmd->roomBehavior.gpFlag2 >> 8) & 1;
     // play->msgCtx.disableWarpSongs = (cmd->roomBehavior.gpFlag2 >> 0xA) & 1;
 }
 
-static void Scene_CommandMeshHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd0A_MeshHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     RoomMesh* mesh = room->mesh;
     MeshHeader* header = SEGMENTED_TO_VIRTUAL(cmd->mesh.segment);
     
@@ -776,7 +897,7 @@ static void Scene_CommandMeshHeader(Scene* scene, RoomHeader* room, SceneCmd* cm
     }
 }
 
-static void Scene_CommandObjectList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd0B_ObjectList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // s32 i;
     // s32 j;
     // s32 k;
@@ -830,7 +951,7 @@ static void Scene_CommandObjectList(Scene* scene, RoomHeader* room, SceneCmd* cm
     // play->objectCtx.num = i;
 }
 
-static void Scene_CommandLightList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd0C_LightList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // s32 i;
     // LightInfo* lightInfo = SEGMENTED_TO_VIRTUAL(cmd->lightList.segment);
     //
@@ -840,16 +961,16 @@ static void Scene_CommandLightList(Scene* scene, RoomHeader* room, SceneCmd* cmd
     // }
 }
 
-static void Scene_CommandPathList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd0D_PathList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // play->setupPathList = SEGMENTED_TO_VIRTUAL(cmd->pathList.segment);
 }
 
-static void Scene_CommandTransitionActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd0E_TransActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // play->transiActorCtx.numActors = cmd->transiActorList.num;
     // play->transiActorCtx.list = SEGMENTED_TO_VIRTUAL(cmd->transiActorList.segment);
 }
 
-static void Scene_CommandLightSettingsList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd0F_EnvList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     SceneHeader* header = &scene->header[scene->curHeader];
     EnvLightSettings* env = SEGMENTED_TO_VIRTUAL(cmd->lightSettingList.segment);
     
@@ -858,30 +979,10 @@ static void Scene_CommandLightSettingsList(Scene* scene, RoomHeader* room, Scene
     
     header->envList.prop = PropList_Init(0);
     for (var i = 0; i < header->envList.num; i++)
-        PropList_Add(&header->envList.prop, xFmt("Env%02X", i));
+        PropList_Add(&header->envList.prop, x_fmt("Env%02X", i));
 }
 
-static void Scene_CommandSkyboxSettings(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // if (room) {
-    //     RoomHeader* header = &room->header[scene->curHeader];
-    //
-    //     Assert(scene->curHeader < ArrayCount(room->header));
-    //
-    //     // play->skyboxId = cmd->skyboxSettings.skyboxId;
-    //     // play->envCtx.skyboxConfig = play->envCtx.changeSkyboxNextConfig = cmd->skyboxSettings.unk_05;
-    //     // play->envCtx.lightMode = cmd->skyboxSettings.unk_06;
-    //
-    //     header->indoorLight = cmd->skyboxSettings.unk_06;
-    // } else
-    //     scene->indoorLight = cmd->skyboxSettings.unk_06;
-}
-
-static void Scene_CommandSkyboxDisables(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // play->envCtx.skyboxDisabled = cmd->skyboxDisables.unk_04;
-// play->envCtx.sunMoonDisabled = cmd->skyboxDisables.unk_05;
-}
-
-static void Scene_CommandTimeSettings(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd10_Time(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // if ((cmd->timeSettings.hour != 0xFF) && (cmd->timeSettings.min != 0xFF)) {
     //  gSaveContext.skyboxTime = gSaveContext.dayTime =
     //      ((cmd->timeSettings.hour + (cmd->timeSettings.min / 60.0f)) * 60.0f) / ((f32)(24 * 60) / 0x10000);
@@ -918,26 +1019,31 @@ static void Scene_CommandTimeSettings(Scene* scene, RoomHeader* room, SceneCmd* 
     // }
 }
 
-static void Scene_CommandWindSettings(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // s8 x = cmd->windSettings.x;
-    // s8 y = cmd->windSettings.y;
-    // s8 z = cmd->windSettings.z;
+static void Scene_Cmd11_Skybox(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+    // if (room) {
+    //     RoomHeader* header = &room->header[scene->curHeader];
     //
-    // play->envCtx.windDirection.x = x;
-    // play->envCtx.windDirection.y = y;
-    // play->envCtx.windDirection.z = z;
+    //     Assert(scene->curHeader < ArrayCount(room->header));
     //
-    // play->envCtx.windSpeed = cmd->windSettings.unk_07;
+    //     // play->skyboxId = cmd->skyboxSettings.skyboxId;
+    //     // play->envCtx.skyboxConfig = play->envCtx.changeSkyboxNextConfig = cmd->skyboxSettings.unk_05;
+    //     // play->envCtx.lightMode = cmd->skyboxSettings.unk_06;
+    //
+    //     header->indoorLight = cmd->skyboxSettings.unk_06;
+    // } else
+    //     scene->indoorLight = cmd->skyboxSettings.unk_06;
 }
 
-static void Scene_CommandExitList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd12_SkyboxDisables(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+    // play->envCtx.skyboxDisabled = cmd->skyboxDisables.unk_04;
+// play->envCtx.sunMoonDisabled = cmd->skyboxDisables.unk_05;
+}
+
+static void Scene_Cmd13_ExitList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // play->setupExitList = SEGMENTED_TO_VIRTUAL(cmd->exitList.segment);
 }
 
-static void Scene_CommandUndefined9(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-}
-
-static void Scene_CommandSoundSettings(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd15_Sound(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // play->sequenceCtx.seqId = cmd->soundSettings.seqId;
     // play->sequenceCtx.natureAmbienceId = cmd->soundSettings.natureAmbienceId;
     //
@@ -946,16 +1052,16 @@ static void Scene_CommandSoundSettings(Scene* scene, RoomHeader* room, SceneCmd*
     // }
 }
 
-static void Scene_CommandEchoSettings(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd16_Echo(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // play->roomCtx.curRoom.echo = cmd->echoSettings.echo;
 }
 
-static void Scene_CommandCutsceneData(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd17_Cutscene(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // osSyncPrintf("\ngame_play->demo_play.data=[%x]", play->csCtx.segment);
     // play->csCtx.segment = SEGMENTED_TO_VIRTUAL(cmd->cutsceneData.segment);
 }
 
-static void Scene_CommandMiscSettings(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+static void Scene_Cmd19_Misc(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // YREG(15) = cmd->miscSettings.cameraMovement;
     // gSaveContext.worldMapArea = cmd->miscSettings.area;
     //
@@ -977,61 +1083,3 @@ static void Scene_CommandMiscSettings(Scene* scene, RoomHeader* room, SceneCmd* 
     //  }
     // }
 }
-
-void (* sSceneCmdHandlers[SCENE_CMD_ID_MAX])(Scene*, RoomHeader*, SceneCmd*) = {
-    /* SCENE_CMD_ID_SPAWN_LIST            */ Scene_CommandSpawnList,
-    /* SCENE_CMD_ID_ACTOR_LIST            */ Scene_CommandActorList,
-    /* SCENE_CMD_ID_UNUSED_2              */ Scene_CommandUnused2,
-    /* SCENE_CMD_ID_COLLISION_HEADER      */ Scene_CommandCollisionHeader,
-    /* SCENE_CMD_ID_ROOM_LIST             */ Scene_CommandRoomList,
-    /* SCENE_CMD_ID_WIND_SETTINGS         */ Scene_CommandWindSettings,
-    /* SCENE_CMD_ID_ENTRANCE_LIST         */ Scene_CommandEntranceList,
-    /* SCENE_CMD_ID_SPECIAL_FILES         */ Scene_CommandSpecialFiles,
-    /* SCENE_CMD_ID_ROOM_BEHAVIOR         */ Scene_CommandRoomBehavior,
-    /* SCENE_CMD_ID_UNDEFINED_9           */ Scene_CommandUndefined9,
-    /* SCENE_CMD_ID_MESH_HEADER           */ Scene_CommandMeshHeader,
-    /* SCENE_CMD_ID_OBJECT_LIST           */ Scene_CommandObjectList,
-    /* SCENE_CMD_ID_LIGHT_LIST            */ Scene_CommandLightList,
-    /* SCENE_CMD_ID_PATH_LIST             */ Scene_CommandPathList,
-    /* SCENE_CMD_ID_TRANSITION_ACTOR_LIST */ Scene_CommandTransitionActorList,
-    /* SCENE_CMD_ID_LIGHT_SETTINGS_LIST   */ Scene_CommandLightSettingsList,
-    /* SCENE_CMD_ID_TIME_SETTINGS         */ Scene_CommandTimeSettings,
-    /* SCENE_CMD_ID_SKYBOX_SETTINGS       */ Scene_CommandSkyboxSettings,
-    /* SCENE_CMD_ID_SKYBOX_DISABLES       */ Scene_CommandSkyboxDisables,
-    /* SCENE_CMD_ID_EXIT_LIST             */ Scene_CommandExitList,
-    /* SCENE_CMD_ID_END                   */ NULL,
-    /* SCENE_CMD_ID_SOUND_SETTINGS        */ Scene_CommandSoundSettings,
-    /* SCENE_CMD_ID_ECHO_SETTINGS         */ Scene_CommandEchoSettings,
-    /* SCENE_CMD_ID_CUTSCENE_DATA         */ Scene_CommandCutsceneData,
-    /* SCENE_CMD_ID_ALTERNATE_HEADER_LIST */ NULL,
-    /* SCENE_CMD_ID_MISC_SETTINGS         */ Scene_CommandMiscSettings,
-};
-
-char* sSceneCmdHandlers_Name[SCENE_CMD_ID_MAX] = {
-    /* SCENE_CMD_ID_SPAWN_LIST            */ "Scene_CommandSpawnList",
-    /* SCENE_CMD_ID_ACTOR_LIST            */ "Scene_CommandActorList",
-    /* SCENE_CMD_ID_UNUSED_2              */ "Scene_CommandUnused2",
-    /* SCENE_CMD_ID_COLLISION_HEADER      */ "Scene_CommandCollisionHeader",
-    /* SCENE_CMD_ID_ROOM_LIST             */ "Scene_CommandRoomList",
-    /* SCENE_CMD_ID_WIND_SETTINGS         */ "Scene_CommandWindSettings",
-    /* SCENE_CMD_ID_ENTRANCE_LIST         */ "Scene_CommandEntranceList",
-    /* SCENE_CMD_ID_SPECIAL_FILES         */ "Scene_CommandSpecialFiles",
-    /* SCENE_CMD_ID_ROOM_BEHAVIOR         */ "Scene_CommandRoomBehavior",
-    /* SCENE_CMD_ID_UNDEFINED_9           */ "Scene_CommandUndefined9",
-    /* SCENE_CMD_ID_MESH_HEADER           */ "Scene_CommandMeshHeader",
-    /* SCENE_CMD_ID_OBJECT_LIST           */ "Scene_CommandObjectList",
-    /* SCENE_CMD_ID_LIGHT_LIST            */ "Scene_CommandLightList",
-    /* SCENE_CMD_ID_PATH_LIST             */ "Scene_CommandPathList",
-    /* SCENE_CMD_ID_TRANSITION_ACTOR_LIST */ "Scene_CommandTransitionActorList",
-    /* SCENE_CMD_ID_LIGHT_SETTINGS_LIST   */ "Scene_CommandLightSettingsList",
-    /* SCENE_CMD_ID_TIME_SETTINGS         */ "Scene_CommandTimeSettings",
-    /* SCENE_CMD_ID_SKYBOX_SETTINGS       */ "Scene_CommandSkyboxSettings",
-    /* SCENE_CMD_ID_SKYBOX_DISABLES       */ "Scene_CommandSkyboxDisables",
-    /* SCENE_CMD_ID_EXIT_LIST             */ "Scene_CommandExitList",
-    /* SCENE_CMD_ID_END                   */ "NULL",
-    /* SCENE_CMD_ID_SOUND_SETTINGS        */ "Scene_CommandSoundSettings",
-    /* SCENE_CMD_ID_ECHO_SETTINGS         */ "Scene_CommandEchoSettings",
-    /* SCENE_CMD_ID_CUTSCENE_DATA         */ "Scene_CommandCutsceneData",
-    /* SCENE_CMD_ID_ALTERNATE_HEADER_LIST */ "SetupIndex",
-    /* SCENE_CMD_ID_MISC_SETTINGS         */ "Scene_CommandMiscSettings",
-};

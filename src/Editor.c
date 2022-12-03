@@ -26,9 +26,18 @@ Editor* GetEditor(void) {
     return sEditor;
 }
 
+static void Editor_UpperHeader(void* pass, void* empty, Split* split) {
+    Editor* this = pass;
+    Scene* scene = &this->scene;
+    
+    Element_Header(split, &scene->ui.roomCombo, 98);
+    Element_Combo(&this->scene.ui.roomCombo);
+}
+
 void Editor_Init(Editor* editor) {
     sEditor = editor;
     
+    editor->geo.bar[0].headerFunc = Editor_UpperHeader;
     Scene_Init(&editor->scene);
     Editor_InitIcons(editor);
 }
