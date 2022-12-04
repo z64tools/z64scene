@@ -82,7 +82,7 @@ typedef struct RoomHeader {
     u8 echo;
 } RoomHeader;
 
-typedef struct {
+typedef struct SceneHeader {
     struct {
         SpawnActor entry[64];
         u32 num;
@@ -127,13 +127,13 @@ typedef struct {
     u16 keepObject;
 } SceneHeader;
 
-typedef struct {
+typedef struct Room {
     const u32  id;
     RoomState  state;
     RoomHeader header[0x10];
 } Room;
 
-typedef struct {
+typedef struct Scene {
     u8* segment;
     
     SceneState  state;
@@ -152,6 +152,9 @@ typedef struct {
     u8 curRoom;
     u8 curEnv;
     
+    Actor* curActor;
+    Actor* prevActor[64];
+    
     CollisionMesh colMesh;
     AnimOoT       animOoT;
     bool kill;
@@ -159,6 +162,8 @@ typedef struct {
     struct {
         RoomMesh entry[255];
         u32      num;
+        Vec3f    rayPos;
+        bool     rayHit;
     } mesh;
 } Scene;
 
@@ -171,7 +176,10 @@ void Scene_LoadScene(Scene* this, const char* file);
 void Scene_LoadRoom(Scene* this, const char* file);
 void Scene_Kill(Scene* this);
 void Scene_Free(Scene* this);
+
+void Scene_Update(Scene* this, View3D* view);
 void Scene_Draw(Scene* this, View3D* view);
+
 void Scene_CacheBuild(Scene* this);
 
 SceneHeader* Scene_GetSceneHeader(Scene* this);

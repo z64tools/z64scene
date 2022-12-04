@@ -17,7 +17,7 @@ SplitTask gSettingsTask = {
 bool PropListCallback(PropList* prop, PropListChange action, s32 id) {
     Scene* scene = prop->udata1;
     SceneHeader* header = Scene_GetSceneHeader(scene);
-    static EnvLightSettings detached;
+    static EnvLightSettings copybuf;
     
     Block(void, AddDefaultLight, (s32 id)) {
         header->envList.entry[id].ambientColor[0] = 0x40;
@@ -49,28 +49,34 @@ bool PropListCallback(PropList* prop, PropListChange action, s32 id) {
         case PROP_ADD:
             AddDefaultLight(header->envList.num);
             header->envList.num++;
-            
             break;
+            
         case PROP_INSERT:
+            copybuf = header->envList.entry[prop->copyKey];
             AddDefaultLight(header->envList.num);
             header->envList.num++;
             ArrMoveR(header->envList.entry, id, header->envList.num - id);
+            
+            if (prop->copy)
+                header->envList.entry[id] = copybuf;
             break;
+            
         case PROP_REMOVE:
             ArrMoveL(header->envList.entry, id, header->envList.num - id);
             header->envList.num--;
             break;
+            
         case PROP_DETACH:
-            detached = header->envList.entry[id];
-            ArrMoveL(header->envList.entry, id, header->envList.num - id);
-            header->envList.num--;
             break;
+            
         case PROP_RETACH:
-            header->envList.num++;
+            ArrMoveL(header->envList.entry, prop->detachKey, header->envList.num - prop->detachKey);
             ArrMoveR(header->envList.entry, id, header->envList.num - id);
-            header->envList.entry[id] = detached;
             break;
+            
         case PROP_DESTROY_DETACH:
+            ArrMoveL(header->envList.entry, prop->detachKey, header->envList.num - prop->detachKey);
+            header->envList.num--;
             break;
     }
     
@@ -126,10 +132,12 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     
     Element_RowY(SPLIT_ELEM_X_PADDING * 2);
     
+    Log("Do Conditions");
     Element_Condition(&this->buttonIndoor, scene->segment != NULL);
     Element_Condition(&this->killScene, scene->segment != NULL);
     Element_Condition(&this->cont, this->cont.prop != NULL);
     
+    Log("Colors");
     if (editor->scene.segment) {
         
         Element_Color_SetColor(&this->envAmbient, envSettings->ambientColor);
@@ -146,31 +154,34 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Element_Color_SetColor(&this->envFogColor, NULL);
     }
     
+    Log("Set Prop List");
     Element_Container_SetPropList(&this->cont, &sceneHeader->envList.prop, 8);
     PropList_SetOnChangeCallback(&sceneHeader->envList.prop, PropListCallback, scene, 0);
     
+    Log("EnvBox");
     Element_Box(BOX_START); {
         Element_Row(split, &this->cont, 1.0f);
         Element_DisplayName(&this->cont, 0.25f);
         scene->curEnv = Element_Container(&this->cont);
         
-        Element_Row(split, NULL, 0.25f, &this->buttonIndoor, 0.75f);
+        Element_Row(split, NULL, 0.5f, &this->buttonIndoor, 0.5f);
         // Element_Button_SetValue(&this->buttonIndoor, true, scene->indoorLight);
-        Element_Button(&this->buttonIndoor);
+        Element_Checkbox(&this->buttonIndoor);
         
         Element_Row(split, &this->envAmbient, 1.0f);
-        Element_DisplayName(&this->envAmbient, 0.25f);
+        Element_DisplayName(&this->envAmbient, 0.5f);
         Element_Color(&this->envAmbient);
         
-        Element_Row(split, &this->envColA, 0.5f, &this->envColB, 0.5f);
+        Element_Row(split, &this->envColA, 1.0f);
+        Element_Row(split, &this->envColB, 1.0f);
         Element_DisplayName(&this->envColA, 0.5f);
         Element_DisplayName(&this->envColB, 0.5f);
         Element_Color(&this->envColA);
         Element_Color(&this->envColB);
         
         Element_Box(BOX_START);
-        Element_Row(split, &this->envFogColor, 1.0);
-        Element_DisplayName(&this->envFogColor, 0.15f);
+        Element_Row(split, &this->envFogColor, 1.0f);
+        Element_DisplayName(&this->envFogColor, 0.5f);
         Element_Color(&this->envFogColor);
         
         Element_Row(split, &this->fogNear, 0.5f, &this->fogFar, 0.5f);
@@ -187,6 +198,7 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Element_Box(BOX_END);
     } Element_Box(BOX_END);
     
+    Log("Buttons");
     Element_Box(BOX_START); {
         Element_Row(split, Element_Text("Render"), 1.0);
         Element_Row(split,  &this->buttonFPS, 0.5, &this->buttonCulling, 0.5);
@@ -206,6 +218,7 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Scene_SetState(scene, SCENE_DRAW_COLLISION, Element_Button(&this->buttonColView));
     } Element_Box(BOX_END);
     
+    Log("Kill!");
     Element_Row(split, &this->killScene, 1.0);
     if (Element_Button(&this->killScene)) {
         Scene_Kill(&editor->scene);

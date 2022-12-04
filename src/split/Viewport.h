@@ -9,12 +9,14 @@ typedef struct {
     SkelAnime skelAnime;
     bool      lockCameraAccess;
     
-    Vec3f  cubePos;
-    Actor* curActor;
+    Vec3f cubePos;
     
     ElButton resetCam;
     
     Gizmo gizmo;
+    
+    Vec2f selPos[512];
+    s32   selID;
 } Viewport;
 
 extern SplitTask gViewportTask;

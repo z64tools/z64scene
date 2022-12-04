@@ -606,6 +606,12 @@ static void Scene_Light(Scene* this) {
     Light_SetDirLight(l2n, env->light2Color);
 }
 
+void Scene_Update(Scene* this, View3D* view) {
+    RayLine r = View_GetCursorRayLine(view);
+    
+    this->mesh.rayHit = Room_Raycast(this, &r, &this->mesh.rayPos);
+}
+
 void Scene_Draw(Scene* this, View3D* view) {
     AnimOoT* animOoT = &this->animOoT;
     

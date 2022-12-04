@@ -4,7 +4,7 @@
 #include <Editor.h>
 
 typedef struct {
-    ElButton buttonIndoor;
+    ElCheckbox buttonIndoor;
     
     ElButton buttonFPS;
     ElButton buttonCulling;
@@ -14,10 +14,10 @@ typedef struct {
     
     ElButton killScene;
     
-    ElColor envAmbient;
-    ElColor envFogColor;
-    ElColor envColA;
-    ElColor envColB;
+    ElColor  envAmbient;
+    ElColor  envFogColor;
+    ElColor  envColA;
+    ElColor  envColB;
     
     ElSlider fogNear;
     ElSlider fogFar;

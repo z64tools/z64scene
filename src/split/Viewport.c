@@ -119,6 +119,7 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
     RayLine ray = View_GetCursorRayLine(&this->view);
     Input* input = &editor->input;
     Actor* selectedActor = NULL;
+    Actor* selHit = NULL;
     Vec3f p;
     Scene* scene = &editor->scene;
     RoomHeader* room = &scene->room[scene->curRoom].header[scene->curHeader];
@@ -133,34 +134,41 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
     for (var i = 0; i < room->actorList.num; i++) {
         Actor* actor = &room->actorList.entry[i];
         
-        if (actor->state & ACTOR_SELECTED)
-            continue;
-        
         veccpy(&actor->sph.pos, &actor->pos);
         actor->sph.pos.y += 10.0f;
         actor->sph.r = 20;
         
-        if (Col3D_LineVsSphere(&ray, &actor->sph, &p))
-            selectedActor = actor;
-    }
-    
-    if (!Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
-        this->curActor = NULL;
-        
-        for (var i = 0; i < room->actorList.num; i++) {
-            Actor* actor = &room->actorList.entry[i];
-            actor->state &= ~ACTOR_SELECTED;
+        if (Col3D_LineVsSphere(&ray, &actor->sph, &p)) {
+            if (actor->state & ACTOR_SELECTED) {
+                selHit = actor;
+                
+                continue;
+            }
             
-            for (s32 j = 0; j < 3; j++)
-                actor->pos.axis[j] = rint(actor->pos.axis[j]);
+            selectedActor = actor;
         }
     }
     
+    if (selHit && !selectedActor && Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
+        Actor_Unselect(scene, selHit);
+        if (scene->curActor) {
+            Gizmo_Focus(&this->gizmo, &scene->curActor->gizmo);
+            Gizmo_Unselect(&this->gizmo, &selHit->gizmo);
+        } else {
+            Gizmo_UnselectAll(&this->gizmo);
+            Actor_UnselectAll(scene, room);
+        }
+        
+        return;
+    } else if (!Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
+        Gizmo_UnselectAll(&this->gizmo);
+        Actor_UnselectAll(scene, room);
+    }
+    
     if (selectedActor) {
-        this->curActor = selectedActor;
-        selectedActor->state |= ACTOR_SELECTED;
-        this->gizmo.initpos = this->gizmo.ppos = this->gizmo.pos = Math_Vec3f_New(UnfoldVec3(this->curActor->pos));
-        this->gizmo.vel = Math_Vec3f_New(0, 0, 0);
+        Actor_Select(scene, selectedActor);
+        Gizmo_Select(&this->gizmo, &selectedActor->gizmo,
+            &selectedActor->pos, &selectedActor->rot);
     }
 }
 
@@ -196,7 +204,6 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     
     // Scene* scene = &editor->scene;
     
-    Log("Viewer");
     Element_Header(split, split->taskCombo, 98, &this->resetCam, 98);
     Element_Combo(split->taskCombo);
     
@@ -212,17 +219,28 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
         return;
     }
     
-    if (Input_GetKey(&editor->input, KEY_LEFT_CONTROL)->hold)
-        this->view.mode = CAM_MODE_ORBIT;
-    else
-        this->view.mode = CAM_MODE_ALL,
-        Viewport_CameraUpdate(editor, this, split);
+    Viewport_CameraUpdate(editor, this, split);
     header = Scene_GetSceneHeader(&editor->scene);
     
     if (editor->scene.state & SCENE_DRAW_FOG)
         this->view.far = header->envList.entry[editor->scene.curEnv].fogFar;
     else
         this->view.far = 12800.0 + 6000;
+    
+    if (Input_GetMouse(&editor->input, CLICK_R)->hold) {
+        Vec2f pos = Math_Vec2f_New(UnfoldVec2(split->cursorPos));
+        
+        if (Input_GetMouse(&editor->input, CLICK_R)->press) {
+            this->selID = 0;
+            this->selPos[this->selID++] = pos;
+        }
+        
+        if (Math_Vec2f_DistXZ(pos, this->selPos[this->selID - 1]) > 4 && this->selID < 512) {
+            this->selPos[this->selID++] = pos;
+        }
+    } else if (Input_GetMouse(&editor->input, CLICK_R)->release) {
+        this->selID = 0;
+    }
     
     // CursorIcon Wrapping
     if (Input_GetMouse(&editor->input, CLICK_ANY)->press)
@@ -334,8 +352,10 @@ static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) 
     gVOPADisp = gVOPAHead;
     gVXLUDisp = gVXLUHead;
     
+    Scene_Update(scene, &this->view);
+    
     Profiler_I(2);
-    if (this->curActor) Gizmo_Update(&this->gizmo, scene, &this->view, &editor->input);
+    Gizmo_Update(&this->gizmo, &this->view, &editor->input, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
     Viewport_UpdateActors(editor, this, split);
     Profiler_O(2);
     
@@ -343,12 +363,19 @@ static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) 
     Scene_Draw(&editor->scene, &this->view);
     Profiler_O(0);
     
-    if (this->curActor) Gizmo_Draw(&this->gizmo, &this->view, &POLY_VOPA_DISP);
+    Gizmo_Draw(&this->gizmo, &this->view, &POLY_VOPA_DISP);
     
     gSPEndDisplayList(POLY_VOPA_DISP++);
     gSPEndDisplayList(POLY_VXLU_DISP++);
     n64_draw(gVOPAHead);
     n64_draw(gVXLUHead);
+    
+    if (this->selID) {
+        nvgBeginPath(editor->vg);
+        nvgFillColor(editor->vg, Theme_GetColor(THEME_PRIM, 125, 1.0f));
+        Gfx_Shape(editor->vg, Math_Vec2f_New(0, 0), 1.0f, 0, this->selPos, this->selID);
+        nvgFill(editor->vg);
+    }
     
 #if 0
     Matrix_Push(); {

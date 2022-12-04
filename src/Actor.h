@@ -5,6 +5,7 @@
 #include <ext_collision.h>
 #include <ext_view.h>
 #include "Types.h"
+#include "Gizmo.h"
 
 struct Room;
 struct RoomHeader;
@@ -29,12 +30,12 @@ typedef struct {
     u16   id;
     Vec3f pos;
     Vec3s rot;
-    Vec3s orot;
     u16   param;
     
-    Vec3f      offset;
     ActorState state;
     Sphere     sph;
+    
+    GizmoElem gizmo;
 } Actor;
 
 typedef struct {
@@ -53,5 +54,9 @@ typedef struct {
 
 void Actor_Draw(Actor* this, View3D* view);
 void Actor_Draw_RoomHeader(struct RoomHeader*, View3D* view);
+
+void Actor_Select(struct Scene* scene, Actor* this);
+void Actor_Unselect(struct Scene* scene, Actor* this);
+void Actor_UnselectAll(struct Scene* scene, struct RoomHeader* hdr);
 
 #endif
