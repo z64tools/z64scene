@@ -157,7 +157,8 @@ typedef struct Scene {
     
     CollisionMesh colMesh;
     AnimOoT       animOoT;
-    bool kill;
+    bool  kill;
+    Gizmo gizmo;
     
     struct {
         RoomMesh entry[255];
@@ -189,6 +190,6 @@ void Scene_SetState(Scene* this, SceneState state, bool set);
 void Scene_SetRoom(Scene* this, s32 roomID);
 
 void Room_Draw(RoomMesh* roomMesh);
-Room* Room_Raycast(Scene* scene, RayLine* ray, Vec3f* out);
+Room* Scene_RaycastRoom(Scene* scene, RayLine* ray, Vec3f* out);
 
 #endif /* __Z64_SCENE_H__ */

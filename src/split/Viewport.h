@@ -13,8 +13,7 @@ typedef struct {
     
     ElButton resetCam;
     
-    Gizmo gizmo;
-    
+    s32   selMode;
     Vec2f selPos[512];
     s32   selID;
 } Viewport;

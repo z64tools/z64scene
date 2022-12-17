@@ -43,11 +43,11 @@ static void Viewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
 }
 #endif
 
-static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) {
+static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split) {
     Input* input = &editor->input;
-    Gizmo* gizmo = &this->gizmo;
-    View3D* view = &this->view;
     Scene* scene = &editor->scene;
+    Gizmo* gizmo = &scene->gizmo;
+    View3D* view = &this->view;
     
     if (Input_GetMouse(input, CLICK_ANY)->hold && this->lockCameraAccess)
         return;
@@ -107,7 +107,7 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
         
         if (Input_GetMouse(input, CLICK_L)->dual) {
             RayLine ray = View_GetCursorRayLine(&this->view);
-            Room* room = Room_Raycast(&editor->scene, &ray, NULL);
+            Room* room = Scene_RaycastRoom(&editor->scene, &ray, NULL);
             
             if (room)
                 Scene_SetRoom(&editor->scene, room->id);
@@ -115,7 +115,7 @@ static void Viewport_CameraUpdate(Editor* editor, Viewport* this, Split* split) 
     }
 }
 
-static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) {
+static void Viewport_Actor_Update(Editor* editor, Viewport* this, Split* split) {
     RayLine ray = View_GetCursorRayLine(&this->view);
     Input* input = &editor->input;
     Actor* selectedActor = NULL;
@@ -124,11 +124,13 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
     Scene* scene = &editor->scene;
     RoomHeader* room = &scene->room[scene->curRoom].header[scene->curHeader];
     
-    if (Gizmo_IsBusy(&this->gizmo) || !Input_GetMouse(input, CLICK_L)->press)
+    if (!split->mouseInSplit || editor->geo.state.blockElemInput)
+        return;
+    if (Gizmo_IsBusy(&scene->gizmo) || !Input_GetMouse(input, CLICK_L)->press)
         return;
     
     // Process rooms so that we do not grab actors behind walls
-    if (Room_Raycast(&editor->scene, &ray, NULL))
+    if (Scene_RaycastRoom(&editor->scene, &ray, NULL))
         ray.nearest += 20.0f;
     
     for (var i = 0; i < room->actorList.num; i++) {
@@ -152,23 +154,108 @@ static void Viewport_UpdateActors(Editor* editor, Viewport* this, Split* split) 
     if (selHit && !selectedActor && Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
         Actor_Unselect(scene, selHit);
         if (scene->curActor) {
-            Gizmo_Focus(&this->gizmo, &scene->curActor->gizmo);
-            Gizmo_Unselect(&this->gizmo, &selHit->gizmo);
+            Gizmo_Focus(&scene->gizmo, &scene->curActor->gizmo);
+            Gizmo_Unselect(&scene->gizmo, &selHit->gizmo);
         } else {
-            Gizmo_UnselectAll(&this->gizmo);
+            Gizmo_UnselectAll(&scene->gizmo);
             Actor_UnselectAll(scene, room);
         }
         
         return;
     } else if (!Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
-        Gizmo_UnselectAll(&this->gizmo);
+        Gizmo_UnselectAll(&scene->gizmo);
         Actor_UnselectAll(scene, room);
     }
     
+    if (selHit && !selectedActor)
+        selectedActor = selHit;
+    
     if (selectedActor) {
         Actor_Select(scene, selectedActor);
-        Gizmo_Select(&this->gizmo, &selectedActor->gizmo,
+        Actor_Focus(scene, selectedActor);
+        
+        Gizmo_Select(&scene->gizmo, &selectedActor->gizmo,
             &selectedActor->pos, &selectedActor->rot);
+        Gizmo_Focus(&scene->gizmo, &selectedActor->gizmo);
+    }
+}
+
+static void Viewport_ShapeSelect_Update(Viewport* this, Split* split, Scene* scene, Input* input) {
+    if (Input_GetMouse(input, CLICK_R)->hold) {
+        Vec2f pos = Math_Vec2f_New(UnfoldVec2(split->cursorPos));
+        
+        if (Input_GetMouse(input, CLICK_R)->press) {
+            this->selID = 0;
+            this->selPos[this->selID++] = pos;
+            this->selMode = Input_GetKey(input, KEY_LEFT_CONTROL)->hold ? -1 : 1;
+        }
+        
+        if (Math_Vec2f_DistXZ(pos, this->selPos[this->selID - 1]) > 4 && this->selID < 512) {
+            this->selPos[this->selID++] = pos;
+        }
+    } else if (Input_GetMouse(input, CLICK_R)->release) {
+        BoundBox bbx = BoundBox_New2F(this->selPos[0]);
+        
+        for (var i = 0; i < this->selID; i++) {
+            BoundBox_Adjust2F(&bbx, this->selPos[i]);
+        }
+        
+        RoomHeader* room = Scene_GetRoomHeader(scene, scene->curRoom);
+        Vec3f camn = Math_Vec3f_LineSegDir(this->view.currentCamera->eye, this->view.currentCamera->at);
+        for (var i = 0; i < room->actorList.num; i++) {
+            Actor* a = &room->actorList.entry[i];
+            Vec2f sp;
+            
+            switch (this->selMode) {
+                case 1:
+                    if (a->state & ACTOR_SELECTED)
+                        continue;
+                    
+                    sp = View_GetScreenPos(&this->view, a->pos);
+                    
+                    if (Math_Vec2f_PointInShape(sp, this->selPos, this->selID)) {
+                        Actor_Select(scene, a);
+                        Gizmo_Select(&scene->gizmo, &a->gizmo, &a->pos, &a->rot);
+                        
+                        if (!scene->curActor) {
+                            Actor_Focus(scene, a);
+                            Gizmo_Focus(&scene->gizmo, &a->gizmo);
+                        }
+                    }
+                    break;
+                    
+                case -1:
+                    if (!(a->state & ACTOR_SELECTED))
+                        continue;
+                    
+                    sp = View_GetScreenPos(&this->view, a->pos);
+                    
+                    if (Math_Vec2f_PointInShape(sp, this->selPos, this->selID)) {
+                        if (0.0f > Math_Vec3f_Dot(camn, Math_Vec3f_LineSegDir(this->view.currentCamera->eye, a->pos)))
+                            continue;
+                        
+                        Actor_Unselect(scene, a);
+                        if (scene->curActor)
+                            Gizmo_Focus(&scene->gizmo, &scene->curActor->gizmo);
+                        Gizmo_Unselect(&scene->gizmo, &a->gizmo);
+                    }
+                    break;
+            }
+        }
+        
+        this->selID = 0;
+    }
+}
+
+static void Viewport_ShapeSelect_Draw(Viewport* this, void* vg) {
+    if (this->selID) {
+        nvgBeginPath(vg);
+        if (this->selMode > 0)
+            nvgFillColor(vg, nvgHSLA(0.6f, 0.5f, 0.5f, 125));
+        else
+            nvgFillColor(vg, nvgHSLA(0.0f, 0.5f, 0.5f, 125));
+        Gfx_Shape(vg, Math_Vec2f_New(0, 0), 1.0f, 0, this->selPos, this->selID);
+        nvgFill(vg);
     }
 }
 
@@ -200,7 +287,8 @@ void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
 void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     SceneHeader* header;
     Cursor* cursor = &editor->input.cursor;
-    Gizmo* gizmo = &this->gizmo;
+    Scene* scene = &editor->scene;
+    Gizmo* gizmo = &scene->gizmo;
     
     // Scene* scene = &editor->scene;
     
@@ -211,7 +299,6 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
         printf_info("Reset Camera");
         View_MoveTo(&this->view, Math_Vec3f_New(0, 0, 0));
         View_RotTo(&this->view, Math_Vec3s_New(0, 0, 0));
-        // this->view.cameraControl = true;
     }
     
     if (editor->scene.segment == NULL) {
@@ -219,7 +306,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
         return;
     }
     
-    Viewport_CameraUpdate(editor, this, split);
+    Viewport_Camera_Update(editor, this, split);
     header = Scene_GetSceneHeader(&editor->scene);
     
     if (editor->scene.state & SCENE_DRAW_FOG)
@@ -227,20 +314,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     else
         this->view.far = 12800.0 + 6000;
     
-    if (Input_GetMouse(&editor->input, CLICK_R)->hold) {
-        Vec2f pos = Math_Vec2f_New(UnfoldVec2(split->cursorPos));
-        
-        if (Input_GetMouse(&editor->input, CLICK_R)->press) {
-            this->selID = 0;
-            this->selPos[this->selID++] = pos;
-        }
-        
-        if (Math_Vec2f_DistXZ(pos, this->selPos[this->selID - 1]) > 4 && this->selID < 512) {
-            this->selPos[this->selID++] = pos;
-        }
-    } else if (Input_GetMouse(&editor->input, CLICK_R)->release) {
-        this->selID = 0;
-    }
+    Viewport_ShapeSelect_Update(this, split, &editor->scene, &editor->input);
     
     // CursorIcon Wrapping
     if (Input_GetMouse(&editor->input, CLICK_ANY)->press)
@@ -259,6 +333,10 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
             Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(cursor->pos.y, yMin, yMax));
     }
 }
+
+// # # # # # # # # # # # # # # # # # # # #
+// #                                     #
+// # # # # # # # # # # # # # # # # # # # #
 
 static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
     nvgFontSize(vg, SPLIT_TEXT);
@@ -355,27 +433,24 @@ static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) 
     Scene_Update(scene, &this->view);
     
     Profiler_I(2);
-    Gizmo_Update(&this->gizmo, &this->view, &editor->input, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
-    Viewport_UpdateActors(editor, this, split);
+    if (split->mouseInSplit) {
+        Gizmo_Update(&scene->gizmo, &this->view, &editor->input, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
+        Viewport_Actor_Update(editor, this, split);
+    }
     Profiler_O(2);
     
     Profiler_I(0);
     Scene_Draw(&editor->scene, &this->view);
     Profiler_O(0);
     
-    Gizmo_Draw(&this->gizmo, &this->view, &POLY_VOPA_DISP);
+    Gizmo_Draw(&scene->gizmo, &this->view, &POLY_VOPA_DISP);
     
     gSPEndDisplayList(POLY_VOPA_DISP++);
     gSPEndDisplayList(POLY_VXLU_DISP++);
     n64_draw(gVOPAHead);
     n64_draw(gVXLUHead);
     
-    if (this->selID) {
-        nvgBeginPath(editor->vg);
-        nvgFillColor(editor->vg, Theme_GetColor(THEME_PRIM, 125, 1.0f));
-        Gfx_Shape(editor->vg, Math_Vec2f_New(0, 0), 1.0f, 0, this->selPos, this->selID);
-        nvgFill(editor->vg);
-    }
+    Viewport_ShapeSelect_Draw(this, editor->vg);
     
 #if 0
     Matrix_Push(); {
@@ -418,10 +493,10 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
     nvgFontSize(vg, 15);
     nvgTextLetterSpacing(vg, 0.0f);
     
-    // ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(PROFILER_FPS), 0);
-    // ProfilerText(vg, 1, "Total:", "%.2fms", Profiler_Time(0xF0) * 1000.0f, 16.0f);
-    // ProfilerText(vg, 2, "Scene Draw:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
-    // ProfilerText(vg, 3, "Gizmo Update:", "%.2fms", Profiler_Time(2) * 1000.f, 16.0f);
-    // ProfilerText(vg, 4, "n64:", "%.2fms", Profiler_Time(8) * 1000.f, 16.0f);
-    // ProfilerText(vg, 5, "Delta:", "%.2f", gDeltaTime, 0);
+    ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(PROFILER_FPS), 0);
+    ProfilerText(vg, 1, "Total:", "%.2fms", Profiler_Time(0xF0) * 1000.0f, 16.0f);
+    ProfilerText(vg, 2, "Scene Draw:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
+    ProfilerText(vg, 3, "Gizmo Update:", "%.2fms", Profiler_Time(2) * 1000.f, 16.0f);
+    ProfilerText(vg, 4, "n64:", "%.2fms", Profiler_Time(8) * 1000.f, 16.0f);
+    ProfilerText(vg, 5, "Delta:", "%.2f", gDeltaTime, 0);
 }

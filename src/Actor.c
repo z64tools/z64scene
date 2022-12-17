@@ -25,10 +25,13 @@ void Actor_Draw(Actor* this, View3D* view) {
             Matrix_RotateX_s(rot.x, MTXMODE_APPLY);
             Matrix_RotateZ_s(rot.z, MTXMODE_APPLY);
             
+            if (this->state & ACTOR_SELECTED)
+                gXPMode(POLY_OPA_DISP++, 0, GX_STENCILWRITE);
+            
             gSPSegment(POLY_OPA_DISP++, 6, (void*)gCube.data);
             
             if (this->state & ACTOR_SELECTED)
-                gDPSetEnvColor(POLY_OPA_DISP++, 0x40, 0xA0, 0xF0, 0xFF);
+                gDPSetEnvColor(POLY_OPA_DISP++, 0x50, 0xB0, 0xFF, 0xFF);
             else
                 gDPSetEnvColor(POLY_OPA_DISP++, 0xC0, 0xC0, 0xC0, 0xFF);
             
@@ -38,6 +41,9 @@ void Actor_Draw(Actor* this, View3D* view) {
                 gSPDisplayList(POLY_OPA_DISP++, gCubeDL);
             else
                 gSPDisplayList(POLY_OPA_DISP++, gCubeLodDL);
+            
+            if (this->state & ACTOR_SELECTED)
+                gXPMode(POLY_OPA_DISP++, GX_STENCILWRITE, 0);
         } Matrix_Pop();
     } Matrix_Pop();
 }
@@ -47,10 +53,13 @@ void Actor_Draw_RoomHeader(RoomHeader* header, View3D* view) {
         Actor_Draw(&header->actorList.entry[i], view);
 }
 
+void Actor_Focus(Scene* scene, Actor* this) {
+    scene->curActor = this;
+}
+
 void Actor_Select(Scene* scene, Actor* this) {
     ArrMoveR(scene->prevActor, 0, 64);
-    scene->prevActor[0] = scene->curActor;
-    scene->curActor = this;
+    scene->prevActor[0] = this;
     this->state |= ACTOR_SELECTED;
 }
 

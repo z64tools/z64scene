@@ -95,7 +95,6 @@ void Settings_Init(Editor* editor, Settings* this, Split* split) {
     Element_Name(&this->envFogColor, "Fog");
     
     Element_Name(&this->buttonIndoor, "Indoor");
-    Element_Name(&this->cont, "EnvID");
     Element_Name(&this->killScene, "Unload Scene");
     
     Element_Name(&this->buttonFPS, "Limit FPS");
@@ -109,13 +108,12 @@ void Settings_Init(Editor* editor, Settings* this, Split* split) {
     Element_Slider_SetParams(&this->fogNear, 0, 1000, "int");
     Element_Slider_SetParams(&this->fogFar, 100, 32000, "int");
     
-    Element_Button_SetValue(&this->buttonIndoor, true, 0);
     Element_Button_SetValue(&this->buttonFPS, true, gLimitFPS);
     Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
     Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
     Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
     
-    Element_Container_SetPropList(&this->cont, NULL, 8);
+    Element_Container_SetPropList(&this->cont, NULL, 6);
 }
 
 void Settings_Destroy(Editor* editor, Settings* this, Split* split) {
@@ -155,18 +153,17 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     }
     
     Log("Set Prop List");
-    Element_Container_SetPropList(&this->cont, &sceneHeader->envList.prop, 8);
+    Element_Container_SetPropList(&this->cont, &sceneHeader->envList.prop, 6);
     PropList_SetOnChangeCallback(&sceneHeader->envList.prop, PropListCallback, scene, 0);
     
     Log("EnvBox");
     Element_Box(BOX_START); {
         Element_Row(split, &this->cont, 1.0f);
-        Element_DisplayName(&this->cont, 0.25f);
         scene->curEnv = Element_Container(&this->cont);
         
-        Element_Row(split, NULL, 0.5f, &this->buttonIndoor, 0.5f);
+        // Element_Row(split, NULL, 0.5f, &this->buttonIndoor, 0.5f);
         // Element_Button_SetValue(&this->buttonIndoor, true, scene->indoorLight);
-        Element_Checkbox(&this->buttonIndoor);
+        // Element_Checkbox(&this->buttonIndoor);
         
         Element_Row(split, &this->envAmbient, 1.0f);
         Element_DisplayName(&this->envAmbient, 0.5f);

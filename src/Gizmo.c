@@ -36,7 +36,8 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
     
     for (s32 i = 0; i < 3; i++) {
         if (!this->lock.state) {
-            NVGcolor color = nvgHSL(i / 3.0, 0.5 + 0.2 * this->focus.axis[i], 0.5 + 0.2 * this->focus.axis[i]);
+            f32 add = 0.2f * this->focus.axis[i];
+            NVGcolor color = nvgHSL(1.0f - (i / 3.0f), 0.5f + add, 0.5f + add);
             f32 scale = Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) * 0.000008f;
             
             gSPSegment((*disp)++, 6, (void*)gGizmo.data);
@@ -76,8 +77,8 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
             if (!this->lock.axis[i])
                 continue;
             
-            Vec3f aI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], 10000));
-            Vec3f bI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], -10000));
+            Vec3f aI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], 1000000));
+            Vec3f bI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], -1000000));
             Vec2f aO, bO;
             
             View_ClipPointIntoView(view, &aI, Math_Vec3f_Invert(mxo[i]));
@@ -86,7 +87,7 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
             bO = View_GetScreenPos(view, bI);
             
             nvgBeginPath(vg);
-            nvgStrokeColor(vg, nvgHSLA(i / 3.0, 0.5, 0.5, 255));
+            nvgStrokeColor(vg, nvgHSLA(1.0f - (i / 3.0f), 0.5f, 0.5f, 255));
             nvgStrokeWidth(vg, 2.0f);
             nvgMoveTo(vg, UnfoldVec2(aO));
             nvgLineTo(vg, UnfoldVec2(bO));
@@ -198,9 +199,15 @@ static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos)
             
             fornode(elem, this->elemHead) {
                 Vec3f relPos = Math_Vec3f_Sub(*elem->dpos, this->pivotPos);
+                Vec3f zero = {};
                 
-                Matrix_MultVec3f(&relPos, &elem->pos);
-                elem->rot.axis[i] = DegToBin(WrapF(BinToDeg(elem->drot->axis[i]) + dgr, -180.f, 180.f));
+                Matrix_Push();
+                
+                Matrix_TranslateRotateZYX(&relPos, elem->drot);
+                Matrix_MultVec3f(&zero, &elem->pos);
+                Matrix_MtxFToYXZRotS(&elem->rot, 0);
+                
+                Matrix_Pop();
                 
                 for (var j  = 0; j < 3; j++)
                     elem->pos.axis[j] = rint(elem->pos.axis[j]);
@@ -349,6 +356,11 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
     }
 }
 
+void Gizmo_Focus(Gizmo* this, GizmoElem* elem) {
+    this->activeElem = elem;
+    this->pos = this->pivotPos = *elem->dpos;
+}
+
 void Gizmo_Select(Gizmo* this, GizmoElem* elem, Vec3f* pos, Vec3s* rot) {
     memset(elem, 0, sizeof(GizmoElem));
     Node_Add(this->elemHead, elem);
@@ -358,10 +370,6 @@ void Gizmo_Select(Gizmo* this, GizmoElem* elem, Vec3f* pos, Vec3s* rot) {
     elem->dpos = pos;
     elem->drot = rot;
     elem->selected = true;
-    
-    this->pivotPos = *pos;
-    this->pos = *pos;
-    this->activeElem = elem;
 }
 
 void Gizmo_UnselectAll(Gizmo* this) {
@@ -387,7 +395,6 @@ void Gizmo_Unselect(Gizmo* this, GizmoElem* elem) {
 }
 
 void Gizmo_ApplyTransforms(Gizmo* this) {
-    printf_info("Apply Transforms");
     fornode(elem, this->elemHead) {
         if (!elem->selected)
             continue;
@@ -399,7 +406,6 @@ void Gizmo_ApplyTransforms(Gizmo* this) {
 }
 
 void Gizmo_ResetTransforms(Gizmo* this) {
-    printf_info("Reset Transforms");
     fornode(elem, this->elemHead) {
         if (!elem->selected)
             continue;
@@ -408,8 +414,4 @@ void Gizmo_ResetTransforms(Gizmo* this) {
     }
     
     this->pos = *this->activeElem->dpos;
-}
-
-void Gizmo_Focus(Gizmo* this, GizmoElem* elem) {
-    this->pos = this->pivotPos = *elem->dpos;
 }

@@ -55,6 +55,7 @@ typedef struct {
 void Actor_Draw(Actor* this, View3D* view);
 void Actor_Draw_RoomHeader(struct RoomHeader*, View3D* view);
 
+void Actor_Focus(struct Scene* scene, Actor* this);
 void Actor_Select(struct Scene* scene, Actor* this);
 void Actor_Unselect(struct Scene* scene, Actor* this);
 void Actor_UnselectAll(struct Scene* scene, struct RoomHeader* hdr);

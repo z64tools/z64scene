@@ -565,7 +565,7 @@ static void Scene_Light(Scene* this) {
     
     this->animOoT.nightFlag = false;
     if (/* this->indoorLight == false && */ curEnv < 4) {
-        u16 time;
+        u16 time = 0;
         
         switch (curEnv) {
             case 0:
@@ -609,7 +609,7 @@ static void Scene_Light(Scene* this) {
 void Scene_Update(Scene* this, View3D* view) {
     RayLine r = View_GetCursorRayLine(view);
     
-    this->mesh.rayHit = Room_Raycast(this, &r, &this->mesh.rayPos);
+    this->mesh.rayHit = Scene_RaycastRoom(this, &r, &this->mesh.rayPos);
 }
 
 void Scene_Draw(Scene* this, View3D* view) {
@@ -699,13 +699,13 @@ void Scene_CacheBuild(Scene* this) {
             Triangle* tri = &mesh->triBuf.head[j];
             
             if (j == 0) {
-                box = BoundBox_New(tri->v[0]);
-                BoundBox_Adjust(&box, tri->v[1]);
-                BoundBox_Adjust(&box, tri->v[2]);
+                box = BoundBox_New3F(tri->v[0]);
+                BoundBox_Adjust3F(&box, tri->v[1]);
+                BoundBox_Adjust3F(&box, tri->v[2]);
             } else {
-                BoundBox_Adjust(&box, tri->v[0]);
-                BoundBox_Adjust(&box, tri->v[1]);
-                BoundBox_Adjust(&box, tri->v[2]);
+                BoundBox_Adjust3F(&box, tri->v[0]);
+                BoundBox_Adjust3F(&box, tri->v[1]);
+                BoundBox_Adjust3F(&box, tri->v[2]);
             }
             
             x += (tri->v[0].x + tri->v[1].x + tri->v[2].x) / 3;
@@ -772,7 +772,7 @@ void Room_Draw(RoomMesh* this) {
     }
 }
 
-Room* Room_Raycast(Scene* scene, RayLine* ray, Vec3f* out) {
+Room* Scene_RaycastRoom(Scene* scene, RayLine* ray, Vec3f* out) {
     s32 id = -1;
     
     for (s32 i = 0; i < scene->numRoom; i++) {
