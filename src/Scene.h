@@ -55,6 +55,11 @@ typedef struct RoomHeader {
     } actorList;
     
     struct {
+        u16 entry[255];
+        u32 num;
+    } objectList;
+    
+    struct {
         Vec3s dir;
         s16   strength;
     } wind;

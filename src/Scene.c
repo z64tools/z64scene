@@ -427,6 +427,118 @@ struct {
 // # Scene                               #
 // # # # # # # # # # # # # # # # # # # # #
 
+void Scene_SaveProject(Scene* this, const char* file) {
+    Toml toml = Toml_New();
+    
+    for (var i = 0; i < this->numHeader; i++) {
+        Toml_SetValue(&toml, x_fmt("header_%d.navi_msg", i),
+            "%s",
+            this->header[i].naviMsg == 1 ? "\"overworld\"" :
+            this->header[i].naviMsg == 2 ? "\"dungeon\"" :
+            "\"none\"");
+        Toml_SetValue(&toml, x_fmt("header_%d.keep_object", i),
+            "0x%04X", this->header[i].keepObject);
+        
+        Toml_SetValue(&toml, x_fmt("header_%d.scene_cam_type", i),
+            "%d", this->header[i].camType);
+        Toml_SetValue(&toml, x_fmt("header_%d.area", i),
+            "%d", this->header[i].area);
+        
+        Toml_SetValue(&toml, x_fmt("header_%d.snd_spec_id", i),
+            "0x%02X", this->header[i].sound.specID);
+        Toml_SetValue(&toml, x_fmt("header_%d.snd_sfx_seq_id", i),
+            "0x%02X", this->header[i].sound.sfxID);
+        Toml_SetValue(&toml, x_fmt("header_%d.snd_bgm_seq_id", i),
+            "0x%02X", this->header[i].sound.bgmID);
+        
+        for (var j = 0; j < this->header[i].exitList.num; j++)
+            Toml_SetValue(&toml, x_fmt("header_%d.exit[%d]", i, j),
+                "0x%02X", this->header[i].exitList.exit[j]);
+        
+        for (var j = 0; j < this->header[i].envList.num; j++) {
+            for (var x = 0; x < 3; x++) {
+                Toml_SetValue(&toml, x_fmt("header_%d.env_light.entry[%d].ambient[%d]", i, j, x),
+                    "%d", this->header[i].envList.entry[j].ambientColor[x]);
+                Toml_SetValue(&toml, x_fmt("header_%d.env_light.entry[%d].a_col[%d]", i, j, x),
+                    "%d", this->header[i].envList.entry[j].light1Color[x]);
+                Toml_SetValue(&toml, x_fmt("header_%d.env_light.entry[%d].a_dir[%d]", i, j, x),
+                    "%d", this->header[i].envList.entry[j].light1Dir[x]);
+                Toml_SetValue(&toml, x_fmt("header_%d.env_light.entry[%d].b_col[%d]", i, j, x),
+                    "%d", this->header[i].envList.entry[j].light2Color[x]);
+                Toml_SetValue(&toml, x_fmt("header_%d.env_light.entry[%d].b_dir[%d]", i, j, x),
+                    "%d", this->header[i].envList.entry[j].light2Dir[x]);
+            }
+        }
+        
+        for (var j = 0; j < this->header[i].spawnList.num; j++) {
+            Toml_SetValue(&toml, x_fmt("header_%d.spawn.entry[%d].room", i, j),
+                "0x%04X", this->header[i].spawnList.entry[j].room);
+            Toml_SetValue(&toml, x_fmt("header_%d.spawn.entry[%d].id", i, j),
+                "0x%04X", this->header[i].spawnList.entry[j].actor.id);
+            Toml_SetValue(&toml, x_fmt("header_%d.spawn.entry[%d].param", i, j),
+                "0x%04X", this->header[i].spawnList.entry[j].actor.param);
+            for (var x = 0; x < 3; x++)
+                Toml_SetValue(&toml, x_fmt("header_%d.spawn.entry[%d].pos[%d]", i, j, x),
+                    "%d", (s32)this->header[i].spawnList.entry[j].actor.pos.axis[x]);
+            for (var x = 0; x < 3; x++)
+                Toml_SetValue(&toml, x_fmt("header_%d.spawn.entry[%d].rot[%d]", i, j, x),
+                    "%d", this->header[i].spawnList.entry[j].actor.rot.axis[x]);
+        }
+        
+        for (var j = 0; j < this->numRoom; j++) {
+            RoomHeader* room = &this->room[j].header[i];
+            
+            Toml_SetValue(&toml, x_fmt("header_%d.room_%d.mesh", i, j),
+                "\"room_%d.zroom\"", j);
+            Toml_SetValue(&toml, x_fmt("header_%d.room_%d.behaviour", i, j),
+                "%d", room->behaviour.behaviour);
+            Toml_SetValue(&toml, x_fmt("header_%d.room_%d.link_behaviour", i, j),
+                "%d", room->behaviour.linkIdleAnim);
+            Toml_SetValue(&toml, x_fmt("header_%d.room_%d.lens_mode", i, j),
+                "%s", room->behaviour.lensMode ? "true" : "false");
+            Toml_SetValue(&toml, x_fmt("header_%d.room_%d.disable_warp_songs", i, j),
+                "%s", room->behaviour.disableWarpSongs ? "true" : "false");
+            
+            if (room->wind.strength) {
+                for (var x = 0; x < 3; x++)
+                    Toml_SetValue(&toml, x_fmt("header_%d.room_%d.wind_axis[%d]", i, j, x),
+                        "%d", room->wind.dir.axis[x]);
+                Toml_SetValue(&toml, x_fmt("header_%d.room_%d.wind_strength", i, j),
+                    "%d", room->wind.strength);
+            }
+            
+            for (var k = 0; k < room->actorList.num; k++) {
+                Toml_SetValue(&toml, x_fmt("header_%d.room_%d.actor.entry[%d].id", i, j, k),
+                    "0x%04X", room->actorList.entry[k].id);
+                Toml_SetValue(&toml, x_fmt("header_%d.room_%d.actor.entry[%d].param", i, j, k),
+                    "0x%04X", room->actorList.entry[k].param);
+                for (var x = 0; x < 3; x++)
+                    Toml_SetValue(&toml, x_fmt("header_%d.room_%d.actor.entry[%d].pos[%d]", i, j, k, x),
+                        "%d", (s32)room->actorList.entry[k].pos.axis[x]);
+                for (var x = 0; x < 3; x++)
+                    Toml_SetValue(&toml, x_fmt("header_%d.room_%d.actor.entry[%d].rot[%d]", i, j, k, x),
+                        "%d", room->actorList.entry[k].rot.axis[x]);
+            }
+            
+            for (var k = 0; k < room->objectList.num; k++) {
+                Toml_SetValue(&toml, x_fmt("header_%d.room_%d.object[%d]", i, j, k),
+                    "0x%04X", room->objectList.entry[k]);
+            }
+        }
+    }
+    
+    Toml_SaveFile(&toml, "toml.toml");
+    Toml_Free(&toml);
+}
+
+void Scene_WriteToml(Scene* this) {
+    Scene_LoadScene(this, "testmap/scene.zscene");
+    for (var i = 0; i < 27; i++)
+        Scene_LoadRoom(this, x_fmt("testmap/room_%d.zroom", i));
+    
+    Scene_SaveProject(this, "");
+}
+
 static void Scene_ExecuteCommands(Scene* this, RoomHeader* room) {
     u8* segment;
     SceneCmd* cmd;
@@ -511,6 +623,7 @@ void Scene_LoadScene(Scene* this, const char* file) {
 
 void Scene_LoadRoom(Scene* this, const char* file) {
     MemFile mem = MemFile_Initialize();
+    
     RoomMesh* mesh = Scene_NewEntry(this->mesh);
     RoomHeader* room = &this->room[this->numRoom++].header[0];
     
@@ -797,14 +910,14 @@ static void Scene_Cmd00_SpawnList(Scene* scene, RoomHeader* room, SceneCmd* cmd)
     SceneHeader* hdr = &scene->header[scene->curHeader];
     SpawnActor* spawn = hdr->spawnList.entry;
     
-    for (s32 i = 0; i < cmd->actorList.num; i++) {
+    for (s32 i = 0; i < cmd->spawnList.data1; i++) {
         spawn[i].actor.id = entryList[i].id;
         spawn[i].actor.param = entryList[i].param;
         spawn[i].actor.pos = Math_Vec3f_New(UnfoldVec3(entryList[i].pos));
         spawn[i].actor.rot = Math_Vec3s_New(UnfoldVec3(entryList[i].rot));
     }
     
-    hdr->spawnList.num = cmd->actorList.num;
+    hdr->spawnList.num = cmd->spawnList.data1;
 }
 
 static void Scene_Cmd01_ActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
@@ -837,37 +950,46 @@ static void Scene_Cmd04_RoomList(Scene* scene, RoomHeader* room, SceneCmd* cmd) 
 }
 
 static void Scene_Cmd05_Wind(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // s8 x = cmd->windSettings.x;
-    // s8 y = cmd->windSettings.y;
-    // s8 z = cmd->windSettings.z;
-    //
-    // play->envCtx.windDirection.x = x;
-    // play->envCtx.windDirection.y = y;
-    // play->envCtx.windDirection.z = z;
-    //
-    // play->envCtx.windSpeed = cmd->windSettings.unk_07;
+    room->wind.dir.x = (s8)cmd->windSettings.x;
+    room->wind.dir.y = (s8)cmd->windSettings.y;
+    room->wind.dir.z = (s8)cmd->windSettings.z;
+    room->wind.strength = cmd->windSettings.unk_07;
 }
 
 static void Scene_Cmd06_EntranceList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // play->setupEntranceList = SEGMENTED_TO_VIRTUAL(cmd->entranceList.segment);
+    struct {
+        u8 spawn;
+        u8 room;
+    }* entranceList = SEGMENTED_TO_VIRTUAL(cmd->entranceList.segment);
+    
+    SceneHeader* hdr = &scene->header[scene->curHeader];
+    SpawnActor* spawn = hdr->spawnList.entry;
+    
+    if (hdr->spawnList.num == 0) {
+        SceneCmd* ncmd = cmd;
+        
+        while (ncmd->base.code != 0x00 && ncmd->base.code != 0x14)
+            ncmd++;
+        
+        Assert(ncmd->base.code != 0x14);
+        
+        hdr->spawnList.num = ncmd->spawnList.data1;
+    }
+    
+    for (var i = 0; i < hdr->spawnList.num; i++)
+        spawn[entranceList[i].spawn].room = entranceList[i].room;
 }
 
 static void Scene_Cmd07_SpecialFiles(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // if (cmd->specialFiles.keepObjectId != OBJECT_INVALID) {
-    //  play->objectCtx.subKeepIndex = Object_Spawn(&play->objectCtx, cmd->specialFiles.keepObjectId);
-    //  gSegments[5] = VIRTUAL_TO_PHYSICAL(play->objectCtx.status[play->objectCtx.subKeepIndex].segment);
-    // }
-    //
-    // if (cmd->specialFiles.cUpElfMsgNum != 0) {
-    //  play->cUpElfMsgs = Play_LoadFile(play, &sNaviMsgFiles[cmd->specialFiles.cUpElfMsgNum - 1]);
-    // }
+    scene->header[scene->curHeader].naviMsg = cmd->specialFiles.cUpElfMsgNum;
+    scene->header[scene->curHeader].keepObject = cmd->specialFiles.keepObjectId;
 }
 
 static void Scene_Cmd08_RoomBehaviour(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // play->roomCtx.curRoom.behaviorType1 = cmd->roomBehavior.gpFlag1;
-    // play->roomCtx.curRoom.behaviorType2 = cmd->roomBehavior.gpFlag2 & 0xFF;
-    // play->roomCtx.curRoom.lensMode = (cmd->roomBehavior.gpFlag2 >> 8) & 1;
-    // play->msgCtx.disableWarpSongs = (cmd->roomBehavior.gpFlag2 >> 0xA) & 1;
+    room->behaviour.behaviour = cmd->roomBehavior.gpFlag1;
+    room->behaviour.linkIdleAnim = cmd->roomBehavior.gpFlag2 & 0xFF;
+    room->behaviour.lensMode = (cmd->roomBehavior.gpFlag2 >> 8) & 1;
+    room->behaviour.disableWarpSongs = (cmd->roomBehavior.gpFlag2 >> 0xA) & 1;
 }
 
 static void Scene_Cmd0A_MeshHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
@@ -904,6 +1026,12 @@ static void Scene_Cmd0A_MeshHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd
 }
 
 static void Scene_Cmd0B_ObjectList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+    u16* objList = SEGMENTED_TO_VIRTUAL(cmd->objectList.segment);
+    
+    for (var i = 0; i < cmd->objectList.num; i++)
+        room->objectList.entry[i] = ReadBE(objList[i]);
+    room->objectList.num = cmd->objectList.num;
+    
     // s32 i;
     // s32 j;
     // s32 k;
@@ -1042,24 +1170,28 @@ static void Scene_Cmd11_Skybox(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
 
 static void Scene_Cmd12_SkyboxDisables(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // play->envCtx.skyboxDisabled = cmd->skyboxDisables.unk_04;
-// play->envCtx.sunMoonDisabled = cmd->skyboxDisables.unk_05;
+    // play->envCtx.sunMoonDisabled = cmd->skyboxDisables.unk_05;
 }
 
 static void Scene_Cmd13_ExitList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // play->setupExitList = SEGMENTED_TO_VIRTUAL(cmd->exitList.segment);
+    u16* exitList = SEGMENTED_TO_VIRTUAL(cmd->exitList.segment);
+    
+    for (var i = 0;; i++) {
+        scene->header[0].exitList.num = i;
+        scene->header[0].exitList.exit[i] = ReadBE(exitList[i]);
+        if (scene->header[0].exitList.exit[i] & 0xF000)
+            break;
+    }
 }
 
 static void Scene_Cmd15_Sound(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // play->sequenceCtx.seqId = cmd->soundSettings.seqId;
-    // play->sequenceCtx.natureAmbienceId = cmd->soundSettings.natureAmbienceId;
-    //
-    // if (gSaveContext.seqId == (u8)NA_BGM_DISABLED) {
-    //  Audio_QueueSeqCmd(cmd->soundSettings.specId | 0xF0000000);
-    // }
+    scene->header[scene->curHeader].sound.bgmID = cmd->soundSettings.seqId;
+    scene->header[scene->curHeader].sound.sfxID = cmd->soundSettings.natureAmbienceId;
+    scene->header[scene->curHeader].sound.specID = cmd->soundSettings.specId;
 }
 
 static void Scene_Cmd16_Echo(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // play->roomCtx.curRoom.echo = cmd->echoSettings.echo;
+    room->echo = cmd->echoSettings.echo;
 }
 
 static void Scene_Cmd17_Cutscene(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
@@ -1068,24 +1200,6 @@ static void Scene_Cmd17_Cutscene(Scene* scene, RoomHeader* room, SceneCmd* cmd) 
 }
 
 static void Scene_Cmd19_Misc(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // YREG(15) = cmd->miscSettings.cameraMovement;
-    // gSaveContext.worldMapArea = cmd->miscSettings.area;
-    //
-    // if ((play->sceneNum == SCENE_SHOP1) || (play->sceneNum == SCENE_SYATEKIJYOU)) {
-    //  if (LINK_AGE_IN_YEARS == YEARS_ADULT) {
-    //      gSaveContext.worldMapArea = 1;
-    //  }
-    // }
-    //
-    // if (((play->sceneNum >= SCENE_SPOT00) && (play->sceneNum <= SCENE_GANON_TOU)) ||
-    //  ((play->sceneNum >= SCENE_ENTRA) && (play->sceneNum <= SCENE_SHRINE_R))) {
-    //  if (gSaveContext.cutsceneIndex < 0xFFF0) {
-    //      gSaveContext.worldMapAreaData |= gBitFlags[gSaveContext.worldMapArea];
-    //      osSyncPrintf(
-    //          "０００  ａｒｅａ＿ａｒｒｉｖａｌ＝%x (%d)\n",
-    //          gSaveContext.worldMapAreaData,
-    //          gSaveContext.worldMapArea
-    //      );
-    //  }
-    // }
+    scene->header[scene->curHeader].camType = cmd->miscSettings.cameraMovement;
+    scene->header[scene->curHeader].area = cmd->miscSettings.area;
 }
