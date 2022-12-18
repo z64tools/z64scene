@@ -39,7 +39,9 @@ typedef struct RoomMesh {
         u32  num;
     } disp;
     
+    const char* name;
     u8*       segment;
+    u32       sizeSegment;
     TriBuffer triBuf;
     
     Vec3f center;
@@ -133,6 +135,8 @@ typedef struct SceneHeader {
 } SceneHeader;
 
 typedef struct Room {
+    u8* segment;
+    
     const u32  id;
     RoomState  state;
     RoomHeader header[0x10];
@@ -140,6 +144,7 @@ typedef struct Room {
 
 typedef struct Scene {
     u8* segment;
+    u32 sizeSegment;
     
     SceneState  state;
     SceneHeader header[0x10];

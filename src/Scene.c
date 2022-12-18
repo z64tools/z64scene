@@ -1,5 +1,6 @@
 #include "Editor.h"
 #include "BgCheck.h"
+#include <ext_zip.h>
 
 #if 1
 typedef struct StructBE {
@@ -429,154 +430,245 @@ struct {
 
 void Scene_SaveProject(Scene* this, const char* file) {
     Toml toml = Toml_New();
+    MemFile mem = MemFile_Initialize();
+    ZipFile zip = {};
     
     for (var i = 0; i < this->numHeader; i++) {
-        Toml_SetValue(&toml, x_fmt("header_%d.navi_msg", i),
+        Toml_SetValue(&toml, x_fmt("header[%d].navi_msg", i),
             "%s",
             this->header[i].naviMsg == 1 ? "\"overworld\"" :
             this->header[i].naviMsg == 2 ? "\"dungeon\"" :
             "\"none\"");
-        Toml_SetValue(&toml, x_fmt("header_%d.keep_object", i),
+        Toml_SetValue(&toml, x_fmt("header[%d].keep_object", i),
             "0x%04X", this->header[i].keepObject);
         
-        Toml_SetValue(&toml, x_fmt("header_%d.scene_cam_type", i),
+        Toml_SetValue(&toml, x_fmt("header[%d].scene_cam_type", i),
             "%d", this->header[i].camType);
-        Toml_SetValue(&toml, x_fmt("header_%d.area", i),
+        Toml_SetValue(&toml, x_fmt("header[%d].area", i),
             "%d", this->header[i].area);
         
-        Toml_SetValue(&toml, x_fmt("header_%d.snd_spec_id", i),
+        Toml_SetValue(&toml, x_fmt("header[%d].snd_spec_id", i),
             "0x%02X", this->header[i].sound.specID);
-        Toml_SetValue(&toml, x_fmt("header_%d.snd_sfx_seq_id", i),
+        Toml_SetValue(&toml, x_fmt("header[%d].snd_sfx_seq_id", i),
             "0x%02X", this->header[i].sound.sfxID);
-        Toml_SetValue(&toml, x_fmt("header_%d.snd_bgm_seq_id", i),
+        Toml_SetValue(&toml, x_fmt("header[%d].snd_bgm_seq_id", i),
             "0x%02X", this->header[i].sound.bgmID);
         
         for (var j = 0; j < this->header[i].exitList.num; j++)
-            Toml_SetValue(&toml, x_fmt("header_%d.exit[%d]", i, j),
+            Toml_SetValue(&toml, x_fmt("header[%d].exit[%d]", i, j),
                 "0x%02X", this->header[i].exitList.exit[j]);
         
         for (var j = 0; j < this->header[i].envList.num; j++) {
             for (var x = 0; x < 3; x++) {
-                Toml_SetValue(&toml, x_fmt("header_%d.env_light.entry[%d].ambient[%d]", i, j, x),
+                Toml_SetValue(&toml, x_fmt("header[%d].env_light.entry[%d].ambient[%d]", i, j, x),
                     "%d", this->header[i].envList.entry[j].ambientColor[x]);
-                Toml_SetValue(&toml, x_fmt("header_%d.env_light.entry[%d].a_col[%d]", i, j, x),
+                Toml_SetValue(&toml, x_fmt("header[%d].env_light.entry[%d].a_col[%d]", i, j, x),
                     "%d", this->header[i].envList.entry[j].light1Color[x]);
-                Toml_SetValue(&toml, x_fmt("header_%d.env_light.entry[%d].a_dir[%d]", i, j, x),
+                Toml_SetValue(&toml, x_fmt("header[%d].env_light.entry[%d].a_dir[%d]", i, j, x),
                     "%d", this->header[i].envList.entry[j].light1Dir[x]);
-                Toml_SetValue(&toml, x_fmt("header_%d.env_light.entry[%d].b_col[%d]", i, j, x),
+                Toml_SetValue(&toml, x_fmt("header[%d].env_light.entry[%d].b_col[%d]", i, j, x),
                     "%d", this->header[i].envList.entry[j].light2Color[x]);
-                Toml_SetValue(&toml, x_fmt("header_%d.env_light.entry[%d].b_dir[%d]", i, j, x),
+                Toml_SetValue(&toml, x_fmt("header[%d].env_light.entry[%d].b_dir[%d]", i, j, x),
                     "%d", this->header[i].envList.entry[j].light2Dir[x]);
             }
         }
         
         for (var j = 0; j < this->header[i].spawnList.num; j++) {
-            Toml_SetValue(&toml, x_fmt("header_%d.spawn.entry[%d].room", i, j),
+            Toml_SetValue(&toml, x_fmt("header[%d].spawn.entry[%d].room", i, j),
                 "0x%04X", this->header[i].spawnList.entry[j].room);
-            Toml_SetValue(&toml, x_fmt("header_%d.spawn.entry[%d].id", i, j),
+            Toml_SetValue(&toml, x_fmt("header[%d].spawn.entry[%d].id", i, j),
                 "0x%04X", this->header[i].spawnList.entry[j].actor.id);
-            Toml_SetValue(&toml, x_fmt("header_%d.spawn.entry[%d].param", i, j),
+            Toml_SetValue(&toml, x_fmt("header[%d].spawn.entry[%d].param", i, j),
                 "0x%04X", this->header[i].spawnList.entry[j].actor.param);
             for (var x = 0; x < 3; x++)
-                Toml_SetValue(&toml, x_fmt("header_%d.spawn.entry[%d].pos[%d]", i, j, x),
+                Toml_SetValue(&toml, x_fmt("header[%d].spawn.entry[%d].pos[%d]", i, j, x),
                     "%d", (s32)this->header[i].spawnList.entry[j].actor.pos.axis[x]);
             for (var x = 0; x < 3; x++)
-                Toml_SetValue(&toml, x_fmt("header_%d.spawn.entry[%d].rot[%d]", i, j, x),
+                Toml_SetValue(&toml, x_fmt("header[%d].spawn.entry[%d].rot[%d]", i, j, x),
                     "%d", this->header[i].spawnList.entry[j].actor.rot.axis[x]);
         }
         
         for (var j = 0; j < this->numRoom; j++) {
             RoomHeader* room = &this->room[j].header[i];
             
-            Toml_SetValue(&toml, x_fmt("header_%d.room_%d.mesh", i, j),
-                "\"room_%d.zroom\"", j);
-            Toml_SetValue(&toml, x_fmt("header_%d.room_%d.behaviour", i, j),
+            Toml_SetValue(&toml, x_fmt("header[%d].room_%d.mesh", i, j),
+                "\"%s\"", room->mesh->name);
+            Toml_SetValue(&toml, x_fmt("header[%d].room_%d.behaviour", i, j),
                 "%d", room->behaviour.behaviour);
-            Toml_SetValue(&toml, x_fmt("header_%d.room_%d.link_behaviour", i, j),
+            Toml_SetValue(&toml, x_fmt("header[%d].room_%d.link_behaviour", i, j),
                 "%d", room->behaviour.linkIdleAnim);
-            Toml_SetValue(&toml, x_fmt("header_%d.room_%d.lens_mode", i, j),
+            Toml_SetValue(&toml, x_fmt("header[%d].room_%d.lens_mode", i, j),
                 "%s", room->behaviour.lensMode ? "true" : "false");
-            Toml_SetValue(&toml, x_fmt("header_%d.room_%d.disable_warp_songs", i, j),
+            Toml_SetValue(&toml, x_fmt("header[%d].room_%d.disable_warp_songs", i, j),
                 "%s", room->behaviour.disableWarpSongs ? "true" : "false");
             
             if (room->wind.strength) {
                 for (var x = 0; x < 3; x++)
-                    Toml_SetValue(&toml, x_fmt("header_%d.room_%d.wind_axis[%d]", i, j, x),
+                    Toml_SetValue(&toml, x_fmt("header[%d].room_%d.wind_axis[%d]", i, j, x),
                         "%d", room->wind.dir.axis[x]);
-                Toml_SetValue(&toml, x_fmt("header_%d.room_%d.wind_strength", i, j),
+                Toml_SetValue(&toml, x_fmt("header[%d].room_%d.wind_strength", i, j),
                     "%d", room->wind.strength);
             }
             
             for (var k = 0; k < room->actorList.num; k++) {
-                Toml_SetValue(&toml, x_fmt("header_%d.room_%d.actor.entry[%d].id", i, j, k),
+                Toml_SetValue(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].id", i, j, k),
                     "0x%04X", room->actorList.entry[k].id);
-                Toml_SetValue(&toml, x_fmt("header_%d.room_%d.actor.entry[%d].param", i, j, k),
+                Toml_SetValue(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].param", i, j, k),
                     "0x%04X", room->actorList.entry[k].param);
                 for (var x = 0; x < 3; x++)
-                    Toml_SetValue(&toml, x_fmt("header_%d.room_%d.actor.entry[%d].pos[%d]", i, j, k, x),
+                    Toml_SetValue(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].pos[%d]", i, j, k, x),
                         "%d", (s32)room->actorList.entry[k].pos.axis[x]);
                 for (var x = 0; x < 3; x++)
-                    Toml_SetValue(&toml, x_fmt("header_%d.room_%d.actor.entry[%d].rot[%d]", i, j, k, x),
+                    Toml_SetValue(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].rot[%d]", i, j, k, x),
                         "%d", room->actorList.entry[k].rot.axis[x]);
             }
             
             for (var k = 0; k < room->objectList.num; k++) {
-                Toml_SetValue(&toml, x_fmt("header_%d.room_%d.object[%d]", i, j, k),
+                Toml_SetValue(&toml, x_fmt("header[%d].room_%d.object[%d]", i, j, k),
                     "0x%04X", room->objectList.entry[k]);
             }
         }
     }
     
-    Toml_SaveFile(&toml, "toml.toml");
+    Toml_ToMem(&toml, &mem);
     Toml_Free(&toml);
+    
+    ZipFile_Load(&zip, "scene.zsp", ZIP_WRITE);
+    ZipFile_WriteEntry(&zip, &mem, "config.toml");
+    MemFile_Free(&mem);
+    
+    MemFile_LoadMem(&mem, this->segment, this->sizeSegment);
+    ZipFile_WriteEntry(&zip, &mem, "scene.zscene");
+    MemFile_Free(&mem);
+    
+    for (var i = 0; i < this->mesh.num; i++) {
+        RoomMesh* mesh = &this->mesh.entry[i];
+        
+        MemFile_LoadMem(&mem, mesh->segment, mesh->sizeSegment);
+        ZipFile_WriteEntry(&zip, &mem, mesh->name);
+        
+        MemFile_Free(&mem);
+    }
+    
+    ZipFile_Free(&zip);
 }
 
 void Scene_WriteToml(Scene* this) {
     Scene_LoadScene(this, "testmap/scene.zscene");
-    for (var i = 0; i < 27; i++)
+    for (var i = 0; i < 1; i++)
         Scene_LoadRoom(this, x_fmt("testmap/room_%d.zroom", i));
     
     Scene_SaveProject(this, "");
 }
 
-static void Scene_ExecuteCommands(Scene* this, RoomHeader* room) {
+static void Scene_ExecuteCommands(Scene* this, Room* room) {
     u8* segment;
     SceneCmd* cmd;
     
-    gSegment[2] = this->segment;
-    gSegment[3] = room ? room->mesh->segment : NULL;
-    
-    if (!room)
-        segment = gSegment[2];
-    else
-        segment = gSegment[3];
-    
-    for (cmd = (void*)segment; cmd->base.code != SCENE_CMD_ID_END; cmd++) {
-        if (cmd->base.code < SCENE_CMD_ID_MAX) {
-            Log("[%02X] %08X [%s]", cmd->base.code, (u8*)cmd - segment, sSceneCmds[cmd->base.code].name);
+    for (var header = 0; header < this->numHeader; header++) {
+        gSegment[2] = this->segment;
+        gSegment[3] = room ? room->segment : NULL;
+        
+        if (!room) {
+            segment = gSegment[2];
+            Log("" PRNT_YELW "SCENE");
+        } else {
+            segment = gSegment[3];
+            Log("" PRNT_BLUE "ROOM");
+        }
+        
+        cmd = (void*)segment;
+        this->curHeader = header;
+        
+        if (header > 0) {
+            Assert(cmd->base.code == SCENE_CMD_ID_ALTERNATE_HEADER_LIST);
             
-            if (sSceneCmds[cmd->base.code].func)
-                sSceneCmds[cmd->base.code].func(this, room, cmd);
+            u32* headers = SEGMENTED_TO_VIRTUAL(cmd->altHeaders.segment);
             
-            else if (cmd->base.code != SCENE_CMD_ID_ALTERNATE_HEADER_LIST)
-                printf_warning("SceneCmd %02X", cmd->base.code);
+            if (headers[header] == 0)
+                continue;
+            
+            cmd = SEGMENTED_TO_VIRTUAL(ReadBE(headers[header]));
+        }
+        
+        for (; cmd->base.code != SCENE_CMD_ID_END; cmd++) {
+            if (cmd->base.code < SCENE_CMD_ID_MAX) {
+                Log("[%02X] %08X [%s]", cmd->base.code, (u8*)cmd - segment, sSceneCmds[cmd->base.code].name);
+                
+                if (sSceneCmds[cmd->base.code].func)
+                    sSceneCmds[cmd->base.code].func(this, &room->header[header], cmd);
+                
+                else if (cmd->base.code != SCENE_CMD_ID_ALTERNATE_HEADER_LIST)
+                    printf_warning("SceneCmd %02X", cmd->base.code);
+            }
         }
     }
+    
+    this->curHeader = 0;
 }
 
 static void Scene_SetHeaderNum(Scene* this) {
     SceneCmd* cmd = gSegment[2] = this->segment;
+    u32 headerOffset = 0;
+    u32* cmdOffset = NULL;
+    u32 numCmdOffset = 0;
     
     this->numHeader = 1;
     
-    for (;; cmd++) {
-        if (cmd->base.code == SCENE_CMD_ID_ALTERNATE_HEADER_LIST) {
+    Block(void, ReadThrough, (SceneCmd * cmd)) {
+        BlockVar(headerOffset);
+        BlockVar(numCmdOffset);
+        BlockVar(cmdOffset);
+        
+        for (;; cmd++) {
+            if (cmd->base.code == SCENE_CMD_ID_END)
+                break;
+            
+            if (cmd->base.code == SCENE_CMD_ID_ALTERNATE_HEADER_LIST) {
+                headerOffset = cmd->base.data2;
+                
+                continue;
+            }
+            
+            switch ((u32)(cmd->base.data2 & 0xFFE00000)) {
+                case 0x02000000:
+                case 0x03000000:
+                    cmdOffset = Realloc(cmdOffset, sizeof(u32[numCmdOffset + 1]));
+                    cmdOffset[numCmdOffset++] = cmd->base.data2;
+                default:
+                    (void)0;
+            }
+        }
+    };
+    Block(int, sort, (const void* void_a, const void* void_b)) {
+        const u32* a = void_a;
+        const u32* b = void_b;
+        
+        return *a - *b;
+    };
+    
+    ReadThrough(cmd);
+    
+    if (headerOffset == 0) {
+        Free(cmdOffset);
+        return;
+    }
+    
+    Assert(cmdOffset != NULL);
+    qsort(cmdOffset, numCmdOffset, sizeof(u32), (void*)sort);
+    
+    for (var i = 0; i < numCmdOffset; i++)
+        printf_info("%08X", cmdOffset[i]);
+    
+    for (var i = 0; i < numCmdOffset; i++) {
+        if (cmdOffset[i] > headerOffset) {
+            this->numHeader = (cmdOffset[i] - headerOffset) / sizeof(u32);
+            printf_info("%d Headers", this->numHeader);
+            
             break;
         }
-        
-        if (cmd->base.code == SCENE_CMD_ID_END)
-            return;
     }
+    Free(cmdOffset);
 }
 
 static bool Scene_OnRoomChange(PropList* list, PropListChange type, s32 index) {
@@ -612,6 +704,7 @@ void Scene_LoadScene(Scene* this, const char* file) {
     
     MemFile_LoadFile(&mem, file);
     this->segment = mem.data;
+    this->sizeSegment = mem.size;
     mem.data = NULL;
     MemFile_Free(&mem);
     
@@ -625,15 +718,21 @@ void Scene_LoadRoom(Scene* this, const char* file) {
     MemFile mem = MemFile_Initialize();
     
     RoomMesh* mesh = Scene_NewEntry(this->mesh);
-    RoomHeader* room = &this->room[this->numRoom++].header[0];
+    Room* room = &this->room[this->numRoom++];
     
     MemFile_LoadFile(&mem, file);
+    
+    mesh->sizeSegment = mem.size;
     mesh->segment = mem.data;
-    room->mesh = mesh;
+    mesh->name = strdup(x_filename(file));
+    
+    room->segment = mem.data;
     mem.data = NULL;
     
-    MemFile_Free(&mem);
+    for (var i = 0; i < this->numHeader; i++)
+        room->header[i].mesh = mesh;
     
+    MemFile_Free(&mem);
     Scene_ExecuteCommands(this, room);
     
     PropList_Add(&this->ui.roomList, x_fmt("Room%02X", this->numRoom - 1));
@@ -935,6 +1034,9 @@ static void Scene_Cmd01_ActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd)
 }
 
 static void Scene_Cmd03_CollisionHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
+    if (scene->colMesh.vtxBuf != NULL)
+        return;
+    
     CollisionHeader* col = MemDup(SEGMENTED_TO_VIRTUAL(cmd->colHeader.segment), sizeof(CollisionHeader));
     
     col->vtxList = SEGMENTED_TO_VIRTUAL(col->vtxList32);
@@ -1177,9 +1279,9 @@ static void Scene_Cmd13_ExitList(Scene* scene, RoomHeader* room, SceneCmd* cmd) 
     u16* exitList = SEGMENTED_TO_VIRTUAL(cmd->exitList.segment);
     
     for (var i = 0;; i++) {
-        scene->header[0].exitList.num = i;
-        scene->header[0].exitList.exit[i] = ReadBE(exitList[i]);
-        if (scene->header[0].exitList.exit[i] & 0xF000)
+        scene->header[scene->curHeader].exitList.num = i;
+        scene->header[scene->curHeader].exitList.exit[i] = ReadBE(exitList[i]);
+        if (scene->header[scene->curHeader].exitList.exit[i] & 0xF000)
             break;
     }
 }

@@ -26,3 +26,4 @@ asm_win32.sh
 *.txt
 !assets/3D/*.zobj
 ExtLib/
+*.zsp

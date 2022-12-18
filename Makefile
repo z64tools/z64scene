@@ -6,7 +6,7 @@ include settings.mk
 CFLAGS          = -Wall -Wno-switch -Wno-unused-function -DEXTLIB=220 -DNDEBUG -I z64viewer/include/ -I src/
 OPT_WIN32      := -O1
 OPT_LINUX      := -O1
-SOURCE_C        = $(shell find src/* -type f -name '*.c')
+SOURCE_C        = $(shell find src/* -type f -name '*.c' -not -name 'TEST.c')
 SOURCE_C       += $(shell find z64viewer/src/* -type f -name '*.c')
 SOURCE_O_LINUX  = $(foreach f,$(SOURCE_C:.c=.o),bin/linux/$f)
 SOURCE_O_WIN32  = $(foreach f,$(SOURCE_C:.c=.o),bin/win32/$f)
@@ -85,7 +85,7 @@ bin/linux/%.o: %.svg $(DataFileCompiler)
 	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
 	@$(DataFileCompiler) --cc gcc --i $< --o $@
 
-$(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O) $(ASSETS_O_LINUX)
+$(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O) $(Zip_Linux_O) $(ASSETS_O_LINUX)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
 	@gcc -o $@ $^ $(XFLAGS) $(CFLAGS)
 
@@ -113,6 +113,6 @@ bin/win32/%.o: %.svg $(DataFileCompiler)
 	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
 	@$(DataFileCompiler) --cc i686-w64-mingw32.static-gcc --i $< --o $@
 
-$(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O) $(ASSETS_O_WIN32)
+$(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O) $(Zip_Win32_O) $(ASSETS_O_WIN32)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
 	@i686-w64-mingw32.static-gcc -o $@ $^ $(XFLAGS) $(CFLAGS) -D_WIN32 -municode
