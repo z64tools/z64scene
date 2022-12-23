@@ -3,7 +3,6 @@ z64scene
 
 __include/*
 compile_flags.txt
-*.png
 *.json
 *.zobj
 !geometry/*.zobj
@@ -27,3 +26,6 @@ asm_win32.sh
 !assets/3D/*.zobj
 ExtLib/
 *.zsp
+._*
+*.yroom
+*.yscene

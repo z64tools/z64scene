@@ -108,7 +108,7 @@ void Settings_Init(Editor* editor, Settings* this, Split* split) {
     Element_Slider_SetParams(&this->fogNear, 0, 1000, "int");
     Element_Slider_SetParams(&this->fogFar, 100, 32000, "int");
     
-    Element_Button_SetValue(&this->buttonFPS, true, gLimitFPS);
+    Element_Button_SetValue(&this->buttonFPS, true, 1);
     Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
     Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
     Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
@@ -125,7 +125,7 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     EnvLightSettings* envSettings = &sceneHeader->envList.entry[scene->curEnv];
     
     Log("Settings");
-    Element_Header(split, split->taskCombo, 92);
+    Element_Header(split->taskCombo, 92);
     Element_Combo(split->taskCombo);
     
     Element_RowY(SPLIT_ELEM_X_PADDING * 2);
@@ -158,30 +158,30 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     
     Log("EnvBox");
     Element_Box(BOX_START); {
-        Element_Row(split, &this->cont, 1.0f);
+        Element_Row(&this->cont, 1.0f);
         scene->curEnv = Element_Container(&this->cont);
         
-        // Element_Row(split, NULL, 0.5f, &this->buttonIndoor, 0.5f);
+        // Element_Row(NULL, 0.5f, &this->buttonIndoor, 0.5f);
         // Element_Button_SetValue(&this->buttonIndoor, true, scene->indoorLight);
         // Element_Checkbox(&this->buttonIndoor);
         
-        Element_Row(split, &this->envAmbient, 1.0f);
+        Element_Row(&this->envAmbient, 1.0f);
         Element_DisplayName(&this->envAmbient, 0.5f);
         Element_Color(&this->envAmbient);
         
-        Element_Row(split, &this->envColA, 1.0f);
-        Element_Row(split, &this->envColB, 1.0f);
+        Element_Row(&this->envColA, 1.0f);
+        Element_Row(&this->envColB, 1.0f);
         Element_DisplayName(&this->envColA, 0.5f);
         Element_DisplayName(&this->envColB, 0.5f);
         Element_Color(&this->envColA);
         Element_Color(&this->envColB);
         
         Element_Box(BOX_START);
-        Element_Row(split, &this->envFogColor, 1.0f);
+        Element_Row(&this->envFogColor, 1.0f);
         Element_DisplayName(&this->envFogColor, 0.5f);
         Element_Color(&this->envFogColor);
         
-        Element_Row(split, &this->fogNear, 0.5f, &this->fogFar, 0.5f);
+        Element_Row(&this->fogNear, 0.5f, &this->fogFar, 0.5f);
         Element_DisplayName(&this->fogNear, 0.3f);
         Element_DisplayName(&this->fogFar, 0.25f);
         
@@ -197,16 +197,15 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     
     Log("Buttons");
     Element_Box(BOX_START); {
-        Element_Row(split, Element_Text("Render"), 1.0);
-        Element_Row(split,  &this->buttonFPS, 0.5, &this->buttonCulling, 0.5);
-        Element_Row(split,  &this->buttonFog, 0.5, &this->buttonColView, 0.5);
+        Element_Row(Element_Text("Render"), 1.0);
+        Element_Row( &this->buttonFPS, 0.5, &this->buttonCulling, 0.5);
+        Element_Row( &this->buttonFog, 0.5, &this->buttonColView, 0.5);
+        
+        Element_Button(&this->buttonFPS);
         
         this->buttonFog.icon = &gVecGfx_EyeOpen;
         Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
         Scene_SetState(scene, SCENE_DRAW_FOG, Element_Button(&this->buttonFog));
-        
-        Element_Button_SetValue(&this->buttonFPS, true, gLimitFPS);
-        gLimitFPS = Element_Button(&this->buttonFPS);
         
         Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
         Scene_SetState(scene, SCENE_DRAW_CULLING, Element_Button(&this->buttonCulling));
@@ -216,7 +215,7 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     } Element_Box(BOX_END);
     
     Log("Kill!");
-    Element_Row(split, &this->killScene, 1.0);
+    Element_Row(&this->killScene, 1.0);
     if (Element_Button(&this->killScene)) {
         Scene_Kill(&editor->scene);
         

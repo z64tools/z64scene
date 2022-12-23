@@ -699,6 +699,66 @@ void Scene_Init(Scene* this) {
     PropList_SetOnChangeCallback(&this->ui.roomList, Scene_OnRoomChange, this, NULL);
 }
 
+static void* Scene_ExObj_GetHeader(MemFile* file) {
+    u8* data = &file->cast.u8[file->size - 0x30];
+    
+    for (var i = 0; i < 0x20; i += 0x10)
+        if (!memcmp(data + i, "z64convert", 10))
+            return data + i;
+    
+    return NULL;
+}
+
+void Scene_LoadScene_ExObj(Scene* this, const char* file) {
+    MemFile mem = MemFile_Initialize();
+    
+    MemFile_LoadFile(&mem, file);
+    
+    this->segment = mem.data;
+    this->sizeSegment = mem.size;
+    
+    mem.data = NULL;
+    MemFile_Free(&mem);
+}
+
+void Scene_LoadRoom_ExObj(Scene* this, const char* file) {
+    MemFile mem = MemFile_Initialize();
+    
+    // RoomMesh* mesh = Scene_NewEntry(this->mesh);
+    // Room* room = &this->room[this->numRoom++];
+    
+    MemFile_LoadFile(&mem, file);
+    
+    PointerCast data = { Scene_ExObj_GetHeader(&mem) };
+    
+    if (data.p) {
+        union {
+            struct {
+                u16 footer : 1;
+                u16 names  : 1;
+                u16 end    : (6 + 5);
+                u16 skel   : 1;
+                u16 col    : 1;
+                u16 dl     : 1;
+            };
+            u16 _short;
+        } mask;
+        
+        SetSegment(0, mem.data);
+        
+        data.u8 += strlen("z64convert");
+        mask._short = ReadBE(data.u16[0]);
+        printf_warning("footer:%d names:%d skel:%d col:%d dl:%d", mask.footer, mask.names, mask.skel, mask.col, mask.dl);
+        printf_error("%04X", mask._short);
+    }
+    
+    this->segment = mem.data;
+    this->sizeSegment = mem.size;
+    
+    mem.data = NULL;
+    MemFile_Free(&mem);
+}
+
 void Scene_LoadScene(Scene* this, const char* file) {
     MemFile mem = MemFile_Initialize();
     
@@ -716,7 +776,6 @@ void Scene_LoadScene(Scene* this, const char* file) {
 
 void Scene_LoadRoom(Scene* this, const char* file) {
     MemFile mem = MemFile_Initialize();
-    
     RoomMesh* mesh = Scene_NewEntry(this->mesh);
     Room* room = &this->room[this->numRoom++];
     

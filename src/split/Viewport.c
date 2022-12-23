@@ -292,7 +292,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     
     // Scene* scene = &editor->scene;
     
-    Element_Header(split, split->taskCombo, 98, &this->resetCam, 98);
+    Element_Header(split->taskCombo, 98, &this->resetCam, 98);
     Element_Combo(split->taskCombo);
     
     if (Element_Button(&this->resetCam)) {

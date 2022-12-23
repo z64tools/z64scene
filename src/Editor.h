@@ -2,6 +2,7 @@
 #define __EDITOR_H__
 
 #include <ext_lib.h>
+#include <ext_texel.h>
 #include <ext_interface.h>
 #include <ext_collision.h>
 #include "SkelAnime.h"

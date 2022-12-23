@@ -1,0 +1,23 @@
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "080904E4"
+    BEGIN
+      VALUE "CompanyName", "z64tools"
+      VALUE "FileDescription", "Zelda Scene Editor"
+      VALUE "FileVersion", "1.0"
+      VALUE "InternalName", "z64scene"
+      VALUE "LegalCopyright", "z64tools"
+      VALUE "OriginalFilename", "z64scene.exe"
+      VALUE "ProductName", "z64scene"
+      VALUE "ProductVersion", "1.0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x809, 1252
+  END
+END
