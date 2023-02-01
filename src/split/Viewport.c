@@ -267,8 +267,8 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
     View_Init(&this->view, &editor->input);
     
     if (gInstance++ == 0) {
-        gVOPAHead = Alloc(sizeof(Gfx) * 4096);
-        gVXLUHead = Alloc(sizeof(Gfx) * 4096);
+        gVOPAHead = new(Gfx[4096]);
+        gVXLUHead = new(Gfx[4096]);
     }
     
     Element_Name(&this->resetCam, "Reset Camera");
@@ -278,10 +278,8 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
 void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
     split->bg.useCustomPaint = false;
     
-    if (--gInstance == 0) {
-        Free(gVOPAHead);
-        Free(gVXLUHead);
-    }
+    if (--gInstance == 0)
+        vfree(gVOPAHead, gVXLUHead);
 }
 
 void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
@@ -296,7 +294,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     Element_Combo(split->taskCombo);
     
     if (Element_Button(&this->resetCam)) {
-        printf_info("Reset Camera");
+        info("Reset Camera");
         View_MoveTo(&this->view, Math_Vec3f_New(0, 0, 0));
         View_RotTo(&this->view, Math_Vec3s_New(0, 0, 0));
     }
@@ -327,10 +325,10 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
         s16 yMax = split->rect.y + split->rect.h;
         
         if (cursor->pos.x < xMin || cursor->pos.x > xMax)
-            Input_SetMousePos(&editor->input, WrapS(cursor->pos.x, xMin, xMax), MOUSE_KEEP_AXIS);
+            Input_SetMousePos(&editor->input, wrapi(cursor->pos.x, xMin, xMax), MOUSE_KEEP_AXIS);
         
         if (cursor->pos.y < yMin || cursor->pos.y > yMax)
-            Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, WrapS(cursor->pos.y, yMin, yMax));
+            Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, wrapi(cursor->pos.y, yMin, yMax));
     }
 }
 
@@ -358,7 +356,7 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
     
     nvgFontBlur(vg, 0.0f);
     if (dangerValue)
-        nvgFillColor(vg, nvgHSLA(SQ(Clamp(val / dangerValue, 0, 1)) * 0.5f + 0.5f, 0.6, 0.6, 225));
+        nvgFillColor(vg, nvgHSLA(SQ(clamp(val / dangerValue, 0, 1)) * 0.5f + 0.5f, 0.6, 0.6, 225));
     else
         nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
     nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, x_fmt(fmt, val), NULL);
@@ -370,7 +368,7 @@ static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
     
     View_Update(&this->view, &editor->input, split);
     
-    Block(bool, N64_CullingCallback, (void* userData, const n64_cullingCallbackData * vtx, u32 numVtx)) {
+    nested(bool, N64_CullingCallback, (void* userData, const n64_cullingCallbackData * vtx, u32 numVtx)) {
         View3D* view = userData;
         
         if (view->ortho)
@@ -432,16 +430,16 @@ static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) 
     
     Scene_Update(scene, &this->view);
     
-    Profiler_I(2);
+    profi_start(2);
     if (split->mouseInSplit) {
         Gizmo_Update(&scene->gizmo, &this->view, &editor->input, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
         Viewport_Actor_Update(editor, this, split);
     }
-    Profiler_O(2);
+    profi_stop(2);
     
-    Profiler_I(0);
+    profi_start(0);
     Scene_Draw(&editor->scene, &this->view);
-    Profiler_O(0);
+    profi_stop(0);
     
     Gizmo_Draw(&scene->gizmo, &this->view, &POLY_VOPA_DISP);
     
@@ -493,10 +491,10 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
     nvgFontSize(vg, 15);
     nvgTextLetterSpacing(vg, 0.0f);
     
-    ProfilerText(vg, 0, "FPS:", "%.0f", 1 / Profiler_Time(PROFILER_FPS), 0);
-    ProfilerText(vg, 1, "Total:", "%.2fms", Profiler_Time(0xF0) * 1000.0f, 16.0f);
-    ProfilerText(vg, 2, "Scene Draw:", "%.2fms", Profiler_Time(0) * 1000.f, 16.0f);
-    ProfilerText(vg, 3, "Gizmo Update:", "%.2fms", Profiler_Time(2) * 1000.f, 16.0f);
-    ProfilerText(vg, 4, "n64:", "%.2fms", Profiler_Time(8) * 1000.f, 16.0f);
+    ProfilerText(vg, 0, "FPS:", "%.0f", 1 / profi_get(PROFILER_FPS), 0);
+    ProfilerText(vg, 1, "Total:", "%.2fms", profi_get(0xF0) * 1000.0f, 16.0f);
+    ProfilerText(vg, 2, "Scene Draw:", "%.2fms", profi_get(0) * 1000.f, 16.0f);
+    ProfilerText(vg, 3, "Gizmo Update:", "%.2fms", profi_get(2) * 1000.f, 16.0f);
+    ProfilerText(vg, 4, "n64:", "%.2fms", profi_get(8) * 1000.f, 16.0f);
     ProfilerText(vg, 5, "Delta:", "%.2f", gDeltaTime, 0);
 }

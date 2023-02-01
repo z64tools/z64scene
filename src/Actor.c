@@ -58,7 +58,7 @@ void Actor_Focus(Scene* scene, Actor* this) {
 }
 
 void Actor_Select(Scene* scene, Actor* this) {
-    ArrMoveR(scene->prevActor, 0, 64);
+    arrmove_r(scene->prevActor, 0, 64);
     scene->prevActor[0] = this;
     this->state |= ACTOR_SELECTED;
 }
@@ -69,14 +69,14 @@ void Actor_Unselect(Scene* scene, Actor* this) {
     foreach(i, scene->prevActor) {
         if (scene->prevActor[i] == this) {
             scene->prevActor[i] = NULL;
-            ArrMoveL(scene->prevActor, i, 64 - i);
+            arrmove_l(scene->prevActor, i, 64 - i);
         }
     }
     
     if (scene->curActor == this) {
         scene->curActor = scene->prevActor[0];
         scene->prevActor[0] = NULL;
-        ArrMoveL(scene->prevActor, 0, 64);
+        arrmove_l(scene->prevActor, 0, 64);
     }
 }
 

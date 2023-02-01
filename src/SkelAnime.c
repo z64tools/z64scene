@@ -3,31 +3,31 @@
 
 static u32 gS;
 
-void SkelAnime_Init(MemFile* memFile, SkelAnime* this, u32 skeleton, u32 animation) {
+void SkelAnime_Init(Memfile* memFile, SkelAnime* this, u32 skeleton, u32 animation) {
     this->memFile = memFile;
     gSegment[6] = memFile->data;
     
-    Log("%08X", skeleton);
+    _log("%08X", skeleton);
     SkeletonHeader* skel = SEGMENTED_TO_VIRTUAL(skeleton);
     
-    Log("%08X", skel);
+    _log("%08X", skel);
     
     this->skeleton = skeleton;
     this->animation = animation;
     this->limbCount = skel->limbCount + 1;
-    this->jointTable = Calloc(this->limbCount * sizeof(Vec3s));
-    this->morphTable = Calloc(this->limbCount * sizeof(Vec3s));
+    this->jointTable = new(Vec3s[this->limbCount]);
+    this->morphTable = new(Vec3s[this->limbCount]);
     
-    printf_info_align("skeleton", "%08X", skeleton);
-    printf_info_align("jointTable", "%08X", this->jointTable);
-    printf_info_align("morphTable", "%08X", this->morphTable);
-    printf_info_align("animation", "%08X", animation);
-    printf_info_align("limbCount", "%08X", skel->limbCount + 1);
+    info_align("skeleton", "%08X", skeleton);
+    info_align("jointTable", "%08X", this->jointTable);
+    info_align("morphTable", "%08X", this->morphTable);
+    info_align("animation", "%08X", animation);
+    info_align("limbCount", "%08X", skel->limbCount + 1);
 }
 
 void SkelAnime_Free(SkelAnime* this) {
-    Free(this->jointTable);
-    Free(this->morphTable);
+    vfree(this->jointTable);
+    vfree(this->morphTable);
 }
 
 static void SkelAnime_GetFrameData(u32 animation, s32 frame, s32 limbCount, Vec3s* frameTable) {
@@ -103,7 +103,7 @@ void SkelAnime_Update(SkelAnime* this) {
     
     this->endFrame = animHeader.common.frameCount - 1;
     SkelAnime_GetFrameData(this->animation, floor(this->curFrame), this->limbCount, this->jointTable);
-    SkelAnime_GetFrameData(this->animation, WrapF(floor(this->curFrame) + 1, 0, this->endFrame), this->limbCount, this->morphTable);
+    SkelAnime_GetFrameData(this->animation, wrapf(floor(this->curFrame) + 1, 0, this->endFrame), this->limbCount, this->morphTable);
     
     SkelAnime_InterpFrameTable(
         this->limbCount,

@@ -3,18 +3,18 @@
 extern DataFile gFileIcon;
 
 void Main_Install(void) {
-    const char* appdata = Sys_ThisAppData();
+    const char* appdata = sys_appdata();
     
-    if (!Sys_Stat(appdata)) {
-        MemFile mem = MemFile_Initialize();
+    if (!sys_stat(appdata)) {
+        Memfile mem = Memfile_New();
         char reg[1024] = {};
         wchar wreg[1024] = {};
         
-        Sys_MakeDir("%s/", appdata);
-        MemFile_LoadMem(&mem, gFileIcon.data, gFileIcon.size);
-        MemFile_SaveFile(&mem, x_fmt("%s/file_icon.ico", appdata));
+        sys_mkdir("%s/", appdata);
+        Memfile_LoadMem(&mem, gFileIcon.data, gFileIcon.size);
+        Memfile_SaveBin(&mem, x_fmt("%s/file_icon.ico", appdata));
         
-        mem = MemFile_Initialize();
+        mem = Memfile_New();
         snprintf(reg, 1024,
             "Windows Registry Editor Version 5.00"      "\x0D\n"
             ""                                          "\x0D\n"
@@ -26,27 +26,27 @@ void Main_Install(void) {
             "%AppData%"
         );
         
-        StrU16(wreg, reg);
-        MemFile_Write(&mem, "\xFF\xFE", 2);
-        MemFile_Write(&mem, wreg, strwlen(wreg) * 2);
+        strto16(wreg, reg);
+        Memfile_Write(&mem, "\xFF\xFE", 2);
+        Memfile_Write(&mem, wreg, strwlen(wreg) * 2);
         
-        MemFile_SaveFile(&mem, x_fmt("%s/file_icon.reg", appdata));
-        MemFile_Free(&mem);
+        Memfile_SaveBin(&mem, x_fmt("%s/file_icon.reg", appdata));
+        Memfile_Free(&mem);
         
-        Terminal_Show();
-        printf_info("Setting file association. This will require admin privileges.");
-        printf_info("Press enter to continue.");
-        Terminal_GetChar();
+        cli_show();
+        info("Setting file association. This will require admin privileges.");
+        info("Press enter to continue.");
+        cli_getc();
         
         system(x_fmt("%s/file_icon.reg", appdata));
-        Terminal_Hide();
+        cli_hide();
     }
     
-    Free(appdata);
+    vfree(appdata);
 }
 
-int UnicodeMain(argc, argv) {
-    Editor* editor = Calloc(sizeof(*editor));
+int uni_main(argc, argv) {
+    Editor* editor = new(*editor);
     
     Main_Install();
     

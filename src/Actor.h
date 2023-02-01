@@ -11,8 +11,8 @@ struct Room;
 struct RoomHeader;
 
 typedef struct {
-    MemFile file;
-    void32  segment;
+    Memfile file;
+    u32  segment;
 } Object;
 
 typedef struct StructBE {

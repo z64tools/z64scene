@@ -67,7 +67,7 @@ static Gfx* Gfx_TwoTexScrollPrimColor(s32 tile1, u32 x1, u32 y1, s32 width1, s32
     return displayList;
 }
 
-static void32 D_8012A2F8[] = {
+static u32 D_8012A2F8[] = {
     0x0200BA18,
     0x0200CA18,
 };
@@ -118,11 +118,11 @@ static void Scene_DrawConfigYdanBoss(AnimOoT* this) {
     gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-static void32 gDCEntranceTextures[] = {
+static u32 gDCEntranceTextures[] = {
     0x02012378,
     0x02013378,
 };
-static void32 sDCLavaFloorTextures[] = {
+static u32 sDCLavaFloorTextures[] = {
     0x02011F78, 0x02014778, 0x02014378, 0x02013F78,
     0x02014B78, 0x02013B78, 0x02012F78, 0x02012B78,
 };
@@ -475,7 +475,7 @@ static void Scene_DrawConfigHakadan(AnimOoT* this) {
     gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-static void32 sThievesHideoutEntranceTextures[] = {
+static u32 sThievesHideoutEntranceTextures[] = {
     0x0200BD20,
     0x0200B920,
 };
@@ -490,7 +490,7 @@ static void Scene_DrawConfigGerudoway(AnimOoT* this) {
     );
 }
 
-static void32 D_8012A330[] = {
+static u32 D_8012A330[] = {
     0x02014C30,
     0x02015830,
 };
@@ -807,10 +807,6 @@ static void Scene_DrawConfigGanonCastleExterior(AnimOoT* this) {
     gDPSetEnvColor(POLY_OPA_DISP++, sp83, sp83, sp83, 128);
 }
 
-// Screen Shake for Ganon's Tower Collapse
-static void func_8009BEEC(AnimOoT* this) {
-}
-
 static void Scene_DrawConfigGanonFinal(AnimOoT* this) {
     s8 sp7B;
     
@@ -876,7 +872,7 @@ static void Scene_DrawConfigGanonFinal(AnimOoT* this) {
     gDPSetEnvColor(POLY_OPA_DISP++, sp7B, sp7B, sp7B, 128);
 }
 
-static void32 sIceCavernEntranceTextures[] = {
+static u32 sIceCavernEntranceTextures[] = {
     0x0200FAC0,
     0x0200F8C0,
 };
@@ -1044,7 +1040,7 @@ static void Scene_DrawConfigCalmWater(AnimOoT* this) {
     gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-static void32 sGTGEntranceTextures[] = {
+static u32 sGTGEntranceTextures[] = {
     0x0200F8C0,
     0x020100C0,
 };
@@ -1140,7 +1136,7 @@ static void Scene_DrawConfigBowling(AnimOoT* this) {
     gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-static void32 sLonLonHouseEntranceTextures[] = {
+static u32 sLonLonHouseEntranceTextures[] = {
     0x02005210,
     0x02005010,
 };
@@ -1159,11 +1155,11 @@ static void Scene_DrawConfigSouko(AnimOoT* this) {
     gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-static void32 sGuardHouseView2Textures[] = {
+static u32 sGuardHouseView2Textures[] = {
     0x02006550,
     0x02003550,
 };
-static void32 sGuardHouseView1Textures[] = {
+static u32 sGuardHouseView1Textures[] = {
     0x02002350,
     0x02001350,
 };
@@ -1205,7 +1201,7 @@ static void Scene_DrawConfigMahouya(AnimOoT* this) {
     gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-static void32 sForestTempleEntranceTextures[] = {
+static u32 sForestTempleEntranceTextures[] = {
     0x02014D90,
     0x02014590,
 };
@@ -1259,7 +1255,7 @@ static void Scene_DrawConfigBmori1(AnimOoT* this) {
     gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-static void32 sSpiritTempleEntranceTextures[] = {
+static u32 sSpiritTempleEntranceTextures[] = {
     0x02018920,
     0x02018020,
 };
@@ -1313,7 +1309,7 @@ static void Scene_DrawConfigSpot00(AnimOoT* this) {
     gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-static void32 sKakarikoWindowTextures[] = {
+static u32 sKakarikoWindowTextures[] = {
     0x02015B50,
     0x02016B50,
 };
@@ -1496,7 +1492,7 @@ static void Scene_DrawConfigSpot06(AnimOoT* this) {
     gDPSetEnvColor(POLY_OPA_DISP++, 255, 255, 255, 128);
 }
 
-static void32 sZorasDomainEntranceTextures[] = {
+static u32 sZorasDomainEntranceTextures[] = {
     0x02008F98,
     0x02008FD8,
 };
@@ -1702,7 +1698,7 @@ static void Scene_DrawConfigSpot11(AnimOoT* this) {
     gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-static void32 D_8012A380[] = {
+static u32 D_8012A380[] = {
     0x02009678,
     0x0200DE78,
 };
@@ -1799,7 +1795,7 @@ static void Scene_DrawConfigSpot17(AnimOoT* this) {
     gDPSetEnvColor(POLY_XLU_DISP++, 128, 128, 128, 128);
 }
 
-static void32 sGoronCityEntranceTextures[] = {
+static u32 sGoronCityEntranceTextures[] = {
     0x02009808,
     0x02008FC8,
 };
@@ -1835,7 +1831,7 @@ static void Scene_DrawConfigSpot18(AnimOoT* this) {
     );
 }
 
-static void32 sLonLonRanchWindowTextures[] = {
+static u32 sLonLonRanchWindowTextures[] = {
     0x020081E0,
     0x0200FBE0,
 };

@@ -57,7 +57,7 @@ typedef struct SkelAnime {
     Vec3s    prevTransl;
     Vec3s    baseTransl;
     f32      prevFrame;
-    MemFile* memFile;
+    Memfile* memFile;
 } SkelAnime;
 
 typedef enum {
@@ -65,7 +65,7 @@ typedef enum {
     SKELANIME_FLEX
 } SkelanimeType;
 
-void SkelAnime_Init(MemFile* memFile, SkelAnime* skelAnime, u32 skeleton, u32 animation);
+void SkelAnime_Init(Memfile* memFile, SkelAnime* skelAnime, u32 skeleton, u32 animation);
 void SkelAnime_Update(SkelAnime* skelAnime);
 void SkelAnime_Draw(SkelAnime* skelAnime, SkelanimeType type);
 void SkelAnime_Free(SkelAnime* this);

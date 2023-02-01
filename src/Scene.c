@@ -24,33 +24,33 @@ typedef struct StructBE {
 } SCmdBase;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     data1;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  data1;
+    /* 0x04 */ u32 segment;
 } SCmdSpawnList;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     num;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  num;
+    /* 0x04 */ u32 segment;
 } SCmdActorList;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     data1;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  data1;
+    /* 0x04 */ u32 segment;
 } SCmdUnused02;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     data1;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  data1;
+    /* 0x04 */ u32 segment;
 } SCmdColHeader;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     num;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  num;
+    /* 0x04 */ u32 segment;
 } SCmdRoomList;
 
 typedef struct StructBE {
@@ -64,9 +64,9 @@ typedef struct StructBE {
 } SCmdWindSettings;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     data1;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  data1;
+    /* 0x04 */ u32 segment;
 } SCmdEntranceList;
 
 typedef struct StructBE {
@@ -82,39 +82,39 @@ typedef struct StructBE {
 } SCmdRoomBehavior;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     data1;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  data1;
+    /* 0x04 */ u32 segment;
 } SCmdMesh;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     num;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  num;
+    /* 0x04 */ u32 segment;
 } SCmdObjectList;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     num;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  num;
+    /* 0x04 */ u32 segment;
 } SCmdLightList;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     data1;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  data1;
+    /* 0x04 */ u32 segment;
 } SCmdPathList;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     num;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  num;
+    /* 0x04 */ u32 segment;
 } SCmdTransiActorList;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     num;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  num;
+    /* 0x04 */ u32 segment;
 } SCmdLightSettingList;
 
 typedef struct StructBE {
@@ -150,9 +150,9 @@ typedef struct StructBE {
 } SCmdEndMarker;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     data1;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  data1;
+    /* 0x04 */ u32 segment;
 } SCmdExitList;
 
 typedef struct StructBE {
@@ -171,15 +171,15 @@ typedef struct StructBE {
 } SCmdEchoSettings;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     data1;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  data1;
+    /* 0x04 */ u32 segment;
 } SCmdCutsceneData;
 
 typedef struct StructBE {
-    /* 0x00 */ u8     code;
-    /* 0x01 */ u8     data1;
-    /* 0x04 */ void32 segment;
+    /* 0x00 */ u8  code;
+    /* 0x01 */ u8  data1;
+    /* 0x04 */ u32 segment;
 } SCmdAltHeaders;
 
 typedef struct StructBE {
@@ -194,14 +194,14 @@ typedef struct StructBE {
 
 typedef struct StructBE {
     MeshHeaderBase base;
-    u8     numEntries;
-    void32 dListStart;
-    void32 dListEnd;
+    u8  numEntries;
+    u32 dListStart;
+    u32 dListEnd;
 } MeshHeader0;
 
 typedef struct StructBE {
-    void32 opaqueDList;
-    void32 translucentDList;
+    u32 opaqueDList;
+    u32 translucentDList;
 } MeshEntry0;
 
 typedef struct StructBE {
@@ -212,49 +212,49 @@ typedef struct StructBE {
 
 typedef struct StructBE {
     MeshHeader1Base base;
-    void32 imagePtr;           // 0x08
-    u32    unknown;            // 0x0C
-    u32    unknown2;           // 0x10
-    u16    bgWidth;            // 0x14
-    u16    bgHeight;           // 0x16
-    u8     imageFormat;        // 0x18
-    u8     imageSize;          // 0x19
-    u16    imagePal;           // 0x1A
-    u16    imageFlip;          // 0x1C
+    u32 imagePtr;              // 0x08
+    u32 unknown;               // 0x0C
+    u32 unknown2;              // 0x10
+    u16 bgWidth;               // 0x14
+    u16 bgHeight;              // 0x16
+    u8  imageFormat;           // 0x18
+    u8  imageSize;             // 0x19
+    u16 imagePal;              // 0x1A
+    u16 imageFlip;             // 0x1C
 } MeshHeader1Single;
 
 typedef struct StructBE {
     MeshHeader1Base base;
-    u8     bgCnt;
-    void32 bgRecordPtr;
+    u8  bgCnt;
+    u32 bgRecordPtr;
 } MeshHeader1Multi;
 
 typedef struct StructBE {
-    u16    unknown;            // 0x00
-    s8     bgID;               // 0x02
-    void32 imagePtr; // 0x04
-    u32    unknown2;           // 0x08
-    u32    unknown3;           // 0x0C
-    u16    bgWidth;            // 0x10
-    u16    bgHeight;           // 0x12
-    u8     imageFmt;           // 0x14
-    u8     imageSize;          // 0x15
-    u16    imagePal;           // 0x16
-    u16    imageFlip;          // 0x18
+    u16 unknown;               // 0x00
+    s8  bgID;                  // 0x02
+    u32 imagePtr; // 0x04
+    u32 unknown2;              // 0x08
+    u32 unknown3;              // 0x0C
+    u16 bgWidth;               // 0x10
+    u16 bgHeight;              // 0x12
+    u8  imageFmt;              // 0x14
+    u8  imageSize;             // 0x15
+    u16 imagePal;              // 0x16
+    u16 imageFlip;             // 0x18
 } BackgroundRecord;
 
 typedef struct StructBE {
-    s16    playerXMax, playerZMax;
-    s16    playerXMin, playerZMin;
-    void32 opaqueDList;
-    void32 translucentDList;
+    s16 playerXMax, playerZMax;
+    s16 playerXMin, playerZMin;
+    u32 opaqueDList;
+    u32 translucentDList;
 } MeshEntry2;
 
 typedef struct StructBE {
     MeshHeaderBase base;
-    u8     numEntries;
-    void32 dListStart;
-    void32 dListEnd;
+    u8  numEntries;
+    u32 dListStart;
+    u32 dListEnd;
 } MeshHeader2;
 
 typedef struct StructBE {
@@ -269,8 +269,8 @@ typedef struct StructBE {
 } LightSettings; // size = 0x16
 
 typedef struct StructBE {
-    /* 0x00 */ u8     count; // number of points in the path
-    /* 0x04 */ void32 points; // Segment Address to the array of points
+    /* 0x00 */ u8  count;      // number of points in the path
+    /* 0x04 */ u32 points; // Segment Address to the array of points
 } PointPath; // size = 0x8
 
 typedef union StructBE {
@@ -333,8 +333,8 @@ typedef enum {
 } SceneCommandTypeID;
 
 typedef struct StructBE {
-    /* 0x00 */ void32 opa;
-    /* 0x04 */ void32 xlu;
+    /* 0x00 */ u32 opa;
+    /* 0x04 */ u32 xlu;
 } PolygonDlist; // size = 0x8
 
 typedef struct StructBE {
@@ -343,23 +343,23 @@ typedef struct StructBE {
 
 typedef struct StructBE {
     /* 0x00 */ PolygonBase base;
-    /* 0x01 */ u8     num; // number of dlist entries
-    /* 0x04 */ void32 start;
-    /* 0x08 */ void32 end;
+    /* 0x01 */ u8  num;        // number of dlist entries
+    /* 0x04 */ u32 start;
+    /* 0x08 */ u32 end;
 } PolygonType0; // size = 0xC
 
 typedef struct StructBE {
     /* 0x00 */ Vec3s_BE pos;
     /* 0x06 */ s16      unk_06;
-    /* 0x08 */ void32   opa;
-    /* 0x0C */ void32   xlu;
+    /* 0x08 */ u32      opa;
+    /* 0x0C */ u32      xlu;
 } PolygonDlist2; // size = 0x8
 
 typedef struct StructBE {
     /* 0x00 */ PolygonBase base;
-    /* 0x01 */ u8     num; // number of dlist entries
-    /* 0x04 */ void32 start;
-    /* 0x08 */ void32 end;
+    /* 0x01 */ u8  num;        // number of dlist entries
+    /* 0x04 */ u32 start;
+    /* 0x08 */ u32 end;
 } PolygonType2; // size = 0xC
 
 typedef union StructBE {
@@ -430,127 +430,127 @@ struct {
 
 void Scene_SaveProject(Scene* this, const char* file) {
     Toml toml = Toml_New();
-    MemFile mem = MemFile_Initialize();
-    ZipFile zip = {};
+    Memfile mem = Memfile_New();
+    Zip zip = {};
     
     for (var i = 0; i < this->numHeader; i++) {
-        Toml_SetValue(&toml, x_fmt("header[%d].navi_msg", i),
+        Toml_SetVar(&toml, x_fmt("header[%d].navi_msg", i),
             "%s",
             this->header[i].naviMsg == 1 ? "\"overworld\"" :
             this->header[i].naviMsg == 2 ? "\"dungeon\"" :
             "\"none\"");
-        Toml_SetValue(&toml, x_fmt("header[%d].keep_object", i),
+        Toml_SetVar(&toml, x_fmt("header[%d].keep_object", i),
             "0x%04X", this->header[i].keepObject);
         
-        Toml_SetValue(&toml, x_fmt("header[%d].scene_cam_type", i),
+        Toml_SetVar(&toml, x_fmt("header[%d].scene_cam_type", i),
             "%d", this->header[i].camType);
-        Toml_SetValue(&toml, x_fmt("header[%d].area", i),
+        Toml_SetVar(&toml, x_fmt("header[%d].area", i),
             "%d", this->header[i].area);
         
-        Toml_SetValue(&toml, x_fmt("header[%d].snd_spec_id", i),
+        Toml_SetVar(&toml, x_fmt("header[%d].snd_spec_id", i),
             "0x%02X", this->header[i].sound.specID);
-        Toml_SetValue(&toml, x_fmt("header[%d].snd_sfx_seq_id", i),
+        Toml_SetVar(&toml, x_fmt("header[%d].snd_sfx_seq_id", i),
             "0x%02X", this->header[i].sound.sfxID);
-        Toml_SetValue(&toml, x_fmt("header[%d].snd_bgm_seq_id", i),
+        Toml_SetVar(&toml, x_fmt("header[%d].snd_bgm_seq_id", i),
             "0x%02X", this->header[i].sound.bgmID);
         
         for (var j = 0; j < this->header[i].exitList.num; j++)
-            Toml_SetValue(&toml, x_fmt("header[%d].exit[%d]", i, j),
+            Toml_SetVar(&toml, x_fmt("header[%d].exit[%d]", i, j),
                 "0x%02X", this->header[i].exitList.exit[j]);
         
         for (var j = 0; j < this->header[i].envList.num; j++) {
             for (var x = 0; x < 3; x++) {
-                Toml_SetValue(&toml, x_fmt("header[%d].env_light.entry[%d].ambient[%d]", i, j, x),
+                Toml_SetVar(&toml, x_fmt("header[%d].env_light.entry[%d].ambient[%d]", i, j, x),
                     "%d", this->header[i].envList.entry[j].ambientColor[x]);
-                Toml_SetValue(&toml, x_fmt("header[%d].env_light.entry[%d].a_col[%d]", i, j, x),
+                Toml_SetVar(&toml, x_fmt("header[%d].env_light.entry[%d].a_col[%d]", i, j, x),
                     "%d", this->header[i].envList.entry[j].light1Color[x]);
-                Toml_SetValue(&toml, x_fmt("header[%d].env_light.entry[%d].a_dir[%d]", i, j, x),
+                Toml_SetVar(&toml, x_fmt("header[%d].env_light.entry[%d].a_dir[%d]", i, j, x),
                     "%d", this->header[i].envList.entry[j].light1Dir[x]);
-                Toml_SetValue(&toml, x_fmt("header[%d].env_light.entry[%d].b_col[%d]", i, j, x),
+                Toml_SetVar(&toml, x_fmt("header[%d].env_light.entry[%d].b_col[%d]", i, j, x),
                     "%d", this->header[i].envList.entry[j].light2Color[x]);
-                Toml_SetValue(&toml, x_fmt("header[%d].env_light.entry[%d].b_dir[%d]", i, j, x),
+                Toml_SetVar(&toml, x_fmt("header[%d].env_light.entry[%d].b_dir[%d]", i, j, x),
                     "%d", this->header[i].envList.entry[j].light2Dir[x]);
             }
         }
         
         for (var j = 0; j < this->header[i].spawnList.num; j++) {
-            Toml_SetValue(&toml, x_fmt("header[%d].spawn.entry[%d].room", i, j),
+            Toml_SetVar(&toml, x_fmt("header[%d].spawn.entry[%d].room", i, j),
                 "0x%04X", this->header[i].spawnList.entry[j].room);
-            Toml_SetValue(&toml, x_fmt("header[%d].spawn.entry[%d].id", i, j),
+            Toml_SetVar(&toml, x_fmt("header[%d].spawn.entry[%d].id", i, j),
                 "0x%04X", this->header[i].spawnList.entry[j].actor.id);
-            Toml_SetValue(&toml, x_fmt("header[%d].spawn.entry[%d].param", i, j),
+            Toml_SetVar(&toml, x_fmt("header[%d].spawn.entry[%d].param", i, j),
                 "0x%04X", this->header[i].spawnList.entry[j].actor.param);
             for (var x = 0; x < 3; x++)
-                Toml_SetValue(&toml, x_fmt("header[%d].spawn.entry[%d].pos[%d]", i, j, x),
+                Toml_SetVar(&toml, x_fmt("header[%d].spawn.entry[%d].pos[%d]", i, j, x),
                     "%d", (s32)this->header[i].spawnList.entry[j].actor.pos.axis[x]);
             for (var x = 0; x < 3; x++)
-                Toml_SetValue(&toml, x_fmt("header[%d].spawn.entry[%d].rot[%d]", i, j, x),
+                Toml_SetVar(&toml, x_fmt("header[%d].spawn.entry[%d].rot[%d]", i, j, x),
                     "%d", this->header[i].spawnList.entry[j].actor.rot.axis[x]);
         }
         
         for (var j = 0; j < this->numRoom; j++) {
             RoomHeader* room = &this->room[j].header[i];
             
-            Toml_SetValue(&toml, x_fmt("header[%d].room_%d.mesh", i, j),
+            Toml_SetVar(&toml, x_fmt("header[%d].room_%d.mesh", i, j),
                 "\"%s\"", room->mesh->name);
-            Toml_SetValue(&toml, x_fmt("header[%d].room_%d.behaviour", i, j),
+            Toml_SetVar(&toml, x_fmt("header[%d].room_%d.behaviour", i, j),
                 "%d", room->behaviour.behaviour);
-            Toml_SetValue(&toml, x_fmt("header[%d].room_%d.link_behaviour", i, j),
+            Toml_SetVar(&toml, x_fmt("header[%d].room_%d.link_behaviour", i, j),
                 "%d", room->behaviour.linkIdleAnim);
-            Toml_SetValue(&toml, x_fmt("header[%d].room_%d.lens_mode", i, j),
+            Toml_SetVar(&toml, x_fmt("header[%d].room_%d.lens_mode", i, j),
                 "%s", room->behaviour.lensMode ? "true" : "false");
-            Toml_SetValue(&toml, x_fmt("header[%d].room_%d.disable_warp_songs", i, j),
+            Toml_SetVar(&toml, x_fmt("header[%d].room_%d.disable_warp_songs", i, j),
                 "%s", room->behaviour.disableWarpSongs ? "true" : "false");
             
             if (room->wind.strength) {
                 for (var x = 0; x < 3; x++)
-                    Toml_SetValue(&toml, x_fmt("header[%d].room_%d.wind_axis[%d]", i, j, x),
+                    Toml_SetVar(&toml, x_fmt("header[%d].room_%d.wind_axis[%d]", i, j, x),
                         "%d", room->wind.dir.axis[x]);
-                Toml_SetValue(&toml, x_fmt("header[%d].room_%d.wind_strength", i, j),
+                Toml_SetVar(&toml, x_fmt("header[%d].room_%d.wind_strength", i, j),
                     "%d", room->wind.strength);
             }
             
             for (var k = 0; k < room->actorList.num; k++) {
-                Toml_SetValue(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].id", i, j, k),
+                Toml_SetVar(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].id", i, j, k),
                     "0x%04X", room->actorList.entry[k].id);
-                Toml_SetValue(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].param", i, j, k),
+                Toml_SetVar(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].param", i, j, k),
                     "0x%04X", room->actorList.entry[k].param);
                 for (var x = 0; x < 3; x++)
-                    Toml_SetValue(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].pos[%d]", i, j, k, x),
+                    Toml_SetVar(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].pos[%d]", i, j, k, x),
                         "%d", (s32)room->actorList.entry[k].pos.axis[x]);
                 for (var x = 0; x < 3; x++)
-                    Toml_SetValue(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].rot[%d]", i, j, k, x),
+                    Toml_SetVar(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].rot[%d]", i, j, k, x),
                         "%d", room->actorList.entry[k].rot.axis[x]);
             }
             
             for (var k = 0; k < room->objectList.num; k++) {
-                Toml_SetValue(&toml, x_fmt("header[%d].room_%d.object[%d]", i, j, k),
+                Toml_SetVar(&toml, x_fmt("header[%d].room_%d.object[%d]", i, j, k),
                     "0x%04X", room->objectList.entry[k]);
             }
         }
     }
     
-    Toml_ToMem(&toml, &mem);
+    Toml_Print(&toml, &mem, (void*)Memfile_Fmt);
     Toml_Free(&toml);
     
-    ZipFile_Load(&zip, "scene.zsp", ZIP_WRITE);
-    ZipFile_WriteEntry(&zip, &mem, "config.toml");
-    MemFile_Free(&mem);
+    Zip_Load(&zip, "scene.zsp", ZIP_WRITE);
+    Zip_Write(&zip, &mem, "config.toml");
+    Memfile_Free(&mem);
     
-    MemFile_LoadMem(&mem, this->segment, this->sizeSegment);
-    ZipFile_WriteEntry(&zip, &mem, "scene.zscene");
-    MemFile_Free(&mem);
+    Memfile_LoadMem(&mem, this->segment, this->sizeSegment);
+    Zip_Write(&zip, &mem, "scene.zscene");
+    Memfile_Free(&mem);
     
     for (var i = 0; i < this->mesh.num; i++) {
         RoomMesh* mesh = &this->mesh.entry[i];
         
-        MemFile_LoadMem(&mem, mesh->segment, mesh->sizeSegment);
-        ZipFile_WriteEntry(&zip, &mem, mesh->name);
+        Memfile_LoadMem(&mem, mesh->segment, mesh->sizeSegment);
+        Zip_Write(&zip, &mem, mesh->name);
         
-        MemFile_Free(&mem);
+        Memfile_Free(&mem);
     }
     
-    ZipFile_Free(&zip);
+    Zip_Free(&zip);
 }
 
 void Scene_WriteToml(Scene* this) {
@@ -571,17 +571,17 @@ static void Scene_ExecuteCommands(Scene* this, Room* room) {
         
         if (!room) {
             segment = gSegment[2];
-            Log("" PRNT_YELW "SCENE");
+            _log("" PRNT_YELW "SCENE");
         } else {
             segment = gSegment[3];
-            Log("" PRNT_BLUE "ROOM");
+            _log("" PRNT_BLUE "ROOM");
         }
         
         cmd = (void*)segment;
         this->curHeader = header;
         
         if (header > 0) {
-            Assert(cmd->base.code == SCENE_CMD_ID_ALTERNATE_HEADER_LIST);
+            _assert(cmd->base.code == SCENE_CMD_ID_ALTERNATE_HEADER_LIST);
             
             u32* headers = SEGMENTED_TO_VIRTUAL(cmd->altHeaders.segment);
             
@@ -593,13 +593,13 @@ static void Scene_ExecuteCommands(Scene* this, Room* room) {
         
         for (; cmd->base.code != SCENE_CMD_ID_END; cmd++) {
             if (cmd->base.code < SCENE_CMD_ID_MAX) {
-                Log("[%02X] %08X [%s]", cmd->base.code, (u8*)cmd - segment, sSceneCmds[cmd->base.code].name);
+                _log("[%02X] %08X [%s]", cmd->base.code, (u8*)cmd - segment, sSceneCmds[cmd->base.code].name);
                 
                 if (sSceneCmds[cmd->base.code].func)
                     sSceneCmds[cmd->base.code].func(this, &room->header[header], cmd);
                 
                 else if (cmd->base.code != SCENE_CMD_ID_ALTERNATE_HEADER_LIST)
-                    printf_warning("SceneCmd %02X", cmd->base.code);
+                    warn("SceneCmd %02X", cmd->base.code);
             }
         }
     }
@@ -615,10 +615,10 @@ static void Scene_SetHeaderNum(Scene* this) {
     
     this->numHeader = 1;
     
-    Block(void, ReadThrough, (SceneCmd * cmd)) {
-        BlockVar(headerOffset);
-        BlockVar(numCmdOffset);
-        BlockVar(cmdOffset);
+    nested(void, ReadThrough, (SceneCmd * cmd)) {
+        nested_var(headerOffset);
+        nested_var(numCmdOffset);
+        nested_var(cmdOffset);
         
         for (;; cmd++) {
             if (cmd->base.code == SCENE_CMD_ID_END)
@@ -633,14 +633,14 @@ static void Scene_SetHeaderNum(Scene* this) {
             switch ((u32)(cmd->base.data2 & 0xFFE00000)) {
                 case 0x02000000:
                 case 0x03000000:
-                    cmdOffset = Realloc(cmdOffset, sizeof(u32[numCmdOffset + 1]));
+                    cmdOffset = realloc(cmdOffset, sizeof(u32[numCmdOffset + 1]));
                     cmdOffset[numCmdOffset++] = cmd->base.data2;
                 default:
                     (void)0;
             }
         }
     };
-    Block(int, sort, (const void* void_a, const void* void_b)) {
+    nested(int, sort, (const void* void_a, const void* void_b)) {
         const u32* a = void_a;
         const u32* b = void_b;
         
@@ -650,25 +650,25 @@ static void Scene_SetHeaderNum(Scene* this) {
     ReadThrough(cmd);
     
     if (headerOffset == 0) {
-        Free(cmdOffset);
+        vfree(cmdOffset);
         return;
     }
     
-    Assert(cmdOffset != NULL);
+    _assert(cmdOffset != NULL);
     qsort(cmdOffset, numCmdOffset, sizeof(u32), (void*)sort);
     
     for (var i = 0; i < numCmdOffset; i++)
-        printf_info("%08X", cmdOffset[i]);
+        info("%08X", cmdOffset[i]);
     
     for (var i = 0; i < numCmdOffset; i++) {
         if (cmdOffset[i] > headerOffset) {
             this->numHeader = (cmdOffset[i] - headerOffset) / sizeof(u32);
-            printf_info("%d Headers", this->numHeader);
+            info("%d Headers", this->numHeader);
             
             break;
         }
     }
-    Free(cmdOffset);
+    vfree(cmdOffset);
 }
 
 static bool Scene_OnRoomChange(PropList* list, PropListChange type, s32 index) {
@@ -689,7 +689,7 @@ static bool Scene_OnRoomChange(PropList* list, PropListChange type, s32 index) {
 void Scene_Init(Scene* this) {
     
     // Init `Room` struct ID
-    for (var i = 0; i < ArrayCount(this->room); i++) {
+    for (var i = 0; i < ArrCount(this->room); i++) {
         u32* id = (u32*)&this->room[i];
         
         *id = i;
@@ -699,7 +699,7 @@ void Scene_Init(Scene* this) {
     PropList_SetOnChangeCallback(&this->ui.roomList, Scene_OnRoomChange, this, NULL);
 }
 
-static void* Scene_ExObj_GetHeader(MemFile* file) {
+static void* Scene_ExObj_GetHeader(Memfile* file) {
     u8* data = &file->cast.u8[file->size - 0x30];
     
     for (var i = 0; i < 0x20; i += 0x10)
@@ -710,24 +710,24 @@ static void* Scene_ExObj_GetHeader(MemFile* file) {
 }
 
 void Scene_LoadScene_ExObj(Scene* this, const char* file) {
-    MemFile mem = MemFile_Initialize();
+    Memfile mem = Memfile_New();
     
-    MemFile_LoadFile(&mem, file);
+    Memfile_LoadBin(&mem, file);
     
     this->segment = mem.data;
     this->sizeSegment = mem.size;
     
     mem.data = NULL;
-    MemFile_Free(&mem);
+    Memfile_Free(&mem);
 }
 
 void Scene_LoadRoom_ExObj(Scene* this, const char* file) {
-    MemFile mem = MemFile_Initialize();
+    Memfile mem = Memfile_New();
     
     // RoomMesh* mesh = Scene_NewEntry(this->mesh);
     // Room* room = &this->room[this->numRoom++];
     
-    MemFile_LoadFile(&mem, file);
+    Memfile_LoadBin(&mem, file);
     
     PointerCast data = { Scene_ExObj_GetHeader(&mem) };
     
@@ -744,29 +744,29 @@ void Scene_LoadRoom_ExObj(Scene* this, const char* file) {
             u16 _short;
         } mask;
         
-        SetSegment(0, mem.data);
+        SegmentSet(0, mem.data);
         
         data.u8 += strlen("z64convert");
         mask._short = ReadBE(data.u16[0]);
-        printf_warning("footer:%d names:%d skel:%d col:%d dl:%d", mask.footer, mask.names, mask.skel, mask.col, mask.dl);
-        printf_error("%04X", mask._short);
+        warn("footer:%d names:%d skel:%d col:%d dl:%d", mask.footer, mask.names, mask.skel, mask.col, mask.dl);
+        errr("%04X", mask._short);
     }
     
     this->segment = mem.data;
     this->sizeSegment = mem.size;
     
     mem.data = NULL;
-    MemFile_Free(&mem);
+    Memfile_Free(&mem);
 }
 
 void Scene_LoadScene(Scene* this, const char* file) {
-    MemFile mem = MemFile_Initialize();
+    Memfile mem = Memfile_New();
     
-    MemFile_LoadFile(&mem, file);
+    Memfile_LoadBin(&mem, file);
     this->segment = mem.data;
     this->sizeSegment = mem.size;
     mem.data = NULL;
-    MemFile_Free(&mem);
+    Memfile_Free(&mem);
     
     Scene_SetHeaderNum(this);
     Scene_ExecuteCommands(this, NULL);
@@ -775,11 +775,11 @@ void Scene_LoadScene(Scene* this, const char* file) {
 }
 
 void Scene_LoadRoom(Scene* this, const char* file) {
-    MemFile mem = MemFile_Initialize();
+    Memfile mem = Memfile_New();
     RoomMesh* mesh = Scene_NewEntry(this->mesh);
     Room* room = &this->room[this->numRoom++];
     
-    MemFile_LoadFile(&mem, file);
+    Memfile_LoadBin(&mem, file);
     
     mesh->sizeSegment = mem.size;
     mesh->segment = mem.data;
@@ -791,7 +791,7 @@ void Scene_LoadRoom(Scene* this, const char* file) {
     for (var i = 0; i < this->numHeader; i++)
         room->header[i].mesh = mesh;
     
-    MemFile_Free(&mem);
+    Memfile_Free(&mem);
     Scene_ExecuteCommands(this, room);
     
     PropList_Add(&this->ui.roomList, x_fmt("Room%02X", this->numRoom - 1));
@@ -806,13 +806,13 @@ void Scene_Free(Scene* this) {
         RoomMesh* mesh = &this->mesh.entry[i];
         
         TriBuffer_Free(&mesh->triBuf);
-        Free(mesh->segment);
-        Free(mesh->disp.opa);
-        Free(mesh->disp.xlu);
+        vfree(mesh->segment);
+        vfree(mesh->disp.opa);
+        vfree(mesh->disp.xlu);
     }
     
     CollisionMesh_Free(&this->colMesh);
-    Free(this->segment);
+    vfree(this->segment);
     PropList_Free(&this->ui.roomList);
     
     memset(this, 0, sizeof(*this));
@@ -828,7 +828,7 @@ static void Scene_Light(Scene* this) {
     u16 fogNear;
     u8 curEnv = this->curEnv;
     
-    Assert(env != NULL);
+    _assert(env != NULL);
     
     env += curEnv;
     memcpy(l1n, env->light1Dir, 3);
@@ -889,10 +889,10 @@ void Scene_Draw(Scene* this, View3D* view) {
     Scene_Light(this);
     
     if (animOoT->wait == false) {
-        Time_Start(TIME_SCENE_ANIM);
+        time_start(TIME_SCENE_ANIM);
         animOoT->wait = true;
     } else {
-        if (Time_Get(TIME_SCENE_ANIM) > 1.0f / 20.0f) {
+        if (time_get(TIME_SCENE_ANIM) > 1.0f / 20.0f) {
             animOoT->wait = false;
             animOoT->frame++;
         }
@@ -901,7 +901,7 @@ void Scene_Draw(Scene* this, View3D* view) {
     for (s32 i = 0; i < this->numRoom; i++) {
         RoomHeader* roomHdr = &this->room[i].header[this->curHeader];
         
-        Log("RoomHeader %d", i);
+        _log("RoomHeader %d", i);
         gSegment[2] = this->segment;
         gSPSegment(POLY_OPA_DISP++, 0x02, this->segment);
         gSPSegment(POLY_XLU_DISP++, 0x02, this->segment);
@@ -924,7 +924,7 @@ void Scene_Draw(Scene* this, View3D* view) {
 void Scene_CacheBuild(Scene* this) {
     MtxF mtx;
     
-    void N64_TriangleCallback (void* userData, const n64_triangleCallbackData* triData) {
+    nested(void, N64_TriangleCallback, (void* userData, const n64_triangleCallbackData * triData)) {
         RoomMesh* this = userData;
         Triangle* tri = &this->triBuf.head[this->triBuf.num];
         
@@ -958,10 +958,10 @@ void Scene_CacheBuild(Scene* this) {
         
         Room_Draw(mesh);
         
-        n64_set_triangleCallbackFunc(mesh, N64_TriangleCallback);
+        n64_set_triangleCallbackFunc(mesh, (void*)N64_TriangleCallback);
         n64_draw_buffers();
         
-        printf_info("RoomHeader TriCount: %d", mesh->triBuf.num);
+        info("RoomHeader TriCount: %d", mesh->triBuf.num);
         
         BoundBox box;
         f64 x = 0.0, y = 0.0, z = 0.0;
@@ -1096,13 +1096,13 @@ static void Scene_Cmd03_CollisionHeader(Scene* scene, RoomHeader* room, SceneCmd
     if (scene->colMesh.vtxBuf != NULL)
         return;
     
-    CollisionHeader* col = MemDup(SEGMENTED_TO_VIRTUAL(cmd->colHeader.segment), sizeof(CollisionHeader));
+    CollisionHeader* col = memdup(SEGMENTED_TO_VIRTUAL(cmd->colHeader.segment), sizeof(CollisionHeader));
     
     col->vtxList = SEGMENTED_TO_VIRTUAL(col->vtxList32);
     col->polyList = SEGMENTED_TO_VIRTUAL(col->polyList32);
     col->surfaceTypeList = SEGMENTED_TO_VIRTUAL(col->surfaceTypeList32);
     CollisionMesh_Generate(col, &scene->colMesh);
-    Free(col);
+    vfree(col);
 }
 
 static void Scene_Cmd04_RoomList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
@@ -1132,7 +1132,7 @@ static void Scene_Cmd06_EntranceList(Scene* scene, RoomHeader* room, SceneCmd* c
         while (ncmd->base.code != 0x00 && ncmd->base.code != 0x14)
             ncmd++;
         
-        Assert(ncmd->base.code != 0x14);
+        _assert(ncmd->base.code != 0x14);
         
         hdr->spawnList.num = ncmd->spawnList.data1;
     }
@@ -1161,10 +1161,10 @@ static void Scene_Cmd0A_MeshHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd
         PolygonType0* polygon = &header->polygon0;
         PolygonDlist* polygonDlist = SEGMENTED_TO_VIRTUAL(polygon->start);
         
-        mesh->disp.xlu = New(u32[polygon->num]);
-        mesh->disp.opa = New(u32[polygon->num]);
+        mesh->disp.xlu = new(u32[polygon->num]);
+        mesh->disp.opa = new(u32[polygon->num]);
         mesh->disp.num = polygon->num;
-        Assert(mesh->disp.xlu && mesh->disp.opa);
+        _assert(mesh->disp.xlu && mesh->disp.opa);
         
         for (s32 i = 0; i < polygon->num; i++, polygonDlist++) {
             mesh->disp.opa[i] = polygonDlist->opa;
@@ -1174,10 +1174,10 @@ static void Scene_Cmd0A_MeshHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd
         PolygonType2* polygon = &header->polygon2;
         PolygonDlist2* polygonDlist = SEGMENTED_TO_VIRTUAL(polygon->start);
         
-        mesh->disp.xlu = New(u32[polygon->num]);
-        mesh->disp.opa = New(u32[polygon->num]);
+        mesh->disp.xlu = new(u32[polygon->num]);
+        mesh->disp.opa = new(u32[polygon->num]);
         mesh->disp.num = polygon->num;
-        Assert(mesh->disp.xlu && mesh->disp.opa);
+        _assert(mesh->disp.xlu && mesh->disp.opa);
         
         for (s32 i = 0; i < polygon->num; i++, polygonDlist++) {
             mesh->disp.opa[i] = polygonDlist->opa;
@@ -1318,7 +1318,7 @@ static void Scene_Cmd11_Skybox(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     // if (room) {
     //     RoomHeader* header = &room->header[scene->curHeader];
     //
-    //     Assert(scene->curHeader < ArrayCount(room->header));
+    //     _assert(scene->curHeader < ArrCount(room->header));
     //
     //     // play->skyboxId = cmd->skyboxSettings.skyboxId;
     //     // play->envCtx.skyboxConfig = play->envCtx.changeSkyboxNextConfig = cmd->skyboxSettings.unk_05;

@@ -105,21 +105,21 @@ static void Gizmo_Move(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
     };
     
     if (ctrlHold && this->lock.state == GIZMO_AXIS_ALL_TRUE) {
-        Log("SnapTo");
+        _log("SnapTo");
         if (rayPos) {
             this->pos.x = rintf(rayPos->x);
             this->pos.y = rintf(rayPos->y);
             this->pos.z = rintf(rayPos->z);
         }
     } else {
-        Log("Other");
+        _log("Other");
         Vec2f gizmoScreenSpace = View_GetScreenPos(view, this->pos);
         Vec2f mv = Math_Vec2f_New(UnfoldVec2(input->cursor.vel));
         RayLine curRay = View_GetPointRayLine(view,  gizmoScreenSpace);
         RayLine nextRay = View_GetPointRayLine(view,  Math_Vec2f_Add(gizmoScreenSpace, mv));
         
         if (this->lock.state == GIZMO_AXIS_ALL_TRUE) {
-            Log("View Move");
+            _log("View Move");
             Vec3f nextRayN = Math_Vec3f_LineSegDir(nextRay.start, nextRay.end);
             f32 nextDist = Math_Vec3f_DistXYZ(nextRay.start, nextRay.end);
             f32 curDist = Math_Vec3f_DistXYZ(curRay.start, curRay.end);
@@ -128,7 +128,7 @@ static void Gizmo_Move(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
             
             this->pos = Math_Vec3f_Add(nextRay.start, Math_Vec3f_MulVal(nextRayN, pointDist * distRatio));
         } else {
-            Log("Axis Move");
+            _log("Axis Move");
             
             if (ctrlHold && rayPos) {
                 for (s32 i = 0; i < 3; i++) {
@@ -149,7 +149,7 @@ static void Gizmo_Move(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
         }
     }
     
-    Log("Apply Pos");
+    _log("Apply Pos");
     fornode(elem, this->elemHead) {
         Vec3f relPos = Math_Vec3f_Sub(this->pos, this->pivotPos);
         
@@ -158,7 +158,7 @@ static void Gizmo_Move(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
         for (var i  = 0; i < 3; i++)
             elem->pos.axis[i] = rint(elem->pos.axis[i]);
     }
-    Log("!");
+    _log("!");
 }
 
 static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
@@ -169,12 +169,12 @@ static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos)
     s32 new = yaw - this->pyaw;
     
     this->degr += BinToDeg(new);
-    this->degr = WrapF(this->degr, -180.f, 180.f);
+    this->degr = wrapf(this->degr, -180.f, 180.f);
     
     f32 dgr = this->degr;
     
     if (step)
-        dgr = RoundStepF(dgr, 15.0f);
+        dgr = roundstepf(dgr, 15.0f);
     
     if (this->lock.state == GIZMO_AXIS_ALL_TRUE) {
     }
@@ -344,7 +344,7 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
         }
     }
     
-    Log("Gizmo Update: %d", this->action);
+    _log("Gizmo Update: %d", this->action);
     if (gizmoActionFunc[this->action])
         gizmoActionFunc[this->action](this, view, input, rayPos);
     

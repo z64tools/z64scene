@@ -72,7 +72,7 @@ bin/linux/assets/%.o: assets/% $(DataFileCompiler)
 	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
 	@$(DataFileCompiler) --cc gcc --i $< --o $@
 
-$(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O) $(Zip_Linux_O) $(Texel_Linux_O) $(ASSETS_O_LINUX)
+$(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_O) $(Zip_Linux_O) $(Texel_Linux_O) $(ASSETS_O_LINUX) $(Image_Linux_O)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
 	@gcc -o $@ $^ $(XFLAGS) $(CFLAGS)
 
@@ -91,6 +91,6 @@ bin/win32/assets/%.o: assets/% $(DataFileCompiler)
 	@echo "$(PRNT_RSET)[$(PRNT_GREN)g$(ASSET_FILENAME)$(PRNT_RSET)]"
 	@$(DataFileCompiler) --cc i686-w64-mingw32.static-gcc --i $< --o $@
 
-$(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o bin/win32/info.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O) $(Zip_Win32_O) $(Texel_Win32_O) $(ASSETS_O_WIN32)
+$(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o bin/win32/info.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O) $(Zip_Win32_O) $(Texel_Win32_O) $(ASSETS_O_WIN32) $(Image_Win32_O)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
 	@i686-w64-mingw32.static-gcc -o $@ $^ $(XFLAGS) $(CFLAGS) -D_WIN32 -municode

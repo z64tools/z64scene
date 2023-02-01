@@ -16,7 +16,7 @@ extern DataFile gCursor_ArrowVertical;
 extern DataFile gCursor_Crosshair;
 extern DataFile gCursor_Empty;
 
-TexFile sTexelFile[5];
+Image sTexelFile[5];
 const DataFile* sIconData[5] = {
     &gAppIcon16,
     &gAppIcon32,
@@ -72,7 +72,7 @@ void Editor_Init(Editor* editor) {
     Theme_Init(0);
     GUI_INITIALIZE(editor, "z64scene", 980, 480, 4, Editor_Update, Editor_Draw, Editor_DropCallback);
     GeoGrid_Init(&editor->geo, &editor->app, editor);
-    GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrayCount(gTaskTable));
+    GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrCount(gTaskTable));
     
     Cursor_Init(&editor->cursor, &editor->app);
     Cursor_CreateCursor(CURSOR_ARROW_U, gCursor_ArrowUp.data, 24, 12, 12);
@@ -103,7 +103,7 @@ void Editor_Init(Editor* editor) {
     GeoGrid_AddSplit(&editor->geo, &size, TAB_ROOM);
     
     for (var i = 0; i < 5; i++) {
-        TexFile_LoadMem(&sTexelFile[i], sIconData[i]->data, sIconData[i]->size);
+        Image_LoadMem(&sTexelFile[i], sIconData[i]->data, sIconData[i]->size);
         sIconImage[i].pixels = sTexelFile[i].data;
     }
     
@@ -127,9 +127,9 @@ void Editor_Destroy(Editor* editor) {
     VectorGfx_Free(&gVecGfx_EyeOpen);
     
     for (var i = 0; i < 5; i++)
-        TexFile_Free(&sTexelFile[i]);
+        Image_Free(&sTexelFile[i]);
     
-    Free(editor);
+    vfree(editor);
 }
 
 void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
@@ -137,20 +137,17 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
     var hasRoom = false;
     var hasScene = false;
     var n = -1;
-    u32 s = 0;
-    ItemList roomList = ItemList_Initialize();
+    List roomList = List_New();
     
-    Time_Start(11);
+    time_start(11);
     
     for (var i = 0; i < count; i++) {
         char* file = item[i];
         
-        s += strlen(item[i]) + 1;
-        
-        if (StrEndCase(file, ".zroom") || StrEndCase(file, ".zmap"))
+        if (striend(file, ".zroom") || striend(file, ".zmap"))
             hasRoom = true;
         
-        if (StrEndCase(file, ".zscene")) {
+        if (striend(file, ".zscene")) {
             hasScene = true;
             n = i;
         }
@@ -159,57 +156,55 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
     if (!hasRoom || !hasScene)
         return;
     
-    printf_info("" PRNT_YELW "LOADING: " PRNT_BLUE "%s", item[n]);
+    info("" PRNT_YELW "LOADING: " PRNT_BLUE "%s", item[n]);
     if (editor->scene.segment)
         Scene_Free(&editor->scene);
-    Time_Start(10);
+    time_start(10);
     Scene_LoadScene(&editor->scene, item[n]);
-    printf_info("SceneLoad:  " PRNT_REDD "%.2fms", Time_Get(10) * 1000);
+    info("SceneLoad:  " PRNT_REDD "%.2fms", time_get(10) * 1000);
     
     if (editor->scene.segment) {
-        ItemList_Alloc(&roomList, count, s);
+        List_Alloc(&roomList, count);
         
         for (var i = 0; i < count; i++) {
             char* file = item[i];
             
-            if (StrEndCase(file, ".zroom") || StrEndCase(file, ".zmap"))
-                ItemList_AddItem(&roomList, file);
+            if (striend(file, ".zroom") || striend(file, ".zmap"))
+                List_Add(&roomList, file);
         }
         
-        ItemList_SortNatural(&roomList);
+        List_Sort(&roomList);
         
-        forlist(i, roomList) {
+        for (int i = 0; i < roomList.num; i++) {
             char* file = roomList.item[i];
             
-            Time_Start(10);
+            time_start(10);
             Scene_LoadRoom(&editor->scene, file);
-            printf_info("RoomLoad:   " PRNT_REDD "%.2fms" PRNT_RSET " [%s]", Time_Get(10) * 1000, file);
+            info("RoomLoad:   " PRNT_REDD "%.2fms" PRNT_RSET " [%s]", time_get(10) * 1000, file);
         }
         
-        ItemList_Free(&roomList);
+        List_Free(&roomList);
     }
     
-    Time_Start(10);
+    time_start(10);
     Scene_CacheBuild(&editor->scene);
-    printf_info("CacheBuild: " PRNT_REDD "%.2fms", Time_Get(10) * 1000);
+    info("CacheBuild: " PRNT_REDD "%.2fms", time_get(10) * 1000);
     
     editor->scene.animOoT.index = 0;
+    
     for (s32 i = 0; i < count; i++) {
-        if (StrEndCase(item[i], ".cfg")) {
-            MemFile cfg = MemFile_Initialize();
+        if (striend(item[i], ".toml")) {
+            Toml toml = Toml_New();
             
-            MemFile_LoadFile_String(&cfg, item[i]);
-            
-            if (Config_Variable(cfg.str, "scene_func_id"))
-                editor->scene.animOoT.index = Config_GetInt(&cfg, "scene_func_id");
-            
-            MemFile_Free(&cfg);
+            Toml_Load(&toml, item[i]);
+            editor->scene.animOoT.index = Toml_GetInt(&toml, "scene_func_id");
+            Toml_Free(&toml);
         }
     }
     
     if (editor->scene.animOoT.index)
-        printf_info("SceneAnim: %d", editor->scene.animOoT.index);
-    printf_info("Total: " PRNT_REDD "%.2fms", Time_Get(11) * 1000);
+        info("SceneAnim: %d", editor->scene.animOoT.index);
+    info("Total: " PRNT_REDD "%.2fms", time_get(11) * 1000);
 }
 
 void Editor_Update(Editor* editor) {
@@ -218,8 +213,8 @@ void Editor_Update(Editor* editor) {
     
     GeoGrid_Update(&editor->geo);
     Cursor_Update(&editor->cursor);
-    Profiler_O(PROFILER_FPS);
-    Profiler_I(PROFILER_FPS);
+    profi_stop(PROFILER_FPS);
+    profi_start(PROFILER_FPS);
 }
 
 void Editor_Draw(Editor* editor) {

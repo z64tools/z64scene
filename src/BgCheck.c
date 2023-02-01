@@ -16,32 +16,32 @@ void CollisionMesh_Generate(CollisionHeader* colHeader, CollisionMesh* mesh) {
     s32 u;
     s32 l = 0;
     
-    Log("%d", l++);
+    _log("%d", l++);
     vBufCount = numPolygons * 3;
     mesh->vtxBuf = malloc(sizeof(*mesh->vtxBuf) * vBufCount);
     memset(mesh->vtxBuf, -1, sizeof(*mesh->vtxBuf) * vBufCount);
     
-    Log("%d", l++);
+    _log("%d", l++);
     for (i = k = 0; i < numPolygons; ++i) {
         CollisionPoly poly = colHeader->polyList[i];
         for (u = 0; u < 3; ++u, ++k)
             memcpy(&mesh->vtxBuf[k].pos, &vtxList[poly.vtxData[u] & 0x1fff], sizeof(*vtxList));
     }
     
-    Log("%d", l++);
+    _log("%d", l++);
     // Allocate triangle list
     // TODO unoptimized; 2 opcodes per triangle for now + a DF at the end
     mesh->tri = malloc(sizeof(*mesh->tri) * (2 * (numPolygons + 1)));
     g = mesh->tri;
     
-    Log("%d", l++);
+    _log("%d", l++);
     for (i = 0; i < numPolygons; ++i) {
         u32 vaddr = 0x06000000 | (i * 16 * 3);
         gSPVertex(g++, vaddr, 3, 0);
         gSP1Triangle(g++, 0, 1, 2, 0);
     }
     
-    Log("%d", l++);
+    _log("%d", l++);
     gSPEndDisplayList(g++);
     
     // output test zobj
@@ -87,8 +87,8 @@ void CollisionMesh_Generate(CollisionHeader* colHeader, CollisionMesh* mesh) {
 }
 
 void CollisionMesh_Free(CollisionMesh* mesh) {
-    Free(mesh->vtxBuf);
-    Free(mesh->tri);
+    vfree(mesh->vtxBuf);
+    vfree(mesh->tri);
     memset(mesh, 0, sizeof(*mesh));
 }
 

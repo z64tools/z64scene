@@ -34,13 +34,13 @@ typedef struct StructBE {
     Vec3s_BE minBounds;
     Vec3s_BE maxBounds;
     u16      numVertices;
-    void32   vtxList32;
+    u32   vtxList32;
     u16      numPolygons;
-    void32   polyList32;
-    void32   surfaceTypeList32;
-    void32   bgCamList32;
+    u32   polyList32;
+    u32   surfaceTypeList32;
+    u32   bgCamList32;
     u16      numWaterBoxes;
-    void32   waterBoxe32s;
+    u32   waterBoxe32s;
     
     Vec3s_BE*      vtxList;
     CollisionPoly* polyList;

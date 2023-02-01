@@ -19,7 +19,7 @@ bool PropListCallback(PropList* prop, PropListChange action, s32 id) {
     SceneHeader* header = Scene_GetSceneHeader(scene);
     static EnvLightSettings copybuf;
     
-    Block(void, AddDefaultLight, (s32 id)) {
+    nested(void, AddDefaultLight, (s32 id)) {
         header->envList.entry[id].ambientColor[0] = 0x40;
         header->envList.entry[id].ambientColor[1] = 0x40;
         header->envList.entry[id].ambientColor[2] = 0x40;
@@ -55,14 +55,14 @@ bool PropListCallback(PropList* prop, PropListChange action, s32 id) {
             copybuf = header->envList.entry[prop->copyKey];
             AddDefaultLight(header->envList.num);
             header->envList.num++;
-            ArrMoveR(header->envList.entry, id, header->envList.num - id);
+            arrmove_r(header->envList.entry, id, header->envList.num - id);
             
             if (prop->copy)
                 header->envList.entry[id] = copybuf;
             break;
             
         case PROP_REMOVE:
-            ArrMoveL(header->envList.entry, id, header->envList.num - id);
+            arrmove_l(header->envList.entry, id, header->envList.num - id);
             header->envList.num--;
             break;
             
@@ -70,12 +70,12 @@ bool PropListCallback(PropList* prop, PropListChange action, s32 id) {
             break;
             
         case PROP_RETACH:
-            ArrMoveL(header->envList.entry, prop->detachKey, header->envList.num - prop->detachKey);
-            ArrMoveR(header->envList.entry, id, header->envList.num - id);
+            arrmove_l(header->envList.entry, prop->detachKey, header->envList.num - prop->detachKey);
+            arrmove_r(header->envList.entry, id, header->envList.num - id);
             break;
             
         case PROP_DESTROY_DETACH:
-            ArrMoveL(header->envList.entry, prop->detachKey, header->envList.num - prop->detachKey);
+            arrmove_l(header->envList.entry, prop->detachKey, header->envList.num - prop->detachKey);
             header->envList.num--;
             break;
     }
@@ -124,18 +124,18 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
     EnvLightSettings* envSettings = &sceneHeader->envList.entry[scene->curEnv];
     
-    Log("Settings");
+    _log("Settings");
     Element_Header(split->taskCombo, 92);
     Element_Combo(split->taskCombo);
     
     Element_RowY(SPLIT_ELEM_X_PADDING * 2);
     
-    Log("Do Conditions");
+    _log("Do Conditions");
     Element_Condition(&this->buttonIndoor, scene->segment != NULL);
     Element_Condition(&this->killScene, scene->segment != NULL);
     Element_Condition(&this->cont, this->cont.prop != NULL);
     
-    Log("Colors");
+    _log("Colors");
     if (editor->scene.segment) {
         
         Element_Color_SetColor(&this->envAmbient, envSettings->ambientColor);
@@ -152,11 +152,11 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Element_Color_SetColor(&this->envFogColor, NULL);
     }
     
-    Log("Set Prop List");
+    _log("Set Prop List");
     Element_Container_SetPropList(&this->cont, &sceneHeader->envList.prop, 6);
     PropList_SetOnChangeCallback(&sceneHeader->envList.prop, PropListCallback, scene, 0);
     
-    Log("EnvBox");
+    _log("EnvBox");
     Element_Box(BOX_START); {
         Element_Row(&this->cont, 1.0f);
         scene->curEnv = Element_Container(&this->cont);
@@ -195,7 +195,7 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Element_Box(BOX_END);
     } Element_Box(BOX_END);
     
-    Log("Buttons");
+    _log("Buttons");
     Element_Box(BOX_START); {
         Element_Row(Element_Text("Render"), 1.0);
         Element_Row( &this->buttonFPS, 0.5, &this->buttonCulling, 0.5);
@@ -214,7 +214,7 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Scene_SetState(scene, SCENE_DRAW_COLLISION, Element_Button(&this->buttonColView));
     } Element_Box(BOX_END);
     
-    Log("Kill!");
+    _log("Kill!");
     Element_Row(&this->killScene, 1.0);
     if (Element_Button(&this->killScene)) {
         Scene_Kill(&editor->scene);
