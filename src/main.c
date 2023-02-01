@@ -41,8 +41,6 @@ void Main_Install(void) {
         system(x_fmt("%s/file_icon.reg", appdata));
         cli_hide();
     }
-    
-    vfree(appdata);
 }
 
 int uni_main(argc, argv) {
