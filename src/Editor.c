@@ -125,6 +125,7 @@ void Editor_Init(Editor* editor) {
 void Editor_Destroy(Editor* editor) {
     GeoGrid_Destroy(&editor->geo);
     VectorGfx_Free(&gVecGfx_EyeOpen);
+    Cursor_Free(&editor->cursor);
     
     for (var i = 0; i < 5; i++)
         Image_Free(&sTexelFile[i]);
