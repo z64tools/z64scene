@@ -7,7 +7,7 @@
 #include "RoomList.h"
 
 static void update_nothing(Editor* e, void* instance, Split* split) {
-    Element_Header(split, split->taskCombo, 128);
+    Element_Header(split->taskCombo, 128);
     Element_Combo(split->taskCombo);
 }
 

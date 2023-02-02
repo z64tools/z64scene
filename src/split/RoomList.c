@@ -16,6 +16,8 @@ SplitTask gRoomListTask = {
 
 void RoomList_Init(Editor* editor, RoomList* this, Split* split) {
     Element_Container_SetPropList(&this->list, &editor->scene.ui.roomList, 32);
+    
+    this->list.showIndex = true;
 }
 
 void RoomList_Destroy(Editor* editor, RoomList* this, Split* split) {

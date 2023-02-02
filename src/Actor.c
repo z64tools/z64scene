@@ -26,7 +26,7 @@ void Actor_Draw(Actor* this, View3D* view) {
             Matrix_RotateZ_s(rot.z, MTXMODE_APPLY);
             
             if (this->state & ACTOR_SELECTED)
-                gXPMode(POLY_OPA_DISP++, 0, GX_STENCILWRITE);
+                gXPModeSet(POLY_OPA_DISP++, GX_MODE_STENCILWRITE);
             
             gSPSegment(POLY_OPA_DISP++, 6, (void*)gCube.data);
             
@@ -43,7 +43,7 @@ void Actor_Draw(Actor* this, View3D* view) {
                 gSPDisplayList(POLY_OPA_DISP++, gCubeLodDL);
             
             if (this->state & ACTOR_SELECTED)
-                gXPMode(POLY_OPA_DISP++, GX_STENCILWRITE, 0);
+                gXPModeClear(POLY_OPA_DISP++, GX_MODE_STENCILWRITE);
         } Matrix_Pop();
     } Matrix_Pop();
 }

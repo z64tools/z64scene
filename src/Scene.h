@@ -153,6 +153,7 @@ typedef struct Scene {
     struct {
         ElCombo  roomCombo;
         PropList roomList;
+        f32      glowFactor;
     } ui;
     
     u8 numHeader;

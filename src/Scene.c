@@ -677,6 +677,7 @@ static bool Scene_OnRoomChange(PropList* list, PropListChange type, s32 index) {
     switch (type) {
         case PROP_SET:
             this->curRoom = index;
+            this->ui.glowFactor = 0.25f;
             
             break;
         case PROP_GET:
@@ -915,9 +916,22 @@ void Scene_Draw(Scene* this, View3D* view) {
         if (sSceneDrawConfigs[this->animOoT.index])
             sSceneDrawConfigs[this->animOoT.index](&this->animOoT);
         
+        if (i == this->curRoom && this->ui.glowFactor > EPSILON) {
+            gXPSetHighlightColor(POLY_OPA_DISP++, 3, 252, 240, (u8)(0xFF * this->ui.glowFactor), ADD);
+            gXPSetHighlightColor(POLY_XLU_DISP++, 3, 252, 240, (u8)(0xFF * this->ui.glowFactor), ADD);
+        }
+        
         Room_Draw(roomHdr->mesh);
+        
+        if (i == this->curRoom && this->ui.glowFactor > EPSILON) {
+            gXPClearHighlightColor(POLY_OPA_DISP++);
+            gXPClearHighlightColor(POLY_XLU_DISP++);
+            Math_SmoothStepToF(&this->ui.glowFactor, 0.0f, 0.125f, 0.008f, 0.001f);
+        }
+        
         if (i == this->curRoom)
             Actor_Draw_RoomHeader(roomHdr, view);
+        
         n64_draw_buffers();
     }
     
