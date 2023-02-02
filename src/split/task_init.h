@@ -6,11 +6,7 @@
 #include "Viewport.h"
 #include "RoomList.h"
 
-static void nothing() {
-}
-
-static void draw_nothing(Editor* e, void* instance, Split* split) {
-    _log("empty");
+static void update_nothing(Editor* e, void* instance, Split* split) {
     Element_Header(split, split->taskCombo, 128);
     Element_Combo(split->taskCombo);
 }
@@ -25,10 +21,10 @@ typedef enum {
 
 SplitTask empty = {
     .taskName = "Empty",
-    .init     = nothing,
-    .destroy  = nothing,
-    .update   = nothing,
-    .draw     = (void*)draw_nothing,
+    .init     = NULL,
+    .destroy  = NULL,
+    .update   = (void*)update_nothing,
+    .draw     = NULL,
     .size     = 10
 };
 

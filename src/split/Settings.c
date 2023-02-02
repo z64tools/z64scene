@@ -125,18 +125,15 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
     EnvLightSettings* envSettings = &sceneHeader->envList.entry[scene->curEnv];
     
-    _log("Settings");
     Element_Header(split->taskCombo, 92);
     Element_Combo(split->taskCombo);
     
     Element_RowY(SPLIT_ELEM_X_PADDING * 2);
     
-    _log("Do Conditions");
     Element_Condition(&this->buttonIndoor, scene->segment != NULL);
     Element_Condition(&this->killScene, scene->segment != NULL);
     Element_Condition(&this->cont, this->cont.prop != NULL);
     
-    _log("Colors");
     if (editor->scene.segment) {
         
         Element_Color_SetColor(&this->envAmbient, envSettings->ambientColor);
@@ -153,11 +150,9 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Element_Color_SetColor(&this->envFogColor, NULL);
     }
     
-    _log("Set Prop List");
     Element_Container_SetPropList(&this->cont, &sceneHeader->envList.prop, 6);
     PropList_SetOnChangeCallback(&sceneHeader->envList.prop, PropListCallback, scene, 0);
     
-    _log("EnvBox");
     Element_Box(BOX_START); {
         Element_Row(&this->cont, 1.0f);
         scene->curEnv = Element_Container(&this->cont);
@@ -196,7 +191,6 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Element_Box(BOX_END);
     } Element_Box(BOX_END);
     
-    _log("Buttons");
     Element_Box(BOX_START); {
         Element_Row(Element_Text("Render"), 1.0);
         Element_Row( &this->buttonFPS, 0.5, &this->buttonCulling, 0.5);
@@ -215,7 +209,6 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Scene_SetState(scene, SCENE_DRAW_COLLISION, Element_Button(&this->buttonColView));
     } Element_Box(BOX_END);
     
-    _log("Kill!");
     Element_Row(&this->killScene, 1.0);
     if (Element_Button(&this->killScene)) {
         Scene_Kill(&editor->scene);
