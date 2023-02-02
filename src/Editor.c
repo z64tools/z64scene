@@ -113,7 +113,7 @@ void Editor_Init(Editor* editor) {
     Scene_Init(&editor->scene);
     Editor_InitIcons(editor);
     
-#if 1
+#if 0
     static FileDialog loadFile;
     // static FileDialog saveFile;
     
