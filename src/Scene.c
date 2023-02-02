@@ -783,7 +783,7 @@ void Scene_LoadRoom(Scene* this, const char* file) {
     
     mesh->sizeSegment = mem.size;
     mesh->segment = mem.data;
-    mesh->name = strdup(x_filename(file));
+    mesh->name = filename(file);
     
     room->segment = mem.data;
     mem.data = NULL;
@@ -793,6 +793,8 @@ void Scene_LoadRoom(Scene* this, const char* file) {
     
     Memfile_Free(&mem);
     Scene_ExecuteCommands(this, room);
+    
+    *((u32*)&room->id) = this->numRoom - 1;
     
     PropList_Add(&this->ui.roomList, x_fmt("Room%02X", this->numRoom - 1));
 }

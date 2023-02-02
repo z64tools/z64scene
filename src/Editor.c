@@ -62,7 +62,7 @@ static void Editor_UpperHeader(void* pass, void* empty, Split* split) {
     Editor* this = pass;
     Scene* scene = &this->scene;
     
-    Element_Header(split, &scene->ui.roomCombo, 98);
+    Element_Header(&scene->ui.roomCombo, 98);
     Element_Combo(&this->scene.ui.roomCombo);
 }
 
@@ -198,7 +198,7 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
             Toml toml = Toml_New();
             
             Toml_Load(&toml, item[i]);
-            editor->scene.animOoT.index = Toml_GetInt(&toml, "scene_func_id");
+            editor->scene.animOoT.index = Toml_GetInt(&toml, "draw_func_index");
             Toml_Free(&toml);
         }
     }

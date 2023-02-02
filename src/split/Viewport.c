@@ -103,14 +103,22 @@ static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split)
             
             if (r)
                 View_MoveTo(&this->view, o);
+            
         }
         
         if (Input_GetMouse(input, CLICK_L)->dual) {
             RayLine ray = View_GetCursorRayLine(&this->view);
             Room* room = Scene_RaycastRoom(&editor->scene, &ray, NULL);
             
-            if (room)
+            if (room) {
+                RoomHeader* hdrroom = &room->header[scene->curHeader];
                 Scene_SetRoom(&editor->scene, room->id);
+                s16 yaw = Math_Vec3f_Yaw(this->view.currentCamera->eye, hdrroom->mesh->center);
+                
+                View_MoveTo(&this->view, hdrroom->mesh->center);
+                View_ZoomTo(&this->view, hdrroom->mesh->size);
+                View_RotTo(&this->view, Math_Vec3s_New(DegToBin(45), yaw, 0));
+            }
         }
     }
 }
@@ -288,8 +296,6 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     Scene* scene = &editor->scene;
     Gizmo* gizmo = &scene->gizmo;
     
-    // Scene* scene = &editor->scene;
-    
     Element_Header(split->taskCombo, 98, &this->resetCam, 98);
     Element_Combo(split->taskCombo);
     
@@ -390,7 +396,7 @@ static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
     n64_set_cullingCallbackFunc(&this->view, (void*)N64_CullingCallback);
 }
 
-static void Viewport_DrawInfo(Editor* editor, Viewport* this, Split* split) {
+static void Viewport_Draw2D(Editor* editor, Viewport* this, Split* split) {
     const char* txt = "z64scene";
     void* vg = editor->vg;
     
@@ -420,7 +426,7 @@ static void Viewport_DrawInfo(Editor* editor, Viewport* this, Split* split) {
     );
 }
 
-static void Viewport_DrawViewport(Editor* editor, Viewport* this, Split* split) {
+static void Viewport_Draw3D(Editor* editor, Viewport* this, Split* split) {
     Scene* scene = &editor->scene;
     
     Viewport_InitDraw(editor, this, split);
@@ -483,9 +489,9 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
     void* vg = editor->vg;
     
     if (editor->scene.segment == NULL)
-        Viewport_DrawInfo(editor, this, split);
+        Viewport_Draw2D(editor, this, split);
     else
-        Viewport_DrawViewport(editor, this, split);
+        Viewport_Draw3D(editor, this, split);
     
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
     nvgFontSize(vg, 15);
