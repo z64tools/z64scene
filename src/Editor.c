@@ -97,10 +97,19 @@ void Editor_Init(Editor* editor) {
         size.w,
         editor->geo.workRect.y,
         editor->geo.workRect.w - size.w,
-        editor->geo.workRect.h
+        editor->geo.workRect.h * 0.35
     };
     
-    GeoGrid_AddSplit(&editor->geo, &size, TAB_ROOM);
+    GeoGrid_AddSplit(&editor->geo, &size, TAB_ROOMLIST);
+    
+    size = (Rectf32) {
+        size.x,
+        editor->geo.workRect.y + size.h,
+        size.w,
+        editor->geo.workRect.h - size.h
+    };
+    
+    GeoGrid_AddSplit(&editor->geo, &size, TAB_SETTINGS);
     
     for (var i = 0; i < 5; i++) {
         Image_LoadMem(&sTexelFile[i], sIconData[i]->data, sIconData[i]->size);

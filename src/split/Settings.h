@@ -1,5 +1,5 @@
-#ifndef __EN_ROOM__
-#define __EN_ROOM__
+#ifndef SETTINGS_H
+#define SETTINGS_H
 
 #include <Editor.h>
 
@@ -14,10 +14,10 @@ typedef struct {
     
     ElButton killScene;
     
-    ElColor  envAmbient;
-    ElColor  envFogColor;
-    ElColor  envColA;
-    ElColor  envColB;
+    ElColor envAmbient;
+    ElColor envFogColor;
+    ElColor envColA;
+    ElColor envColB;
     
     ElSlider fogNear;
     ElSlider fogFar;

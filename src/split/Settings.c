@@ -114,6 +114,7 @@ void Settings_Init(Editor* editor, Settings* this, Split* split) {
     Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
     
     Element_Container_SetPropList(&this->cont, NULL, 6);
+    this->cont.drag = true;
 }
 
 void Settings_Destroy(Editor* editor, Settings* this, Split* split) {

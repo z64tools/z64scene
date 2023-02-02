@@ -1,5 +1,5 @@
-#ifndef __EN_3D_VIEWPORT__
-#define __EN_3D_VIEWPORT__
+#ifndef VIEWPORT_TASK_H
+#define VIEWPORT_TASK_H
 
 #include <Editor.h>
 #include <Gizmo.h>

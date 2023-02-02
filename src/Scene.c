@@ -808,9 +808,13 @@ void Scene_Free(Scene* this) {
         RoomMesh* mesh = &this->mesh.entry[i];
         
         TriBuffer_Free(&mesh->triBuf);
-        vfree(mesh->segment);
-        vfree(mesh->disp.opa);
-        vfree(mesh->disp.xlu);
+        vfree(mesh->segment, mesh->disp.opa, mesh->disp.xlu, mesh->name);
+    }
+    
+    for (var i = 0; i < this->numHeader; i++) {
+        SceneHeader* hdr = &this->header[i];
+        
+        PropList_Free(&hdr->envList.prop);
     }
     
     CollisionMesh_Free(&this->colMesh);
