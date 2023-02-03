@@ -25,17 +25,17 @@ void Actor_Draw(Actor* this, View3D* view) {
             Matrix_RotateX_s(rot.x, MTXMODE_APPLY);
             Matrix_RotateZ_s(rot.z, MTXMODE_APPLY);
             
-            if (this->state & ACTOR_SELECTED)
-                gXPModeSet(POLY_OPA_DISP++, GX_MODE_STENCILWRITE);
-            
             gSPSegment(POLY_OPA_DISP++, 6, (void*)gCube.data);
-            
-            if (this->state & ACTOR_SELECTED)
-                gDPSetEnvColor(POLY_OPA_DISP++, 0x50, 0xB0, 0xFF, 0xFF);
-            else
-                gDPSetEnvColor(POLY_OPA_DISP++, 0xC0, 0xC0, 0xC0, 0xFF);
+            gDPSetEnvColor(POLY_OPA_DISP++, 0x60, 0x60, 0x60, 0xFF);
             
             gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+            
+            if (this->state & ACTOR_SELECTED) {
+                if (this->gizmo.focus)
+                    gXPSetHighlightColor(POLY_OPA_DISP++, 3, 252, 240, 0x80, DODGE);
+                else
+                    gXPSetHighlightColor(POLY_OPA_DISP++, 3, 252, 240, 0x40, DODGE);
+            }
             
             if (Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) < 500.0f)
                 gSPDisplayList(POLY_OPA_DISP++, gCubeDL);
@@ -43,7 +43,20 @@ void Actor_Draw(Actor* this, View3D* view) {
                 gSPDisplayList(POLY_OPA_DISP++, gCubeLodDL);
             
             if (this->state & ACTOR_SELECTED)
+                gXPClearHighlightColor(POLY_OPA_DISP++);
+            
+#if 0
+            if (this->state & ACTOR_SELECTED) {
+                gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+                
+                gXPModeSet(POLY_OPA_DISP++, GX_MODE_STENCILWRITE);
+                if (Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) < 500.0f)
+                    gSPDisplayList(POLY_OPA_DISP++, gCubeDL);
+                else
+                    gSPDisplayList(POLY_OPA_DISP++, gCubeLodDL);
                 gXPModeClear(POLY_OPA_DISP++, GX_MODE_STENCILWRITE);
+            }
+#endif
         } Matrix_Pop();
     } Matrix_Pop();
 }

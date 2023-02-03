@@ -917,8 +917,8 @@ void Scene_Draw(Scene* this, View3D* view) {
             sSceneDrawConfigs[this->animOoT.index](&this->animOoT);
         
         if (i == this->curRoom && this->ui.glowFactor > EPSILON) {
-            gXPSetHighlightColor(POLY_OPA_DISP++, 3, 252, 240, (u8)(0xFF * this->ui.glowFactor), ADD);
-            gXPSetHighlightColor(POLY_XLU_DISP++, 3, 252, 240, (u8)(0xFF * this->ui.glowFactor), ADD);
+            gXPSetHighlightColor(POLY_OPA_DISP++, 3, 252, 240, (u8)(0xFF * this->ui.glowFactor), DODGE);
+            gXPSetHighlightColor(POLY_XLU_DISP++, 3, 252, 240, (u8)(0xFF * this->ui.glowFactor), DODGE);
         }
         
         Room_Draw(roomHdr->mesh);

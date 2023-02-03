@@ -357,7 +357,9 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
 }
 
 void Gizmo_Focus(Gizmo* this, GizmoElem* elem) {
+    if (this->activeElem) this->activeElem->focus = false;
     this->activeElem = elem;
+    this->activeElem->focus = true;
     this->pos = this->pivotPos = *elem->dpos;
 }
 
@@ -378,6 +380,7 @@ void Gizmo_UnselectAll(Gizmo* this) {
     
     while (this->elemHead) {
         this->elemHead->selected = false;
+        this->elemHead->focus = false;
         Node_Remove(this->elemHead, this->elemHead);
     }
     
@@ -386,6 +389,7 @@ void Gizmo_UnselectAll(Gizmo* this) {
 
 void Gizmo_Unselect(Gizmo* this, GizmoElem* elem) {
     elem->selected = false;
+    elem->focus = false;
     Node_Remove(this->elemHead, elem);
     
     if (this->activeElem == elem)

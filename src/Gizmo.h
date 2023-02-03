@@ -38,6 +38,7 @@ typedef struct GizmoElem {
     Vec3f pos;
     Vec3s rot;
     bool  selected;
+    bool  focus;
     
     Vec3f* dpos;
     Vec3s* drot;
