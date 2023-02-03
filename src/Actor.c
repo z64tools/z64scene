@@ -1,9 +1,7 @@
 #include <Editor.h>
 
 extern DataFile gCube;
-
-#define gCubeDL    0x06000990
-#define gCubeLodDL 0x06000BF0
+#include "../assets/3D/Cube.h"
 
 void Actor_Draw(Actor* this, View3D* view) {
     Vec3f pos = this->pos;
@@ -32,29 +30,31 @@ void Actor_Draw(Actor* this, View3D* view) {
             
             if (this->state & ACTOR_SELECTED) {
                 if (this->gizmo.focus)
-                    gXPSetHighlightColor(POLY_OPA_DISP++, 3, 252, 240, 0x80, DODGE);
+                    gXPSetHighlightColor(POLY_OPA_DISP++, 252, 186, 0, 0xA0, DODGE);
                 else
-                    gXPSetHighlightColor(POLY_OPA_DISP++, 3, 252, 240, 0x40, DODGE);
+                    gXPSetHighlightColor(POLY_OPA_DISP++, 252, 186, 0, 0x70, DODGE);
             }
             
             if (Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) < 500.0f)
-                gSPDisplayList(POLY_OPA_DISP++, gCubeDL);
+                gSPDisplayList(POLY_OPA_DISP++, gCube_DlCube);
             else
-                gSPDisplayList(POLY_OPA_DISP++, gCubeLodDL);
+                gSPDisplayList(POLY_OPA_DISP++, gCube_DlCubeLOD);
             
             if (this->state & ACTOR_SELECTED)
                 gXPClearHighlightColor(POLY_OPA_DISP++);
-            
+
 #if 0
             if (this->state & ACTOR_SELECTED) {
-                gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+                gXPModeSet(STENCIL_DISP++, GX_MODE_STENCILWRITE);
+                gSPSegment(STENCIL_DISP++, 6, (void*)gCube.data);
+                gSPMatrix(STENCIL_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+                gDPSetEnvColor(STENCIL_DISP++, 0x80, 0x40, 0x20, 0x30);
                 
-                gXPModeSet(POLY_OPA_DISP++, GX_MODE_STENCILWRITE);
                 if (Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) < 500.0f)
-                    gSPDisplayList(POLY_OPA_DISP++, gCubeDL);
+                    gSPDisplayList(STENCIL_DISP++, gCubeDL);
                 else
-                    gSPDisplayList(POLY_OPA_DISP++, gCubeLodDL);
-                gXPModeClear(POLY_OPA_DISP++, GX_MODE_STENCILWRITE);
+                    gSPDisplayList(STENCIL_DISP++, gCubeLodDL);
+                gXPModeClear(STENCIL_DISP++, GX_MODE_STENCILWRITE);
             }
 #endif
         } Matrix_Pop();

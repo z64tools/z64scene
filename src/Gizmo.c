@@ -2,9 +2,7 @@
 #include <Gizmo.h>
 
 extern DataFile gGizmo;
-
-#define gGizmo_GizmoDL 0x060006D0
-#define gGizmo_LineDL  0x06000C60
+#include "../assets/3D/Gizmo.h"
 
 static void Gizmo_Reset(Gizmo* this) {
     this->lock.state = GIZMO_AXIS_ALL_FALSE;
@@ -27,8 +25,8 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
         /* MXO_F */ { this->mtx.xz, this->mtx.yz, this->mtx.zz },
     };
     static Vec3f sOffsetMul[] = {
-        { 0, 100 * 100, 0 },
-        { 0, 230 * 100, 0 },
+        { 0, 120, 0 },
+        { 0, 400, 0 },
     };
     
     if (!this->activeElem)
@@ -38,7 +36,7 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
         if (!this->lock.state) {
             f32 add = 0.2f * this->focus.axis[i];
             NVGcolor color = nvgHSL(1.0f - (i / 3.0f), 0.5f + add, 0.5f + add);
-            f32 scale = Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) * 0.000008f;
+            f32 scale = Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) * 0.0006f;
             
             gSPSegment((*disp)++, 6, (void*)gGizmo.data);
             Matrix_Push(); {
@@ -46,25 +44,32 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
                 Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
                 Matrix_Mult(&this->mtx, MTXMODE_APPLY);
                 
-                if (i == 1) {
-                    gDPSetEnvColor((*disp)++, UnfoldNVGcolor(color), 0xFF);
-                }
-                
-                if (i == 2) {
-                    gDPSetEnvColor((*disp)++, UnfoldNVGcolor(color), 0xFF);
+                if (i == 2)
                     Matrix_RotateX_d(90, MTXMODE_APPLY);
-                }
-                if (i == 0) {
-                    gDPSetEnvColor((*disp)++, UnfoldNVGcolor(color), 0xFF);
+                
+                if (i == 0)
                     Matrix_RotateZ_d(90, MTXMODE_APPLY);
-                }
                 
                 Matrix_MultVec3f(&sOffsetMul[0], &this->cyl[i].start);
                 Matrix_MultVec3f(&sOffsetMul[1], &this->cyl[i].end);
+                
+                Vec3f dir = Math_Vec3f_LineSegDir(this->cyl[i].start, this->cyl[i].end);
+                Vec3f frn = Math_Vec3f_LineSegDir(view->currentCamera->eye, view->currentCamera->at);
+                f32 dot = invertf(fabsf(powf(Math_Vec3f_Dot(dir, frn), 3)));
+                
+                if (i == 1)
+                    gDPSetEnvColor((*disp)++, UnfoldNVGcolor(color), 0xFF * dot);
+                
+                if (i == 2)
+                    gDPSetEnvColor((*disp)++, UnfoldNVGcolor(color), 0xFF * dot);
+                
+                if (i == 0)
+                    gDPSetEnvColor((*disp)++, UnfoldNVGcolor(color), 0xFF * dot);
+                
                 this->cyl[i].r = Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) * 0.02f;
                 
                 gSPMatrix((*disp)++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-                gSPDisplayList((*disp)++, gGizmo_GizmoDL);
+                gSPDisplayList((*disp)++, gGizmo_DlGizmo);
             } Matrix_Pop();
         }
     }
@@ -166,58 +171,55 @@ static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos)
     Vec2f sp = View_GetScreenPos(view, this->pos);
     Vec2f mp = Math_Vec2f_New(UnfoldVec2(input->cursor.pos));
     s16 yaw = Math_Vec2f_Yaw(sp, mp);
-    s32 new = yaw - this->pyaw;
     
-    this->degr += BinToDeg(new);
-    this->degr = wrapf(this->degr, -180.f, 180.f);
-    
-    f32 dgr = this->degr;
-    
-    if (step)
-        dgr = roundstepf(dgr, 15.0f);
-    
-    if (this->lock.state == GIZMO_AXIS_ALL_TRUE) {
+    if (this->initAction) {
+        this->prev_yaw = yaw;
+        this->degr = 0;
     }
     
-    for (var i = 0; i < 3; i++) {
-        if (this->lock.axis[i]) {
-            Matrix_Push();
-            Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_NEW);
-            Matrix_Translate(UnfoldVec3(this->pivotPos), MTXMODE_APPLY);
-            
-            switch (i) {
-                case 0:
-                    Matrix_RotateX_d(dgr, MTXMODE_APPLY);
-                    break;
-                case 1:
-                    Matrix_RotateY_d(dgr, MTXMODE_APPLY);
-                    break;
-                case 2:
-                    Matrix_RotateZ_d(dgr, MTXMODE_APPLY);
-                    break;
-            }
-            
-            fornode(elem, this->elemHead) {
-                Vec3f relPos = Math_Vec3f_Sub(*elem->dpos, this->pivotPos);
-                Vec3f zero = {};
-                
-                Matrix_Push();
-                
-                Matrix_TranslateRotateZYX(&relPos, elem->drot);
-                Matrix_MultVec3f(&zero, &elem->pos);
-                Matrix_MtxFToYXZRotS(&elem->rot, 0);
-                
-                Matrix_Pop();
-                
-                for (var j  = 0; j < 3; j++)
-                    elem->pos.axis[j] = rint(elem->pos.axis[j]);
-            }
-            
-            Matrix_Pop();
-        }
+    if (this->prev_yaw - yaw == 0)
+        return;
+    
+    this->degr += this->prev_yaw - yaw;
+    
+    MtxF orientation;
+    int lock_axis = 0;
+    
+    f32 dgr = BinToDeg(this->degr);
+    if (step) dgr = roundstepf(dgr, 15.0f);
+    
+    Matrix_Push();
+    
+    if (this->lock.state != GIZMO_AXIS_ALL_TRUE && this->lock.state & GIZMO_AXIS_ALL_TRUE) {
+        while (!this->lock.axis[lock_axis]) lock_axis++;
+        orientation = View_GetLockOrientedMtxF(view, dgr, lock_axis);
+    } else
+        orientation = View_GetOrientedMtxF(view, dgr);
+    
+    Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_NEW);
+    Matrix_Translate(UnfoldVec3(this->pivotPos), MTXMODE_APPLY);
+    if (!this->initAction)
+        Matrix_Mult(&orientation, MTXMODE_APPLY);
+    
+    fornode(elem, this->elemHead) {
+        Vec3f relPos = Math_Vec3f_Sub(*elem->dpos, this->pivotPos);
+        Vec3f zero = {};
+        
+        Matrix_Push();
+        
+        Matrix_TranslateRotateZYX(&relPos, elem->drot);
+        Matrix_MultVec3f(&zero, &elem->pos);
+        Matrix_MtxFToYXZRotS(&elem->rot, 0);
+        
+        Matrix_Pop();
+        
+        for (var j  = 0; j < 3; j++)
+            elem->pos.axis[j] = rint(elem->pos.axis[j]);
     }
     
-    this->pyaw = yaw;
+    Matrix_Pop();
+    
+    this->prev_yaw = yaw;
 }
 
 void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
@@ -257,6 +259,7 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
             this->pressLock = true;
             this->initpos = this->pos;
             this->focus.state = GIZMO_AXIS_ALL_TRUE;
+            this->initAction = true;
             oneHit = true;
             
             if (alt) {
@@ -265,21 +268,17 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
         }
         
         if (Input_GetKey(input, KEY_R)->press) {
-            Vec2f sp = View_GetScreenPos(view, this->pos);
-            Vec2f mp = Math_Vec2f_New(UnfoldVec2(input->cursor.pos));
-            s16 yaw = Math_Vec2f_Yaw(sp, mp);
-            
             this->action = GIZMO_ACTION_ROTATE;
             this->pressLock = true;
             this->initpos = this->pos;
-            this->pyaw = yaw;
-            this->degr = 0;
             this->focus.state = GIZMO_AXIS_ALL_TRUE;
+            this->initAction = true;
             oneHit = true;
             
             if (alt) {
                 fornode(elem, this->elemHead) {
                     elem->rot = Math_Vec3s_New(0, 0, 0);
+                    *elem->drot = Math_Vec3s_New(0, 0, 0);
                 }
             }
         }
@@ -347,6 +346,7 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
     _log("Gizmo Update: %d", this->action);
     if (gizmoActionFunc[this->action])
         gizmoActionFunc[this->action](this, view, input, rayPos);
+    this->initAction = false;
     
     this->lock = this->focus;
     

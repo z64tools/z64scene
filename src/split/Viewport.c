@@ -258,10 +258,11 @@ static void Viewport_ShapeSelect_Update(Viewport* this, Split* split, Scene* sce
 static void Viewport_ShapeSelect_Draw(Viewport* this, void* vg) {
     if (this->selID) {
         nvgBeginPath(vg);
+        
         if (this->selMode > 0)
             nvgFillColor(vg, nvgHSLA(0.6f, 0.5f, 0.5f, 125));
-        else
-            nvgFillColor(vg, nvgHSLA(0.0f, 0.5f, 0.5f, 125));
+        else nvgFillColor(vg, nvgHSLA(0.0f, 0.5f, 0.5f, 125));
+        
         Gfx_Shape(vg, Math_Vec2f_New(0, 0), 1.0f, 0, this->selPos, this->selID);
         nvgFill(vg);
     }

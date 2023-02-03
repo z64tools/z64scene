@@ -13,7 +13,9 @@ SOURCE_O_WIN32  = $(foreach f,$(SOURCE_C:.c=.o),bin/win32/$f)
 RELEASE_EXECUTABLE_LINUX := app_linux/z64scene
 RELEASE_EXECUTABLE_WIN32 := app_win32/z64scene.exe
 
-ASSETS          = $(shell find assets/3D/* -type f -name '*.zobj')
+OBJECT_SRC      = $(shell find assets/3D/* -type f -name '*.objex')
+OBJECT_ZBJ      = $(foreach f,$(OBJECT_SRC:%.objex=%.zobj),$f)
+ASSETS          = $(OBJECT_ZBJ)
 ASSETS         += $(shell find assets/* -maxdepth 0 -type f -name '*.ia16')
 ASSETS         += $(shell find assets/* -maxdepth 0 -type f -name '*.rgba')
 ASSETS         += $(shell find assets/* -maxdepth 0 -type f -name '*.svg')
@@ -27,8 +29,8 @@ SOURCE_O_WIN32 += $(foreach f,$(ASSETS:%=%.o),bin/win32/$f)
 		linux
 
 default: linux
-linux: $(RELEASE_EXECUTABLE_LINUX)
-win32: $(RELEASE_EXECUTABLE_WIN32)
+linux: $(OBJECT_ZBJ) $(RELEASE_EXECUTABLE_LINUX)
+win32: $(OBJECT_ZBJ) $(RELEASE_EXECUTABLE_WIN32)
 
 $(shell mkdir -p bin/ $(foreach dir, \
 	$(dir $(RELEASE_EXECUTABLE_LINUX)) \
@@ -56,6 +58,9 @@ format-z64viewer:
 
 -include $(SOURCE_O_LINUX:.o=.d)
 -include $(SOURCE_O_WIN32:.o=.d)
+
+assets/3D/%.zobj: assets/3D/%.objex
+	./assets/3D/z64convert-cli --in $< --out $@ --address 0x06000000 --scale 1.0f --macros $(basename $<).h --silent
 
 # # # # # # # # # # # # # # # # # # # #
 # LINUX BUILD                         #
@@ -93,4 +98,5 @@ bin/win32/assets/%.o: assets/% $(DataFileCompiler)
 
 $(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o bin/win32/info.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O) $(Zip_Win32_O) $(Texel_Win32_O) $(ASSETS_O_WIN32) $(Image_Win32_O)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
-	@i686-w64-mingw32.static-gcc -o $@ $^ $(XFLAGS) $(CFLAGS) -D_WIN32 -municode
+	i686-w64-mingw32.static-gcc -o $@ $^ $(XFLAGS) $(CFLAGS) -D_WIN32 -municode
+

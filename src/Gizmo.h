@@ -13,6 +13,9 @@ struct Scene;
 typedef enum {
     GIZMO_AXIS_ALL_TRUE  = 0x00010101,
     GIZMO_AXIS_ALL_FALSE = 0x00000000,
+    GIZMO_AXIS_X         = 0x00010000,
+    GIZMO_AXIS_Y         = 0x00000100,
+    GIZMO_AXIS_Z         = 0x00000001,
 } GizmoState;
 
 typedef struct {
@@ -48,8 +51,10 @@ typedef struct {
     Vec3f pos;
     Vec3f initpos;
     
-    f32 degr;
-    s16 pyaw;
+    s16 degr;
+    s16 prev_yaw;
+    
+    bool initAction;
     
     GizmoAxis   focus;
     GizmoAxis   lock;

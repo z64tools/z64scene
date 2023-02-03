@@ -678,9 +678,6 @@ static bool Scene_OnRoomChange(PropList* list, PropListChange type, s32 index) {
         case PROP_SET:
             this->curRoom = index;
             this->ui.glowFactor = 0.25f;
-            
-            break;
-        case PROP_GET:
             break;
     }
     
