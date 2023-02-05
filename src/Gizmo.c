@@ -329,8 +329,11 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
             }
         }
         
-        if (Input_GetKey(input, KEY_KP_0)->press)
+        if (Input_GetKey(input, KEY_KP_0)->press) {
             View_MoveTo(view, this->pos);
+            this->typed[0] = 0;
+        }
+        
         if (!this->pressLock && Input_GetMouse(input, CLICK_L)->press == false)
             return;
         if (!oneHit)
