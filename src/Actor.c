@@ -7,7 +7,7 @@ void Actor_Draw(Actor* this, View3D* view) {
     Vec3f pos = this->pos;
     Vec3s rot = this->rot;
     
-    if (this->gizmo.selected) {
+    if (this->gizmo.action && this->gizmo.selected) {
         pos = this->gizmo.pos;
         rot = this->gizmo.rot;
     }
@@ -42,7 +42,7 @@ void Actor_Draw(Actor* this, View3D* view) {
             
             if (this->state & ACTOR_SELECTED)
                 gXPClearHighlightColor(POLY_OPA_DISP++);
-
+            
 #if 0
             if (this->state & ACTOR_SELECTED) {
                 gXPModeSet(STENCIL_DISP++, GX_MODE_STENCILWRITE);

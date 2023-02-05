@@ -5,6 +5,7 @@
 #include <ext_texel.h>
 #include <ext_interface.h>
 #include <ext_collision.h>
+#include <ext_undo.h>
 #include "SkelAnime.h"
 #include "Light.h"
 #include "Scene.h"
@@ -12,20 +13,20 @@
 extern VectorGfx gVecGfx_EyeOpen;
 
 typedef enum {
-	TIME_SCENE_ANIM = 0x40,
+    TIME_SCENE_ANIM = 0x40,
 } TimeSlot;
 
 typedef enum {
-	PROFILER_FPS = 4,
+    PROFILER_FPS = 4,
 } ProfilerSlot;
 
 typedef struct Editor {
-	AppInfo app;
-	void*   vg;
-	GeoGrid geo;
-	CursorIcon  cursor;
-	Input   input;
-	Scene   scene;
+    AppInfo    app;
+    void*      vg;
+    GeoGrid    geo;
+    CursorIcon cursor;
+    Input      input;
+    Scene      scene;
 } Editor;
 
 void* NewMtx();
@@ -38,6 +39,6 @@ void Editor_Update(Editor* editor);
 void Editor_Draw(Editor* editor);
 
 extern Gfx* gSetupDL;
-#define gSetupDList(x) & gSetupDL[6 * x]
+#define gSetupDList(x) &gSetupDL[6 * x]
 
 #endif

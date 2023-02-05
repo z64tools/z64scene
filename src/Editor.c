@@ -70,6 +70,7 @@ void Editor_Init(Editor* editor) {
     sEditor = editor;
     
     Theme_Init(0);
+    Undo_Init(128);
     GUI_INITIALIZE(editor, "z64scene", 980, 480, 4, Editor_Update, Editor_Draw, Editor_DropCallback);
     GeoGrid_Init(&editor->geo, &editor->app, editor);
     GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrCount(gTaskTable));
@@ -135,6 +136,7 @@ void Editor_Destroy(Editor* editor) {
     GeoGrid_Destroy(&editor->geo);
     VectorGfx_Free(&gVecGfx_EyeOpen);
     Cursor_Free(&editor->cursor);
+    Undo_Destroy();
     
     for (var i = 0; i < 5; i++)
         Image_Free(&sTexelFile[i]);
@@ -221,6 +223,7 @@ void Editor_Update(Editor* editor) {
     if (editor->scene.kill)
         Scene_Free(&editor->scene);
     
+    Undo_Update(&editor->input);
     GeoGrid_Update(&editor->geo);
     Cursor_Update(&editor->cursor);
     profi_stop(PROFILER_FPS);

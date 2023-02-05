@@ -40,6 +40,7 @@ typedef struct GizmoElem {
     struct GizmoElem* next;
     Vec3f pos;
     Vec3s rot;
+    bool  action;
     bool  selected;
     bool  focus;
     
@@ -67,9 +68,13 @@ typedef struct {
         bool release   : 1;
         bool resetRot  : 1;
     };
+    char typed[32];
+    f32  value;
     
     GizmoElem* elemHead;
     GizmoElem* activeElem;
+    
+    int undorepos;
 } Gizmo;
 
 void Gizmo_Draw(Gizmo* this, View3D* view, struct Gfx** disp);

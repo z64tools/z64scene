@@ -9,6 +9,7 @@ static void Gizmo_Reset(Gizmo* this) {
     this->pressLock = false;
     this->release = true;
     this->action = GIZMO_ACTION_NULL;
+    this->typed[0] = 0;
 }
 
 bool Gizmo_IsBusy(Gizmo* this) {
@@ -158,6 +159,7 @@ static void Gizmo_Move(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
     fornode(elem, this->elemHead) {
         Vec3f relPos = Math_Vec3f_Sub(this->pos, this->pivotPos);
         
+        elem->action = true;
         elem->pos = Math_Vec3f_Add(*elem->dpos, relPos);
         
         for (var i  = 0; i < 3; i++)
@@ -177,8 +179,9 @@ static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos)
         this->degr = 0;
     }
     
-    if (this->prev_yaw - yaw == 0)
-        return;
+    if (this->typed[0]) {
+        this->degr = DegToBin(wrapf(this->value, -180, 180));
+    }
     
     this->degr += this->prev_yaw - yaw;
     
@@ -198,16 +201,21 @@ static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos)
     
     Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_NEW);
     Matrix_Translate(UnfoldVec3(this->pivotPos), MTXMODE_APPLY);
-    if (!this->initAction)
-        Matrix_Mult(&orientation, MTXMODE_APPLY);
+    Matrix_Mult(&orientation, MTXMODE_APPLY);
     
     fornode(elem, this->elemHead) {
         Vec3f relPos = Math_Vec3f_Sub(*elem->dpos, this->pivotPos);
         Vec3f zero = {};
         
+        elem->action = true;
+        
         Matrix_Push();
         
-        Matrix_TranslateRotateZYX(&relPos, elem->drot);
+        Matrix_Translate(UnfoldVec3(relPos), MTXMODE_APPLY);
+        Matrix_RotateY_s(elem->drot->y, MTXMODE_APPLY);
+        Matrix_RotateX_s(elem->drot->x, MTXMODE_APPLY);
+        Matrix_RotateZ_s(elem->drot->z, MTXMODE_APPLY);
+        
         Matrix_MultVec3f(&zero, &elem->pos);
         Matrix_MtxFToYXZRotS(&elem->rot, 0);
         
@@ -222,6 +230,29 @@ static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos)
     this->prev_yaw = yaw;
 }
 
+static void Gizmo_UpdateTyped(Gizmo* this, Input* input) {
+    if (input->buffer[0]) {
+        char* buf = x_strdup(input->buffer);
+        int len = strlen(buf);
+        
+        for (int i = 0; i < len; i++)
+            if (!isdigit(buf[i]) && buf[i] != '.' && buf[i] != '-')
+                strrem(buf, 1);
+        strncat(this->typed, buf, 32);
+        this->value = sfloat(this->typed);
+    }
+    
+    if (Input_GetKey(input, KEY_ESCAPE)->press) {
+        Gizmo_ResetTransforms(this);
+        Gizmo_Reset(this);
+    }
+    
+    if (Input_GetKey(input, KEY_ENTER)->press) {
+        Gizmo_ApplyTransforms(this);
+        Gizmo_Reset(this);
+    }
+}
+
 void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
     void (* gizmoActionFunc[])(Gizmo*, View3D*, Input*, Vec3f*) = {
         NULL,
@@ -231,11 +262,26 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
     bool alt = Input_GetKey(input, KEY_LEFT_ALT)->hold;
     u8 oneHit = 0;
     
+    fornode(elem, this->elemHead) {
+        elem->action = false;
+    }
+    
     if (!this->activeElem)
         return;
     
+    if (this->undorepos) {
+        fornode(elem, this->elemHead) {
+            elem->pos = *elem->dpos;
+            elem->rot = *elem->drot;
+        }
+        
+        Gizmo_Focus(this, this->activeElem);
+        this->undorepos = false;
+    }
+    
     // Reset for now, utilize for local space later
     Matrix_Clear(&this->mtx);
+    Gizmo_UpdateTyped(this, input);
     
     this->release = false;
     this->resetRot = false;
@@ -399,9 +445,20 @@ void Gizmo_Unselect(Gizmo* this, GizmoElem* elem) {
 }
 
 void Gizmo_ApplyTransforms(Gizmo* this) {
+    UndoEvent* undo = NULL;
+    
     fornode(elem, this->elemHead) {
         if (!elem->selected)
             continue;
+        
+        if (!undo) {
+            undo = Undo_New();
+            Undo_Response(undo, &this->undorepos);
+        }
+        
+        Undo_RegVar(undo, elem->dpos);
+        Undo_RegVar(undo, elem->drot);
+        
         *elem->dpos = elem->pos;
         *elem->drot = elem->rot;
     }
@@ -415,6 +472,7 @@ void Gizmo_ResetTransforms(Gizmo* this) {
             continue;
         elem->pos = *elem->dpos;
         elem->rot = *elem->drot;
+        elem->action = false;
     }
     
     this->pos = *this->activeElem->dpos;
