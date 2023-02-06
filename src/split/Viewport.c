@@ -103,9 +103,9 @@ static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split)
             
             if (r)
                 View_MoveTo(&this->view, o);
-            
         }
         
+#if 0
         if (Input_GetMouse(input, CLICK_L)->dual) {
             RayLine ray = View_GetCursorRayLine(&this->view);
             Room* room = Scene_RaycastRoom(&editor->scene, &ray, NULL);
@@ -120,6 +120,7 @@ static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split)
                 View_RotTo(&this->view, Math_Vec3s_New(DegToBin(45), yaw, 0));
             }
         }
+#endif
     }
 }
 
@@ -282,6 +283,7 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
     
     Element_Name(&this->resetCam, "Reset Camera");
     this->resetCam.align = ALIGN_LEFT;
+    // this->view.mode = CAM_MODE_ORBIT;
 }
 
 void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
@@ -456,6 +458,27 @@ static void Viewport_Draw3D(Editor* editor, Viewport* this, Split* split) {
     n64_draw(gVXLUHead);
     
     Viewport_ShapeSelect_Draw(this, editor->vg);
+    
+    if (scene->gizmo.action) {
+        void* vg = editor->vg;
+        char* txt = x_fmt("%s %.8g along %s",
+                scene->gizmo.action == 1 ? "Move" : "Rotate",
+                scene->gizmo.value,
+                scene->gizmo.lock.x ? "X" : scene->gizmo.lock.y ? "Y" : "Z"
+        );
+        
+        nvgFontSize(vg, SPLIT_TEXT);
+        nvgFontFace(vg, "default");
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+        
+        nvgFontBlur(vg, 1.0f);
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+        nvgText(vg, 8, split->rect.h - SPLIT_TEXT_H - SPLIT_ELEM_X_PADDING, txt, NULL);
+        
+        nvgFontBlur(vg, 0.0f);
+        nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
+        nvgText(vg, 8, split->rect.h - SPLIT_TEXT_H - SPLIT_ELEM_X_PADDING, txt, NULL);
+    }
     
 #if 0
     Matrix_Push(); {

@@ -6,10 +6,10 @@ extern DataFile gGizmo;
 
 static void Gizmo_Reset(Gizmo* this) {
     this->lock.state = GIZMO_AXIS_ALL_FALSE;
-    this->pressLock = false;
     this->release = true;
-    this->action = GIZMO_ACTION_NULL;
+    this->action = 0;
     this->typed[0] = 0;
+    this->typing = false;
 }
 
 bool Gizmo_IsBusy(Gizmo* this) {
@@ -37,12 +37,12 @@ void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
         if (!this->lock.state) {
             f32 add = 0.2f * this->focus.axis[i];
             NVGcolor color = nvgHSL(1.0f - (i / 3.0f), 0.5f + add, 0.5f + add);
-            f32 scale = Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) * 0.0006f;
+            f32 s = Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) * 0.0006f;
             
             gSPSegment((*disp)++, 6, (void*)gGizmo.data);
             Matrix_Push(); {
                 Matrix_Translate(UnfoldVec3(this->pos), MTXMODE_NEW);
-                Matrix_Scale(scale, scale, scale, MTXMODE_APPLY);
+                Matrix_Scale(s, s, s, MTXMODE_APPLY);
                 Matrix_Mult(&this->mtx, MTXMODE_APPLY);
                 
                 if (i == 2)
@@ -110,22 +110,25 @@ static void Gizmo_Move(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
         /* Front */ { this->mtx.xz, this->mtx.yz, this->mtx.zz },
     };
     
-    if (ctrlHold && this->lock.state == GIZMO_AXIS_ALL_TRUE) {
-        _log("SnapTo");
+    if (this->typing && this->lock.state != GIZMO_AXIS_ALL_TRUE) {
+        this->pos.x = this->pivotPos.x + this->value * this->lock.x;
+        this->pos.y = this->pivotPos.y + this->value * this->lock.y;
+        this->pos.z = this->pivotPos.z + this->value * this->lock.z;
+        
+    } else if (ctrlHold && this->lock.state == GIZMO_AXIS_ALL_TRUE) {
         if (rayPos) {
             this->pos.x = rintf(rayPos->x);
             this->pos.y = rintf(rayPos->y);
             this->pos.z = rintf(rayPos->z);
         }
+        
     } else {
-        _log("Other");
         Vec2f gizmoScreenSpace = View_GetScreenPos(view, this->pos);
         Vec2f mv = Math_Vec2f_New(UnfoldVec2(input->cursor.vel));
         RayLine curRay = View_GetPointRayLine(view,  gizmoScreenSpace);
         RayLine nextRay = View_GetPointRayLine(view,  Math_Vec2f_Add(gizmoScreenSpace, mv));
         
         if (this->lock.state == GIZMO_AXIS_ALL_TRUE) {
-            _log("View Move");
             Vec3f nextRayN = Math_Vec3f_LineSegDir(nextRay.start, nextRay.end);
             f32 nextDist = Math_Vec3f_DistXYZ(nextRay.start, nextRay.end);
             f32 curDist = Math_Vec3f_DistXYZ(curRay.start, curRay.end);
@@ -134,8 +137,6 @@ static void Gizmo_Move(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
             
             this->pos = Math_Vec3f_Add(nextRay.start, Math_Vec3f_MulVal(nextRayN, pointDist * distRatio));
         } else {
-            _log("Axis Move");
-            
             if (ctrlHold && rayPos) {
                 for (s32 i = 0; i < 3; i++) {
                     if (!this->lock.axis[i])
@@ -155,17 +156,15 @@ static void Gizmo_Move(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
         }
     }
     
-    _log("Apply Pos");
     fornode(elem, this->elemHead) {
         Vec3f relPos = Math_Vec3f_Sub(this->pos, this->pivotPos);
         
-        elem->action = true;
+        elem->interact = true;
         elem->pos = Math_Vec3f_Add(*elem->dpos, relPos);
         
         for (var i  = 0; i < 3; i++)
             elem->pos.axis[i] = rint(elem->pos.axis[i]);
     }
-    _log("!");
 }
 
 static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
@@ -176,28 +175,45 @@ static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos)
     
     if (this->initAction) {
         this->prev_yaw = yaw;
-        this->degr = 0;
+        this->rot.x = 0;
+        this->rot.y = 0;
+        this->rot.z = 0;
     }
     
-    if (this->typed[0]) {
-        this->degr = DegToBin(wrapf(this->value, -180, 180));
+    this->rot.x += (int)(DegToBin(input->cursor.vel.x) * 0.75f);
+    this->rot.y -= (int)(DegToBin(input->cursor.vel.y) * 0.75f);
+    this->rot.z += this->prev_yaw - yaw;
+    
+    f32 x = BinToDeg(this->rot.x);
+    f32 y = BinToDeg(this->rot.y);
+    f32 z = BinToDeg(this->rot.z);
+    
+    if (this->typing) z = this->value;
+    
+    if (step) {
+        x = roundstepf(x, 15.0f);
+        y = roundstepf(y, 15.0f);
+        z = roundstepf(z, 15.0f);
     }
     
-    this->degr += this->prev_yaw - yaw;
+    if (!this->typing) this->value = z;
+    
+    if (this->trackball) {
+        z = 0;
+        this->lock.state = GIZMO_AXIS_ALL_TRUE;
+    } else
+        x = y = 0;
+    
+    Matrix_Push();
     
     MtxF orientation;
     int lock_axis = 0;
     
-    f32 dgr = BinToDeg(this->degr);
-    if (step) dgr = roundstepf(dgr, 15.0f);
-    
-    Matrix_Push();
-    
     if (this->lock.state != GIZMO_AXIS_ALL_TRUE && this->lock.state & GIZMO_AXIS_ALL_TRUE) {
         while (!this->lock.axis[lock_axis]) lock_axis++;
-        orientation = View_GetLockOrientedMtxF(view, dgr, lock_axis);
+        orientation = View_GetLockOrientedMtxF(view, z, lock_axis, !this->typing);
     } else
-        orientation = View_GetOrientedMtxF(view, dgr);
+        orientation = View_GetOrientedMtxF(view, x, y, z);
     
     Matrix_Scale(1.0f, 1.0f, 1.0f, MTXMODE_NEW);
     Matrix_Translate(UnfoldVec3(this->pivotPos), MTXMODE_APPLY);
@@ -207,7 +223,7 @@ static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos)
         Vec3f relPos = Math_Vec3f_Sub(*elem->dpos, this->pivotPos);
         Vec3f zero = {};
         
-        elem->action = true;
+        elem->interact = true;
         
         Matrix_Push();
         
@@ -231,25 +247,25 @@ static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos)
 }
 
 static void Gizmo_UpdateTyped(Gizmo* this, Input* input) {
-    if (input->buffer[0]) {
+    if (Input_GetKey(input, KEY_BACKSPACE)->press) {
+        if (this->typed[0]) {
+            this->typed[strlen(this->typed) - 1] = 0;
+            this->value = sfloat(this->typed);
+        } else
+            this->typing = false;
+    } else if (input->buffer[0]) {
         char* buf = x_strdup(input->buffer);
         int len = strlen(buf);
         
         for (int i = 0; i < len; i++)
             if (!isdigit(buf[i]) && buf[i] != '.' && buf[i] != '-')
                 strrem(buf, 1);
-        strncat(this->typed, buf, 32);
+        strncat(this->typed, buf, 12);
+        this->typed[12] = 0;
         this->value = sfloat(this->typed);
-    }
-    
-    if (Input_GetKey(input, KEY_ESCAPE)->press) {
-        Gizmo_ResetTransforms(this);
-        Gizmo_Reset(this);
-    }
-    
-    if (Input_GetKey(input, KEY_ENTER)->press) {
-        Gizmo_ApplyTransforms(this);
-        Gizmo_Reset(this);
+        
+        if (this->typed[0])
+            this->typing = true;
     }
 }
 
@@ -260,33 +276,94 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
         Gizmo_Rotate,
     };
     bool alt = Input_GetKey(input, KEY_LEFT_ALT)->hold;
-    u8 oneHit = 0;
     
     fornode(elem, this->elemHead) {
-        elem->action = false;
+        elem->interact = false;
     }
     
     if (!this->activeElem)
         return;
     
-    if (this->undorepos) {
+    // Reset for now, utilize for local space later
+    Matrix_Clear(&this->mtx);
+    this->release = false;
+    
+    if (Input_GetKey(input, KEY_G)->press) {
+        if (!this->action) {
+            this->initAction = true;
+            this->initpos = this->pos;
+            this->lock.state = GIZMO_AXIS_ALL_TRUE;
+            this->refreshNodes = true;
+            Gizmo_ResetTransforms(this);
+        } else if (this->action != GIZMO_ACTION_MOVE)
+            this->refreshTransforms = true;
+        
+        this->action = GIZMO_ACTION_MOVE;
+        
+        if (alt)
+            this->resetTransforms = true;
+    }
+    
+    if (Input_GetKey(input, KEY_R)->press) {
+        if (!this->action) {
+            this->initAction = true;
+            this->initpos = this->pos;
+            this->lock.state = GIZMO_AXIS_ALL_TRUE;
+            this->trackball = 0;
+            Gizmo_ResetTransforms(this);
+        } else if (this->action != GIZMO_ACTION_ROTATE)
+            this->refreshTransforms = true;
+        
+        if (this->action == GIZMO_ACTION_ROTATE)
+            this->trackball ^= 1;
+        this->action = GIZMO_ACTION_ROTATE;
+        
+        if (alt)
+            this->resetTransforms = true;
+    }
+    
+    if (this->resetTransforms || this->refreshTransforms) {
+        this->refreshNodes = true;
+        this->rot = Math_Vec3s_New(0, 0, 0);
+        this->refreshTransforms = false;
+        
+        if (this->action == GIZMO_ACTION_MOVE)
+            this->pos = Math_Vec3f_New(0, 0, 0);
+        if (this->action == GIZMO_ACTION_ROTATE)
+            this->rot = Math_Vec3s_New(0, 0, 0);
+        
+        if (this->resetTransforms) {
+            if (this->action == GIZMO_ACTION_MOVE) {
+                fornode(elem, this->elemHead) {
+                    elem->pos = Math_Vec3f_New(0, 0, 0);
+                    *elem->dpos = Math_Vec3f_New(0, 0, 0);
+                }
+            }
+            if (this->action == GIZMO_ACTION_ROTATE) {
+                fornode(elem, this->elemHead) {
+                    elem->rot = Math_Vec3s_New(0, 0, 0);
+                    *elem->drot = Math_Vec3s_New(0, 0, 0);
+                }
+            }
+            
+            Gizmo_ApplyTransforms(this);
+            Gizmo_Reset(this);
+            this->resetTransforms = false;
+            return;
+        }
+    }
+    
+    if (this->refreshNodes) {
         fornode(elem, this->elemHead) {
             elem->pos = *elem->dpos;
             elem->rot = *elem->drot;
         }
         
         Gizmo_Focus(this, this->activeElem);
-        this->undorepos = false;
+        this->refreshNodes = false;
     }
     
-    // Reset for now, utilize for local space later
-    Matrix_Clear(&this->mtx);
-    Gizmo_UpdateTyped(this, input);
-    
-    this->release = false;
-    this->resetRot = false;
-    
-    if (this->lock.state == 0) {
+    if (!this->lock.state) {
         RayLine ray = View_GetCursorRayLine(view);
         
         for (s32 i = 0; i < 3; i++) {
@@ -295,114 +372,81 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
             
             if (Col3D_LineVsCylinder(&ray, &this->cyl[i], &p)) {
                 this->focus.axis[i] = true;
-                oneHit = true;
-                this->action = GIZMO_ACTION_MOVE;
-            }
-        }
-        
-        if (Input_GetKey(input, KEY_G)->press) {
-            this->action = GIZMO_ACTION_MOVE;
-            this->pressLock = true;
-            this->initpos = this->pos;
-            this->focus.state = GIZMO_AXIS_ALL_TRUE;
-            this->initAction = true;
-            oneHit = true;
-            
-            if (alt) {
-                this->pos = Math_Vec3f_New(0, 0, 0);
-            }
-        }
-        
-        if (Input_GetKey(input, KEY_R)->press) {
-            this->action = GIZMO_ACTION_ROTATE;
-            this->pressLock = true;
-            this->initpos = this->pos;
-            this->focus.state = GIZMO_AXIS_ALL_TRUE;
-            this->initAction = true;
-            oneHit = true;
-            
-            if (alt) {
-                fornode(elem, this->elemHead) {
-                    elem->rot = Math_Vec3s_New(0, 0, 0);
-                    *elem->drot = Math_Vec3s_New(0, 0, 0);
+                
+                if (Input_GetMouse(input, CLICK_L)->press) {
+                    this->action = GIZMO_ACTION_MOVE;
+                    this->initpos = this->pos;
+                    this->lock.axis[i] = true;
+                    this->initAction = true;
+                    this->pressHold = true;
+                    break;
                 }
             }
         }
-        
-        if (Input_GetKey(input, KEY_KP_0)->press) {
-            View_MoveTo(view, this->pos);
-            this->typed[0] = 0;
-        }
-        
-        if (!this->pressLock && Input_GetMouse(input, CLICK_L)->press == false)
-            return;
-        if (!oneHit)
-            return;
-        
-    } else {
-        if (Input_GetKey(input, KEY_X)->press) {
-            if (this->focus.y || this->focus.z) {
-                this->focus.state = GIZMO_AXIS_ALL_FALSE;
-                this->focus.x = true;
-                this->pos.y = this->initpos.y;
-                this->pos.z = this->initpos.z;
-            } else
-                this->focus.state = GIZMO_AXIS_ALL_TRUE;
-        }
-        if (Input_GetKey(input, KEY_Z)->press) {
-            if (this->focus.x || this->focus.z) {
-                this->focus.state = GIZMO_AXIS_ALL_FALSE;
-                this->focus.y = true;
-                this->pos.x = this->initpos.x;
-                this->pos.z = this->initpos.z;
-            } else
-                this->focus.state = GIZMO_AXIS_ALL_TRUE;
-        }
-        if (Input_GetKey(input, KEY_Y)->press) {
-            if (this->focus.x || this->focus.y) {
-                this->focus.state = GIZMO_AXIS_ALL_FALSE;
-                this->focus.z = true;
-                this->pos.x = this->initpos.x;
-                this->pos.y = this->initpos.y;
-            } else
-                this->focus.state = GIZMO_AXIS_ALL_TRUE;
-        }
     }
     
-    if (this->pressLock) {
-        if (Input_GetMouse(input, CLICK_ANY)->press || Input_GetKey(input, KEY_ESCAPE)->press) {
-            
-            if (Input_GetMouse(input, CLICK_ANY)->press)
-                Gizmo_ApplyTransforms(this);
-            else
-                Gizmo_ResetTransforms(this);
-            
-            Gizmo_Reset(this);
-            return;
-        }
-    } else {
-        if (Input_GetMouse(input, CLICK_L)->hold == false || Input_GetKey(input, KEY_ESCAPE)->press) {
-            if (Input_GetMouse(input, CLICK_ANY)->hold == false)
-                Gizmo_ApplyTransforms(this);
-            else
-                Gizmo_ResetTransforms(this);
-            
-            Gizmo_Reset(this);
-            return;
-        }
+    if (!this->action)
+        return;
+    
+    if (Input_GetKey(input, KEY_X)->press) {
+        if (this->lock.y || this->lock.z) {
+            this->lock.state = GIZMO_AXIS_ALL_FALSE;
+            this->lock.x = true;
+            this->pos.y = this->initpos.y;
+            this->pos.z = this->initpos.z;
+            this->trackball = false;
+        } else
+            this->lock.state = GIZMO_AXIS_ALL_TRUE;
+    }
+    
+    if (Input_GetKey(input, KEY_Z)->press) {
+        if (this->lock.x || this->lock.z) {
+            this->lock.state = GIZMO_AXIS_ALL_FALSE;
+            this->lock.y = true;
+            this->pos.x = this->initpos.x;
+            this->pos.z = this->initpos.z;
+            this->trackball = false;
+        } else
+            this->lock.state = GIZMO_AXIS_ALL_TRUE;
+    }
+    
+    if (Input_GetKey(input, KEY_Y)->press) {
+        if (this->lock.x || this->lock.y) {
+            this->lock.state = GIZMO_AXIS_ALL_FALSE;
+            this->lock.z = true;
+            this->pos.x = this->initpos.x;
+            this->pos.y = this->initpos.y;
+            this->trackball = false;
+        } else
+            this->lock.state = GIZMO_AXIS_ALL_TRUE;
+    }
+    
+    if (Input_GetKey(input, KEY_KP_0)->press) {
+        View_MoveTo(view, this->pos);
+    } else
+        Gizmo_UpdateTyped(this, input);
+    
+    bool cancel = Input_GetKey(input, KEY_ESCAPE)->press;
+    bool apply =  Input_GetKey(input, KEY_ENTER)->press;
+    
+    apply = apply || (!this->pressHold && (Input_GetMouse(input, CLICK_L)->press || Input_GetMouse(input, CLICK_R)->press));
+    apply = apply || (this->pressHold && !Input_GetMouse(input, CLICK_L)->hold);
+    
+    if (apply || cancel) {
+        if (apply)
+            Gizmo_ApplyTransforms(this);
+        else
+            Gizmo_ResetTransforms(this);
+        
+        Gizmo_Reset(this);
+        return;
     }
     
     _log("Gizmo Update: %d", this->action);
+    
     if (gizmoActionFunc[this->action])
         gizmoActionFunc[this->action](this, view, input, rayPos);
     this->initAction = false;
-    
-    this->lock = this->focus;
-    
-    if (alt && oneHit) {
-        Gizmo_ApplyTransforms(this);
-        Gizmo_Reset(this);
-    }
 }
 
 void Gizmo_Focus(Gizmo* this, GizmoElem* elem) {
@@ -456,7 +500,7 @@ void Gizmo_ApplyTransforms(Gizmo* this) {
         
         if (!undo) {
             undo = Undo_New();
-            Undo_Response(undo, &this->undorepos);
+            Undo_Response(undo, &this->refreshNodes);
         }
         
         Undo_RegVar(undo, elem->dpos);
@@ -475,7 +519,7 @@ void Gizmo_ResetTransforms(Gizmo* this) {
             continue;
         elem->pos = *elem->dpos;
         elem->rot = *elem->drot;
-        elem->action = false;
+        elem->interact = false;
     }
     
     this->pos = *this->activeElem->dpos;

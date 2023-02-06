@@ -31,8 +31,7 @@ typedef struct {
 } GizmoAxis;
 
 typedef enum {
-    GIZMO_ACTION_NULL,
-    GIZMO_ACTION_MOVE,
+    GIZMO_ACTION_MOVE = 1,
     GIZMO_ACTION_ROTATE,
 } GizmoAction;
 
@@ -40,7 +39,7 @@ typedef struct GizmoElem {
     struct GizmoElem* next;
     Vec3f pos;
     Vec3s rot;
-    bool  action;
+    bool  interact;
     bool  selected;
     bool  focus;
     
@@ -52,8 +51,8 @@ typedef struct {
     Vec3f pos;
     Vec3f initpos;
     
-    s16 degr;
-    s16 prev_yaw;
+    Vec3s rot;
+    s16   prev_yaw;
     
     bool initAction;
     
@@ -64,17 +63,25 @@ typedef struct {
     Vec3f       pivotPos;
     GizmoAction action;
     struct {
-        bool pressLock : 1;
+        /*
+         * Delay 'Gizmo_IsBusy' by one frame
+         * to give the for Gizmo to avoid getting
+         * duplicate inputs
+         */
         bool release   : 1;
-        bool resetRot  : 1;
+        bool typing    : 1;
+        bool trackball : 1;
+        bool pressHold : 1;
     };
-    char typed[32];
+    char typed[20];
     f32  value;
     
     GizmoElem* elemHead;
     GizmoElem* activeElem;
     
-    int undorepos;
+    int refreshNodes;
+    int resetTransforms;
+    int refreshTransforms;
 } Gizmo;
 
 void Gizmo_Draw(Gizmo* this, View3D* view, struct Gfx** disp);
