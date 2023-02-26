@@ -115,6 +115,8 @@ void Settings_Init(Editor* editor, Settings* this, Split* split) {
     
     Element_Container_SetPropList(&this->cont, NULL, 6);
     this->cont.drag = true;
+    
+    this->cont.showHexID = true;
 }
 
 void Settings_Destroy(Editor* editor, Settings* this, Split* split) {
@@ -135,7 +137,6 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     Element_Condition(&this->cont, this->cont.prop != NULL);
     
     if (editor->scene.segment) {
-        
         Element_Color_SetColor(&this->envAmbient, envSettings->ambientColor);
         Element_Color_SetColor(&this->envColA, envSettings->light1Color);
         Element_Color_SetColor(&this->envColB, envSettings->light2Color);
@@ -143,6 +144,7 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         
         Element_Slider_SetValue(&this->fogNear, envSettings->fogNear & 0x3FF);
         Element_Slider_SetValue(&this->fogFar, envSettings->fogFar);
+        
     } else {
         Element_Color_SetColor(&this->envAmbient, NULL);
         Element_Color_SetColor(&this->envColA, NULL);

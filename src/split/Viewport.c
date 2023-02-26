@@ -43,6 +43,15 @@ static void Viewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
 }
 #endif
 
+void Viewport_FocusRoom(Viewport* this, Scene* scene, int id) {
+    RoomHeader* room = Scene_GetRoomHeader(scene, id);
+    s16 yaw = Math_Vec3f_Yaw(this->view.currentCamera->eye, room->mesh->center);
+    
+    View_MoveTo(&this->view, room->mesh->center);
+    View_ZoomTo(&this->view, room->mesh->size);
+    View_RotTo(&this->view, Math_Vec3s_New(DegToBin(45), yaw, 0));
+}
+
 static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split) {
     Input* input = &editor->input;
     Scene* scene = &editor->scene;
@@ -80,14 +89,8 @@ static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split)
         view->cameraControl = true;
     
     if (split->mouseInSplit) {
-        if (Input_GetKey(input, KEY_KP_DECIMAL)->press) {
-            RoomHeader* room = Scene_GetRoomHeader(scene, scene->curRoom);
-            s16 yaw = Math_Vec3f_Yaw(this->view.currentCamera->eye, room->mesh->center);
-            
-            View_MoveTo(&this->view, room->mesh->center);
-            View_ZoomTo(&this->view, room->mesh->size);
-            View_RotTo(&this->view, Math_Vec3s_New(DegToBin(45), yaw, 0));
-        }
+        if (Input_GetKey(input, KEY_KP_DECIMAL)->press)
+            Viewport_FocusRoom(this, scene, scene->curRoom);
         
         if (Input_GetMouse(input, CLICK_M)->press && Input_GetKey(input, KEY_LEFT_ALT)->hold) {
             Vec3f o;
@@ -105,8 +108,7 @@ static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split)
                 View_MoveTo(&this->view, o);
         }
         
-#if 0
-        if (Input_GetMouse(input, CLICK_L)->dual) {
+        if (Input_GetMouse(input, CLICK_M)->press && Input_GetKey(input, KEY_LEFT_CONTROL)->hold) {
             RayLine ray = View_GetCursorRayLine(&this->view);
             Room* room = Scene_RaycastRoom(&editor->scene, &ray, NULL);
             
@@ -120,7 +122,6 @@ static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split)
                 View_RotTo(&this->view, Math_Vec3s_New(DegToBin(45), yaw, 0));
             }
         }
-#endif
     }
 }
 
@@ -205,12 +206,12 @@ static void Viewport_ShapeSelect_Update(Viewport* this, Split* split, Scene* sce
     } else if (Input_GetMouse(input, CLICK_R)->release) {
         BoundBox bbx = BoundBox_New2F(this->selPos[0]);
         
-        for (var i = 0; i < this->selID; i++) {
+        for (var i = 0; i < this->selID; i++)
             BoundBox_Adjust2F(&bbx, this->selPos[i]);
-        }
         
         RoomHeader* room = Scene_GetRoomHeader(scene, scene->curRoom);
         Vec3f camn = Math_Vec3f_LineSegDir(this->view.currentCamera->eye, this->view.currentCamera->at);
+        
         for (var i = 0; i < room->actorList.num; i++) {
             Actor* a = &room->actorList.entry[i];
             Vec2f sp;
@@ -219,36 +220,45 @@ static void Viewport_ShapeSelect_Update(Viewport* this, Split* split, Scene* sce
                 case 1:
                     if (a->state & ACTOR_SELECTED)
                         continue;
-                    
-                    sp = View_GetScreenPos(&this->view, a->pos);
-                    
-                    if (Math_Vec2f_PointInShape(sp, this->selPos, this->selID)) {
-                        Actor_Select(scene, a);
-                        Gizmo_Select(&scene->gizmo, &a->gizmo, &a->pos, &a->rot);
-                        
-                        if (!scene->curActor) {
-                            Actor_Focus(scene, a);
-                            Gizmo_Focus(&scene->gizmo, &a->gizmo);
-                        }
-                    }
                     break;
                     
                 case -1:
                     if (!(a->state & ACTOR_SELECTED))
                         continue;
-                    
-                    sp = View_GetScreenPos(&this->view, a->pos);
-                    
-                    if (Math_Vec2f_PointInShape(sp, this->selPos, this->selID)) {
-                        if (0.0f > Math_Vec3f_Dot(camn, Math_Vec3f_LineSegDir(this->view.currentCamera->eye, a->pos)))
-                            continue;
-                        
-                        Actor_Unselect(scene, a);
-                        if (scene->curActor)
-                            Gizmo_Focus(&scene->gizmo, &scene->curActor->gizmo);
-                        Gizmo_Unselect(&scene->gizmo, &a->gizmo);
-                    }
                     break;
+            }
+            
+            sp = View_GetScreenPos(&this->view, a->pos);
+            
+            if (Math_Vec2f_PointInShape(sp, this->selPos, this->selID)) {
+                RayLine ray = View_GetRayLine(&this->view, sp);
+                ray.end = a->pos;
+                ray.end = Math_Vec3f_Add(ray.end, Math_Vec3f_MulVal(Math_Vec3f_LineSegDir(ray.end, ray.start), 10.0f));
+                
+                if (!Scene_RaycastRoom(scene, &ray, NULL)) {
+                    if (0.0f > Math_Vec3f_Dot(camn, Math_Vec3f_LineSegDir(this->view.currentCamera->eye, a->pos)))
+                        continue;
+                    
+                    switch (this->selMode) {
+                        case 1:
+                            Actor_Select(scene, a);
+                            Gizmo_Select(&scene->gizmo, &a->gizmo, &a->pos, &a->rot);
+                            
+                            if (!scene->curActor) {
+                                Actor_Focus(scene, a);
+                                Gizmo_Focus(&scene->gizmo, &a->gizmo);
+                            }
+                            break;
+                            
+                        case -1:
+                            Actor_Unselect(scene, a);
+                            if (scene->curActor)
+                                Gizmo_Focus(&scene->gizmo, &scene->curActor->gizmo);
+                            Gizmo_Unselect(&scene->gizmo, &a->gizmo);
+                            break;
+                    }
+                    
+                }
             }
         }
         
@@ -339,6 +349,20 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
         if (cursor->pos.y < yMin || cursor->pos.y > yMax)
             Input_SetMousePos(&editor->input, MOUSE_KEEP_AXIS, wrapi(cursor->pos.y, yMin, yMax));
     }
+    
+    rgb8_t color = {
+        scene->header[scene->curHeader].envList.entry[scene->curEnv].fogColor[0],
+        scene->header[scene->curHeader].envList.entry[scene->curEnv].fogColor[1],
+        scene->header[scene->curHeader].envList.entry[scene->curEnv].fogColor[2]
+    };
+    hsl_t hsl;
+    
+    Color_Convert2hsl(&hsl, &color);
+    
+    split->bg.paint = nvgLinearGradient(editor->vg, 0, 0, 0, split->rect.h,
+            nvgHSL(hsl.h, hsl.s, hsl.l),
+            nvgHSL(hsl.h, hsl.s * 0.75f, hsl.l * 0.75f));
+    split->bg.useCustomPaint = true;
 }
 
 // # # # # # # # # # # # # # # # # # # # #
@@ -399,7 +423,7 @@ static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
     n64_set_cullingCallbackFunc(&this->view, (void*)N64_CullingCallback);
 }
 
-static void Viewport_Draw2D(Editor* editor, Viewport* this, Split* split) {
+static void Viewport_Draw_NoFile(Editor* editor, Viewport* this, Split* split) {
     const char* txt = "z64scene";
     void* vg = editor->vg;
     
@@ -429,7 +453,7 @@ static void Viewport_Draw2D(Editor* editor, Viewport* this, Split* split) {
     );
 }
 
-static void Viewport_Draw3D(Editor* editor, Viewport* this, Split* split) {
+static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
     Scene* scene = &editor->scene;
     
     Viewport_InitDraw(editor, this, split);
@@ -513,9 +537,9 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
     void* vg = editor->vg;
     
     if (editor->scene.segment == NULL)
-        Viewport_Draw2D(editor, this, split);
+        Viewport_Draw_NoFile(editor, this, split);
     else
-        Viewport_Draw3D(editor, this, split);
+        Viewport_Draw_Scene(editor, this, split);
     
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
     nvgFontSize(vg, 15);

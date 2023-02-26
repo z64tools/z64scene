@@ -47,6 +47,12 @@ typedef struct GizmoElem {
     Vec3s* drot;
 } GizmoElem;
 
+typedef enum {
+    GIZMO_ORIENTATION_GLOBAL,
+    GIZMO_ORIENTATION_LOCAL,
+    GIZMO_ORIENTATION_VIEW,
+} GizmoOrientation;
+
 typedef struct {
     Vec3f pos;
     Vec3f initpos;
@@ -56,12 +62,13 @@ typedef struct {
     
     bool initAction;
     
-    GizmoAxis   focus;
-    GizmoAxis   lock;
-    Cylinder    cyl[3];
-    MtxF        mtx;
-    Vec3f       pivotPos;
-    GizmoAction action;
+    GizmoAxis        focus;
+    GizmoAxis        lock;
+    Cylinder         cyl[3];
+    MtxF             mtx;
+    Vec3f            pivotPos;
+    GizmoAction      action;
+    GizmoOrientation orientation;
     struct {
         /*
          * Delay 'Gizmo_IsBusy' by one frame

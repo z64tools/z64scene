@@ -6,6 +6,7 @@
 #include <ext_interface.h>
 #include <ext_collision.h>
 #include <ext_undo.h>
+#include <split/task_init.h>
 #include "SkelAnime.h"
 #include "Light.h"
 #include "Scene.h"

@@ -1,7 +1,5 @@
 #include "Editor.h"
 
-#include <split/task_init.h>
-
 extern DataFile gAppIcon16;
 extern DataFile gAppIcon32;
 extern DataFile gAppIcon64;
@@ -92,7 +90,7 @@ void Editor_Init(Editor* editor) {
         editor->geo.workRect.h
     };
     
-    GeoGrid_AddSplit(&editor->geo, &size, TAB_3DVP);
+    GeoGrid_AddSplit(&editor->geo, &size, TAB_VIEWPORT);
     
     size = (Rectf32) {
         size.w,

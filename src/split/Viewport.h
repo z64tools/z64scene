@@ -20,4 +20,6 @@ typedef struct {
 
 extern SplitTask gViewportTask;
 
+void Viewport_FocusRoom(Viewport* this, Scene* scene, int id);
+
 #endif
