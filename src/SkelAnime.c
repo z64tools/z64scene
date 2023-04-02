@@ -94,6 +94,9 @@ static void SkelAnime_InterpFrameTable(s32 limbCount, Vec3s* dst, Vec3s* start, 
 }
 
 void SkelAnime_Update(SkelAnime* this) {
+    if (!FpsLock(20.2))
+        return;
+    
     AnimationHeader animHeader = *((AnimationHeader*)SEGMENTED_TO_VIRTUAL(this->animation));
     
     SwapBE(animHeader.jointIndices);
@@ -113,11 +116,11 @@ void SkelAnime_Update(SkelAnime* this) {
         fmod(this->curFrame, 1.0f)
     );
     
-    if (this->curFrame < this->endFrame) {
+    if (this->curFrame < this->endFrame)
         this->curFrame += this->playSpeed;
-    } else {
+    else
         this->curFrame = 0;
-    }
+    
     this->prevFrame = this->curFrame;
 }
 

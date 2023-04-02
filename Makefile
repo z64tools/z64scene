@@ -99,4 +99,5 @@ bin/win32/assets/%.o: assets/% $(DataFileCompiler)
 $(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o bin/win32/info.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O) $(Zip_Win32_O) $(Texel_Win32_O) $(ASSETS_O_WIN32) $(Image_Win32_O)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
 	i686-w64-mingw32.static-gcc -o $@ $^ $(XFLAGS) $(CFLAGS) -D_WIN32 -municode
+	i686-w64-mingw32.static-strip --strip-unneeded $@
 

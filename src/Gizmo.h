@@ -39,10 +39,10 @@ typedef struct GizmoElem {
     struct GizmoElem* next;
     Vec3f pos;
     Vec3s rot;
-    bool  interact : 1;
-    bool  selected : 1;
-    bool  focus    : 1;
-    bool  refresh  : 1;
+    s8    interact;
+    s8    selected;
+    s8    focus;
+    s8    refresh;
     
     Vec3f* dpos;
     Vec3s* drot;
@@ -71,12 +71,7 @@ typedef struct {
     GizmoAction      action;
     GizmoOrientation orientation;
     struct {
-        /*
-         * Delay 'Gizmo_IsBusy' by one frame
-         * to give the for Gizmo to avoid getting
-         * duplicate inputs
-         */
-        bool release   : 1;
+        int  release   : 3;
         bool typing    : 1;
         bool trackball : 1;
         bool pressHold : 1;
@@ -93,8 +88,8 @@ typedef struct {
 } Gizmo;
 
 void Gizmo_Draw(Gizmo* this, View3D* view, struct Gfx** disp);
-void Gizmo_NodeUpdate(Gizmo* this);
-void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos);
+void Gizmo_Update(Gizmo* this, Input* input);
+void Gizmo_ViewportUpdate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos);
 bool Gizmo_IsBusy(Gizmo* this);
 
 void Gizmo_Select(Gizmo* this, GizmoElem* elem, Vec3f* pos, Vec3s* rot);

@@ -233,7 +233,7 @@ void Editor_Update(Editor* editor) {
     profi_stop(PROFILER_FPS);
     profi_start(PROFILER_FPS);
     
-    SlotMsg(0, "InputBlock: %d", editor->input.state.block);
+    Gizmo_Update(&editor->scene.gizmo, &editor->input);
 }
 
 void Editor_Draw(Editor* editor) {

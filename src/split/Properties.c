@@ -142,10 +142,16 @@ static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
 static inline void MenuActor_RefreshProperties(MenuActor* this, Actor* actor, bool set) {
     if (actor) {
         if (set) {
+            actor->gizmo.refresh = true;
+            
             info("refresh actor");
             
             UndoEvent* undo = Undo_New();
-            Undo_Register(undo, actor, sizeof(u16[2]) + sizeof(Vec3f) + sizeof(Vec3s));
+            Undo_Register(undo, &actor->pos, sizeof(Vec3f));
+            Undo_Register(undo, &actor->rot, sizeof(Vec3s));
+            Undo_Register(undo, &actor->id, sizeof(u16));
+            Undo_Register(undo, &actor->param, sizeof(u16));
+            Undo_Register(undo, &actor->gizmo.refresh, sizeof(u8));
             
             actor->id = shex(this->index.txt);
             actor->param = shex(this->variable.txt);
@@ -155,14 +161,13 @@ static inline void MenuActor_RefreshProperties(MenuActor* this, Actor* actor, bo
             actor->pos.x = sint(this->posX.txt);
             actor->pos.y = sint(this->posY.txt);
             actor->pos.z = sint(this->posZ.txt);
-            actor->gizmo.refresh = true;
         }
         
         Element_Textbox_SetText(&this->index, x_fmt("%04X", actor->id));
         Element_Textbox_SetText(&this->variable, x_fmt("%04X", actor->param));
-        Element_Textbox_SetText(&this->rotX, x_fmt("%4X", (u32)(u16)actor->rot.x));
-        Element_Textbox_SetText(&this->rotY, x_fmt("%4X", (u32)(u16)actor->rot.y));
-        Element_Textbox_SetText(&this->rotZ, x_fmt("%4X", (u32)(u16)actor->rot.z));
+        Element_Textbox_SetText(&this->rotX, x_fmt("%04X", (u32)(u16)actor->rot.x));
+        Element_Textbox_SetText(&this->rotY, x_fmt("%04X", (u32)(u16)actor->rot.y));
+        Element_Textbox_SetText(&this->rotZ, x_fmt("%04X", (u32)(u16)actor->rot.z));
         Element_Textbox_SetText(&this->posX, x_fmt("%d", (int)actor->pos.x));
         Element_Textbox_SetText(&this->posY, x_fmt("%d", (int)actor->pos.y));
         Element_Textbox_SetText(&this->posZ, x_fmt("%d", (int)actor->pos.z));
@@ -174,6 +179,8 @@ static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     RoomHeader* room = Scene_GetRoomHeader(&editor->scene, editor->scene.curRoom);
     
     Element_Combo_SetArli(&this->actorEntry, &room->actorList);
+    Element_Container_SetArli(&this->objectContainer, &room->objectList, 8);
+    this->objectContainer.drag = true;
     
     Actor* actor = Arli_At(&room->actorList, room->actorList.cur);
     MenuActor_RefreshProperties(this, actor, false);
@@ -189,6 +196,15 @@ static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     
     Element_Name(&this->buttonAdd, "New");
     Element_Name(&this->buttonRem, "Del");
+    Element_Name(&this->index, "ID");
+    Element_Name(&this->variable, "Var");
+    
+    Element_Name(&this->posX, "X");
+    Element_Name(&this->posY, "Y");
+    Element_Name(&this->posZ, "Z");
+    Element_Name(&this->rotX, "X");
+    Element_Name(&this->rotY, "Y");
+    Element_Name(&this->rotZ, "Z");
 }
 
 static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
@@ -197,20 +213,33 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     Arli* list = this->actorEntry.arlist;
     Actor* actor = Arli_At(list, list->cur);
     int set = 0;
+    int objContIndex = 0;
     
+    Element_Container_SetArli(&this->objectContainer, &room->objectList, 4);
     Element_Combo_SetArli(&this->actorEntry, &room->actorList);
     
-    Element_Box(BOX_START);
+    Element_Row(Element_Text("Object List"), 1.0f);
+    Element_Row(&this->objectContainer, 1.0f);
+    _log("a");
+    if ((objContIndex = Element_Container(&this->objectContainer)) > -1) {
+        u16* obj = Arli_At(&room->objectList, objContIndex);
+        
+        if (obj) *obj = shex(this->objectContainer.textBox.txt);
+    }
+    
+    Element_Separator(false);
+    
     Element_Row(&this->actorEntry, 0.5f, &this->buttonAdd, 0.25f, &this->buttonRem, 0.25f);
-    Element_Separator(true);
-    Element_Row(Element_Text("ID"), 0.15f, &this->index, 0.35f, Element_Text("Var"), 0.15f, &this->variable, 0.35f);
+    
+    Element_Separator(false);
+    
+    Element_Row(&this->index, 0.5f, &this->variable, 0.5f);
     
     Element_Box(BOX_START);
-    Element_Row(Element_Text("PosXYZ"), 0.5f, Element_Text("RotXYZ"), 0.5f);
+    Element_Row(Element_Text("Position"), 0.5f, Element_Text("Rotation"), 0.5f);
     Element_Row(&this->posX, 0.5f, &this->rotX, 0.5f);
     Element_Row(&this->posY, 0.5f, &this->rotY, 0.5f);
     Element_Row(&this->posZ, 0.5f, &this->rotZ, 0.5f);
-    Element_Box(BOX_END);
     Element_Box(BOX_END);
     
     Element_Condition(&this->actorEntry, actor != NULL);
@@ -224,6 +253,15 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     Element_Condition(&this->posZ, actor != NULL);
     Element_Condition(&this->buttonAdd, actor != NULL);
     Element_Condition(&this->buttonRem, actor != NULL);
+    
+    Element_DisplayName(&this->index, -1);
+    Element_DisplayName(&this->variable, -1);
+    Element_DisplayName(&this->posX, -1);
+    Element_DisplayName(&this->posY, -1);
+    Element_DisplayName(&this->posZ, -1);
+    Element_DisplayName(&this->rotX, -1);
+    Element_DisplayName(&this->rotY, -1);
+    Element_DisplayName(&this->rotZ, -1);
     
     set += !!Element_Textbox(&this->index);
     set += !!Element_Textbox(&this->variable);
@@ -245,16 +283,17 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////////
+
 static struct {
     void  (*init)(Editor*, void*, Split*);
     void  (*update)(Editor*, void*, Split*);
     off_t offset;
+    char* name;
 } sSubMenuParam[] = {
     //crustify
-    { MenuDebug_Init, MenuDebug_Update, offsetof(Properties, menuDebug) },
-    { MenuActor_Init, MenuActor_Update, offsetof(Properties, menuActor) },
-    { NULL,           MenuDebug_Update, offsetof(Properties, menuDebug) },
-    { NULL,           MenuDebug_Update, offsetof(Properties, menuDebug) },
+    { MenuDebug_Init, MenuDebug_Update, offsetof(Properties, menuDebug), "D" },
+    { MenuActor_Init, MenuActor_Update, offsetof(Properties, menuActor), "A" },
     //uncrustify
 };
 
@@ -314,13 +353,17 @@ void Settings_Draw(Editor* editor, Properties* this, Split* split) {
     Rect scissor = r;
     
     Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_ELEMENT_DARK, 255, 1.25f));
-    
     r.x += r.w - 1;
     r.w = 1;
     Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_ELEMENT_LIGHT, 25, 1.25f));
     
     for (int i = 0; i < ArrCount(sSubMenuParam); i++) {
-        Rect r = GetSubRect(split, i);
+        Rect tr;
+        Rect r;
+        NVGcolor col = Theme_GetColor(THEME_TEXT, 255, 1.0f);
+        
+        tr = r = GetSubRect(split, i);
+        tr.x += SPLIT_ELEM_X_PADDING / 2;
         
         if (this->subIndex == i) {
             r.w += SPLIT_ELEM_X_PADDING / 2;
@@ -329,6 +372,13 @@ void Settings_Draw(Editor* editor, Properties* this, Split* split) {
             Gfx_DrawRounderOutline(vg, r, Theme_GetColor(THEME_ELEMENT_LIGHT, 25, 1.0f));
             Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_BASE, 255, 1.0f));
             nvgResetScissor(vg);
+            
+            r.w -= SPLIT_ELEM_X_PADDING;
+            
+            col = Theme_GetColor(THEME_PRIM, 255, 1.0f);
         }
+        
+        if (sSubMenuParam[i].name)
+            Gfx_Text(vg, tr, NVG_ALIGN_MIDDLE | NVG_ALIGN_LEFT, col, sSubMenuParam[i].name);
     }
 }

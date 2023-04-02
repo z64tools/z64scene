@@ -24,6 +24,7 @@ typedef struct {
 } MenuDebug;
 
 typedef struct {
+    ElContainer objectContainer;
     ElCombo   actorEntry;
     ElTextbox index;
     ElTextbox variable;

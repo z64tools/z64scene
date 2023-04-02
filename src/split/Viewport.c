@@ -50,6 +50,7 @@ void Viewport_FocusRoom(Viewport* this, Scene* scene, int id) {
     View_MoveTo(&this->view, room->mesh->center);
     View_ZoomTo(&this->view, room->mesh->size);
     View_RotTo(&this->view, Math_Vec3s_New(DegToBin(45), yaw, 0));
+    scene->ui.glowFactor = 0.25f;
 }
 
 static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split) {
@@ -92,7 +93,7 @@ static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split)
         if (Input_GetKey(input, KEY_KP_DECIMAL)->press)
             Viewport_FocusRoom(this, scene, scene->curRoom);
         
-        if (Input_GetMouse(input, CLICK_M)->press && Input_GetKey(input, KEY_LEFT_ALT)->hold) {
+        if (Input_SelectClick(input, CLICK_M) && Input_GetKey(input, KEY_LEFT_ALT)->hold) {
             Vec3f o;
             s32 r = 0;
             RayLine ray = View_GetCursorRayLine(&this->view);
@@ -108,18 +109,13 @@ static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split)
                 View_MoveTo(&this->view, o);
         }
         
-        if (Input_GetMouse(input, CLICK_M)->press && Input_GetKey(input, KEY_LEFT_CONTROL)->hold) {
+        if (Input_SelectClick(input, CLICK_M) && Input_GetKey(input, KEY_LEFT_CONTROL)->hold) {
             RayLine ray = View_GetCursorRayLine(&this->view);
             Room* room = Scene_RaycastRoom(&editor->scene, &ray, NULL);
             
             if (room) {
-                RoomHeader* hdrroom = &room->header[scene->curHeader];
                 Scene_SetRoom(&editor->scene, room->id);
-                s16 yaw = Math_Vec3f_Yaw(this->view.currentCamera->eye, hdrroom->mesh->center);
-                
-                View_MoveTo(&this->view, hdrroom->mesh->center);
-                View_ZoomTo(&this->view, hdrroom->mesh->size);
-                View_RotTo(&this->view, Math_Vec3s_New(DegToBin(45), yaw, 0));
+                Viewport_FocusRoom(this, scene, room->id);
             }
         }
     }
@@ -136,7 +132,9 @@ static void Viewport_Actor_Update(Editor* editor, Viewport* this, Split* split) 
     
     if (!split->mouseInSplit || editor->geo.state.blockElemInput)
         return;
-    if (Gizmo_IsBusy(&scene->gizmo) || !Input_GetMouse(input, CLICK_L)->press)
+    if (Gizmo_IsBusy(&scene->gizmo))
+        return;
+    if (!Input_SelectClick(input, CLICK_L))
         return;
     
     // Process rooms so that we do not grab actors behind walls
@@ -294,6 +292,10 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
     Element_Name(&this->resetCam, "Reset Camera");
     this->resetCam.align = ALIGN_LEFT;
     // this->view.mode = CAM_MODE_ORBIT;
+    
+    Memfile_LoadBin(&this->object, "object.zobj");
+    SkelAnime_Init(&this->object, &this->skelAnime, 0x06013990, 0x06015B20);
+    this->skelAnime.playSpeed = 1.0f;
 }
 
 void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
@@ -434,24 +436,12 @@ static void Viewport_Draw_NoFile(Editor* editor, Viewport* this, Split* split) {
     nvgFontFace(vg, "default-bold");
     nvgFontSize(vg, 35);
     nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
-    nvgText(
-        vg,
-        split->rect.w * 0.5,
-        split->rect.h * 0.5,
-        txt,
-        NULL
-    );
+    nvgText(vg, split->rect.w * 0.5, split->rect.h * 0.5, txt, NULL);
     
     nvgFontFace(vg, "default");
     nvgFontSize(vg, 15);
     nvgFillColor(vg, Theme_GetColor(THEME_BASE, 255, 2.0f));
-    nvgText(
-        vg,
-        split->rect.w * 0.5,
-        split->rect.h * 0.5 + 35 * 0.75f,
-        "drop files here",
-        NULL
-    );
+    nvgText(vg, split->rect.w * 0.5, split->rect.h * 0.5 + 35 * 0.75f, "drop files here", NULL);
 }
 
 static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
@@ -465,15 +455,26 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
     Scene_Update(scene, &this->view);
     
     profi_start(2);
-    Gizmo_NodeUpdate(&scene->gizmo);
-    
-    SlotMsg(2, "Mouse In Split: %B", split->mouseInSplit);
-    
     if (split->mouseInSplit) {
-        Gizmo_Update(&scene->gizmo, &this->view, &editor->input, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
+        Gizmo_ViewportUpdate(&scene->gizmo, &this->view, &editor->input, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
         Viewport_Actor_Update(editor, this, split);
     }
     profi_stop(2);
+    
+#if 1
+    Matrix_Push(); {
+        gxSPSegment(POLY_OPA_DISP++, 0x6, this->object.data);
+        gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
+        
+        Matrix_Translate(0, 0, 0, MTXMODE_NEW);
+        Matrix_Scale(0.01f, 0.01f, 0.01f, MTXMODE_APPLY);
+        
+        gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+        
+        SkelAnime_Update(&this->skelAnime);
+        SkelAnime_Draw(&this->skelAnime, SKELANIME_FLEX);
+    } Matrix_Pop();
+#endif
     
     profi_start(0);
     Scene_Draw(&editor->scene, &this->view);
@@ -509,33 +510,6 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
         nvgText(vg, 8, split->rect.h - SPLIT_TEXT_H - SPLIT_ELEM_X_PADDING, txt, NULL);
     }
     
-#if 0
-    Matrix_Push(); {
-        gxSPSegment(POLY_OPA_DISP++, 0x6, gNora.data);
-        
-        gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
-        
-        Matrix_Scale(0.01f, 0.01f, 0.01f, MTXMODE_APPLY);
-        Matrix_Translate(0, 0, 0, MTXMODE_APPLY);
-        
-        gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-        
-        SkelAnime_Update(&this->skelAnime);
-        SkelAnime_Draw(&this->skelAnime, SKELANIME_FLEX);
-    } Matrix_Pop();
-    
-    Matrix_Push(); {
-        gSegment[6] = this->zobj[1].data;
-        gSPSegment(POLY_OPA_DISP++, 0x6, this->zobj[1].data);
-        
-        Matrix_Scale(0.01f, 0.01f, 0.01f, MTXMODE_APPLY);
-        gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-        
-        gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
-        
-        gSPDisplayList(POLY_OPA_DISP++, 0x060017C0);
-    } Matrix_Pop();
-#endif
 }
 
 char sMsg[32][128];

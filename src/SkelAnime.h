@@ -58,6 +58,8 @@ typedef struct SkelAnime {
     Vec3s    baseTransl;
     f32      prevFrame;
     Memfile* memFile;
+    
+    f64 time;
 } SkelAnime;
 
 typedef enum {

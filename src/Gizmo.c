@@ -347,7 +347,7 @@ static void Gizmo_UpdateTyped(Gizmo* this, Input* input) {
     }
 }
 
-void Gizmo_NodeUpdate(Gizmo* this) {
+void Gizmo_Update(Gizmo* this, Input* input) {
     fornode(elem, this->elemHead) {
         elem->interact = false;
         
@@ -361,9 +361,16 @@ void Gizmo_NodeUpdate(Gizmo* this) {
             elem->refresh = false;
         }
     }
+    
+    if (this->release == 2)
+        this->release = 0;
+    
+    if (Input_GetMouse(input, CLICK_L)->release)
+        if (this->release == 1)
+            this->release = 2;
 }
 
-void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
+void Gizmo_ViewportUpdate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
     void (* gizmoActionFunc[])(Gizmo*, View3D*, Input*, Vec3f*) = {
         NULL,
         Gizmo_Move,
@@ -378,11 +385,7 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
         return;
     }
     
-    this->orientation = GIZMO_ORIENTATION_LOCAL;
-    
     Gizmo_UpdateMtx(this, view);
-    
-    this->release = false;
     
     if (Input_GetKey(input, KEY_G)->press) {
         if (!this->action) {

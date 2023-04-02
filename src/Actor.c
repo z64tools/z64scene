@@ -51,16 +51,17 @@ void Actor_Draw_RoomHeader(RoomHeader* header, View3D* view) {
 }
 
 void Actor_Focus(Scene* scene, Actor* this) {
+    RoomHeader* room = Scene_GetRoomHeader(scene, scene->curRoom);
+    
     scene->curActor = this;
+    Arli_Set(&room->actorList, Arli_IndexOf(&room->actorList, this));
 }
 
 void Actor_Select(Scene* scene, Actor* this) {
-    RoomHeader* room = Scene_GetRoomHeader(scene, scene->curRoom);
     
     arrmove_r(scene->prevActor, 0, 64);
     scene->prevActor[0] = this;
     this->state |= ACTOR_SELECTED;
-    Arli_Set(&room->actorList, Arli_IndexOf(&room->actorList, this));
 }
 
 void Actor_Unselect(Scene* scene, Actor* this) {

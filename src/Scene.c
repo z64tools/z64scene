@@ -568,6 +568,21 @@ void Scene_Init(Scene* this) {
             
             room->objectList = Arli_New(u16);
             Arli_Alloc(&room->objectList, 16);
+            
+            nested(const char*, ActorEntry_ElemName, (Arli * this, size_t index)) {
+                Actor* actor = Arli_At(this, index);
+                
+                return x_fmt("%d: 0x%04X", index, actor->id);
+            };
+            
+            nested(const char*, ObjectEntry_ElemName, (Arli * this, size_t index)) {
+                u16* object = Arli_At(this, index);
+                
+                return x_fmt("%04X", *object);
+            };
+            
+            Arli_SetElemNameCallback(&room->actorList, (void*)ActorEntry_ElemName);
+            Arli_SetElemNameCallback(&room->objectList, (void*)ObjectEntry_ElemName);
         }
     }
     
@@ -930,8 +945,8 @@ void Scene_SetRoom(Scene* this, s32 roomID) {
 
 void Room_Draw(RoomMesh* this) {
     gSPDisplayList(POLY_OPA_DISP++, gSetupDList(0x19));
-    gDPSetEnvColor(POLY_OPA_DISP++, 0x80, 0x80, 0x80, 0x80);
     gSPDisplayList(POLY_XLU_DISP++, gSetupDList(0x19));
+    gDPSetEnvColor(POLY_OPA_DISP++, 0x80, 0x80, 0x80, 0x80);
     gDPSetEnvColor(POLY_XLU_DISP++, 0x80, 0x80, 0x80, 0x80);
     
     Matrix_Push();
@@ -995,14 +1010,7 @@ static void Scene_Cmd01_ActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd)
     ActorEntry* entryList = SEGMENTED_TO_VIRTUAL(cmd->actorList.segment);
     Arli* list = &room->actorList;
     
-    nested(const char*, ActorEntry_ElemName, (Arli * this, size_t index)) {
-        Actor* actor = Arli_At(this, index);
-        
-        return x_fmt("%d: 0x%04X", index, actor->id);
-    };
-    
     Arli_Clear(list);
-    Arli_SetElemNameCallback(list, (void*)ActorEntry_ElemName);
     Arli_Alloc(list, 255);
     
     for (s32 i = 0; i < cmd->actorList.num; i++) {
