@@ -148,9 +148,9 @@ typedef struct Scene {
     Room room[32];
     
     struct {
-        ElCombo  roomCombo;
-        PropList roomList;
-        f32      glowFactor;
+        ElCombo roomCombo;
+        Arli    roomNameList;
+        f32     glowFactor;
     } ui;
     
     u8 numHeader;

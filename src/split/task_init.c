@@ -1,5 +1,5 @@
 #include "RoomList.h"
-#include "Settings.h"
+#include "Properties.h"
 #include "Viewport.h"
 #include "task_init.h"
 
@@ -18,7 +18,7 @@ SplitTask empty = {
 };
 
 SplitTask* gTaskTable[] = {
-    [TAB_SETTINGS] = &gSettingsTask,
+    [TAB_SETTINGS] = &gPropertiesTask,
     [TAB_VIEWPORT] = &gViewportTask,
     [TAB_ROOMLIST] = &gRoomListTask,
     [TAB_EMPTY] = &empty

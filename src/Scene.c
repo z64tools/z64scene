@@ -550,30 +550,48 @@ static void Scene_SetHeaderNum(Scene* this) {
     vfree(cmdOffset);
 }
 
-static bool Scene_OnRoomChange(PropList* list, PropListChange type, s32 index) {
-    Scene* this = list->udata1;
-    
-    switch (type) {
-        case PROP_SET:
-            this->curRoom = index;
-            this->ui.glowFactor = 0.25f;
-            break;
-    }
-    
-    return true;
-}
-
 void Scene_Init(Scene* this) {
     
-    // Init `Room` struct ID
     for (var i = 0; i < ArrCount(this->room); i++) {
         u32* id = (u32*)&this->room[i];
         
         *id = i;
+        
+        for (var j = 0; j < ArrCount(this->room[i].header); j++) {
+            RoomHeader* room = &this->room[i].header[j];
+            
+            room->roomLight = Arli_New(LightParams);
+            Arli_Alloc(&room->roomLight, 64);
+            
+            room->actorList = Arli_New(Actor);
+            Arli_Alloc(&room->actorList, 256);
+            
+            room->objectList = Arli_New(u16);
+            Arli_Alloc(&room->objectList, 16);
+        }
     }
     
-    Element_Combo_SetPropList(&this->ui.roomCombo, &this->ui.roomList);
-    PropList_SetOnChangeCallback(&this->ui.roomList, Scene_OnRoomChange, this, NULL);
+    for (var i = 0; i < ArrCount(this->header); i++) {
+        SceneHeader* scene = &this->header[i];
+        
+        scene->spawnList = Arli_New(SpawnActor);
+        Arli_Alloc(&scene->spawnList, 64);
+        
+        scene->pathList = Arli_New(PathList);
+        Arli_Alloc(&scene->pathList, 64);
+        
+        scene->transitionList = Arli_New(TransitionActor);
+        Arli_Alloc(&scene->transitionList, 255);
+        
+        scene->envList = Arli_New(EnvLightSettings);
+        Arli_Alloc(&scene->envList, 255);
+        
+        scene->exitList = Arli_New(u16);
+        Arli_Alloc(&scene->exitList, 32);
+    }
+    
+    this->ui.roomNameList = Arli_New(char[64]);
+    Element_Combo_SetArli(&this->ui.roomCombo, &this->ui.roomNameList);
 }
 
 static void* Scene_ExObj_GetHeader(Memfile* file) {
@@ -673,7 +691,7 @@ void Scene_LoadRoom(Scene* this, const char* file) {
     
     *((u32*)&room->id) = this->numRoom - 1;
     
-    PropList_Add(&this->ui.roomList, x_fmt("Room%02X", this->numRoom - 1));
+    Arli_Add(&this->ui.roomNameList, x_fmt("Room%02X", this->numRoom - 1));
 }
 
 void Scene_Kill(Scene* this) {
@@ -690,7 +708,7 @@ void Scene_Free(Scene* this) {
     
     CollisionMesh_Free(&this->colMesh);
     vfree(this->segment);
-    PropList_Free(&this->ui.roomList);
+    Arli_Free(&this->ui.roomNameList);
     
     memset(this, 0, sizeof(*this));
     n64_clearCache();
@@ -902,7 +920,8 @@ void Scene_SetState(Scene* this, SceneState state, bool set) {
 }
 
 void Scene_SetRoom(Scene* this, s32 roomID) {
-    PropList_Set(&this->ui.roomList, roomID);
+    Arli_Set(&this->ui.roomNameList, roomID);
+    this->curRoom = roomID;
 }
 
 // # # # # # # # # # # # # # # # # # # # #
@@ -960,38 +979,39 @@ static void Scene_Cmd00_SpawnList(Scene* scene, RoomHeader* room, SceneCmd* cmd)
     SceneHeader* hdr = &scene->header[scene->curHeader];
     Arli* spawnList = &hdr->spawnList;
     
-    Arli_Free(spawnList);
-    hdr->spawnList = Arli_New(SpawnActor);
+    Arli_Clear(spawnList);
     
     for (s32 i = 0; i < cmd->spawnList.data1; i++) {
-        SpawnActor spawn = {
-            .actor.id    = entryList[i].id,
+        Arli_AddVar(spawnList, (SpawnActor) {
+            .actor.id = entryList[i].id,
             .actor.param = entryList[i].param,
-            .actor.pos   = Math_Vec3f_New(UnfoldVec3(entryList[i].pos)),
-            .actor.rot   = Math_Vec3s_New(UnfoldVec3(entryList[i].rot)),
-        };
-        
-        Arli_Add(spawnList, &spawn);
+            .actor.pos = Math_Vec3f_New(UnfoldVec3(entryList[i].pos)),
+            .actor.rot = Math_Vec3s_New(UnfoldVec3(entryList[i].rot)),
+        });
     }
 }
 
 static void Scene_Cmd01_ActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     ActorEntry* entryList = SEGMENTED_TO_VIRTUAL(cmd->actorList.segment);
-    Arli* arli = &room->actorList;
+    Arli* list = &room->actorList;
     
-    Arli_Free(arli);
-    room->actorList = Arli_New(Actor);
-    Arli_Alloc(arli, 255);
+    nested(const char*, ActorEntry_ElemName, (Arli * this, size_t index)) {
+        Actor* actor = Arli_At(this, index);
+        
+        return x_fmt("%d: 0x%04X", index, actor->id);
+    };
+    
+    Arli_Clear(list);
+    Arli_SetElemNameCallback(list, (void*)ActorEntry_ElemName);
+    Arli_Alloc(list, 255);
     
     for (s32 i = 0; i < cmd->actorList.num; i++) {
-        Actor actor = {
-            .id    = entryList[i].id,
+        Arli_AddVar(list, (Actor) {
+            .id = entryList[i].id,
             .param = entryList[i].param,
-            .pos   = Math_Vec3f_New(UnfoldVec3(entryList[i].pos)),
-            .rot   = Math_Vec3s_New(UnfoldVec3(entryList[i].rot)),
-        };
-        
-        Arli_Add(arli, &actor);
+            .pos = Math_Vec3f_New(UnfoldVec3(entryList[i].pos)),
+            .rot = Math_Vec3s_New(UnfoldVec3(entryList[i].rot)),
+        });
     }
 }
 
@@ -1096,68 +1116,12 @@ static void Scene_Cmd0A_MeshHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd
 
 static void Scene_Cmd0B_ObjectList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     u16* objList = SEGMENTED_TO_VIRTUAL(cmd->objectList.segment);
-    Arli* arli = &room->objectList;
+    Arli* list = &room->objectList;
     
-    Arli_Free(arli);
-    room->objectList = Arli_New(u16);
+    Arli_Clear(list);
     
-    for (var i = 0; i < cmd->objectList.num; i++) {
-        u16 obj = ReadBE(objList[i]);
-        
-        Arli_Add(arli, &obj);
-    }
-    
-    // s32 i;
-    // s32 j;
-    // s32 k;
-    // ObjectStatus* status;
-    // ObjectStatus* status2;
-    // ObjectStatus* firstStatus;
-    // s16* objectEntry = SEGMENTED_TO_VIRTUAL(cmd->objectList.segment);
-    // void* nextPtr;
-    //
-    // k = 0;
-    // i = play->objectCtx.unk_09;
-    // firstStatus = &play->objectCtx.status[0];
-    // status = &play->objectCtx.status[i];
-    //
-    // while (i < play->objectCtx.num) {
-    //  if (status->id != *objectEntry) {
-    //      status2 = &play->objectCtx.status[i];
-    //      for (j = i; j < play->objectCtx.num; j++) {
-    //          status2->id = OBJECT_INVALID;
-    //          status2++;
-    //      }
-    //      play->objectCtx.num = i;
-    //      func_80031A28(play, &play->actorCtx);
-    //
-    //      continue;
-    //  }
-    //
-    //  i++;
-    //  k++;
-    //  objectEntry++;
-    //  status++;
-    // }
-    //
-    // ASSERT(
-    //  cmd->objectList.num <= OBJECT_EXCHANGE_BANK_MAX,
-    //  "scene_info->object_bank.num <= OBJECT_EXCHANGE_BANK_MAX",
-    //  "../z_scene.c",
-    //  705
-    // );
-    //
-    // while (k < cmd->objectList.num) {
-    //  nextPtr = func_800982FC(&play->objectCtx, i, *objectEntry);
-    //  if (i < OBJECT_EXCHANGE_BANK_MAX - 1) {
-    //      firstStatus[i + 1].segment = nextPtr;
-    //  }
-    //  i++;
-    //  k++;
-    //  objectEntry++;
-    // }
-    //
-    // play->objectCtx.num = i;
+    for (var i = 0; i < cmd->objectList.num; i++)
+        Arli_AddVar(list, (u16)ReadBE(objList[i]));
 }
 
 static void Scene_Cmd0C_LightList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
@@ -1182,10 +1146,11 @@ static void Scene_Cmd0E_TransActorList(Scene* scene, RoomHeader* room, SceneCmd*
 static void Scene_Cmd0F_EnvList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     SceneHeader* header = &scene->header[scene->curHeader];
     EnvLightSettings* env = SEGMENTED_TO_VIRTUAL(cmd->lightSettingList.segment);
+    Arli* list = &header->envList;
     
-    Arli_Free(&header->envList);
-    header->envList = Arli_New(EnvLightSettings);
-    Arli_Insert(&header->envList, 0, cmd->lightSettingList.num, env);
+    Arli_Clear(list);
+    Arli_Alloc(list, cmd->lightSettingList.num);
+    Arli_AddX(list, cmd->lightSettingList.num, env);
 }
 
 static void Scene_Cmd10_Time(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
@@ -1249,12 +1214,10 @@ static void Scene_Cmd13_ExitList(Scene* scene, RoomHeader* room, SceneCmd* cmd) 
     u16* exitList = SEGMENTED_TO_VIRTUAL(cmd->exitList.segment);
     SceneHeader* header = Scene_GetSceneHeader(scene);
     
-    Arli_Free(&header->exitList);
-    header->exitList = Arli_New(u16);
+    Arli_Clear(&header->exitList);
     
     for (var i = 0;; i++) {
         u16 exit = ReadBE(exitList[i]);
-        
         Arli_Add(&header->exitList, &exit);
         
         if (exit & 0xF000)

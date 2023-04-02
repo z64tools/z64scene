@@ -347,6 +347,22 @@ static void Gizmo_UpdateTyped(Gizmo* this, Input* input) {
     }
 }
 
+void Gizmo_NodeUpdate(Gizmo* this) {
+    fornode(elem, this->elemHead) {
+        elem->interact = false;
+        
+        if (elem->refresh) {
+            elem->pos = *elem->dpos;
+            elem->rot = *elem->drot;
+            
+            if (elem->focus)
+                Gizmo_Focus(this, elem);
+            
+            elem->refresh = false;
+        }
+    }
+}
+
 void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
     void (* gizmoActionFunc[])(Gizmo*, View3D*, Input*, Vec3f*) = {
         NULL,
@@ -354,10 +370,6 @@ void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
         Gizmo_Rotate,
     };
     bool alt = Input_GetKey(input, KEY_LEFT_ALT)->hold;
-    
-    fornode(elem, this->elemHead) {
-        elem->interact = false;
-    }
     
     if (!this->activeElem) {
         if (view->currentCamera->roll != 0)

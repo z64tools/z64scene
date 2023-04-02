@@ -39,9 +39,10 @@ typedef struct GizmoElem {
     struct GizmoElem* next;
     Vec3f pos;
     Vec3s rot;
-    bool  interact;
-    bool  selected;
-    bool  focus;
+    bool  interact : 1;
+    bool  selected : 1;
+    bool  focus    : 1;
+    bool  refresh  : 1;
     
     Vec3f* dpos;
     Vec3s* drot;
@@ -92,6 +93,7 @@ typedef struct {
 } Gizmo;
 
 void Gizmo_Draw(Gizmo* this, View3D* view, struct Gfx** disp);
+void Gizmo_NodeUpdate(Gizmo* this);
 void Gizmo_Update(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos);
 bool Gizmo_IsBusy(Gizmo* this);
 

@@ -13,6 +13,8 @@
 
 extern VectorGfx gVecGfx_EyeOpen;
 
+void SlotMsg(int i, const char* fmt, ...);
+
 typedef enum {
     TIME_SCENE_ANIM = 0x40,
 } TimeSlot;

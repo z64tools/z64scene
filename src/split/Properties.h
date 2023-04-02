@@ -24,16 +24,26 @@ typedef struct {
 } MenuDebug;
 
 typedef struct {
-    ElTextbox   textBox;
-    ElContainer actorContainerList;
+    ElCombo   actorEntry;
+    ElTextbox index;
+    ElTextbox variable;
+    ElTextbox rotX;
+    ElTextbox rotY;
+    ElTextbox rotZ;
+    ElTextbox posX;
+    ElTextbox posY;
+    ElTextbox posZ;
+    
+    ElButton buttonAdd;
+    ElButton buttonRem;
 } MenuActor;
 
 typedef struct {
     int       subIndex;
     MenuDebug menuDebug;
     MenuActor menuActor;
-} Settings;
+} Properties;
 
-extern SplitTask gSettingsTask;
+extern SplitTask gPropertiesTask;
 
 #endif

@@ -371,7 +371,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
 // # # # # # # # # # # # # # # # # # # # #
 
 static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
-    nvgFontSize(vg, SPLIT_TEXT);
+    nvgFontSize(vg, SPLIT_TEXT + 2);
     nvgFontFace(vg, "default");
     nvgFontBlur(vg, 1.0f);
     nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
@@ -465,6 +465,10 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
     Scene_Update(scene, &this->view);
     
     profi_start(2);
+    Gizmo_NodeUpdate(&scene->gizmo);
+    
+    SlotMsg(2, "Mouse In Split: %B", split->mouseInSplit);
+    
     if (split->mouseInSplit) {
         Gizmo_Update(&scene->gizmo, &this->view, &editor->input, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
         Viewport_Actor_Update(editor, this, split);
@@ -534,6 +538,18 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
 #endif
 }
 
+char sMsg[32][128];
+int sMsgState[32];
+
+void SlotMsg(int i, const char* fmt, ...) {
+    va_list va;
+    
+    va_start(va, fmt);
+    xl_vsnprintf(sMsg[i], 128, fmt, va);
+    va_end(va);
+    sMsgState[i] = true;
+}
+
 void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
     void* vg = editor->vg;
     
@@ -552,4 +568,24 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
     ProfilerText(vg, 3, "Gizmo Update:", "%.2fms", profi_get(2) * 1000.f, 16.0f);
     ProfilerText(vg, 4, "n64:", "%.2fms", profi_get(8) * 1000.f, 16.0f);
     ProfilerText(vg, 5, "Delta:", "%.2f", gDeltaTime, 0);
+    
+    for (int i = 0; i < ArrCount(sMsg); i++) {
+        if (sMsg[i][0]) {
+            nvgFontSize(vg, SPLIT_TEXT + 2);
+            nvgFontFace(vg, "default");
+            nvgFontBlur(vg, 1.0f);
+            nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+            for (s32 i = 0; i < 2; i++)
+                nvgText(vg, 8, 8 + SPLIT_TEXT_H * (6 + i), sMsg[i], NULL);
+            
+            nvgFontBlur(vg, 0.0f);
+            if (sMsgState[i])
+                nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
+            else
+                nvgFillColor(vg, nvgRGBA(80, 80, 80, 225));
+            nvgText(vg, 8, 8 + SPLIT_TEXT_H * (6 + i), sMsg[i], NULL);
+            
+            sMsgState[i] = false;
+        }
+    }
 }

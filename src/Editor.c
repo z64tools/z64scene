@@ -232,6 +232,8 @@ void Editor_Update(Editor* editor) {
     Cursor_Update(&editor->cursor);
     profi_stop(PROFILER_FPS);
     profi_start(PROFILER_FPS);
+    
+    SlotMsg(0, "InputBlock: %d", editor->input.state.block);
 }
 
 void Editor_Draw(Editor* editor) {
