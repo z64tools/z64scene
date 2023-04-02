@@ -21,8 +21,17 @@ typedef struct {
     
     ElSlider fogNear;
     ElSlider fogFar;
-    
-    ElContainer cont;
+} MenuDebug;
+
+typedef struct {
+    ElTextbox   textBox;
+    ElContainer actorContainerList;
+} MenuActor;
+
+typedef struct {
+    int       subIndex;
+    MenuDebug menuDebug;
+    MenuActor menuActor;
 } Settings;
 
 extern SplitTask gSettingsTask;

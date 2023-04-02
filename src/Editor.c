@@ -57,11 +57,8 @@ Editor* GetEditor(void) {
 }
 
 static void Editor_UpperHeader(void* pass, void* empty, Split* split) {
-    Editor* this = pass;
-    Scene* scene = &this->scene;
-    
-    Element_Header(&scene->ui.roomCombo, 98);
-    Element_Combo(&this->scene.ui.roomCombo);
+    // Editor* this = pass;
+    // Scene* scene = &this->scene;
 }
 
 void Editor_Init(Editor* editor) {
@@ -128,6 +125,15 @@ void Editor_Init(Editor* editor) {
     FileDialog_New(&loadFile, &editor->app, "Load File");
     // FileDialog_New(&saveFile, &editor->app, "Save File");
 #endif
+    
+    char* files[] = {
+        "scene.zscene",
+        "room_0.zroom",
+        "room_1.zroom",
+    };
+    
+    Editor_DropCallback(editor->app.window, 3, files);
+    DisplayList_GatherReferences(&editor->scene);
 }
 
 void Editor_Destroy(Editor* editor) {

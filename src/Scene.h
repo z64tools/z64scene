@@ -8,6 +8,7 @@
 #include "BgCheck.h"
 #include "Light.h"
 #include "Actor.h"
+#include "Gfx.h"
 
 typedef struct {
     Vec3f* point;
@@ -51,15 +52,9 @@ typedef struct RoomMesh {
 typedef struct RoomHeader {
     RoomMesh* mesh;
     
-    struct {
-        Actor entry[255];
-        u32   num;
-    } actorList;
-    
-    struct {
-        u16 entry[255];
-        u32 num;
-    } objectList;
+    Arli actorList;
+    Arli objectList;
+    Arli roomLight;
     
     struct {
         Vec3s dir;
@@ -74,11 +69,6 @@ typedef struct RoomHeader {
     } behaviour;
     
     struct {
-        LightParams entry[64];
-        u32 num;
-    } roomLight;
-    
-    struct {
         u8   type;
         u8   config;
         u8   lightMode;
@@ -90,6 +80,12 @@ typedef struct RoomHeader {
 } RoomHeader;
 
 typedef struct SceneHeader {
+    Arli spawnList;
+    Arli pathList;
+    Arli transitionList;
+    Arli envList;
+    Arli exitList;
+#if 0
     struct {
         SpawnActor entry[64];
         u32 num;
@@ -112,15 +108,16 @@ typedef struct SceneHeader {
     } envList;
     
     struct {
+        u16 exit[32];
+        u32 num;
+    } exitList;
+#endif
+    
+    struct {
         u8 hour;
         u8 min;
         u8 speed;
     } time;
-    
-    struct {
-        u16 exit[32];
-        u32 num;
-    } exitList;
     
     struct {
         u8 specID;
@@ -172,7 +169,7 @@ typedef struct Scene {
     Gizmo gizmo;
     
     struct {
-        RoomMesh entry[255];
+        RoomMesh entry[32 * 4];
         u32      num;
         Vec3f    rayPos;
         bool     rayHit;
@@ -201,6 +198,7 @@ void Scene_SetState(Scene* this, SceneState state, bool set);
 void Scene_SetRoom(Scene* this, s32 roomID);
 
 void Room_Draw(RoomMesh* roomMesh);
+
 Room* Scene_RaycastRoom(Scene* scene, RayLine* ray, Vec3f* out);
 
 #endif /* __Z64_SCENE_H__ */

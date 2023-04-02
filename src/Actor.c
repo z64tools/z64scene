@@ -47,7 +47,7 @@ void Actor_Draw(Actor* this, View3D* view) {
 
 void Actor_Draw_RoomHeader(RoomHeader* header, View3D* view) {
     for (var i = 0; i < header->actorList.num; i++)
-        Actor_Draw(&header->actorList.entry[i], view);
+        Actor_Draw(Arli_At(&header->actorList, i), view);
 }
 
 void Actor_Focus(Scene* scene, Actor* this) {
@@ -80,6 +80,9 @@ void Actor_Unselect(Scene* scene, Actor* this) {
 void Actor_UnselectAll(Scene* scene, RoomHeader* hdr) {
     scene->curActor = NULL;
     memset(scene->prevActor, 0, sizeof(scene->prevActor));
-    for (var i = 0; i < hdr->actorList.num; i++)
-        hdr->actorList.entry[i].state &= ~ACTOR_SELECTED;
+    for (var i = 0; i < hdr->actorList.num; i++) {
+        Actor* actor = Arli_At(&hdr->actorList, i);
+        
+        actor->state &= ~ACTOR_SELECTED;
+    }
 }

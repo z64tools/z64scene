@@ -429,128 +429,7 @@ struct {
 // # # # # # # # # # # # # # # # # # # # #
 
 void Scene_SaveProject(Scene* this, const char* file) {
-    Toml toml = Toml_New();
-    Memfile mem = Memfile_New();
-    Zip zip = {};
     
-    for (var i = 0; i < this->numHeader; i++) {
-        Toml_SetVar(&toml, x_fmt("header[%d].navi_msg", i),
-            "%s",
-            this->header[i].naviMsg == 1 ? "\"overworld\"" :
-            this->header[i].naviMsg == 2 ? "\"dungeon\"" :
-            "\"none\"");
-        Toml_SetVar(&toml, x_fmt("header[%d].keep_object", i),
-            "0x%04X", this->header[i].keepObject);
-        
-        Toml_SetVar(&toml, x_fmt("header[%d].scene_cam_type", i),
-            "%d", this->header[i].camType);
-        Toml_SetVar(&toml, x_fmt("header[%d].area", i),
-            "%d", this->header[i].area);
-        
-        Toml_SetVar(&toml, x_fmt("header[%d].snd_spec_id", i),
-            "0x%02X", this->header[i].sound.specID);
-        Toml_SetVar(&toml, x_fmt("header[%d].snd_sfx_seq_id", i),
-            "0x%02X", this->header[i].sound.sfxID);
-        Toml_SetVar(&toml, x_fmt("header[%d].snd_bgm_seq_id", i),
-            "0x%02X", this->header[i].sound.bgmID);
-        
-        for (var j = 0; j < this->header[i].exitList.num; j++)
-            Toml_SetVar(&toml, x_fmt("header[%d].exit[%d]", i, j),
-                "0x%02X", this->header[i].exitList.exit[j]);
-        
-        for (var j = 0; j < this->header[i].envList.num; j++) {
-            for (var x = 0; x < 3; x++) {
-                Toml_SetVar(&toml, x_fmt("header[%d].env_light.entry[%d].ambient[%d]", i, j, x),
-                    "%d", this->header[i].envList.entry[j].ambientColor[x]);
-                Toml_SetVar(&toml, x_fmt("header[%d].env_light.entry[%d].a_col[%d]", i, j, x),
-                    "%d", this->header[i].envList.entry[j].light1Color[x]);
-                Toml_SetVar(&toml, x_fmt("header[%d].env_light.entry[%d].a_dir[%d]", i, j, x),
-                    "%d", this->header[i].envList.entry[j].light1Dir[x]);
-                Toml_SetVar(&toml, x_fmt("header[%d].env_light.entry[%d].b_col[%d]", i, j, x),
-                    "%d", this->header[i].envList.entry[j].light2Color[x]);
-                Toml_SetVar(&toml, x_fmt("header[%d].env_light.entry[%d].b_dir[%d]", i, j, x),
-                    "%d", this->header[i].envList.entry[j].light2Dir[x]);
-            }
-        }
-        
-        for (var j = 0; j < this->header[i].spawnList.num; j++) {
-            Toml_SetVar(&toml, x_fmt("header[%d].spawn.entry[%d].room", i, j),
-                "0x%04X", this->header[i].spawnList.entry[j].room);
-            Toml_SetVar(&toml, x_fmt("header[%d].spawn.entry[%d].id", i, j),
-                "0x%04X", this->header[i].spawnList.entry[j].actor.id);
-            Toml_SetVar(&toml, x_fmt("header[%d].spawn.entry[%d].param", i, j),
-                "0x%04X", this->header[i].spawnList.entry[j].actor.param);
-            for (var x = 0; x < 3; x++)
-                Toml_SetVar(&toml, x_fmt("header[%d].spawn.entry[%d].pos[%d]", i, j, x),
-                    "%d", (s32)this->header[i].spawnList.entry[j].actor.pos.axis[x]);
-            for (var x = 0; x < 3; x++)
-                Toml_SetVar(&toml, x_fmt("header[%d].spawn.entry[%d].rot[%d]", i, j, x),
-                    "%d", this->header[i].spawnList.entry[j].actor.rot.axis[x]);
-        }
-        
-        for (var j = 0; j < this->numRoom; j++) {
-            RoomHeader* room = &this->room[j].header[i];
-            
-            Toml_SetVar(&toml, x_fmt("header[%d].room_%d.mesh", i, j),
-                "\"%s\"", room->mesh->name);
-            Toml_SetVar(&toml, x_fmt("header[%d].room_%d.behaviour", i, j),
-                "%d", room->behaviour.behaviour);
-            Toml_SetVar(&toml, x_fmt("header[%d].room_%d.link_behaviour", i, j),
-                "%d", room->behaviour.linkIdleAnim);
-            Toml_SetVar(&toml, x_fmt("header[%d].room_%d.lens_mode", i, j),
-                "%s", room->behaviour.lensMode ? "true" : "false");
-            Toml_SetVar(&toml, x_fmt("header[%d].room_%d.disable_warp_songs", i, j),
-                "%s", room->behaviour.disableWarpSongs ? "true" : "false");
-            
-            if (room->wind.strength) {
-                for (var x = 0; x < 3; x++)
-                    Toml_SetVar(&toml, x_fmt("header[%d].room_%d.wind_axis[%d]", i, j, x),
-                        "%d", room->wind.dir.axis[x]);
-                Toml_SetVar(&toml, x_fmt("header[%d].room_%d.wind_strength", i, j),
-                    "%d", room->wind.strength);
-            }
-            
-            for (var k = 0; k < room->actorList.num; k++) {
-                Toml_SetVar(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].id", i, j, k),
-                    "0x%04X", room->actorList.entry[k].id);
-                Toml_SetVar(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].param", i, j, k),
-                    "0x%04X", room->actorList.entry[k].param);
-                for (var x = 0; x < 3; x++)
-                    Toml_SetVar(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].pos[%d]", i, j, k, x),
-                        "%d", (s32)room->actorList.entry[k].pos.axis[x]);
-                for (var x = 0; x < 3; x++)
-                    Toml_SetVar(&toml, x_fmt("header[%d].room_%d.actor.entry[%d].rot[%d]", i, j, k, x),
-                        "%d", room->actorList.entry[k].rot.axis[x]);
-            }
-            
-            for (var k = 0; k < room->objectList.num; k++) {
-                Toml_SetVar(&toml, x_fmt("header[%d].room_%d.object[%d]", i, j, k),
-                    "0x%04X", room->objectList.entry[k]);
-            }
-        }
-    }
-    
-    Toml_Print(&toml, &mem, (void*)Memfile_Fmt);
-    Toml_Free(&toml);
-    
-    Zip_Load(&zip, "scene.zsp", ZIP_WRITE);
-    Zip_Write(&zip, &mem, "config.toml");
-    Memfile_Free(&mem);
-    
-    Memfile_LoadMem(&mem, this->segment, this->sizeSegment);
-    Zip_Write(&zip, &mem, "scene.zscene");
-    Memfile_Free(&mem);
-    
-    for (var i = 0; i < this->mesh.num; i++) {
-        RoomMesh* mesh = &this->mesh.entry[i];
-        
-        Memfile_LoadMem(&mem, mesh->segment, mesh->sizeSegment);
-        Zip_Write(&zip, &mem, mesh->name);
-        
-        Memfile_Free(&mem);
-    }
-    
-    Zip_Free(&zip);
 }
 
 void Scene_WriteToml(Scene* this) {
@@ -809,12 +688,6 @@ void Scene_Free(Scene* this) {
         vfree(mesh->segment, mesh->disp.opa, mesh->disp.xlu, mesh->name);
     }
     
-    for (var i = 0; i < this->numHeader; i++) {
-        SceneHeader* hdr = &this->header[i];
-        
-        PropList_Free(&hdr->envList.prop);
-    }
-    
     CollisionMesh_Free(&this->colMesh);
     vfree(this->segment);
     PropList_Free(&this->ui.roomList);
@@ -827,11 +700,13 @@ void Scene_Free(Scene* this) {
 static void Scene_Light(Scene* this) {
     // RoomHeader* roomHeader = Scene_GetRoomHeader(this, this->curRoom);
     SceneHeader* header = Scene_GetSceneHeader(this);
-    EnvLightSettings* env = header->envList.entry;
     s8 l1n[3], l2n[3];
     u16 fogNear;
     u8 curEnv = this->curEnv;
+    Arli* envList = &header->envList;
+    EnvLightSettings* env;
     
+    env = Arli_At(envList, curEnv);
     _assert(env != NULL);
     
     env += curEnv;
@@ -1031,7 +906,7 @@ void Scene_SetRoom(Scene* this, s32 roomID) {
 }
 
 // # # # # # # # # # # # # # # # # # # # #
-// # RoomHeader                                #
+// # RoomHeader                          #
 // # # # # # # # # # # # # # # # # # # # #
 
 void Room_Draw(RoomMesh* this) {
@@ -1083,30 +958,41 @@ Room* Scene_RaycastRoom(Scene* scene, RayLine* ray, Vec3f* out) {
 static void Scene_Cmd00_SpawnList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     ActorEntry* entryList = SEGMENTED_TO_VIRTUAL(cmd->spawnList.segment);
     SceneHeader* hdr = &scene->header[scene->curHeader];
-    SpawnActor* spawn = hdr->spawnList.entry;
+    Arli* spawnList = &hdr->spawnList;
+    
+    Arli_Free(spawnList);
+    hdr->spawnList = Arli_New(SpawnActor);
     
     for (s32 i = 0; i < cmd->spawnList.data1; i++) {
-        spawn[i].actor.id = entryList[i].id;
-        spawn[i].actor.param = entryList[i].param;
-        spawn[i].actor.pos = Math_Vec3f_New(UnfoldVec3(entryList[i].pos));
-        spawn[i].actor.rot = Math_Vec3s_New(UnfoldVec3(entryList[i].rot));
+        SpawnActor spawn = {
+            .actor.id    = entryList[i].id,
+            .actor.param = entryList[i].param,
+            .actor.pos   = Math_Vec3f_New(UnfoldVec3(entryList[i].pos)),
+            .actor.rot   = Math_Vec3s_New(UnfoldVec3(entryList[i].rot)),
+        };
+        
+        Arli_Add(spawnList, &spawn);
     }
-    
-    hdr->spawnList.num = cmd->spawnList.data1;
 }
 
 static void Scene_Cmd01_ActorList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     ActorEntry* entryList = SEGMENTED_TO_VIRTUAL(cmd->actorList.segment);
-    Actor* actor = room->actorList.entry;
+    Arli* arli = &room->actorList;
+    
+    Arli_Free(arli);
+    room->actorList = Arli_New(Actor);
+    Arli_Alloc(arli, 255);
     
     for (s32 i = 0; i < cmd->actorList.num; i++) {
-        actor[i].id = entryList[i].id;
-        actor[i].param = entryList[i].param;
-        actor[i].pos = Math_Vec3f_New(UnfoldVec3(entryList[i].pos));
-        actor[i].rot = Math_Vec3s_New(UnfoldVec3(entryList[i].rot));
+        Actor actor = {
+            .id    = entryList[i].id,
+            .param = entryList[i].param,
+            .pos   = Math_Vec3f_New(UnfoldVec3(entryList[i].pos)),
+            .rot   = Math_Vec3s_New(UnfoldVec3(entryList[i].rot)),
+        };
+        
+        Arli_Add(arli, &actor);
     }
-    
-    room->actorList.num = cmd->actorList.num;
 }
 
 static void Scene_Cmd03_CollisionHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
@@ -1141,7 +1027,6 @@ static void Scene_Cmd06_EntranceList(Scene* scene, RoomHeader* room, SceneCmd* c
     }* entranceList = SEGMENTED_TO_VIRTUAL(cmd->entranceList.segment);
     
     SceneHeader* hdr = &scene->header[scene->curHeader];
-    SpawnActor* spawn = hdr->spawnList.entry;
     
     if (hdr->spawnList.num == 0) {
         SceneCmd* ncmd = cmd;
@@ -1151,11 +1036,17 @@ static void Scene_Cmd06_EntranceList(Scene* scene, RoomHeader* room, SceneCmd* c
         
         _assert(ncmd->base.code != 0x14);
         
-        hdr->spawnList.num = ncmd->spawnList.data1;
+        Scene_Cmd00_SpawnList(scene, room, ncmd);
     }
     
-    for (var i = 0; i < hdr->spawnList.num; i++)
-        spawn[entranceList[i].spawn].room = entranceList[i].room;
+    for (var i = 0; i < hdr->spawnList.num; i++) {
+        SpawnActor* spawn = Arli_At(&hdr->spawnList, entranceList[i].spawn);
+        
+        _log("%d / %d", entranceList[i].spawn, hdr->spawnList.num);
+        spawn->room = entranceList[i].room;
+    }
+    
+    _log("OK");
 }
 
 static void Scene_Cmd07_SpecialFiles(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
@@ -1205,10 +1096,16 @@ static void Scene_Cmd0A_MeshHeader(Scene* scene, RoomHeader* room, SceneCmd* cmd
 
 static void Scene_Cmd0B_ObjectList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     u16* objList = SEGMENTED_TO_VIRTUAL(cmd->objectList.segment);
+    Arli* arli = &room->objectList;
     
-    for (var i = 0; i < cmd->objectList.num; i++)
-        room->objectList.entry[i] = ReadBE(objList[i]);
-    room->objectList.num = cmd->objectList.num;
+    Arli_Free(arli);
+    room->objectList = Arli_New(u16);
+    
+    for (var i = 0; i < cmd->objectList.num; i++) {
+        u16 obj = ReadBE(objList[i]);
+        
+        Arli_Add(arli, &obj);
+    }
     
     // s32 i;
     // s32 j;
@@ -1286,12 +1183,9 @@ static void Scene_Cmd0F_EnvList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     SceneHeader* header = &scene->header[scene->curHeader];
     EnvLightSettings* env = SEGMENTED_TO_VIRTUAL(cmd->lightSettingList.segment);
     
-    memcpy(header->envList.entry, env, sizeof(EnvLightSettings) * cmd->lightSettingList.num);
-    header->envList.num = cmd->lightSettingList.num;
-    
-    header->envList.prop = PropList_Init(0);
-    for (var i = 0; i < header->envList.num; i++)
-        PropList_Add(&header->envList.prop, x_fmt("Env%02X", i));
+    Arli_Free(&header->envList);
+    header->envList = Arli_New(EnvLightSettings);
+    Arli_Insert(&header->envList, 0, cmd->lightSettingList.num, env);
 }
 
 static void Scene_Cmd10_Time(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
@@ -1353,11 +1247,17 @@ static void Scene_Cmd12_SkyboxDisables(Scene* scene, RoomHeader* room, SceneCmd*
 
 static void Scene_Cmd13_ExitList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     u16* exitList = SEGMENTED_TO_VIRTUAL(cmd->exitList.segment);
+    SceneHeader* header = Scene_GetSceneHeader(scene);
+    
+    Arli_Free(&header->exitList);
+    header->exitList = Arli_New(u16);
     
     for (var i = 0;; i++) {
-        scene->header[scene->curHeader].exitList.num = i;
-        scene->header[scene->curHeader].exitList.exit[i] = ReadBE(exitList[i]);
-        if (scene->header[scene->curHeader].exitList.exit[i] & 0xF000)
+        u16 exit = ReadBE(exitList[i]);
+        
+        Arli_Add(&header->exitList, &exit);
+        
+        if (exit & 0xF000)
             break;
     }
 }

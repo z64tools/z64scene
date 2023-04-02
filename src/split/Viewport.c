@@ -144,7 +144,7 @@ static void Viewport_Actor_Update(Editor* editor, Viewport* this, Split* split) 
         ray.nearest += 20.0f;
     
     for (var i = 0; i < room->actorList.num; i++) {
-        Actor* actor = &room->actorList.entry[i];
+        Actor* actor = Arli_At(&room->actorList, i);
         
         veccpy(&actor->sph.pos, &actor->pos);
         actor->sph.pos.y += 10.0f;
@@ -213,7 +213,7 @@ static void Viewport_ShapeSelect_Update(Viewport* this, Split* split, Scene* sce
         Vec3f camn = Math_Vec3f_LineSegDir(this->view.currentCamera->eye, this->view.currentCamera->at);
         
         for (var i = 0; i < room->actorList.num; i++) {
-            Actor* a = &room->actorList.entry[i];
+            Actor* a = Arli_At(&room->actorList, i);
             Vec2f sp;
             
             switch (this->selMode) {
@@ -304,7 +304,6 @@ void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
 }
 
 void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
-    SceneHeader* header;
     Cursor* cursor = &editor->input.cursor;
     Scene* scene = &editor->scene;
     Gizmo* gizmo = &scene->gizmo;
@@ -323,11 +322,13 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
         return;
     }
     
+    SceneHeader* header = Scene_GetSceneHeader(scene);
+    EnvLightSettings* envSettings = Arli_At(&header->envList, scene->curEnv);
+    
     Viewport_Camera_Update(editor, this, split);
-    header = Scene_GetSceneHeader(&editor->scene);
     
     if (editor->scene.state & SCENE_DRAW_FOG)
-        this->view.far = header->envList.entry[editor->scene.curEnv].fogFar;
+        this->view.far = envSettings->fogFar;
     else
         this->view.far = 12800.0 + 6000;
     
@@ -351,9 +352,9 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     }
     
     rgb8_t color = {
-        scene->header[scene->curHeader].envList.entry[scene->curEnv].fogColor[0],
-        scene->header[scene->curHeader].envList.entry[scene->curEnv].fogColor[1],
-        scene->header[scene->curHeader].envList.entry[scene->curEnv].fogColor[2]
+        envSettings->fogColor[0],
+        envSettings->fogColor[1],
+        envSettings->fogColor[2]
     };
     hsl_t hsl;
     

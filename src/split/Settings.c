@@ -14,80 +14,13 @@ SplitTask gSettingsTask = {
     .size     = sizeof(Settings)
 };
 
-bool PropListCallback(PropList* prop, PropListChange action, s32 id) {
-    Scene* scene = prop->udata1;
-    SceneHeader* header = Scene_GetSceneHeader(scene);
-    static EnvLightSettings copybuf;
-    
-    nested(void, AddDefaultLight, (s32 id)) {
-        header->envList.entry[id].ambientColor[0] = 0x40;
-        header->envList.entry[id].ambientColor[1] = 0x40;
-        header->envList.entry[id].ambientColor[2] = 0x40;
-        
-        header->envList.entry[id].light1Color[0] = 0xC0;
-        header->envList.entry[id].light1Color[1] = 0xC0;
-        header->envList.entry[id].light1Color[2] = 0xC0;
-        header->envList.entry[id].light1Dir[0] = 0x49;
-        header->envList.entry[id].light1Dir[1] = 0x49;
-        header->envList.entry[id].light1Dir[2] = 0x49;
-        
-        header->envList.entry[id].light2Color[0] = 0x20;
-        header->envList.entry[id].light2Color[1] = 0x20;
-        header->envList.entry[id].light2Color[2] = 0x20;
-        header->envList.entry[id].light2Dir[0] = 0xB7;
-        header->envList.entry[id].light2Dir[1] = 0xB7;
-        header->envList.entry[id].light2Dir[2] = 0xB7;
-        
-        header->envList.entry[id].fogColor[0] = 0x80;
-        header->envList.entry[id].fogColor[1] = 0x80;
-        header->envList.entry[id].fogColor[2] = 0x80;
-        header->envList.entry[id].fogNear = 0x3E0;
-        header->envList.entry[id].fogFar = 0x3200;
-    };
-    
-    switch (action) {
-        case PROP_ADD:
-            AddDefaultLight(header->envList.num);
-            header->envList.num++;
-            break;
-            
-        case PROP_INSERT:
-            copybuf = header->envList.entry[prop->copyKey];
-            AddDefaultLight(header->envList.num);
-            header->envList.num++;
-            arrmove_r(header->envList.entry, id, header->envList.num - id);
-            
-            if (prop->copy)
-                header->envList.entry[id] = copybuf;
-            break;
-            
-        case PROP_REMOVE:
-            arrmove_l(header->envList.entry, id, header->envList.num - id);
-            header->envList.num--;
-            break;
-            
-        case PROP_DETACH:
-            break;
-            
-        case PROP_RETACH:
-            arrmove_l(header->envList.entry, prop->detachKey, header->envList.num - prop->detachKey);
-            arrmove_r(header->envList.entry, id, header->envList.num - id);
-            break;
-            
-        case PROP_DESTROY_DETACH:
-            arrmove_l(header->envList.entry, prop->detachKey, header->envList.num - prop->detachKey);
-            header->envList.num--;
-            break;
-    }
-    
-    return true;
-}
+#define SIDE_BUTTON_SIZE 24
 
-void Settings_Init(Editor* editor, Settings* this, Split* split) {
+///////////////////////////////////////////////////////////////////////////////
+
+static void MenuDebug_Init(Editor* editor, void* __this, Split* split) {
+    MenuDebug* this = __this;
     Scene* scene = &editor->scene;
-    
-    // SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
-    // RoomHeader* roomHeader = Scene_GetRoomHeader(scene, scene->curRoom);
     
     Element_Name(&this->envAmbient, "Ambient");
     Element_Name(&this->envColA, "EnvA");
@@ -112,29 +45,16 @@ void Settings_Init(Editor* editor, Settings* this, Split* split) {
     Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
     Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
     Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
-    
-    Element_Container_SetPropList(&this->cont, NULL, 6);
-    this->cont.drag = true;
-    
-    this->cont.showHexID = true;
 }
 
-void Settings_Destroy(Editor* editor, Settings* this, Split* split) {
-}
-
-void Settings_Update(Editor* editor, Settings* this, Split* split) {
+static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
+    MenuDebug* this = __this;
     Scene* scene = &editor->scene;
     SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
-    EnvLightSettings* envSettings = &sceneHeader->envList.entry[scene->curEnv];
-    
-    Element_Header(split->taskCombo, 92);
-    Element_Combo(split->taskCombo);
-    
-    Element_RowY(SPLIT_ELEM_X_PADDING * 2);
+    EnvLightSettings* envSettings = Arli_At(&sceneHeader->envList, scene->curEnv);
     
     Element_Condition(&this->buttonIndoor, scene->segment != NULL);
     Element_Condition(&this->killScene, scene->segment != NULL);
-    Element_Condition(&this->cont, this->cont.prop != NULL);
     
     if (editor->scene.segment) {
         Element_Color_SetColor(&this->envAmbient, envSettings->ambientColor);
@@ -152,12 +72,7 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
         Element_Color_SetColor(&this->envFogColor, NULL);
     }
     
-    Element_Container_SetPropList(&this->cont, &sceneHeader->envList.prop, 6);
-    PropList_SetOnChangeCallback(&sceneHeader->envList.prop, PropListCallback, scene, 0);
-    
     Element_Box(BOX_START); {
-        Element_Row(&this->cont, 1.0f);
-        scene->curEnv = Element_Container(&this->cont);
         
         // Element_Row(NULL, 0.5f, &this->buttonIndoor, 0.5f);
         // Element_Button_SetValue(&this->buttonIndoor, true, scene->indoorLight);
@@ -222,5 +137,103 @@ void Settings_Update(Editor* editor, Settings* this, Split* split) {
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
+    // MenuActor* this = __this;
+}
+
+static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
+    // MenuActor* this = __this;
+    
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static struct {
+    void  (*init)(Editor*, void*, Split*);
+    void  (*update)(Editor*, void*, Split*);
+    off_t offset;
+} sSubMenuParam[] = {
+    //crustify
+    { MenuDebug_Init, MenuDebug_Update, offsetof(Settings, menuDebug) },
+    { MenuActor_Init, MenuActor_Update, offsetof(Settings, menuActor) },
+    { NULL,           MenuDebug_Update, offsetof(Settings, menuDebug) },
+    { NULL,           MenuDebug_Update, offsetof(Settings, menuDebug) },
+    //uncrustify
+};
+
+static void* GetArg(void* ptr, int index) {
+    return ((u8*)ptr) + sSubMenuParam[index].offset;
+}
+
+static Rect GetSubRect(Split* split, int index) {
+    Rect r;
+    
+    r.x = SPLIT_ELEM_X_PADDING / 2;
+    r.y = SPLIT_ELEM_X_PADDING + (SIDE_BUTTON_SIZE + SPLIT_ELEM_X_PADDING) * index;
+    r.w = SIDE_BUTTON_SIZE;
+    r.h = SIDE_BUTTON_SIZE;
+    
+    return r;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void Settings_Init(Editor* editor, Settings* this, Split* split) {
+    for (int i = 0; i < ArrCount(sSubMenuParam); i++)
+        if (sSubMenuParam[i].init)
+            sSubMenuParam[i].init(editor, GetArg(this, i), split);
+}
+
+void Settings_Destroy(Editor* editor, Settings* this, Split* split) {
+}
+
+void Settings_Update(Editor* editor, Settings* this, Split* split) {
+    Element_Header(split->taskCombo, 92);
+    Element_Combo(split->taskCombo);
+    
+    Element_RowY(SPLIT_ELEM_X_PADDING * 2);
+    Element_ShiftX(SIDE_BUTTON_SIZE);
+    
+    sSubMenuParam[this->subIndex].update(editor, GetArg(this, this->subIndex), split);
+    
+    if (!split->blockMouse && !editor->geo.state.blockElemInput) {
+        Input* input = &editor->input;
+        
+        for (int i = 0; i < ArrCount(sSubMenuParam); i++) {
+            Rect r = GetSubRect(split, i);
+            
+            if (Input_GetMouse(input, CLICK_L)->press)
+                if (Split_CursorInRect(split, &r))
+                    this->subIndex = i;
+        }
+    }
+}
+
 void Settings_Draw(Editor* editor, Settings* this, Split* split) {
+    void* vg = editor->vg;
+    Rect r = {
+        0, 0, SIDE_BUTTON_SIZE + SPLIT_ELEM_X_PADDING, split->dispRect.h
+    };
+    Rect scissor = r;
+    
+    Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_ELEMENT_DARK, 255, 1.25f));
+    
+    r.x += r.w - 1;
+    r.w = 1;
+    Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_ELEMENT_LIGHT, 25, 1.25f));
+    
+    for (int i = 0; i < ArrCount(sSubMenuParam); i++) {
+        Rect r = GetSubRect(split, i);
+        
+        if (this->subIndex == i) {
+            r.w += SPLIT_ELEM_X_PADDING / 2;
+            nvgScissor(vg, UnfoldRect(scissor));
+            r.w += SPLIT_ELEM_X_PADDING;
+            Gfx_DrawRounderOutline(vg, r, Theme_GetColor(THEME_ELEMENT_LIGHT, 25, 1.0f));
+            Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_BASE, 255, 1.0f));
+            nvgResetScissor(vg);
+        }
+    }
 }
