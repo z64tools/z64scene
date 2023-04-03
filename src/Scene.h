@@ -85,33 +85,6 @@ typedef struct SceneHeader {
     Arli transitionList;
     Arli envList;
     Arli exitList;
-#if 0
-    struct {
-        SpawnActor entry[64];
-        u32 num;
-    } spawnList;
-    
-    struct {
-        PathList entry[64];
-        u32      num;
-    } pathList;
-    
-    struct {
-        TransitionActor entry[255];
-        u32 num;
-    } transitionList;
-    
-    struct {
-        EnvLightSettings entry[255];
-        u32      num;
-        PropList prop;
-    } envList;
-    
-    struct {
-        u16 exit[32];
-        u32 num;
-    } exitList;
-#endif
     
     struct {
         u8 hour;
