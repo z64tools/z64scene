@@ -83,10 +83,11 @@ typedef struct {
     GizmoElem* activeElem;
     View3D*    activeView;
     
-    Input*        input;
     View3D*       curView;
     struct Split* curSplit;
-    void* vg;
+    
+    Input* input;
+    void*  vg;
     
     int refreshNodes;
     int resetTransforms;

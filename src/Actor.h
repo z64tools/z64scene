@@ -12,7 +12,7 @@ struct RoomHeader;
 
 typedef struct {
     Memfile file;
-    u32  segment;
+    u32     segment;
 } Object;
 
 typedef struct StructBE {

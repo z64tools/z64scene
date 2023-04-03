@@ -5,6 +5,7 @@ extern DataFile gGizmo;
 #include "../assets/3D/Gizmo.h"
 
 static void Gizmo_Reset(Gizmo* this) {
+    info("Gizmo Reset");
     this->lock.state = GIZMO_AXIS_ALL_FALSE;
     this->release = true;
     this->action = 0;
@@ -211,7 +212,7 @@ static void Gizmo_Rotate(Gizmo* this, Vec3f* rayPos) {
         Matrix_RotateZ_s(elem->drot->z, MTXMODE_APPLY);
         
         Matrix_MultVec3f(&zero, &elem->pos);
-        Matrix_MtxFToYXZRotS(&elem->rot, 0);
+        Matrix_MtxFToYXZRotS(&elem->rot, true);
         
         Matrix_Pop();
         
@@ -248,6 +249,7 @@ static void Gizmo_UpdateTyped(Gizmo* this, Input* input) {
 }
 
 static void Gizmo_SetAction(Gizmo* this, GizmoAction action) {
+    info("Gizmo Set: %d", action);
     this->action = action;
     this->activeView = this->curView;
 }
@@ -439,12 +441,8 @@ void Gizmo_UpdateView3D(Gizmo* this, Vec3f* rayPos) {
     Input* input = this->input;
     bool alt = Input_GetKey(input, KEY_LEFT_ALT)->hold;
     
-    if (!this->activeElem) {
-        if (view->currentCamera->roll != 0)
-            View_RotTo(view, Math_Vec3s_New(view->currentCamera->pitch, view->currentCamera->yaw, 0));
-        
+    if (!this->activeElem)
         return;
-    }
     
     Gizmo_UpdateMtx(this, view);
     
@@ -496,17 +494,18 @@ void Gizmo_UpdateView3D(Gizmo* this, Vec3f* rayPos) {
             if (this->action == GIZMO_ACTION_MOVE) {
                 fornode(elem, this->elemHead) {
                     elem->pos = Math_Vec3f_New(0, 0, 0);
-                    *elem->dpos = Math_Vec3f_New(0, 0, 0);
+                    // *elem->dpos = Math_Vec3f_New(0, 0, 0);
                 }
             }
             if (this->action == GIZMO_ACTION_ROTATE) {
                 fornode(elem, this->elemHead) {
                     elem->rot = Math_Vec3s_New(0, 0, 0);
-                    *elem->drot = Math_Vec3s_New(0, 0, 0);
+                    // *elem->drot = Math_Vec3s_New(0, 0, 0);
                 }
             }
             
             Gizmo_ApplyTransforms(this);
+            
             Gizmo_Reset(this);
             this->resetTransforms = false;
             return;
@@ -645,14 +644,13 @@ void Gizmo_Select(Gizmo* this, GizmoElem* elem, Vec3f* pos, Vec3s* rot) {
 void Gizmo_UnselectAll(Gizmo* this) {
     Gizmo_Reset(this);
     this->release = false;
+    this->activeElem = NULL;
     
     while (this->elemHead) {
         this->elemHead->selected = false;
         this->elemHead->focus = false;
         Node_Remove(this->elemHead, this->elemHead);
     }
-    
-    this->activeElem = NULL;
 }
 
 void Gizmo_Unselect(Gizmo* this, GizmoElem* elem) {

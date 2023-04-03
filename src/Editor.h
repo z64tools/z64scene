@@ -30,6 +30,7 @@ typedef struct Editor {
     CursorIcon cursor;
     Input      input;
     Scene      scene;
+    Gizmo      gizmo;
 } Editor;
 
 void* NewMtx();
@@ -37,7 +38,6 @@ void* NewMtx();
 Editor* GetEditor(void);
 void Editor_Init(Editor* editor);
 void Editor_Destroy(Editor* editor);
-void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]);
 void Editor_Update(Editor* editor);
 void Editor_Draw(Editor* editor);
 

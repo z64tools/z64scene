@@ -1,0 +1,4312 @@
+[[actor]]
+	index = 0x0000
+	name = "Link / Spawn point"
+	category = "PLAYER"
+	var = [
+		[ 0x0000, "Invisible, Can't Control //Used for cutscenes without Link" ],
+		[ 0x0100, "Master Sword Pull and Drop Animation //Overwrites coordinates" ],
+		[ 0x0200, "Spawn: Blue Warp //used when returning from a blue warp" ],
+		[ 0x0300, "Spawn: Immobile" ],
+		[ 0x0400, "Spawn: Exit via Grotto //Y velocity = 12" ],
+		[ 0x0500, "Spawn: Warp Song" ],
+		[ 0x0600, "Spawn: Farore's Wind" ],
+		[ 0x0700, "Spawn: Thrown Out" ],
+		[ 0x0D00, "Stand" ],
+		[ 0x0E00, "Slow Walk Forward" ],
+		[ 0x0F00, "Retain Previous Velocity //Walk speed set by last exit" ],
+	]
+	[[actor.property]]
+		name = "Camera ID (nullable)"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0002
+	object = 0x0032
+	name = "Stalfos"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Invisible (Lens of Truth), Mini-Boss Theme" ],
+		[ 0x0001, "Rises from Ground, Mini-Boss Theme" ],
+		[ 0x0002, "Rises from Ground //Pair with 0001" ],
+		[ 0x0003, "Drops From Sky on Approach" ],
+		[ 0x0004, "Rises from Ground, Mini-Boss Theme" ],
+	]
+[[actor]]
+	index = 0x0004
+	name = "Shops"
+	category = "PROP"
+[[actor]]
+	index = 0x0007
+	name = "Disintegrating Blue Flame"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0001, "Green Flame" ],
+		[ 0x0003, "Purple Flame" ],
+		[ 0x0004, "Red Bubbles" ],
+		[ 0x0005, "Invisible Hovering Object w/Shadow, bursts into purple flames" ],
+		[ 0x0009, "Green Flame" ],
+		[ 0x000A, "Green Flame" ],
+		[ 0x000B, "Purple Flame" ],
+		[ 0x000C, "Green Flame" ],
+	]
+[[actor]]
+	index = 0x0008
+	name = "Flame"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Large Orange Flame" ],
+		[ 0x0001, "Large Orange Flame" ],
+		[ 0x0002, "Large Blue Flame" ],
+		[ 0x0003, "Large Green Flame" ],
+		[ 0x0004, "Small Orange Flame" ],
+		[ 0x0005, "Large Orange Flame" ],
+		[ 0x0006, "Large Green Flame" ],
+		[ 0x0007, "Large Blue Flame" ],
+		[ 0x0008, "Large Magenta Flame" ],
+		[ 0x0009, "Large Pale Orange Flame" ],
+		[ 0x000A, "Large Pale Yellow Flame" ],
+		[ 0x000B, "Large Pale Green Flame" ],
+		[ 0x000C, "Large Pale Pink Flame" ],
+		[ 0x000D, "Large Pale Purple Flame" ],
+		[ 0x000E, "Large Pale Indigo Flame" ],
+		[ 0x000F, "Large Pale Blue Flame" ],
+		[ 0x83F0, "Candle Flame" ],
+		[ 0xFFFF, "Faint Blue Aura" ],
+	]
+[[actor]]
+	index = 0x0009
+	name = "Wooden Door"
+	category = "DOOR"
+	var = [
+		[ 0x0000, "Wooden Door //Loads rooms" ],
+		[ 0x0040, "Double Wooden Doors //Loads rooms" ],
+		[ 0x0080, "Small Key Locked Door" ],
+		[ 0x00C0, "Locked Double Wooden Doors //Left door is locked on one side, right door is locked on the other. Loads rooms." ],
+		[ 0x0100, "Double Wooden Two-Way Doors //Loads rooms" ],
+		[ 0x0140, "Double Wooden Two-Way Doors //Loads rooms" ],
+		[ 0x0180, "Double Wooden Two-Way Doors //Loads rooms" ],
+		[ 0x01BF, "Wooden door, loads collision behind the door faster //Loads rooms" ],
+		[ 0x01C0, "Double Wooden Two-Way Doors //Loads rooms" ],
+		[ 0x01CF, "Double Wooden Two-Way Doors, loads collision behind the door faster //Loads rooms" ],
+		[ 0x0200, "Ajar Wooden Door //Door slams shut on approach, then says \"It won't open!\" if you try to interact with it." ],
+		[ 0x0300, "Wooden Two-Way Door with Message //Last two values' text matches that of actor 0185, but in increments of 1 instead" ],
+		[ 0x0400, "Wooden Two-Way Door //Doesn't load room" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x000A
+	object = 0x000E
+	name = "Treasure Chest"
+	category = "CHEST"
+	var = [
+		[ 0x0000, "Large" ],
+		[ 0x1000, "Large, Appears, Clear Flag" ],
+		[ 0x2000, "Boss Key’s Chest" ],
+		[ 0x3000, "Large, Falling, Switch Flag" ],
+		[ 0x4000, "Large, Invisible" ],
+		[ 0x5000, "Small" ],
+		[ 0x6000, "Small, Invisible" ],
+		[ 0x7000, "Small, Appears, Clear Flag" ],
+		[ 0x8000, "Small, Falls, Switch Flag" ],
+		[ 0x9000, "Large, Appears, Zelda's Lullaby" ],
+		[ 0xA000, "Large, Appears, Sun's Song Triggered" ],
+		[ 0xB000, "Large, Appears, Switch Flag" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+		source = "zrot"
+	[[actor.property]]
+		name = "Chest Flag"
+		mask = 0x001F
+		source = "var"
+	[[actor.property]]
+		name = "Content"
+		mask = 0x0FE0
+		source = "var"
+		drop = [
+			[ 0x0004, "Fairy Bow" ],
+			[ 0x0005, "Fairy Slingshot" ],
+			[ 0x0006, "Boomerang" ],
+			[ 0x0008, "Hookshot" ],
+			[ 0x0009, "Longshot" ],
+			[ 0x000A, "Lens of Truth" ],
+			[ 0x003B, "Fairy Ocarina" ],
+			[ 0x000C, "Ocarina of Time" ],
+			[ 0x000D, "Megaton Hammer" ],
+			[ 0x0016, "Magic Bean" ],
+			[ 0x0058, "Fire Arrow" ],
+			[ 0x0059, "Ice Arrow" ],
+			[ 0x005A, "Light Arrow" ],
+			[ 0x005C, "Din’s Fire" ],
+			[ 0x005D, "Farore’s Wind" ],
+			[ 0x005E, "Nayru’s Love" ],
+			[ 0x003F, "DUNGEON Boss Key" ],
+			[ 0x0040, "DUNGEON Compass" ],
+			[ 0x0041, "DUNGEON Map" ],
+			[ 0x0042, "DUNGEON Small Key" ],
+			[ 0x005B, "Gold Skulltula Token" ],
+			[ 0x003E, "Piece of Heart" ],
+			[ 0x003D, "Heart Container" ],
+			[ 0x002C, "Goron Tunic" ],
+			[ 0x002D, "Zora Tunic" ],
+			[ 0x002E, "Iron Boots" ],
+			[ 0x002F, "Hover Boots" ],
+			[ 0x0029, "Deku Shield" ],
+			[ 0x002A, "Hylian Shield" ],
+			[ 0x002B, "Mirror Shield" ],
+			[ 0x0027, "Kokiri’s Sword" ],
+			[ 0x0028, "Giant’s Knife" ],
+			[ 0x0057, "Giant's Knife or Biggoron’s Sword" ],
+			[ 0x0048, "Recovery Heart" ],
+			[ 0x004C, "Green (1) Rupee" ],
+			[ 0x004D, "Blue (5) Rupee" ],
+			[ 0x004E, "Red (20) Rupee" ],
+			[ 0x0055, "Purple (50) Rupee" ],
+			[ 0x0056, "Huge/Yellow (200) Rupee" ],
+			[ 0x0007, "Deku Stick (1)" ],
+			[ 0x0049, "Arrows (5)" ],
+			[ 0x004A, "Arrows (10)" ],
+			[ 0x004B, "Arrows (30)" ],
+			[ 0x0065, "Bombs (1)" ],
+			[ 0x0001, "Bombs (5)" ],
+			[ 0x0066, "Bombs (10)" ],
+			[ 0x0067, "Bombs (20)" ],
+			[ 0x0068, "Bombs (30)" ],
+			[ 0x006A, "Bombchu (5)" ],
+			[ 0x0003, "Bombchu (10)" ],
+			[ 0x006B, "Bombchu (20)" ],
+			[ 0x0002, "Deku Nuts" ],
+			[ 0x0069, "Deku Seeds (30) or blue (5) rupee" ],
+			[ 0x0054, "Goron Bracelet" ],
+			[ 0x0077, "Deku Stick Upgrade (20)" ],
+			[ 0x0078, "Deku Stick Upgrade (30)" ],
+			[ 0x0079, "Deku Nut Upgrade (30)" ],
+			[ 0x007A, "Deku Nut Upgrade (40)" ],
+			[ 0x005F, "Deku Seeds Bullet Bag (40)" ],
+			[ 0x007B, "Deku Seeds Bullet Bag (50)" ],
+			[ 0x0030, "Big Quiver" ],
+			[ 0x0031, "Biggest Quiver" ],
+			[ 0x0032, "Bomb Bag" ],
+			[ 0x0033, "Big Bomb Bag" ],
+			[ 0x0034, "Biggest Bomb Bag" ],
+			[ 0x0045, "Adult Wallet" ],
+			[ 0x0046, "Giant Wallet" ],
+			[ 0x0035, "Silver Gauntlets" ],
+			[ 0x0036, "Golden Gauntlets" ],
+			[ 0x0037, "Silver Scale" ],
+			[ 0x0038, "Golden Scale" ],
+			[ 0x000F, "Empty Bottle" ],
+			[ 0x0010, "Red Potion" ],
+			[ 0x0011, "Green Potion" ],
+			[ 0x0012, "Blue Potion" ],
+			[ 0x0013, "Bottled Fairy" ],
+			[ 0x0050, "Lon Lon Milk" ],
+			[ 0x006C, "Bottled Fish" ],
+			[ 0x006D, "Bottled Bug" ],
+			[ 0x006E, "Blue Fire" ],
+			[ 0x006F, "Bottled Poe" ],
+			[ 0x0070, "Bottled Big Poe" ],
+			[ 0x0051, "Goron Mask" ],
+			[ 0x0052, "Zora Mask" ],
+			[ 0x0053, "Gerudo Mask" ],
+			[ 0x0017, "Skull Mask" ],
+			[ 0x0018, "Spooky Mask" ],
+			[ 0x001A, "Keaton Mask" ],
+			[ 0x001B, "Bunny Hood" ],
+			[ 0x001C, "Mask of Truth" ],
+			[ 0x0047, "Weird Egg" ],
+			[ 0x001D, "Pocket Egg" ],
+			[ 0x001E, "Pocket Cucco - uses Magic Bean message ID" ],
+			[ 0x001F, "Odd Mushroom" ],
+			[ 0x0020, "Odd Potion" ],
+			[ 0x0021, "Poacher’s Saw" ],
+			[ 0x0022, "Broken Goron’s Sword" ],
+			[ 0x0023, "Prescription" ],
+			[ 0x0024, "Eyeball Frog" ],
+			[ 0x0025, "World’s Finest Eye Drops" ],
+			[ 0x0026, "Claim Check" ],
+			[ 0x0015, "Ruto's Letter" ],
+			[ 0x000B, "Zelda’s Letter" ],
+			[ 0x000E, "Cojiro" ],
+			[ 0x0039, "Stone of Agony" ],
+			[ 0x003A, "Gerudo Membership Card" ],
+		]
+[[actor]]
+	index = 0x000B
+	object = 0x000A
+	name = "Great Fairy"
+	category = "PROP"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x000C
+	object = 0x002C
+	name = "Proximity Activated Firewall"
+	category = "BG"
+[[actor]]
+	index = 0x000D
+	object = 0x0009
+	name = "Poe"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Graveyard Poe" ],
+		[ 0x0001, "Graveyard Poe //Leaves a Blue Rupee at its spawn point" ],
+		[ 0x0002, "(006E) Sharp (Composer Brothers)", 0x006E ],
+		[ 0x0003, "(006E) Flat (Composer Brothers)", 0x006E ],
+		[ 0x0004, "Graveyard Poe" ],
+	]
+[[actor]]
+	index = 0x000E
+	object = 0x0007
+	name = "Octorok"
+	category = "ENEMY"
+[[actor]]
+	index = 0x000F
+	object = 0x0036
+	name = "Webs"
+	category = "BG"
+	var = [
+		[ 0x0000, "Web-Covered Hole" ],
+		[ 0x1000, "Vertical Web Wall" ],
+		[ 0x2000, "Web-Covered Hole //When burned, web becomes inverse-conical and extends upwards" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (set on destroy)"
+		mask = 0x003F
+	[[actor.property]]
+		name = "Switch Flag (burns when set)"
+		mask = 0x0FC0
+[[actor]]
+	index = 0x0010
+	name = "Bomb"
+	category = "EXPLOSIVE"
+	var = [
+		[ 0x0000, "Bomb" ],
+		[ 0x0001, "Bomb Shadow" ],
+	]
+[[actor]]
+	index = 0x0011
+	object = 0x000B
+	name = "Wallmaster"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Unknown //Used in Master Quest" ],
+		[ 0x0001, "Normal" ],
+		[ 0x0002, "Spawn on Switch Flag" ],
+	]
+[[actor]]
+	index = 0x0012
+	object = 0x000C
+	name = "Dodongo"
+	category = "ENEMY"
+	var = [
+		[ 0xFFFF, "Default" ],
+		[ 0x0000, "Two-Foot Dodongo //Emits fire and smoke from mouth upon death" ],
+		[ 0x0001, "Two-Foot Dodongo //Doesn't emit fire and smoke from mouth upon death" ],
+	]
+[[actor]]
+	index = 0x0013
+	object = 0x000D
+	name = "Keese"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Fire Keese" ],
+		[ 0x0002, "Aggressive Keese" ],
+		[ 0x0003, "Roosting Keese" ],
+		[ 0x0004, "Ice Keese" ],
+	]
+	[[actor.property]]
+		name = "Invisible"
+		mask = 0x8000
+[[actor]]
+	index = 0x0014
+	object = 0x001A
+	name = "Epona"
+	category = "BG"
+	var = [
+		[ 0x0000, "Epona" ],
+		[ 0x8000, "No Epona" ],
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0015
+	name = "Collectable Item"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Green Rupee" ],
+		[ 0x0001, "Blue Rupee" ],
+		[ 0x0002, "Red Rupee" ],
+		[ 0x0003, "Recovery Heart" ],
+		[ 0x0004, "Bomb" ],
+		[ 0x0005, "Arrow (1) //Used for collecting arrows stuck in walls" ],
+		[ 0x0006, "Heart Piece" ],
+		[ 0x0008, "Deku Seeds (5) or Arrows (5)" ],
+		[ 0x0009, "Deku Seeds (5) or Arrows (10)" ],
+		[ 0x000A, "Deku Seeds (5) or Arrows (30)" ],
+		[ 0x000B, "Bombs (5)" ],
+		[ 0x000C, "Deku Nut" ],
+		[ 0x000D, "Deku Stick" ],
+		[ 0x000E, "Large Magic Jar" ],
+		[ 0x000F, "Small Magic Jar" ],
+		[ 0x0010, "Deku Seeds (5) or Arrows (5)" ],
+		[ 0x0011, "Small Key" ],
+		[ 0x0012, "Flexible Drop //Used for randomized drops, see comments. Will spawn as an invisible Recovery Heart in some situations" ],
+		[ 0x0013, "Giant Orange Rupee" ],
+		[ 0x0014, "Large Purple Rupee" ],
+		[ 0x0015, "Deku Shield //May require Child Link's object" ],
+		[ 0x0016, "Hylian Shield" ],
+		[ 0x0017, "Zora Tunic" ],
+		[ 0x0018, "Goron Tunic" ],
+		[ 0x0019, "Bombs (5)" ],
+		[ 0x001A, "Invisible Item" ],
+	]
+	[[actor.property]]
+		name = "Collectible Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x0016
+	name = "Arrow"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Fire Arrow" ],
+		[ 0x0001, "Wooden Arrow" ],
+	]
+[[actor]]
+	index = 0x0018
+	name = "Fairy"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Navi" ],
+		[ 0x0001, "Bottled Healing Fairy" ],
+		[ 0x0002, "Roaming Healing Fairy" ],
+		[ 0x0004, "Group of Healing Fairies" ],
+		[ 0x0005, "Fairy Healing You" ],
+		[ 0x0007, "Roaming Large Healing Fairy" ],
+	]
+[[actor]]
+	index = 0x0019
+	object = 0x0013
+	name = "Cucco"
+	category = "PROP"
+	var = [
+		[ 0x0004, "Flees when approached //Cucco hidden in the box in Kakariko" ],
+		[ 0x0008, "Doesn't Flee" ],
+		[ 0x000E, "Non-Targetable //The non-super cuccos in the Ranch house" ],
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x001B
+	object = 0x0016
+	name = "Tektite"
+	category = "ENEMY"
+	var = [
+		[ 0xFFFF, "Red Tektite" ],
+		[ 0xFFFE, "Blue Tektite" ],
+		[ 0x0000, "Normal Tektite" ],
+		[ 0x0004, "Dies Instantly" ],
+	]
+[[actor]]
+	index = 0x001C
+	object = 0x0017
+	name = "Leever"
+	category = "ENEMY"
+[[actor]]
+	index = 0x001D
+	object = 0x0018
+	name = "Peahat"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Flying Peahat //Spawns Larva" ],
+		[ 0x0001, "Peahat Larva" ],
+		[ 0xFFFF, "Burrowed Peahat" ],
+	]
+[[actor]]
+	index = 0x001E
+	object = 0x0002
+	name = "Butterfly"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x0020
+	name = "Bug"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Large Bug" ],
+		[ 0x0002, "Three Small Bugs" ],
+		[ 0x0003, "Small Bug" ],
+	]
+[[actor]]
+	index = 0x0021
+	name = "Fish"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Flopping" ],
+		[ 0x0001, "Swimming, Doesn't Flee //Used for very small pools of water" ],
+		[ 0x0002, "Swimming, Reacts to Link" ],
+		[ 0xFFFF, "Swimming, Flees" ],
+	]
+[[actor]]
+	index = 0x0023
+	name = "Room Changing Black Plane"
+	category = "DOOR"
+	var = [
+		[ 0x0000, "Vertical, two way, fades black when approached" ],
+		[ 0x0040, "Up/Down, one-way, fades black when approached" ],
+		[ 0x0080, "Up/Down, two-way, no fade" ],
+		[ 0x00C0, "Vertical, enabled on switch flag, fades black when approached" ],
+		[ 0x0100, "Vertical, two-way, no fade" ],
+		[ 0x0140, "Up/Down, two-way, fades black when approached" ],
+	]
+[[actor]]
+	index = 0x0024
+	object = 0x0040
+	name = "(Unknown scene change)"
+	category = "PROP"
+[[actor]]
+	index = 0x0025
+	object = 0x001B
+	name = "Lizalfos"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Lizalfos mini-boss, drops from ceiling //Partner to 01, in order to be killed" ],
+		[ 0x0001, "Lizalfos mini-boss, no mini-boss music //Partner to 00, in order to be killed" ],
+		[ 0x0080, "Lizalfos, no mini-boss music" ],
+		[ 0x00FE, "Dinolfos, no mini-boss music" ],
+		[ 0x00FF, "Lizalfos, no mini-boss music, drops from ceiling" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x0026
+	object = 0x0076
+	name = "Wooden Post with Red Cloth"
+	category = "PROP"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0027
+	object = 0x0019
+	name = "King Dodongo"
+	category = "BOSS"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0028
+	object = 0x001C
+	name = "Queen Gohma"
+	category = "BOSS"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0029
+	object = 0x001D
+	name = "Princess Zelda Child"
+	category = "NPC"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x002A
+	name = "Cutscene Actors"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Impa's Horse" ],
+		[ 0x0101, "Impa on Horse" ],
+		[ 0x0202, "Zelda" ],
+		[ 0x0303, "Ganondorf on Horse (Stationary)" ],
+		[ 0x0404, "Ganondorf's Horse (Stationary)" ],
+		[ 0x05FF, "Ganondorf on Horse (Riding) + Flames" ],
+		[ 0x06FF, "Ganondorf's Horse (Galloping)" ],
+		[ 0x07FF, "Ganondorf hands crossed", 0x009B ],
+		[ 0x08FF, "Ganondorf Bowing to King" ],
+		[ 0x09FF, "Ganondorf floating (Curse You)", 0x00E1 ],
+	]
+[[actor]]
+	index = 0x002B
+	object = 0x001E
+	name = "Gohma Larva"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Falls, lands on ground, hatches in moments" ],
+		[ 0x0003, "Crashes" ],
+		[ 0x0006, "Normal egg on ground" ],
+		[ 0x0008, "Invisible until it hatches (or with Lens of Truth)" ],
+		[ 0x000A, "Destroyed" ],
+		[ 0x0064, "Puffs of Blue Smoke (dies away when Link approaches)" ],
+	]
+[[actor]]
+	index = 0x002C
+	object = 0x0003
+	name = "Alpha Cube Copy"
+	category = "BG"
+[[actor]]
+	index = 0x002D
+	object = 0x0012
+	name = "Shabom"
+	category = "ENEMY"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x002E
+	name = "Lifting Wooden Door"
+	category = "DOOR"
+	var = [
+		[ 0x0000, "Lifting door" ],
+		[ 0x0040, "Front side attached to Room Clear" ],
+		[ 0x0080, "Front side attached to Switch" ],
+		[ 0x00C0, "Back side permanently locked" ],
+		[ 0x0140, "Boss door ", 0x00B0 ],
+		[ 0x01C0, "Front side attached to Switch, Back to Room Clear" ],
+		[ 0x02C0, "Key Locked door" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x002F
+	object = 0x001F
+	name = "Baby Dodongo"
+	category = "ENEMY"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0030
+	object = 0x0019
+	name = "King Dodongo's Fire"
+	category = "ENEMY"
+[[actor]]
+	index = 0x0032
+	name = "Boomerang"
+	category = "MISC"
+[[actor]]
+	index = 0x0033
+	object = 0x0020
+	name = "Dark Link"
+	category = "BOSS"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0034
+	object = 0x0021
+	name = "Biri"
+	category = "ENEMY"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0035
+	object = 0x0022
+	name = "Taliparisan"
+	category = "ENEMY"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0037
+	object = 0x0024
+	name = "Skulltula"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Normal" ],
+		[ 0x0001, "Big" ],
+		[ 0x0002, "Invisible" ],
+		[ 0x0003, "+ Normal" ],
+	]
+[[actor]]
+	index = 0x0038
+	object = 0x0025
+	name = "Torch Slug"
+	category = "ENEMY"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0039
+	name = "Gameplay_keep Objects"
+	category = "MISC"
+	var = [
+		[ 0x0000, "Small grey stone block" ],
+		[ 0x0001, "Large grey stone block" ],
+		[ 0x0002, "Huge grey stone block" ],
+		[ 0x0003, "Small grey stone block, rotates when you stand on it" ],
+		[ 0x0004, "Large grey stone block, rotates when you stand on it" ],
+		[ 0x0005, "Small grey stone cube" ],
+		[ 0x0006, "Crashes" ],
+		[ 0x0007, "Grass clump" ],
+		[ 0x0008, "Small tree stump" ],
+		[ 0x0009, "Oblong Signpost (unbreakable)" ],
+		[ 0x000A, "Arrow Signpost" ],
+		[ 0x000C, "Black knobby thing" ],
+	]
+	[[actor.property]]
+		name = "Message ID"
+		mask = 0xFF00
+[[actor]]
+	index = 0x003A
+	object = 0x0026
+	name = "Stinger"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Four spinning a circle, but once you kill one, the rest are gone as well" ],
+		[ 0x0001, "Three in formation, sink under floor and do not activate" ],
+		[ 0x0002, "Two in formation, sink under floor and do not activate" ],
+		[ 0x0003, "One in formation, sink under floor and do not activate" ],
+		[ 0x000A, "Single" ],
+	]
+[[actor]]
+	index = 0x003B
+	name = "Ambient Sound Effects"
+	category = "BG"
+	var = [
+		[ 0x0000, "River (Multi-Point)" ],
+		[ 0x0001, "Stream" ],
+		[ 0x0002, "Magma" ],
+		[ 0x0003, "Waterfall" ],
+		[ 0x0004, "Small Stream" ],
+		[ 0x0005, "Stream" ],
+		[ 0x0006, "Fire Temple’s Lower Ambient Noise" ],
+		[ 0x0007, "Fire Temple’s Higher Ambient Noise" ],
+		[ 0x0008, "Water Dripping (Well)" ],
+		[ 0x0009, "River" ],
+		[ 0x000A, "Market gibberish" ],
+		[ 0x000B, "Unknown //FIXME: volume decreased but no ambient sound seemed to play" ],
+		[ 0x000D, "Proximity Saria’s Song" ],
+		[ 0x000E, "Howling wind" ],
+		[ 0x000F, "Gurgling" ],
+		[ 0x0010, "Temple of Light’s dripping sounds" ],
+		[ 0x0011, "Low booming-likish sound" ],
+		[ 0x0012, "Quake/Collapse" ],
+		[ 0x0013, "Fairy Fountain" ],
+		[ 0x0014, "Torches" ],
+		[ 0x0015, "Cows" ],
+		[ 0x0016, "Outside of the ambient noise domain" ],
+	]
+	[[actor.property]]
+		name = "Path Id (River)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x003C
+	object = 0x0027
+	name = "Normal Horse"
+	category = "BG"
+	var = [
+		[ 0x0001, "Tan, Runs Around" ],
+		[ 0x000F, "Tan, Runs Around" ],
+		[ 0x0010, "Tan, Runs Away" ],
+		[ 0xFFFF, "Tan, Runs Around" ],
+	]
+[[actor]]
+	index = 0x003D
+	name = "Shopkeeper"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Kokiri Shopkeeper //Add objects (0101, 0102) Text ID 10BA" ],
+		[ 0x0001, "Kakariko Potion Shopkeeper //Add objects (00B2, 0159) Text ID 504E" ],
+		[ 0x0002, "Bombchu Shopkeeper // Add ????? object, requires killing king dodongo to appear" ],
+		[ 0x0003, "Market Potion Shopkeeper //Add objects (00B2, 0159)  Text ID 504E" ],
+		[ 0x0004, "Bazaar Shopkeeper // Add ????? object  Text ID 009D as adult" ],
+		[ 0x0007, "Zora Shopkeeper // Add ????? object" ],
+		[ 0x0008, "Goron Shopkeeper // Add ????? object" ],
+		[ 0x000A, "Happy Mask Shopkeeper // Add ????? object" ],
+	]
+[[actor]]
+	index = 0x003E
+	object = 0x002A
+	name = "Deku Tree's Jaw"
+	category = "BG"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x003F
+	object = 0x002B
+	name = "Dodongo Skull's Jaw"
+	category = "BG"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x0040
+	object = 0x002C
+	name = "Lower Part of Megaton Statue"
+	category = "BG"
+	var = [
+		[ 0x0000, "Lower Part (Flame decal)" ],
+		[ 0x0001, "Top Part (Face decal)" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x0041
+	object = 0x002C
+	name = "Huge Stone Spike Platform"
+	category = "BG"
+	var = [
+		[ 0x0000, "Huge" ],
+		[ 0x0100, "Big" ],
+		[ 0x0200, "Small" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0042
+	object = 0x002D
+	name = "Ganondorf's Horse"
+	category = "BG"
+[[actor]]
+	index = 0x0043
+	object = 0x002C
+	name = "Fire Temple Stone Block"
+	category = "BG"
+	var = [
+		[ 0x0000, "Large Face Cube //Pushable" ],
+		[ 0x0001, "Squat Cube //Shakes and flies into the air when you land on it" ],
+	]
+[[actor]]
+	index = 0x0044
+	object = 0x002C
+	name = "Spinning Flame Thrower Statue"
+	category = "BG"
+[[actor]]
+	index = 0x0045
+	object = 0x002C
+	name = "Stationary Flame Thrower Statue"
+	category = "BG"
+	var = [
+		[ 0x0000, "2-way diagonal" ],
+		[ 0x0001, "4-way plus" ],
+	]
+[[actor]]
+	index = 0x0046
+	object = 0x002C
+	name = "Sink Stone Platform"
+	category = "BG"
+	var = [
+		[ 0x0000, "Sinking" ],
+		[ 0x0001, "Sliding" ],
+	]
+[[actor]]
+	index = 0x0047
+	object = 0x002C
+	name = "Fire Temple Stone Block"
+	category = "BG"
+[[actor]]
+	index = 0x0048
+	object = 0x008A
+	name = "Sheik"
+	category = "NPC"
+[[actor]]
+	index = 0x0049
+	name = "Flame Circle"
+	category = "PROP"
+	notes = [
+	"+0x003F = Switch Flag", "+0x0FC0 = Chest Flag",
+	]
+	var = [
+		[ 0x0000, "Large, turns off with room clear." ],
+		[ 0x1000, "Large, plays cutscene, switches off for long time with ticking sound. Turns off permanently with chest flag." ],
+		[ 0x2000, "Small, switches off for long time silently." ],
+		[ 0x3000, "Large, plays cutscene, switches off for short time with ticking sound." ],
+		[ 0x4000, "Disabled, small, switches on for short time." ],
+		[ 0x5000, "Disabled, large, can be switched on and off." ],
+		[ 0x6000, "Large, switches off permanently, won't spawn if room is cleared." ],
+		[ 0x7000, "Nothing" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+	[[actor.property]]
+		name = "Chest Flag"
+		mask = 0x0FC0
+[[actor]]
+	index = 0x004A
+	object = 0x002F
+	name = "Drawbridge"
+	category = "BG"
+	var = [
+		[ 0x0000, "Chains" ],
+		[ 0xFFFF, "Drawbridge" ],
+	]
+[[actor]]
+	index = 0x004B
+	object = 0x0030
+	name = "Ground Pounding Moblin"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Club Moblin //Pounds the ground" ],
+		[ 0x00FF, "Spear Moblin" ],
+	]
+	[[actor.property]]
+		name = "Path Id"
+		mask = 0xFF00
+[[actor]]
+	index = 0x004C
+	object = 0x0031
+	name = "Bomb Flower"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Bomb" ],
+		[ 0x0001, "Invisible Bomb" ],
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x004D
+	object = 0x0060
+	name = "Adult Zelda (Cutscene)"
+	category = "NPC"
+[[actor]]
+	index = 0x004E
+	object = 0x002C
+	name = "Elevator Platform"
+	category = "BG"
+[[actor]]
+	index = 0x004F
+	object = 0x0035
+	name = "Lock-on Blue Spot? (Unknown)"
+	category = "NPC"
+[[actor]]
+	index = 0x0050
+	object = 0x0036
+	name = "Back and Forth Moving Platform"
+	category = "BG"
+	var = [
+		[ 0x0000, "Platform" ],
+		[ 0x0001, "Water plane" ],
+		[ 0x0002, "Raising platforms" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0xFF00
+[[actor]]
+	index = 0x0051
+	object = 0x0036
+	name = "Rotating Spike Cylinder"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Rotating Spike Cylinder" ],
+		[ 0x0100, "Deku tree ladder falling when hit by slingshot (switchflag?)" ],
+	]
+[[actor]]
+	index = 0x0052
+	object = 0x0037
+	name = "Phantom Ganon"
+	category = "BOSS"
+[[actor]]
+	index = 0x0054
+	object = 0x0038
+	name = "Armos"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Pushable" ],
+		[ 0x0001, "Monster //Invincible?" ],
+		[ 0xFFFF, "Monster" ],
+	]
+[[actor]]
+	index = 0x0055
+	object = 0x0039
+	name = "Deku Baba"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Small" ],
+		[ 0x0001, "Big" ],
+	]
+[[actor]]
+	index = 0x0056
+	name = "Deku Nuts (from Link)"
+	category = "MISC"
+[[actor]]
+	index = 0x0057
+	name = "Spin Attack"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x0058
+	object = 0x002B
+	name = "Rising Stone Platform"
+	category = "BG"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0059
+	object = 0x018A
+	name = "Bombable Wall"
+	category = "BG"
+	var = [
+		[ 0xA000, "Normal" ],
+		[ 0x0000, "Dodongo's Cavern cutscene" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x005A
+	object = 0x0040
+	name = "Lord Jabu Jabu"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Collision Data" ],
+	]
+[[actor]]
+	index = 0x005B
+	object = 0x0046
+	name = "Zelda's Horse"
+	category = "BG"
+[[actor]]
+	index = 0x005C
+	object = 0x002B
+	name = "Stone Stairs"
+	category = "BG"
+[[actor]]
+	index = 0x005D
+	object = 0x0048
+	name = "Blue Warp"
+	category = "ITEMACTION"
+	var = [
+		[ 0xFFFF, "Normal (adult Link)" ],
+		[ 0xFFFE, "Spawning in from crystal //Combine with Link's gentle fall spawn in" ],
+		[ 0x0000, "Normal" ],
+		[ 0x0001, "Nothing" ],
+		[ 0x0002, "Blue warp, disappears" ],
+		[ 0x0003, "Giant purple crystal/magic enclosure" ],
+		[ 0x0004, "Yellow warp, disappears" ],
+		[ 0x0005, "Blue warp, doesn't warp you" ],
+		[ 0x0006, "Spawn in from child blue warp //Combine with Link's gentle fall" ],
+		[ 0x0007, "Blue warp, warping animation" ],
+		[ 0x0008, "Tan warp, disappears" ],
+		[ 0x0009, "Green warp, disappears" ],
+		[ 0x000A, "Red warp, disappears" ],
+		[ 0x000B, "Area fails to load" ],
+	]
+[[actor]]
+	index = 0x005E
+	object = 0x00A4
+	name = "Torch"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Golden Torch" ],
+		[ 0x1000, "Timed Torch" ],
+		[ 0x2000, "Unlit Wooden Torch" ],
+		[ 0x2400, "Lit Wooden Torch" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+	[[actor.property]]
+		name = "# of Torches"
+		mask = 0x03C0
+[[actor]]
+	index = 0x005F
+	object = 0x00BD
+	name = "Heart Container"
+	category = "MISC"
+[[actor]]
+	index = 0x0060
+	object = 0x004A
+	name = "Deku Scrub"
+	category = "ENEMY"
+	var = [
+		[ 0x00FF, "Fire 1 shot" ],
+	]
+	[[actor.property]]
+		name = "Nuts shot per volley"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0061
+	object = 0x004D
+	name = "Large Rotating Stone Ring"
+	category = "BG"
+[[actor]]
+	index = 0x0062
+	object = 0x004D
+	name = "Statue Eyes"
+	category = "BG"
+[[actor]]
+	index = 0x0063
+	object = 0x0056
+	name = "Bari"
+	category = "ENEMY"
+[[actor]]
+	index = 0x0064
+	object = 0x0059
+	name = "Dragon Head Statue"
+	category = "BG"
+	var = [
+		[ 0x0000, "Floating Square platform, sloped bottom //Used in first room, on center column" ],
+		[ 0x1000, "Floating Square platform" ],
+		[ 0x2000, "Floating Square platform, tapered on bottom //Center Room floating block" ],
+		[ 0x3000, "Dragon Head Statue //Main Room" ],
+		[ 0x4000, "Dragon Head Statue //Skulltula Room" ],
+		[ 0x5000, "Dragon Head Statue //before Dark Link" ],
+		[ 0x6000, "Dragon Head Statue" ],
+		[ 0x7000, "Moving Square Platform with Hookshot Target" ],
+	]
+	[[actor.property]]
+		name = "Path Id (var 7000)"
+		mask = 0x0F00
+	[[actor.property]]
+		name = "Speed (var 7000)"
+		mask = 0x00F0
+	[[actor.property]]
+		name = "Start point on path (var 7000)"
+		mask = 0x000F
+[[actor]]
+	index = 0x0065
+	object = 0x0059
+	name = "Water Temple Water"
+	category = "BG"
+	var = [
+		[ 0x0000, "Switches to lowest (Triforce seems to activate itself for some reason in the ToT)" ],
+		[ 0x0001, "Stays at ground level (Triforce isn't affected in ToT)" ],
+		[ 0x1A02, "Water Temple Map 3, Standard Quest" ],
+		[ 0x3103, "Water Temple Map 6, Standard Quest" ],
+		[ 0x1804, "Water Temple Map 14, Standard Quest" ],
+		[ 0xFF00, "Water Temple (most rooms), Standard Quest" ],
+	]
+[[actor]]
+	index = 0x0066
+	object = 0x0014
+	name = "Hookshot"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x0067
+	object = 0x005A
+	name = "Phantom Ganon's Horse"
+	category = "BG"
+[[actor]]
+	index = 0x0068
+	object = 0x006F
+	name = "Twisted Hallway"
+	category = "BG"
+[[actor]]
+	index = 0x0069
+	object = 0x005D
+	name = "Bubble"
+	category = "ENEMY"
+	var = [
+		[ 0x00FB, "Large Green Bubble //requires movement path" ],
+		[ 0x00FC, "Green Bubble //requires movement path" ],
+		[ 0x00FD, "White Bubble //requires movement path" ],
+		[ 0x00FE, "Fire Bubble //Proximity activated, bounces on solid surfaces, hides in lava" ],
+		[ 0x00FF, "Blue Bubble" ],
+	]
+	[[actor.property]]
+		name = "Path Id"
+		mask = 0xFF00
+[[actor]]
+	index = 0x006A
+	object = 0x005E
+	name = "Temple of Time Windows"
+	category = "BG"
+	var = [
+		[ 0x0000, "Normal" ],
+		[ 0x0001, "Invisible" ],
+	]
+[[actor]]
+	index = 0x006B
+	object = 0x005F
+	name = "Flying Floor Tile"
+	category = "ENEMY"
+	[[actor.property]]
+		name = "Time until it rises"
+		mask = 0x00FF
+[[actor]]
+	index = 0x006C
+	object = 0x005E
+	name = "Master Sword"
+	category = "PROP"
+[[actor]]
+	index = 0x006D
+	object = 0x005A
+	name = "Phantom Ganon's Lightning Attack"
+	category = "BOSS"
+[[actor]]
+	index = 0x006E
+	object = 0x0061
+	name = "Warp Pad"
+	category = "BG"
+	var = [
+		[ 0x0000, "(0068) Ocarina //Unused" ],
+		[ 0x0001, "(0062) Light Medallion" ],
+		[ 0x0002, "(0063) Shadow Medallion" ],
+		[ 0x0003, "(0064) Fire Medallion" ],
+		[ 0x0004, "(0065) Water Medallion" ],
+		[ 0x0005, "(0066) Spirit Medallion" ],
+		[ 0x0006, "(0067) Forest Medallion" ],
+	]
+[[actor]]
+	index = 0x006F
+	object = 0x002C
+	name = "Metal Gate"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Yellow with corner removed" ],
+		[ 0x0001, "Green and rectangular" ],
+		[ 0x0002, "Yellow/green and rectangular, looks rusty" ],
+		[ 0x0003, "Crashes, but not without drawing a huge black thing that I can only assume is a gate..." ],
+		[ 0x0004, "Crashes before it can even light the area..." ],
+		[ 0x0005, "+ Crashes, no sign of a gate" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x0070
+	object = 0x005E
+	name = "Door of Time"
+	category = "BG"
+[[actor]]
+	index = 0x0071
+	object = 0x002C
+	name = "Hammer Steps in Fire Temple"
+	category = "BG"
+	var = [
+		[ 0x0000, "Hammer-triggered Stone Steps" ],
+		[ 0x0001, "Platform, one sided" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x0072
+	object = 0x0077
+	name = "Alpha Bird"
+	category = "PROP"
+[[actor]]
+	index = 0x0077
+	object = 0x007C
+	name = "Greenery"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Large tree" ],
+		[ 0x0001, "Medium tree" ],
+		[ 0x0002, "Small tree" ],
+		[ 0x0003, "Group of trees" ],
+		[ 0x0004, "Medium tree" ],
+		[ 0x0005, "Medium tree, dark brown trunk, greener leaves" ],
+		[ 0x0006, "Group of trees, dark brown trunk, yellow leaves" ],
+		[ 0x0007, "Medium tree, dark brown trunk, yellow leaves" ],
+		[ 0x0008, "Group of trees, dark brown trunk, greener leaves" ],
+		[ 0x0009, "Medium tree, dark brown trunk, greener leaves" ],
+		[ 0x000A, "Ugly tree from Kakariko Village" ],
+		[ 0x000B, "Bush" ],
+		[ 0x000C, "Large bush" ],
+		[ 0x000D, "Group of bushes" ],
+		[ 0x000E, "Bush" ],
+		[ 0x000F, "Group of large bushes" ],
+		[ 0x0010, "Large bush" ],
+		[ 0x0011, "Dark bush" ],
+		[ 0x0012, "Large dark bush" ],
+		[ 0x0013, "Group of dark bushes" ],
+		[ 0x0014, "Dark bush" ],
+		[ 0x0015, "Group of large dark bushes" ],
+		[ 0x0016, "Large dark bush" ],
+		[ 0x0019, "Dancing dark bush //Disappears after several repetitions" ],
+	]
+	[[actor.property]]
+		name = "Gold Skulltula Low Byte"
+		mask = 0xFF00
+		source = "var"
+	[[actor.property]]
+		name = "Gold Skulltula High Byte"
+		mask = 0x00FF
+		source = "zrot"
+[[actor]]
+	index = 0x007C
+	object = 0x0081
+	name = "Alpha Large Noisy Stone"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Normal, flashes blue when struck with sword" ],
+		[ 0x0001, "Frickin’ huge, doesn’t flash when struck" ],
+		[ 0x0002, "Even bigger?" ],
+		[ 0x0003, "Ridiculously huge?" ],
+		[ 0x0004, "Small size, flashes blue when struck" ],
+	]
+[[actor]]
+	index = 0x007D
+	object = 0x0082
+	name = "Alpha Stone Cube"
+	category = "BG"
+	var = [
+		[ 0x0000, "Stone cube, side struck with sword flashes blue" ],
+		[ 0x0001, "Slightly larger" ],
+	]
+	[[actor.property]]
+		name = "Size"
+		mask = 0x000F
+[[actor]]
+	index = 0x0080
+	object = 0x0085
+	name = "Sliding Spike Trap"
+	category = "BG"
+	var = [
+		[ 0x0000, "4-Way Attack" ],
+		[ 0x0010, "Line Loop" ],
+		[ 0x0020, "Circle Loop" ],
+		[ 0x0030, "Vertical //Unintended Behavior?" ],
+	]
+	[[actor.property]]
+		name = "Radius (Type 1 and 2)"
+		mask = 0xF000
+	[[actor.property]]
+		name = "Move North (Type 0)"
+		mask = 0x0001
+	[[actor.property]]
+		name = "Move South (Type 0)"
+		mask = 0x0002
+	[[actor.property]]
+		name = "Move West (Type 0)"
+		mask = 0x0004
+	[[actor.property]]
+		name = "Move East (Type 0)"
+		mask = 0x0008
+	[[actor.property]]
+		name = "Attack Speed"
+		mask = 0x0F00
+[[actor]]
+	index = 0x0081
+	name = "Beta Arrow Trap"
+	category = "PROP"
+[[actor]]
+	index = 0x0082
+	object = 0x0086
+	name = "Alpha Orange Pot"
+	category = "PROP"
+[[actor]]
+	index = 0x0084
+	object = 0x0088
+	name = "Talon"
+	category = "NPC"
+[[actor]]
+	index = 0x0085
+	object = 0x0089
+	name = "Dampe Grave Digging Game"
+	category = "NPC"
+[[actor]]
+	index = 0x0086
+	object = 0x0072
+	name = "Lowering Circular Platform"
+	category = "BG"
+[[actor]]
+	index = 0x0087
+	object = 0x0072
+	name = "Forest Temple Elevator"
+	category = "BG"
+[[actor]]
+	index = 0x0088
+	object = 0x0072
+	name = "Rotating Room"
+	category = "BG"
+[[actor]]
+	index = 0x0089
+	object = 0x0072
+	name = "Forest Temple Ceiling"
+	category = "BG"
+[[actor]]
+	index = 0x008A
+	object = 0x008B
+	name = "Beamos"
+	category = "ENEMY"
+	var = [
+		[ 0x0700, "Attacking Beamos (2 health)" ],
+		[ 0x0701, "Attacking Beamos (1 health)" ],
+	]
+	[[actor.property]]
+		name = "Unknown (use 07)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x008B
+	name = "Spiritual Stones/Goddesses/Triforce"
+	category = "BG"
+	var = [
+		[ 0x0000, "Corrupted, actors and interface gone" ],
+		[ 0x0001, "Corrupted, actors and interface gone //in Sutaru, Navi and certain other things are invisible, but the interface and Link are not" ],
+		[ 0x0002, "Fading blue glow (Ruto’s teleportation?)" ],
+		[ 0x0003, "Corrupted (black polygons spew outwards), disappears after changing its form once" ],
+		[ 0x0004, "Actors and Link are gone, interface goes in and out, loud rumbling sound (goddess)" ],
+		[ 0x0009, "Fire Medallion //use object 00BA" ],
+		[ 0x000A, "Water Medallion //use object 00BA" ],
+		[ 0x000B, "Forest Medallion //use object 00BA" ],
+		[ 0x000C, "Spirit Medallion //use object 00BA" ],
+		[ 0x000D, "Shadow Medallion //use object 00BA" ],
+		[ 0x000F, "??? (actor performs beq on this value)" ],
+		[ 0x0010, "Similar to 00, portal or vortex sound (possibly from the sages?), returns to normal when sound finishes" ],
+		[ 0x0012, "? //Loaded in Chamber of Sages" ],
+		[ 0x0013, "Kokiri Emerald //use object 00AD" ],
+		[ 0x0014, "Goron's Ruby //use object 00AD" ],
+		[ 0x0015, "Zora's Sapphire //use object 00AD" ],
+	]
+[[actor]]
+	index = 0x008C
+	object = 0x005E
+	name = "Temple of Time Objects"
+	category = "BG"
+	var = [
+		[ 0x0000, "Unknown //Use object 0092, Spawned in Cutscene Map 71 (0,4,6,8,11)" ],
+		[ 0x0001, "Unknown //Use object 0092, Spawned in Temple of Time" ],
+		[ 0x0002, "Unknown //Use object 0092, Creation Cutscene in Gerudo Valley" ],
+		[ 0x0003, "Unknown //Use object 0092, Creation Cutscene in Gerudo Valley" ],
+		[ 0x0004, "Unknown //Use object 0092, Creation Cutscene in Gerudo Valley" ],
+		[ 0x0005, "Unknown //Use object 0092, Creation Cutscene in Gerudo Valley" ],
+		[ 0x0006, "Unknown //Use object 0092, Creation Cutscene in Gerudo Valley" ],
+		[ 0x0007, "Fluffy Clouds //Used when talking to zelda at the end of the game" ],
+		[ 0x0008, "Unknown //Use object 00B6, object_gi_melody, musical note item" ],
+		[ 0x0009, "Unknown //Use object 00B6, object_gi_melody, musical note item" ],
+		[ 0x000A, "Unknown //Use object 00B6, object_gi_melody, musical note item" ],
+		[ 0x000B, "Unknown //Use object 00B6, object_gi_melody, musical note item" ],
+		[ 0x000C, "Unknown //Use object 00B6, object_gi_melody, musical note item" ],
+		[ 0x000D, "Door of Time //Use object 005E" ],
+		[ 0x000E, "Plane of yellow light //Use object 005E" ],
+		[ 0x000F, "Warp Song leaving effect" ],
+		[ 0x0010, "Warp song arriving effect" ],
+		[ 0x0011, "Sparkly effect" ],
+	]
+[[actor]]
+	index = 0x008D
+	object = 0x002C
+	name = "Large Firewall"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Stationary with switch and hardcoded camera cutscene" ],
+		[ 0x0100, "Follows you" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x00FF
+[[actor]]
+	index = 0x008E
+	object = 0x000B
+	name = "Floormaster"
+	category = "ENEMY"
+[[actor]]
+	index = 0x008F
+	object = 0x0097
+	name = "Castle Courtyard Guards"
+	category = "NPC"
+	var = [
+		[ 0x0000, "? patrolling guard?" ],
+		[ 0x0500, "Standing guard //Immediately unloads self if the current world time is lower or equal than B888, or if it's currently day" ],
+	]
+	[[actor.property]]
+		name = "Path Id"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0090
+	object = 0x0098
+	name = "Redead/Gibdo"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Redead" ],
+		[ 0x0080, "Gibdo" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x7F00
+	[[actor.property]]
+		name = "Action"
+		mask = 0x00FF
+	[[actor.property]]
+		name = "Unknown"
+		mask = 0x8000
+[[actor]]
+	index = 0x0091
+	object = 0x0099
+	name = "Poe Sisters"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Meg //Purple" ],
+		[ 0x0100, "Joelle //Red" ],
+		[ 0x0200, "Beth //Blue" ],
+		[ 0x0300, "Amy //Green" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+	[[actor.property]]
+		name = "?"
+		mask = 0x0C00
+	[[actor.property]]
+		name = "?"
+		mask = 0x1000
+[[actor]]
+	index = 0x0092
+	object = 0x009A
+	name = "Golden Gauntlets Rock"
+	category = "BG"
+	var = [
+		[ 0x0000, "Sinks into the ground" ],
+		[ 0x0001, "Breaks on impact" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x0093
+	object = 0x0099
+	name = "Poe Puzzle Block"
+	category = "BG"
+	var = [
+		[ 0x0000, "??? Amy" ],
+		[ 0x0100, "??? Amy" ],
+		[ 0x0200, "Joelle Painting Puzzle" ],
+		[ 0x0300, "Beth Painting Puzzle" ],
+		[ 0x0400, "??? Amy" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x0094
+	name = "Fish, Bugs, or Butterflies"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0022, "Fish" ],
+		[ 0x0023, "Bug" ],
+		[ 0x0024, "Butterfly" ],
+	]
+	[[actor.property]]
+		name = "Spawn Count"
+		mask = 0x0700
+[[actor]]
+	index = 0x0095
+	object = 0x0024
+	name = "Skullwalltula/Golden Skulltula"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Skullwalltula" ],
+		[ 0x8000, "Gold Skulltula, Always Spawns" ],
+		[ 0xA000, "Gold Skulltula, Spawns at night" ],
+	]
+	[[actor.property]]
+		name = "Location"
+		mask = 0x1F00
+	[[actor.property]]
+		name = "Skulltula Flag"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0096
+	object = 0x009C
+	name = "Flying Volvagia"
+	category = "BOSS"
+[[actor]]
+	index = 0x0097
+	name = "Environmental effects"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Flying Fairies, Dustmotes //Kokiri Forest/Lost Woods/Sacred Forest Meadow" ],
+		[ 0x0002, "? //Used in Kakariko Graveyard, cutscene 1" ],
+		[ 0x0003, "Snow" ],
+		[ 0x0004, "Proximity Rain Effect //Kakariko Graveyard" ],
+		[ 0x0005, "Colored Light Beams //Use object 0179, From lower part of Ganon's Tower" ],
+	]
+[[actor]]
+	index = 0x0098
+	object = 0x009D
+	name = "Darunia"
+	category = "NPC"
+[[actor]]
+	index = 0x0099
+	object = 0x009E
+	name = "Fire Dancer"
+	category = "ENEMY"
+[[actor]]
+	index = 0x009A
+	object = 0x00A0
+	name = "Child Epona"
+	category = "BG"
+[[actor]]
+	index = 0x009B
+	object = 0x0002
+	name = "Hole in Ground Exit"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Grottos //Scene 62" ],
+		[ 0x1000, "Small Fairy Fountain //Scene 60" ],
+	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0x0300
+		source = "var"
+	[[actor.property]]
+		name = "Contents"
+		mask = 0x00E0
+		source = "var"
+	[[actor.property]]
+		name = "Chest Flag"
+		mask = 0x001F
+		source = "var"
+	[[actor.property]]
+		name = "Destination (Type 0)"
+		mask = 0x000F
+		source = "zrot"
+[[actor]]
+	index = 0x009C
+	object = 0x00A1
+	name = "Graveyard Objects"
+	category = "BG"
+	var = [
+		[ 0x0000, "Eye of Truth-Engraved Door 240x260" ],
+		[ 0x0001, "Small Square Patch of Ground //(Child Link only) Used to block entrance to Dampe's Grave" ],
+		[ 0x0002, "Royal Tomb Grave //Only one can be spawned?" ],
+		[ 0x0003, "? //Probably Royal Tomb Grave opening cutscene related" ],
+		[ 0x0004, "Light Aura //Appears when Royal Tomb Grave explodes" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0xFF00
+[[actor]]
+	index = 0x009D
+	object = 0x00A2
+	name = "Gravestone"
+	category = "BG"
+	var = [
+		[ 0x0000, "Default" ],
+		[ 0x0001, "Plays discovery sfx when pulled back" ],
+		[ 0x0002, "Typical" ],
+	]
+[[actor]]
+	index = 0x009E
+	name = "Farore's Wind"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Normal (no sphere)" ],
+		[ 0x0001, "Dissipating (no sphere)" ],
+	]
+[[actor]]
+	index = 0x009F
+	name = "Din's Fire"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x00A1
+	object = 0x00A3
+	name = "Young Ruto"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Blue Warp and Ruto" ],
+		[ 0x0001, "Leaning Ruto //no collision data, targetable" ],
+		[ 0x0002, "Ruto, First Encounter //Plays cutscene from Jabu-Jabu’s Belly when you first meet her" ],
+		[ 0x0003, "Ruto, after falling down the hole in Jabu-Jabu" ],
+	]
+[[actor]]
+	index = 0x00A2
+	object = 0x00A5
+	name = "Hole Volvagia"
+	category = "BOSS"
+[[actor]]
+	index = 0x00A3
+	object = 0x0003
+	name = "Fireball"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Flies, lands, dies in a bit //try not to run into it, Link’ll catch on fire" ],
+		[ 0x8000, "Flies, lands, creeps towards Link, dies in a bit //it’s blue, but it’s still fire" ],
+	]
+[[actor]]
+	index = 0x00A4
+	object = 0x00A6
+	name = "Deadhand"
+	category = "ENEMY"
+[[actor]]
+	index = 0x00A5
+	object = 0x00A6
+	name = "Deadhand's Arms"
+	category = "ENEMY"
+[[actor]]
+	index = 0x00A6
+	object = 0x00A7
+	name = "Rauru"
+	category = "NPC"
+[[actor]]
+	index = 0x00A7
+	name = "Enemy Spawner"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Leever //Use object 0017, they spawn on sand (#Quicksand)" ],
+		[ 0x0A00, "Red Tektite //Use object 0016" ],
+		[ 0x1000, "Stalchildren //Use object 0184, Must stand on dirt to appear?" ],
+	]
+	[[actor.property]]
+		name = "Enemies to Spawn"
+		mask = 0x00FF
+[[actor]]
+	index = 0x00A8
+	object = 0x009D
+	name = "Sage Darunia (Cutscene)"
+	category = "NPC"
+[[actor]]
+	index = 0x00A9
+	object = 0x0087
+	name = "Impa"
+	category = "NPC"
+[[actor]]
+	index = 0x00AA
+	object = 0x000E
+	name = "Treasure Chest Light"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x00AB
+	object = 0x009E
+	name = "Core Fire Dancer Creature"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "No damage" ],
+		[ 0x0001, "One-Hit Kill" ],
+	]
+[[actor]]
+	index = 0x00AC
+	object = 0x009C
+	name = "Volvagia Platform"
+	category = "BG"
+[[actor]]
+	index = 0x00AD
+	object = 0x009C
+	name = "Volvagia Rocks"
+	category = "BOSS"
+[[actor]]
+	index = 0x00AE
+	name = "Fake/Invisible Objects"
+	category = "PROP"
+	var = [
+		[ 0x0003, "Rock Wall with Skull //style that sometimes has glowy eyes" ],
+		[ 0x0004, "Black square with large skull face" ],
+		[ 0x0005, "Shadow Temple Boss Room platforms" ],
+		[ 0x0006, "Wall of Skulls" ],
+		[ 0x0007, "Shadow Temple Floor //bluish? texture" ],
+		[ 0x0008, "Massive Platform" ],
+		[ 0x0009, "Wall with bluish?, fat bricks texture (one sided)" ],
+		[ 0x000A, "Shadow Temple Diamond Room (before big key) Fake Walls" ],
+		[ 0x000B, "Wall with purplish?, fat brick texture (both side)" ],
+		[ 0x000C, "Room 11's invisible spikes, invisible hookshot point." ],
+	]
+[[actor]]
+	index = 0x00AF
+	object = 0x0069
+	name = "Invisible Objects/Metal Gate"
+	category = "BG"
+	var = [
+		[ 0x0000, "Moving stone platforms" ],
+		[ 0x0001, "Rising and falling stone platforms" ],
+		[ 0x0002, "Spinning black platform" ],
+		[ 0x0003, "Metal grate" ],
+		[ 0x0004, "Same as 0001, but graphics are glitched" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0xFF00
+[[actor]]
+	index = 0x00B0
+	object = 0x0069
+	name = "Shadow Temple Ship"
+	category = "BG"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x00B1
+	name = "Spinning Scythe Statues"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Shadow Temple Scythes (Visible) //Use object 0069" ],
+		[ 0x0001, "Shadow Temple Scythes (Invisible) //Use object 0069" ],
+		[ 0x0100, "Ice Cavern Spinning Blade //Use object 0069" ],
+	]
+[[actor]]
+	index = 0x00B3
+	object = 0x0097
+	name = "Gate Guards"
+	category = "NPC"
+	var = [
+		[ 0x0002, "Hyrule Castle guard" ],
+		[ 0x0005, "Death Mountain gate guard" ],
+		[ 0x0006, "Ceremonial guard //Seen through Zelda's window" ],
+	]
+[[actor]]
+	index = 0x00B4
+	object = 0x0092
+	name = "Falling Rock Spawner"
+	category = "ENEMY"
+[[actor]]
+	index = 0x00B5
+	object = 0x0092
+	name = "Flying Rubble"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Large" ],
+		[ 0x0001, "Medium" ],
+		[ 0x0002, "Small" ],
+		[ 0x0003, "Large" ],
+	]
+[[actor]]
+	index = 0x00B6
+	object = 0x00AC
+	name = "Flobbery Muscle Block"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Completely flat, doesn't hurt you" ],
+		[ 0x007F, "Half" ],
+		[ 0x00FF, "Default height" ],
+	]
+	[[actor.property]]
+		name = "Smaller Size"
+		mask = 0x1000
+[[actor]]
+	index = 0x00B7
+	object = 0x00AB
+	name = "Sun Block Switch"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0001, "Position at -1696, 843, -179S" ],
+		[ 0x0002, "Position at 1100, 480, -842" ],
+		[ 0x0003, "Position at 2040, 843, -220" ],
+		[ 0x0004, "Position at -553 1749, -303" ],
+	]
+[[actor]]
+	index = 0x00B8
+	object = 0x00AE
+	name = "Gerudo Valley Objects"
+	category = "BG"
+	var = [
+		[ 0x0000, "Cliff (cutscene)" ],
+		[ 0x0001, "Bridge (Adult)" ],
+		[ 0x0002, "Bridge (Child)" ],
+		[ 0x0003, "Tent" ],
+	]
+[[actor]]
+	index = 0x00B9
+	object = 0x00AF
+	name = "Statue from Darunia's Room"
+	category = "BG"
+	var = [
+		[ 0x0000, "Statue, no spear, movable with Adult Link" ],
+		[ 0x0001, "Spear only, climbable" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0xFF00
+[[actor]]
+	index = 0x00BA
+	object = 0x008C
+	name = "Barinade"
+	category = "BOSS"
+	var = [
+		[ 0xFFFF, "Barinade" ],
+	]
+[[actor]]
+	index = 0x00BB
+	object = 0x0069
+	name = "Open Topped Skull Statue"
+	category = "BG"
+[[actor]]
+	index = 0x00BC
+	object = 0x0069
+	name = "Shadow temple objects"
+	category = "BG"
+	var = [
+		[ 0x0000, "Guillotine Blade (Slow)" ],
+		[ 0x0001, "Spiked Box on Chain" ],
+		[ 0x0002, "Spiked Wooden Wall, moving //FIXME: moves in wrong direction?" ],
+		[ 0x0003, "Opposite Spiked Wooden Wall, moving //FIXME: moves in wrong direction?" ],
+		[ 0x0004, "Propeller, blows wind" ],
+		[ 0x0005, "Guillotine Blade (Fast)" ],
+		[ 0x0006, "+ Graphical glitches, same as 2 or 3 (unsure)" ],
+	]
+[[actor]]
+	index = 0x00BD
+	object = 0x008D
+	name = "Coffin Lid"
+	category = "BG"
+	var = [
+		[ 0x0100, "Spawns gibdo //(needs object 0098)" ],
+		[ 0x0200, "Spawns 2 keese //(needs object 000D)" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x00BE
+	object = 0x0069
+	name = "Bird Statue/Bombables"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Giant Bird Statue //Bombing it makes it fall" ],
+		[ 0x0001, "Bombable Wall of Skulls" ],
+		[ 0x0002, "Bombable Rubble //Need specific object?" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x00BF
+	object = 0x00B1
+	name = "Crater Smoke Cone"
+	category = "SWITCH"
+[[actor]]
+	index = 0x00C0
+	name = "Shooting Gallery Game"
+	category = "PROP"
+[[actor]]
+	index = 0x00C1
+	object = 0x005B
+	name = "Shooting Gallery Man"
+	category = "NPC"
+[[actor]]
+	index = 0x00C2
+	object = 0x00B2
+	name = "Shop Shelves"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Wooden (Default)" ],
+		[ 0x0001, "Stone (Zora)" ],
+		[ 0x0002, "Granite (Goron)" ],
+	]
+[[actor]]
+	index = 0x00C3
+	object = 0x00B3
+	name = "Nabooru"
+	category = "NPC"
+[[actor]]
+	index = 0x00C4
+	object = 0x00B4
+	name = "Morpha"
+	category = "BOSS"
+[[actor]]
+	index = 0x00C5
+	object = 0x00B5
+	name = "Shell Blade"
+	category = "ENEMY"
+[[actor]]
+	index = 0x00C6
+	object = 0x015F
+	name = "Big Octorok"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Sits there, mini-boss music starts, slice it to make it move (no teleport), green target" ],
+		[ 0x0001, "Already running around, yellow target this time, no music" ],
+	]
+[[actor]]
+	index = 0x00C7
+	object = 0x0039
+	name = "Withered Deku Baba"
+	category = "ENEMY"
+[[actor]]
+	index = 0x00C8
+	object = 0x0096
+	name = "Jabu-Jabu Objects"
+	category = "BG"
+	var = [
+		[ 0x0000, "Giant Octo's Platform" ],
+		[ 0x0001, "Elevator Platform" ],
+		[ 0x0002, "Water Square //Rises when Switch Flag is set" ],
+		[ 0x0003, "Lowering Platform //Lowers into place when stepped on, sets Switch Flag" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x00C9
+	object = 0x00BC
+	name = "Sage Saria (Cutscene)"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Chamber of Sages, gives Forest Medallion" ],
+		[ 0x0002, "Inside Ganon's Castle and Sealing of Ganondorf Cutscene //Use with actor 01A7" ],
+		[ 0x0004, "Credits, Death Mountain Trail" ],
+		[ 0x0005, "Fairy Ocarina Cutscene" ],
+	]
+[[actor]]
+	index = 0x00CA
+	object = 0x00C9
+	name = "Gorons (Cutscene)"
+	category = "NPC"
+[[actor]]
+	index = 0x00CB
+	object = 0x00C0
+	name = "Ingo"
+	category = "NPC"
+[[actor]]
+	index = 0x00CC
+	object = 0x00C1
+	name = "Koume and Kotake"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Koume" ],
+		[ 0x0001, "Kotake" ],
+	]
+[[actor]]
+	index = 0x00CD
+	object = 0x00C2
+	name = "Giant Boulder Blocking Dodongo's Cavern"
+	category = "PROP"
+	var = [
+		[ 0x00FF, "Default" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0xFF00
+[[actor]]
+	index = 0x00CF
+	object = 0x002C
+	name = "Cracked Stone Platform"
+	category = "BG"
+	var = [
+		[ 0x0000, "Cracked stone floor" ],
+		[ 0x0001, "Bombable stone wall" ],
+		[ 0x0002, "Large bombable stone wall" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x00D0
+	object = 0x0002
+	name = "2D Bombable Wall"
+	category = "BG"
+	var = [
+		[ 0x8000, "Used in Death Mountain Trail" ],
+		[ 0x0000, "Used in Death Mountain Crater (cutscene setups)" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x00D1
+	object = 0x0074
+	name = "Ice Platform"
+	category = "BG"
+	var = [
+		[ 0x0001, "Huge" ],
+		[ 0x0010, "Big" ],
+		[ 0x0012, "Big, Spinning" ],
+		[ 0x0020, "Small" ],
+		[ 0x0023, "Two small ones, spinning around" ],
+	]
+[[actor]]
+	index = 0x00D2
+	object = 0x00CA
+	name = "Adult Ruto"
+	category = "NPC"
+[[actor]]
+	index = 0x00D3
+	object = 0x00CC
+	name = "Deku Tree Sprout"
+	category = "NPC"
+[[actor]]
+	index = 0x00D4
+	object = 0x0059
+	name = "Water Noise"
+	category = "PROP"
+[[actor]]
+	index = 0x00D5
+	object = 0x006A
+	name = "Lake Hylia Objects"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Temple Gate" ],
+		[ 0x0100, "Gate lock" ],
+		[ 0x0200, "Water plane" ],
+		[ 0x0300, "Nothing //FIXME: Is Spawned" ],
+		[ 0x0400, "Crashes" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0x00FF
+[[actor]]
+	index = 0x00D6
+	object = 0x006B
+	name = "Moveable Ice Block"
+	category = "PROP"
+[[actor]]
+	index = 0x00D7
+	object = 0x008D
+	name = "Bottom of the well water level changer"
+	category = "PROP"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x00D9
+	object = 0x00D0
+	name = "Adult Malon"
+	category = "NPC"
+[[actor]]
+	index = 0x00DA
+	name = "Bombchu"
+	category = "EXPLOSIVE"
+[[actor]]
+	index = 0x00DB
+	name = "Horseback Games"
+	category = "BG"
+	var = [
+		[ 0x0004, "Timer appears, gunshot noise" ],
+	]
+[[actor]]
+	index = 0x00DC
+	object = 0x00D3
+	name = "Twinrova"
+	category = "BOSS"
+[[actor]]
+	index = 0x00DD
+	object = 0x00D4
+	name = "Like-Like"
+	category = "ENEMY"
+[[actor]]
+	index = 0x00DE
+	object = 0x00D5
+	name = "Tentacle from Inside Lord Jabu-Jabu"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Reddish brown" ],
+		[ 0x0001, "Green" ],
+		[ 0x0002, "Grayish blue with some red" ],
+		[ 0x0003, "Already dead" ],
+	]
+[[actor]]
+	index = 0x00DF
+	object = 0x00D5
+	name = "Blocking Tentacle from Jabu-Jabu"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Reddish brown" ],
+		[ 0x0001, "Green" ],
+		[ 0x0002, "Grayish blue with some red" ],
+		[ 0x0003, "Corrupt textures, still visible and works" ],
+		[ 0x0004, "Dark brownish" ],
+		[ 0x0005, "Blackish gray" ],
+	]
+[[actor]]
+	index = 0x00E0
+	object = 0x00D6
+	name = "Anubis Body"
+	category = "ENEMY"
+[[actor]]
+	index = 0x00E1
+	object = 0x00D6
+	name = "Anubis Fire Attack"
+	category = "ENEMY"
+[[actor]]
+	index = 0x00E2
+	object = 0x0072
+	name = "Ladder (Part of Forest Temple Warped Room)"
+	category = "BG"
+[[actor]]
+	index = 0x00E3
+	object = 0x0072
+	name = "Golden Gate"
+	category = "BG"
+	var = [
+		[ 0x0000, "Rotating platforms" ],
+		[ 0x0001, "Metal Gate" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable type 1)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x00E4
+	object = 0x0072
+	name = "Forest Temple Well Water"
+	category = "BG"
+[[actor]]
+	index = 0x00E5
+	object = 0x017A
+	name = "Death Mountain Cloud Ring"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Gray" ],
+		[ 0x0001, "Expanding, gray //Unused?" ],
+		[ 0x0002, "Expanding, gray //Unused?" ],
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x00E6
+	object = 0x0096
+	name = "Switch from Inside Lord Jabu-Jabu"
+	category = "SWITCH"
+	var = [
+		[ 0x0000, "Blue Switch //Resets if not held down, makes discovery sound" ],
+		[ 0x0001, "Yellow Switch (Heavy Weight) //Ruto to trigger?" ],
+		[ 0x0002, "Yellow Switch (Standard) //makes puzzle solved sound" ],
+		[ 0x0003, "Tall Yellow Button //can’t press it, shoot to make puzzle solved sound" ],
+		[ 0x0004, "Tall Yellow Button //Only pressed when hit with slingshot or explosives" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x00E7
+	object = 0x00E0
+	name = "Young Malon"
+	category = "NPC"
+[[actor]]
+	index = 0x00E8
+	object = 0x00E1
+	name = "Boss Ganondorf"
+	category = "BOSS"
+	var = [
+		[ 0xFFFF, "Default" ],
+		[ 0x0000, "Begins battle" ],
+		[ 0x0001, "Ganondorf death sequence" ],
+	]
+[[actor]]
+	index = 0x00E9
+	object = 0x00E2
+	name = "Bongo Bongo"
+	category = "BOSS"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x00EC
+	object = 0x00E5
+	name = "Spike Enemy"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Normal" ],
+		[ 0x0001, "Does not open //possibly waiting for some trap to spring?" ],
+	]
+[[actor]]
+	index = 0x00ED
+	object = 0x00E6
+	name = "Frog Song Spot and Frogs"
+	category = "NPC"
+[[actor]]
+	index = 0x00EE
+	object = 0x0015
+	name = "Deku Shield"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Collectible Deku Shield" ],
+		[ 0x0001, "Burning Deku shield" ],
+	]
+[[actor]]
+	index = 0x00EF
+	object = 0x006B
+	name = "Large Red Ice"
+	category = "BG"
+	var = [
+		[ 0x0000, "Large crystal" ],
+		[ 0x0100, "Smaller crystal" ],
+		[ 0x0200, "Crystal platform" ],
+		[ 0x0300, "Meltable ice sheet" ],
+		[ 0x0400, "Giant crystal" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0x00FF
+[[actor]]
+	index = 0x00F0
+	name = "Blue Flame"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Group of small blue flames, disappear" ],
+		[ 0x0001, "Blue flame, disappears" ],
+		[ 0xFFFF, "Blue flame, targetable" ],
+	]
+[[actor]]
+	index = 0x00F1
+	object = 0x00DE
+	name = "Ocarina of Time"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Ocarina of Time being tossed higher in air" ],
+		[ 0x0001, "Ocarina of Time being tossed in air" ],
+		[ 0x0002, "Ocarina of Time" ],
+		[ 0x0003, "Collectible Ocarina of Time" ],
+	]
+[[actor]]
+	index = 0x00F4
+	name = "Nayru's Love"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Normal" ],
+		[ 0x0001, "No bright sphere, first one dies off quickly" ],
+	]
+[[actor]]
+	index = 0x00F5
+	name = "Sages, Balls of Light (Cutscene)"
+	category = "PROP"
+[[actor]]
+	index = 0x00F6
+	object = 0x00D6
+	name = "Anubis"
+	category = "SWITCH"
+[[actor]]
+	index = 0x00F7
+	object = 0x0069
+	name = "Shadow Temple Truth Spinner"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Rotatable Bird Statue" ],
+		[ 0x0001, "Circular Trap Door Platform //Opens when wrong skull is chosen" ],
+		[ 0x0002, "Gate //Only blocks one-way" ],
+		[ 0x0003, "Skull Top" ],
+		[ 0x0004, "Glitchy graphics, can’t see object, behaves like the gate" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x00F8
+	object = 0x00F0
+	name = "Hyrule Castle Gate"
+	category = "ITEMACTION"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x00F9
+	object = 0x011F
+	name = "Giant Rolling Boulder"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Normal" ],
+		[ 0x0C00, "Follow patch faster and repeat it" ],
+	]
+[[actor]]
+	index = 0x00FA
+	object = 0x00F1
+	name = "Moving Brick Wall"
+	category = "BG"
+[[actor]]
+	index = 0x00FC
+	object = 0x00F1
+	name = "Rotating Cobra Mirror"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Large shadow //looks like it’s reproduced, well-done though" ],
+		[ 0x0001, "Small Shadow //CRASH?" ],
+		[ 0x0002, "No shadow //CRASH?" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x00FD
+	object = 0x00F1
+	name = "Climbable Mesh Wall"
+	category = "BG"
+[[actor]]
+	index = 0x00FE
+	object = 0x015B
+	name = "Fishing Game, Fish, and Fisherman"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Wearing red vest over blue shirt, no hat" ],
+		[ 0x0064, "Normal fish" ],
+		[ 0x0073, "Hylian Loach" ],
+		[ 0x0100, "Huge Hylian Loach" ],
+		[ 0x8000, "Pond stuff, still no hat" ],
+	]
+[[actor]]
+	index = 0x00FF
+	object = 0x0003
+	name = "Push Block"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Red" ],
+		[ 0x0040, "Green" ],
+		[ 0x00C0, "?" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0xFF00
+	[[actor.property]]
+		name = "Size"
+		mask = 0x0003
+[[actor]]
+	index = 0x0100
+	object = 0x0181
+	name = "Death Mountain Trail Gate"
+	category = "ITEMACTION"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0101
+	name = "Dust Motes Gathering Together"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Rushing white particles //Jabu-Jabu, when he opens his mouth" ],
+		[ 0x0001, "Rushing white particles to one point (???)" ],
+	]
+[[actor]]
+	index = 0x0102
+	object = 0x00F9
+	name = "Windmill Sails"
+	category = "BG"
+[[actor]]
+	index = 0x0103
+	object = 0x00F9
+	name = "Kakariko Village Well Crossbeams"
+	category = "PROP"
+[[actor]]
+	index = 0x0104
+	object = 0x00F9
+	name = "Kakariko Well Water"
+	category = "BG"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0105
+	object = 0x00A4
+	name = "Golden Torch Stand (Poe Sisters)"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Purple (Meg)" ],
+		[ 0x0100, "Red (Joelle)" ],
+		[ 0x0200, "Blue (Beth)" ],
+		[ 0x0300, "Green (Amy)" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x0106
+	object = 0x00E1
+	name = "Floor of Ganondorf's Room"
+	category = "PROP"
+[[actor]]
+	index = 0x0107
+	object = 0x00F0
+	name = "Milk Crate"
+	category = "BG"
+	[[actor.property]]
+		name = "Switch Flag (?)"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0108
+	object = 0x0100
+	name = "Lon Lon Ranch Horse Jumping Fence"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Fence" ],
+		[ 0x0001, "Nothing //Possibly waypoint for the Ingo Race?" ],
+		[ 0xFFFF, "Fence" ],
+	]
+[[actor]]
+	index = 0x010A
+	name = "Fire Arrow"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x010B
+	name = "Ice Arrow"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x010C
+	name = "Light Arrow"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x010F
+	name = "GI Collectables (Shields, Bottles, etc)"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Bottle //Use group 00C6" ],
+		[ 0x0001, "Bottle with Ruto's Letter //Use group 010B" ],
+		[ 0x0002, "Hylian shield //Use group 00DC" ],
+		[ 0x0003, "Quiver //Use group 00BE" ],
+		[ 0x0004, "Silver Scale //Use group 00DB" ],
+		[ 0x0005, "Golden Scale //Use group 00DB" ],
+		[ 0x0006, "Small Key //Use group 00AA" ],
+		[ 0x0007, "Fire Arrow //Use group 0158" ],
+	]
+[[actor]]
+	index = 0x0110
+	object = 0x0003
+	name = "Small Wooden Crate"
+	category = "PROP"
+	var = [
+		[ 0xFFFF, "No Item to Spawn" ],
+	]
+[[actor]]
+	index = 0x0111
+	object = 0x0003
+	name = "Breakable Pot"
+	category = "PROP"
+	[[actor.property]]
+		name = "Collectible Flag"
+		mask = 0x7E00
+	[[actor.property]]
+		name = "Collectible Var"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0112
+	name = "Invisible Collectable"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Collect Immediately //Not used?" ],
+		[ 0x1000, "Invisible, free collectible" ],
+		[ 0x1800, "Invisible hitbox, drops collectible when hit //See Z-Rotation for parameters" ],
+		[ 0x3800, "Invisible hitbox, set switch flag when touched" ],
+		[ 0x4000, "Slingshotable hitbox, spawns Hylian Soldier (actor 00B3) who throws a bomb" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+		source = "var"
+	[[actor.property]]
+		name = "Collectible to Spawn"
+		mask = 0x07C0
+		source = "var"
+	[[actor.property]]
+		name = "# of Collectibles / Spawn Trigger"
+		mask = 0x00FF
+		source = "zrot"
+[[actor]]
+	index = 0x0113
+	object = 0x0106
+	name = "Iron Knuckle"
+	category = "BOSS"
+	var = [
+		[ 0x0001, "White, sitting //Stone Chair" ],
+		[ 0x0000, "Nabooru Knuckle //May Crash" ],
+		[ 0x0002, "Black, standing" ],
+		[ 0x0003, "White, standing" ],
+		[ 0x000B, "White, no armor falls off when at low health" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x0114
+	object = 0x0106
+	name = "Iron Knuckle Armor Pieces"
+	category = "NPC"
+[[actor]]
+	index = 0x0115
+	object = 0x010A
+	name = "Skullkid"
+	category = "ENEMY"
+[[actor]]
+	index = 0x0116
+	object = 0x010A
+	name = "Skullkid's Needle"
+	category = "ENEMY"
+[[actor]]
+	index = 0x0117
+	name = "Silver Rupee/Large Rotating Pot"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Rupee Chain" ],
+		[ 0x1000, "Silver Rupee //Check SharpOcarina fill with... example for how to use this puzzle" ],
+		[ 0x2000, "Horseback Archery Pot" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+	[[actor.property]]
+		name = "Count"
+		mask = 0x0FC0
+[[actor]]
+	index = 0x0118
+	object = 0x005A
+	name = "Vortex (Koume/Kotake kidnap Nabooru)"
+	category = "NPC"
+[[actor]]
+	index = 0x0119
+	name = "Bongo Bongo Shadow"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x011A
+	object = 0x0168
+	name = "Business Scrub"
+	category = "BG"
+	var = [
+		[ 0x0000, "Deku Nuts" ],
+		[ 0x0001, "Deku Sticks" ],
+		[ 0x0002, "Piece of Heart (10 rupees)" ],
+		[ 0x0003, "Deku Seeds" ],
+		[ 0x0004, "Deku Shield" ],
+		[ 0x0005, "Bombs" ],
+		[ 0x0006, "Deku Seeds" ],
+		[ 0x0007, "Red Potion" ],
+		[ 0x0008, "Green Potion" ],
+		[ 0x0009, "Deku Stick Upgrade" ],
+		[ 0x000A, "Deku Nut Upgrade" ],
+		[ 0x000B, "Never speaks, and Link is sadly very patient..." ],
+		[ 0x000C, "Pocket Egg?" ],
+	]
+[[actor]]
+	index = 0x011B
+	name = "Navi Information Spot"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Talk when in range" ],
+		[ 0x8000, "C-Up Prompt" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+	[[actor.property]]
+		name = "Message ID"
+		mask = 0x00FF
+[[actor]]
+	index = 0x011C
+	object = 0x0003
+	name = "Eye Switch and Flame that Follows Link"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Stone Eye" ],
+		[ 0x0001, "Heat-Seeking flame" ],
+		[ 0x0002, "Immobile flame, dies" ],
+		[ 0x0003, "Flame sound effect" ],
+	]
+[[actor]]
+	index = 0x011D
+	object = 0x0003
+	name = "Flying Magic Pot"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Heart or Green Rupee" ],
+		[ 0x0100, "Bombs" ],
+		[ 0x0200, "Deku Seeds" ],
+		[ 0x0300, "Deku Nuts" ],
+		[ 0x0400, "Deku Seeds" ],
+		[ 0x0500, "Giant Purple Rupee" ],
+		[ 0x0600, "Goron Tunic" ],
+		[ 0xFF00, "Nothing" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x011E
+	name = "Ice That Covers Switches"
+	category = "PROP"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x011F
+	object = 0x0112
+	name = "Zora's River Waterfall"
+	category = "BG"
+[[actor]]
+	index = 0x0120
+	object = 0x0113
+	name = "Zora's Domain Waterfall"
+	category = "BG"
+	var = [
+		[ 0x0000, "Waterfall and Pool //Room 1" ],
+		[ 0x0001, "King's Chamber Water //Room 0" ],
+	]
+[[actor]]
+	index = 0x0121
+	object = 0x0114
+	name = "Freezard"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Immobile" ],
+		[ 0xFFFF, "Mobile //Hidden When Spawned" ],
+	]
+[[actor]]
+	index = 0x0122
+	object = 0x0089
+	name = "Dampe's Ghost"
+	category = "NPC"
+[[actor]]
+	index = 0x0123
+	object = 0x006C
+	name = "Rotating Windmill Mechanism"
+	category = "BG"
+	var = [
+		[ 0x0000, "Rotating platform" ],
+		[ 0x0100, "+ Thick stone door //Opened when Dampe approaches" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0124
+	object = 0x00FE
+	name = "Zora Diving Game"
+	category = "NPC"
+[[actor]]
+	index = 0x0125
+	name = "Grass Clump, doesn't regrow"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Normal shrub. Random drops. //Use object 0002" ],
+		[ 0x0001, "Cut-able, regenerating grass //Use object 012B, Drops: Heart, Arrows or Deku Seeds" ],
+		[ 0x0002, "Cut-able grass //Use object 012B, Set drop table via Random Drop Table param" ],
+	]
+	[[actor.property]]
+		name = "Spawn Bugs"
+		mask = 0x0010
+	[[actor.property]]
+		name = "Random Drop Table (Nullable)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x0126
+	object = 0x011E
+	name = "Bean Planting Spot"
+	category = "BG"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+		source = "var"
+	[[actor.property]]
+		name = "Path Id"
+		mask = 0x1F00
+		source = "var"
+	[[actor.property]]
+		name = "Speed"
+		mask = 0x0003
+		source = "zrot"
+[[actor]]
+	index = 0x0127
+	object = 0x0163
+	name = "Bombable Rock"
+	category = "PROP"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+	[[actor.property]]
+		name = "Puzzle Solved Sound"
+		mask = 0x8000
+[[actor]]
+	index = 0x012A
+	object = 0x0003
+	name = "Dungeon Switches"
+	category = "SWITCH"
+	var = [
+		[ 0x0000, "Floor" ],
+		[ 0x0001, "Rusted Floor" ],
+		[ 0x0002, "Yellow Eye" ],
+		[ 0x0003, "Crystal" ],
+		[ 0x0004, "Targetable Crystal" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+	[[actor.property]]
+		name = "Toggle"
+		mask = 0x0010
+	[[actor.property]]
+		name = "Reset"
+		mask = 0x0020
+	[[actor.property]]
+		name = "Trigger All"
+		mask = 0x0040
+	[[actor.property]]
+		name = "Frozen"
+		mask = 0x0080
+[[actor]]
+	index = 0x012B
+	object = 0x011B
+	name = "Huge Stone Switch/Stone Elevator"
+	category = "BG"
+	var = [
+		[ 0x0000, "Large" ],
+		[ 0x0001, "Small" ],
+	]
+[[actor]]
+	index = 0x012C
+	object = 0x011D
+	name = "Square Collapsing Platform"
+	category = "BG"
+	[[actor.property]]
+		name = "Delay"
+		mask = 0xFF00
+	[[actor.property]]
+		name = "Size"
+		mask = 0x00FF
+[[actor]]
+	index = 0x012D
+	object = 0x011C
+	name = "Stone Hookshot Target"
+	category = "BG"
+	var = [
+		[ 0x0000, "Square hookshot target tower" ],
+		[ 0x0001, "Same, underground" ],
+		[ 0x0002, "Square hookshot stone" ],
+		[ 0x0003, "Corrupted graphics, cannot see (no mesh seems to be present)" ],
+		[ 0xFFC2, "?? (Dodongo's Cavern)" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x012E
+	name = "Play Ocarina Here Spot"
+	category = "PROP"
+	var = [
+		[ 0x0400, "Zora River, Zelda's Lullaby Spot (no cutscene)" ],
+		[ 0x0800, "Windmill, Song of Storms spot (cutscene)" ],
+		[ 0x1000, "Temple of Time, Song of Time spot (cutscene)" ],
+		[ 0x1400, "Learn Sun's Song spot" ],
+		[ 0x1800, "Royal Family Tomb, Zelda's Lullaby spot" ],
+		[ 0x1C00, "Puzzle Spot" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+	[[actor.property]]
+		name = "Song to Play"
+		mask = 0x03C0
+[[actor]]
+	index = 0x012F
+	name = "Horseback Archery Target"
+	category = "PROP"
+	var = [
+		[ 0x0000, "End Targets" ],
+		[ 0x0001, "Mounted Target (Small)" ],
+		[ 0x0002, "Mounted Target (Big) //Center one" ],
+	]
+[[actor]]
+	index = 0x0130
+	object = 0x011F
+	name = "Rolling Boulder"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Follows path, disappears, reappears at first waypoint //simulates falling into a hole" ],
+		[ 0x0100, "Follows path, breaks into pieces, reappears at first waypoint //As in adult Death Mountain Trail" ],
+		[ 0x0200, "Follows path, treating it as a closed loop" ],
+		[ 0x0300, "Follows path, halts, reverses, repeat //As in Fire Temple boulder maze" ],
+	]
+	[[actor.property]]
+		name = "Path Id"
+		mask = 0x00FF
+		source = "var"
+	[[actor.property]]
+		name = " Behavior after colliding"
+		mask = 0x0001
+		source = "zrot"
+[[actor]]
+	index = 0x0131
+	name = "Sparkling Rupee"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Sparkling blue rupee" ],
+		[ 0x0001, "Huge Magenta Rupee, explodes when touched //Unused" ],
+		[ 0x0002, "Blue, red, and orange rupees, explode when touched //Unused" ],
+		[ 0x0003, "Random-colored rupees, collectible" ],
+		[ 0x0004, "Green rupees underground, not collectible //Unused" ],
+	]
+[[actor]]
+	index = 0x0132
+	object = 0x0121
+	name = "Head Carpenter"
+	category = "NPC"
+[[actor]]
+	index = 0x0133
+	object = 0x0122
+	name = "Carpenter"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Ichiro //Red/Purple Pants, \"normal\" hair" ],
+		[ 0x0001, "Sabooro //Light-Blue Pants" ],
+		[ 0x0002, "Jiro //Green Pants" ],
+		[ 0x0003, "Shiro //Pink/Purple Pants, two-spiked hair" ],
+	]
+[[actor]]
+	index = 0x0135
+	object = 0x0124
+	name = "Alpha Blue Balls"
+	category = "PROP"
+[[actor]]
+	index = 0x0136
+	object = 0x0125
+	name = "Dark Link's Illusion Room"
+	category = "PROP"
+[[actor]]
+	index = 0x0137
+	name = "Zelda's Magic to Open Gates"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Cannot see anything while object is visible. Navi is capable of targeting it, but gives no information." ],
+		[ 0x0002, "Area is visible (interface corrupted), otherwise same." ],
+		[ 0x0008, "Everything seems fine, but Navi's invisible and there's no mesh. Still targetable, though." ],
+	]
+[[actor]]
+	index = 0x0138
+	object = 0x0116
+	name = "White Clothed Gerudo"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Shoos you away //Calls you a kid regardless of your actual age" ],
+		[ 0x0001, "Gate Manager (Gerudo Fortress)" ],
+		[ 0x0004, "Generic Guard (Gerudo Fortress)" ],
+		[ 0x0005, "Stands By Cow (Gerudo Valley)" ],
+		[ 0x0045, "Horseback Archery" ],
+		[ 0x0046, "Gerudo Training Grounds Guard" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x0139
+	name = "Block Save Point"
+	category = "PROP"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x013A
+	name = "Alpha Link Shadow Activator"
+	category = "BOSS"
+[[actor]]
+	index = 0x013B
+	name = "Alpha Arwing"
+	category = "BOSS"
+	var = [
+		[ 0x0000, "Cutscene start" ],
+		[ 0x0001, "No cutscene //required if you spawn more than four or five of these" ],
+	]
+[[actor]]
+	index = 0x013C
+	object = 0x0110
+	name = "Cucco Lady"
+	category = "NPC"
+[[actor]]
+	index = 0x013D
+	object = 0x00C9
+	name = "Medigoron"
+	category = "NPC"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x013E
+	object = 0x0127
+	name = "Bean Seller"
+	category = "NPC"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x013F
+	object = 0x0128
+	name = "Carpenter's Son"
+	category = "NPC"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0140
+	object = 0x0129
+	name = "Ingo's Gates"
+	category = "PROP"
+[[actor]]
+	index = 0x0141
+	object = 0x012F
+	name = "Square Signpost"
+	category = "PROP"
+	var = [
+		[ 0x0000, "X" ],
+		[ 0x0001, "Hyrule Field" ],
+		[ 0x0002, "Hyrule Castle Town" ],
+		[ 0x0003, "The Temple of Time" ],
+		[ 0x0004, "Dead End" ],
+		[ 0x0005, "Kakariko Village / Death Mountain Trail / Starting Point" ],
+		[ 0x0006, "Kakariko Village Graveyard" ],
+		[ 0x0007, "Dark! Narrow! Scary! / Well of Three Features" ],
+		[ 0x0008, "Death Mountain / No passage without a / Royal Decree!" ],
+		[ 0x0009, "Death Mountain Trail" ],
+		[ 0x000A, "Dodongo’s Cavern / Don’t enter without permission!" ],
+		[ 0x000B, "Land of the Gorons / Goron City" ],
+		[ 0x000C, "Zora’s River / Watch out for swift current / and strong undertow." ],
+		[ 0x000D, "The Shadow will yield only to one / with the eye of truth, handed / down in Kakariko Village." ],
+		[ 0x000E, "Zora’s Domain" ],
+		[ 0x000F, "Zora’s Fountain / Don’t disturb Lord Jabu-Jabu! / –King Zora XVI" ],
+		[ 0x0010, "Forest Training Center / Don’t recklessly cut signs– / read them carefully!" ],
+		[ 0x0011, "All those reckless enough to / venture into the desert–please drop by our shop. / Carpet Merchant" ],
+		[ 0x0012, "Just ahead: / Great Deku Tree’s Meadow" ],
+		[ 0x0013, "Forest Temple" ],
+		[ 0x0014, "The Lost Woods" ],
+		[ 0x0015, "Talon and Malon’s / Lon Lon Ranch" ],
+		[ 0x0016, "The Great Ingo’s / Ingo Ranch" ],
+		[ 0x0017, "Lake Hylia" ],
+		[ 0x0018, "Lakeside Laboratory / Daily trying to get to the bottom / of the mysteries of Lake Hylia! / –Lake Scientist" ],
+		[ 0x0019, "Gerudo Valley" ],
+		[ 0x001A, "Horseback Archery Range / Skilled players are welcome! / Current record: # Points" ],
+		[ 0x001B, "Gerudo Training Ground / Only registered members are / allowed!" ],
+		[ 0x001C, "Haunted Wasteland / If you chase a mirage, the / desert will swallow you. / Only one path is true!" ],
+		[ 0x001D, "Spirit Temple" ],
+		[ 0x001E, "Kokiri Shop / We have original forest goods!" ],
+		[ 0x001F, "LINK’s House" ],
+		[ 0x0020, "Forest folk shall not leave these woods." ],
+		[ 0x0021, "Follow the trail along the edge of / the cliff and you will reach / Goron City, home of the Gorons." ],
+		[ 0x0022, "Natural Wonder / Bomb Flower / Danger! Do not uproot!" ],
+		[ 0x0023, "Death Mountain Summit / Entrance to the crater ahead / Beware of intense heat!" ],
+		[ 0x0024, "King Zora’s Throne Room / To hear the King’s royal / proclamations, stand on the / platform and speak to him." ],
+		[ 0x0025, "If you can stop my wild rolling, you might get something great. / –Hot Rodder Goron" ],
+		[ 0x0026, "Only one with the eye of truth / will find the stone umbrella / that protects against the / rain of blades." ],
+		[ 0x0027, "Only one who has sacred feet / can cross the valley of the dead." ],
+		[ 0x0028, "The record time of those / who raced against me was: / ##\"##\" / –Dampé the Gravekeeper" ],
+		[ 0x0029, "Shooting Gallery / etc." ],
+		[ 0x002A, "Treasure Chest Shop / We don’t necessarily sell them..." ],
+		[ 0x002B, "High Dive Practice Spot / Are you confident / in your diving skill?" ],
+		[ 0x002C, "032c" ],
+		[ 0x002D, "Mountain Summit / Danger Ahead - Keep Out" ],
+		[ 0x002E, "Happy Mask Shop! / Now hiring happiness / delivery men!" ],
+		[ 0x002F, "Bombchu Bowling Alley / You can experience the / latest in Bomb technology!" ],
+		[ 0x0030, "Bazaar / We have a little bit of everything!" ],
+		[ 0x0031, "Potion Shop / We have the best quality / potions!" ],
+		[ 0x0032, "Goron Shop / Mountaineering supplies!" ],
+		[ 0x0033, "Zora Shop / We have fresh fish!" ],
+		[ 0x0034, "Heart-Pounding Gravedigging Tour! / From 18:00 to 21:00 Hyrule Time / –Dampé the Gravekeeper" ],
+		[ 0x0035, "Heart-Pounding Gravedigging Tour! / Tours are cancelled until a new / gravekeeper is found. We / apologize for any inconvenience." ],
+		[ 0x0036, "Thrust Attack Signs! / To thrust with your sword, press / CS toward your target while / Z Targeting, then press B." ],
+		[ 0x0037, "Hole of “Z” / Let’s go through this small / hole! / Stand in front of the hole and / push CS towards it. When the / Action Icon shows “Enter,” press / A to crawl into the hole. / Pay attention to what the Action / Icon says!" ],
+		[ 0x0038, "Cut Grass With Your Sword / If you just swing with B, you’ll / cut horizontally. If you hold Z as / you swing, you’ll cut vertically." ],
+		[ 0x0039, "Hyrule Castle / Lon Lon Ranch" ],
+		[ 0x003A, "You are here: Hyrule Castle / This way to Lon Lon Ranch" ],
+		[ 0x003B, "Just Ahead / King Zora’s Chamber / Show the proper respect!" ],
+		[ 0x003C, "House of the Great Mido / Boss of the Kokiri" ],
+		[ 0x003D, "House of the Know-It-All Brothers" ],
+		[ 0x003E, "House of Twins" ],
+		[ 0x003F, "Saria’s House" ],
+		[ 0x0040, "View Point with Z Targeting / When you have no object to look / at, you can just look forward / with Z. / Stop moving and then change the / direction you are facing, or hold / down Z for a little while. / This can help you get oriented in / the direction you want to face. / It’s quite convenient! / If you hold down Z, you can / walk sideways while facing / straight ahead. / Walking sideways can be a very / important technique in dungeon / corridors. Turn around and try doing this right now." ],
+		[ 0x0041, "Stepping Stones in the Pond / If you boldly go in the direction / you want to jump, you will leap / automatically. / If you hop around on the stones, / you’ll become happier!" ],
+		[ 0x0042, "No Diving Allowed / –It won’t do you any good!" ],
+		[ 0x0043, "Switch Targeting / If you see a / icon above an / object, you can target it with Z. / ... / You can target the stones next to this sign for practice!" ],
+		[ 0x0044, "Forest Stage / We are waiting to see your / beautiful face! / Win fabulous prizes!" ],
+		[ 0x0045, "Visit the / House of the Know-It-All Brothers / to get answers to all your / item-related questions!" ],
+		[ 0x0046, "Pocket Egg" ],
+	]
+[[actor]]
+	index = 0x0142
+	object = 0x0097
+	name = "Hyrule Castle Guard"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Whistleblower" ],
+		[ 0x0001, "Stands there, does nothing" ],
+	]
+[[actor]]
+	index = 0x0143
+	object = 0x0013
+	name = "Hopping Cucco, Not Solid"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Non-solid cucco, hops oddly every once in awhile and only goes in one direction" ],
+		[ 0x0001, "Invisible, solid cucco, doesn’t move, can be attacked but will only smoke and molt" ],
+		[ 0x0002, "Invisible cucco, cannot be attacked it seems, no idea what it does, but you can hear it" ],
+	]
+[[actor]]
+	index = 0x0144
+	object = 0x0013
+	name = "Attacking Cucco"
+	category = "ENEMY"
+[[actor]]
+	index = 0x0145
+	object = 0x0180
+	name = "Stone Blocking Well Entrance"
+	category = "BG"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0146
+	object = 0x00BC
+	name = "Saria"
+	category = "NPC"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x0147
+	name = "Checkable Spot"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Bean Seller's dialog //Doesn't work properly?" ],
+		[ 0x0800, "Temple of Time stone altar dialog" ],
+		[ 0x1000, "Gravekeeper's diary dialog //Navi hovers higher than normal" ],
+		[ 0x1800, "Royal Composer Sharp's grave dialog //Use Object 006E, Sets Temporary Switch Flag 09, spawns Sharp" ],
+		[ 0x2000, "\"Royal Family Tomb\" dialog" ],
+		[ 0x2800, "Royal Composer Flat's grave dialog //Use Object 006E, Sets Temporary Switch Flag 08, spawns Flat" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x0148
+	object = 0x0130
+	name = "Rainbow Bridge"
+	category = "PROP"
+[[actor]]
+	index = 0x0149
+	object = 0x010F
+	name = "Potion Shop Lady"
+	category = "NPC"
+[[actor]]
+	index = 0x014A
+	object = 0x0132
+	name = "Lake Hylia Doctor"
+	category = "NPC"
+[[actor]]
+	index = 0x014B
+	object = 0x0160
+	name = "Bombchu Bowling Girl"
+	category = "NPC"
+[[actor]]
+	index = 0x014C
+	name = "Bombchu Bowling Pit"
+	category = "PROP"
+[[actor]]
+	index = 0x014D
+	object = 0x0131
+	name = "Kaepora Gaebora"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Does nothing" ],
+		[ 0x0040, "Outside of Kokiri Forest exit, auto talks" ],
+		[ 0x0080, "Near Hyrule Castle, auto talks" ],
+		[ 0x00C0, "In front of Kakariko Village, auto talks" ],
+		[ 0x0100, "Between Lake Hylia and Gerudo Valley, auto talks" ],
+		[ 0x0140, "In front of Lake Hylia, auto talks" ],
+		[ 0x0180, "Nothing" ],
+		[ 0x01C0, "Lake Hylia, manual talk, talon grab shortcut" ],
+		[ 0x0200, "Death Mountain summit, manual talk, talon grab shortcut" ],
+		[ 0x0240, "Death Mountain summit, manual talk, talon grab shortcut" ],
+		[ 0x0280, "Desert Colossus, auto talks" ],
+		[ 0x02C0, "Lost Woods, before meeting Saria, auto talks" ],
+		[ 0x0300, "Lost Woods, after meeting Saria, auto talks" ],
+		[ 0x0340, "Outside of Kokiri Forest exit, auto talks, Head position alternates?" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x014E
+	object = 0x0002
+	name = "Rock"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Small rock, random drops" ],
+		[ 0x0001, "Large light-gray rock, can't pick up as Young Link, no drop" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (High Bits)"
+		mask = 0xF000
+	[[actor.property]]
+		name = "Switch Flag (Low Bits)"
+		mask = 0x00C0
+	[[actor.property]]
+		name = "Spawn Bugs"
+		mask = 0x0010
+	[[actor.property]]
+		name = "Drop Table"
+		mask = 0x0F00
+[[actor]]
+	index = 0x014F
+	object = 0x0002
+	name = "Grave Flower"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Flower for grave" ],
+		[ 0x0001, "Non-liftable small rock" ],
+		[ 0x0002, "Uncuttable small shrub" ],
+		[ 0x0003, "Erratic collision data" ],
+	]
+[[actor]]
+	index = 0x0150
+	object = 0x012A
+	name = "Light Activated Sun Switch/Sun Block"
+	category = "SWITCH"
+	var = [
+		[ 0x0000, "Sun emblem" ],
+		[ 0x0001, "Block with sun emblem" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x0151
+	name = "Circle of Bushes"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Circle of shrubs with one in the middle, random drops" ],
+		[ 0x0001, "Scattered shrubs, random drops" ],
+		[ 0x0002, "Circle of rocks, random drops" ],
+		[ 0x0003, "Crashes" ],
+	]
+	[[actor.property]]
+		name = "Spawn Bugs"
+		mask = 0x0010
+	[[actor.property]]
+		name = "Random Drop Table"
+		mask = 0xFF00
+[[actor]]
+	index = 0x0152
+	object = 0x00C9
+	name = "Goron (Cutscene?)"
+	category = "NPC"
+[[actor]]
+	index = 0x0153
+	object = 0x0133
+	name = "Windmill Man"
+	category = "NPC"
+[[actor]]
+	index = 0x0155
+	name = "Treasure Chests from Treasure Box Game"
+	category = "PROP"
+[[actor]]
+	index = 0x0156
+	object = 0x00F1
+	name = "Large Stone Face (Spirit Temple)"
+	category = "BG"
+[[actor]]
+	index = 0x0157
+	object = 0x00F1
+	name = "Hanging Platform (Spirit Temple)"
+	category = "BG"
+[[actor]]
+	index = 0x0158
+	object = 0x00F1
+	name = "Large Circular Mirror (Spirit Temple)"
+	category = "BG"
+[[actor]]
+	index = 0x0159
+	object = 0x00F1
+	name = "Light Blocking Rock (Spirit Temple)"
+	category = "BG"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x015A
+	object = 0x00F1
+	name = "Circular, Lifting Metal Shutter (Spirit Temple)"
+	category = "BG"
+[[actor]]
+	index = 0x015B
+	object = 0x00F1
+	name = "Bombable Rock Wall (Spirit Temple)"
+	category = "BG"
+[[actor]]
+	index = 0x015C
+	object = 0x00AF
+	name = "Giant Three Sided Goron Statue"
+	category = "PROP"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+	[[actor.property]]
+		name = "Collectible Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x015E
+	object = 0x00E1
+	name = "Ganondorf's Organ"
+	category = "BOSS"
+[[actor]]
+	index = 0x015F
+	object = 0x013A
+	name = "Water Spout"
+	category = "BG"
+	var = [
+		[ 0x1000, "Lowering" ],
+		[ 0x0000, "Rising" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x0FC0
+		source = "var"
+	[[actor.property]]
+		name = "Chest Flag"
+		mask = 0x001F
+		source = "var"
+	[[actor.property]]
+		name = "Size of Jet"
+		mask = 0x00FF
+		source = "zrot"
+	[[actor.property]]
+		name = "Height"
+		mask = 0x00FF
+		source = "xrot"
+	[[actor.property]]
+		name = "Timer in seconds"
+		mask = 0x00FF
+		source = "yrot"
+[[actor]]
+	index = 0x0160
+	object = 0x013B
+	name = "Whirlpool Effect"
+	category = "BG"
+	var = [
+		[ 0x0000, "Tall and narrow" ],
+		[ 0x0001, "Short and wide" ],
+	]
+[[actor]]
+	index = 0x0162
+	object = 0x013C
+	name = "Running Man"
+	category = "NPC"
+	var = [
+		[ 0x0000, "? (Hyrule Field)" ],
+		[ 0xFF00, "? (Lon Lon Ranch)" ],
+	]
+[[actor]]
+	index = 0x0163
+	object = 0x00C5
+	name = "Kokiri"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Standing boy //requires object 00FC, text ID as Adult: 1072" ],
+		[ 0x0001, "Standing girl //requires object 00FD, text ID as Adult: 1073" ],
+		[ 0x0002, "Boxing boy //requires object 00FC, text ID as Adult: 1074" ],
+		[ 0x0003, "Blocking boy //requires object 00FC, text ID as Adult: 1075" ],
+		[ 0x0004, "Backflipping boy //requires object 00FC, text ID as Adult: 1076" ],
+		[ 0x0005, "Sitting girl //requires object 00FD, text ID as Adult: 1057" ],
+		[ 0x0006, "Standing girl //requires object 00FD, text ID as Adult: 1077" ],
+		[ 0x000C, "Blond girl //requires object 013D, text ID as Adult: 10B9" ],
+	]
+[[actor]]
+	index = 0x0164
+	object = 0x00FF
+	name = "King Zora"
+	category = "NPC"
+[[actor]]
+	index = 0x0165
+	name = "Weather Effects"
+	category = "PROP"
+	[[actor.property]]
+		name = "Area Size"
+		mask = 0x7000
+[[actor]]
+	index = 0x0166
+	object = 0x00E2
+	name = "Bongo Bongo Floor"
+	category = "BG"
+[[actor]]
+	index = 0x0167
+	object = 0x00EC
+	name = "Kakariko Village Rooftop Man"
+	category = "NPC"
+[[actor]]
+	index = 0x0168
+	name = "Lost Woods Slingshot Game"
+	category = "PROP"
+[[actor]]
+	index = 0x0169
+	object = 0x016C
+	name = "Brick Pillar (Spirit Temple)"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Brick pillar" ],
+		[ 0x0001, "Brick throne" ],
+	]
+[[actor]]
+	index = 0x016A
+	object = 0x0144
+	name = "Bombchu Salesman"
+	category = "NPC"
+[[actor]]
+	index = 0x016B
+	name = "Flying Carpet"
+	category = "NPC"
+[[actor]]
+	index = 0x016C
+	object = 0x0145
+	name = "Graveyard Boy"
+	category = "NPC"
+	[[actor.property]]
+		name = "Path Id"
+		mask = 0x00FF
+[[actor]]
+	index = 0x016D
+	object = 0x00FB
+	name = "Mido"
+	category = "NPC"
+	var = [
+		[ 0x0100, "Blocking Deku Tree" ],
+	]
+[[actor]]
+	index = 0x016E
+	object = 0x00C5
+	name = "Hylians"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Fat woman in light blue // Use object 0105, text ID 079D (looking for puppy)" ],
+		[ 0x0001, "Fat woman in white, blues and yellow // Use object 018C, text ID 7016 first, then 7017" ],
+		[ 0x0002, "Bearded man in white and green // Use object 0107, text ID 701A" ],
+		[ 0x0003, "Jogging man (Sakon) // Use object 0111, needs pathway, text ID 7002" ],
+		[ 0x0004, "Staunch man in black and green // Use object 0107, text ID 7023 first, then 7024" ],
+		[ 0x0005, "Begging man // Use object 0111 // Use object 0111, buy things in bottles, text ID 70ED and followings" ],
+		[ 0x0006, "Old woman in white // Use object 010D, text ID 7021 first, then 7022" ],
+		[ 0x0007, "Old man in blue // Use object 010C, text ID 7027 first, then 7028" ],
+		[ 0x0008, "Thin woman in lilac // Use object 0108, text ID 701D first, then 701E" ],
+		[ 0x0009, "Laughing man in red and white // Use object 0111, text ID 701F first, then 7020" ],
+		[ 0x000A, "Explaining man in blue and white // Use object 0111, text ID 7018 first, then 7019" ],
+		[ 0x000B, "Thin woman in blue and yellow // Use object 0108, text ID 7014" ],
+		[ 0x000C, "Looking man in crimson // Use object 0111, text ID 7015" ],
+		[ 0x000D, "Red haired man in green and lilac // Use object 0107, text ID 7055" ],
+		[ 0x000E, "Bearded, red haired man in green and white // Use object 0111, text ID 7089" ],
+		[ 0x000F, "Bald man in brown // Use object 010C, text ID 708A" ],
+		[ 0x0010, "Man in white // Use object 0111, text ID 700E" ],
+		[ 0x0011, "Staunch man two shades of green // Use object 0107, text ID 505B first, then 505C" ],
+		[ 0x0013, "Bald man in purple // Use object 010C" ],
+		[ 0x0014, "Man in two shades of green // Use object 0107" ],
+	]
+	[[actor.property]]
+		name = "Path Id"
+		mask = 0x0780
+[[actor]]
+	index = 0x016F
+	name = "Ganondorf's Mantle"
+	category = "BOSS"
+[[actor]]
+	index = 0x0170
+	name = "Rain and Lightning"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x0171
+	object = 0x014A
+	name = "Title Screen Actor"
+	category = "PROP"
+[[actor]]
+	index = 0x0172
+	object = 0x014B
+	name = "Metal Grate Door"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x0173
+	name = "Targetable Navi Spot"
+	category = "BG"
+[[actor]]
+	index = 0x0174
+	object = 0x014C
+	name = "Ganon's Tower Collapsing"
+	category = "PROP"
+[[actor]]
+	index = 0x0175
+	object = 0x006D
+	name = "Hyrule Field Poes/Big Poes"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Big Poe" ],
+		[ 0xFFFF, "Normal poe, circles around you" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag ? (big poe)"
+		mask = 0x003F
+[[actor]]
+	index = 0x0176
+	object = 0x014D
+	name = "Lava Sprites"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x0177
+	object = 0x0156
+	name = "Metal Bars"
+	category = "NPC"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x0178
+	object = 0x0097
+	name = "Hyrule Guard"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Time teller" ],
+	]
+[[actor]]
+	index = 0x0179
+	object = 0x0060
+	name = "Adult Zelda"
+	category = "NPC"
+[[actor]]
+	index = 0x017A
+	object = 0x0153
+	name = "Ganon"
+	category = "BOSS"
+[[actor]]
+	index = 0x017B
+	object = 0x0154
+	name = "Scarecrow"
+	category = "NPC"
+[[actor]]
+	index = 0x017C
+	object = 0x0155
+	name = "Treasure Chest Shop Man"
+	category = "NPC"
+[[actor]]
+	index = 0x017D
+	object = 0x0003
+	name = "Push Block (Has Savepoint)"
+	category = "PROP"
+[[actor]]
+	index = 0x017E
+	name = "Sun's Song effect"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x017F
+	name = "The End Message"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x0181
+	name = "Treasure Chest (variable chosen by Hole)"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x0182
+	object = 0x015A
+	name = "Ranch NPC's (Ending Cutscene)"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Drunken Ingo // Use Object 00C0" ],
+		[ 0x0001, "Drunken Talon // Use Object 0088" ],
+		[ 0x0002, "Windmill man breakdancing // Use Object 0133" ],
+		[ 0x0003, "Encouraging Kokiri Boy // Use Object 00FC" ],
+		[ 0x0004, "Encouraging Kokiri Girl // Use Object 00FD" ],
+		[ 0x0005, "White-haired man in blue // Use Object 010C" ],
+		[ 0x0006, "Black-bearded man in white and green // Use Object 0107" ],
+		[ 0x0007, "Bushy-haired woman in red and black // Use Object 0115" ],
+		[ 0x0008, "Little old lady // Use Object 010D" ],
+		[ 0x0009, "Carpenter Boss, Singing // Use Object 0121" ],
+		[ 0x000A, "Carpenter, Singing // Use Object 0122" ],
+		[ 0x000B, "Carpenter, Singing // Use Object 0122" ],
+		[ 0x000C, "Carpenter, Singing // Use Object 0122" ],
+		[ 0x000D, "Carpenter, Singing // Use Object 0122" ],
+		[ 0x000E, "Kokiri Boy, Dancing // Use Object 00FC" ],
+		[ 0x000F, "Kokiri Girl, Dancing // Use Object 00FD" ],
+		[ 0x0010, "Gerudo, Line-dancing 1 // Use Object 0116" ],
+		[ 0x0011, "Gerudo, Line-dancing 2 // Use Object 0116" ],
+		[ 0x0012, "Gerudo, spikey-haired, Line-dancing // Use Object 0116" ],
+		[ 0x0013, "Dancing Zora // Use Object 00FE" ],
+		[ 0x0014, "King Zora // Use Object 00FF" ],
+		[ 0x0015, "Mido, sitting // Use Object 00FB" ],
+		[ 0x0016, "Floating cucco // Use Object 0013" ],
+		[ 0x0017, "Floating cucco 2 // Use Object 0013" ],
+		[ 0x0018, "Walking cucco // Use Object 0013" ],
+		[ 0x0019, "Cucco Lady // Use Object 0110" ],
+		[ 0x001A, "Potion Shopkeeper // Use Object 0159" ],
+		[ 0x001B, "Happy Mask Salesman // Use Object 013E" ],
+		[ 0x001C, "Fisherman // Use Object 015B" ],
+		[ 0x001D, "Bombchu Shopkeeper // Use Object 0165" ],
+		[ 0x001E, "Dancing Goron // Use Object 00C9" ],
+		[ 0x001F, "Belly slapping Goron // Use Object 00C9" ],
+		[ 0x0020, "Biggoron, dancing // Use Object 00C9" ],
+		[ 0x0021, "Medigoron, lying down // Use Object 00C9" ],
+		[ 0x0022, "Singing Malon // Use Object 00D0" ],
+	]
+[[actor]]
+	index = 0x0183
+	name = "Fire Arrow Shot/Sun's Song Fairy"
+	category = "PROP"
+[[actor]]
+	index = 0x0184
+	object = 0x000A
+	name = "Great Fairy's Pink and Yellow Beams"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Pink spiral beam" ],
+		[ 0x0001, "Green spiral beam" ],
+		[ 0x0002, "Purple spiral beam" ],
+		[ 0x0003, "Blue spiral beam" ],
+		[ 0x0004, "+ Black spiral beam" ],
+		[ 0x000C, "Black and green spiral beam" ],
+		[ 0x000D, "Gray and green spiral beam" ],
+		[ 0x000E, "Light blue spiral beam" ],
+		[ 0x000F, "Light purple spiral beam" ],
+	]
+[[actor]]
+	index = 0x0185
+	name = "Checkable Spot"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Checkable, Sets Switch" ],
+		[ 0x4000, "Instant Text" ],
+		[ 0x8000, "Checkable, Disappears on Switch" ],
+		[ 0xC000, "Z-Target, No Text" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+	[[actor.property]]
+		name = "Message ID"
+		mask = 0x3FC0
+[[actor]]
+	index = 0x0186
+	object = 0x0167
+	name = "Patrolling Gerudo"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Turns around, can’t move, whistle-blower" ],
+		[ 0x0001, "Won’t turn around, can’t move, whistle-blower" ],
+		[ 0x0002, "Purple Gerudo, acts like the one that gives you the membership card" ],
+	]
+	[[actor.property]]
+		name = "Range of movements (type 0)"
+		mask = 0x0F00
+[[actor]]
+	index = 0x0187
+	name = "Room Timer"
+	category = "ENEMY"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0xFC00
+	[[actor.property]]
+		name = "Timer in Seconds"
+		mask = 0x03FF
+[[actor]]
+	index = 0x0188
+	object = 0x015E
+	name = "Cursed Skulltula People"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Main Hyliantula //(gold skulltulas lower than 100)" ],
+		[ 0x0001, "Hyliantula without an arm //(gold skulltulas lower than 10)" ],
+		[ 0x0002, "Hyliantula without an arm //(gold skulltulas lower than 20)" ],
+		[ 0x0003, "Hyliantula without an arm //(gold skulltulas lower than 30)" ],
+		[ 0x0004, "Hyliantula without an arm //(gold skulltulas lower than 40)" ],
+		[ 0x0005, "Hyliantula without an arm //(gold skulltulas lower than 50)" ],
+		[ 0x0006, "Hyliantula without an arm //(gold skulltulas lower than 60)" ],
+		[ 0x0007, "Hyliantula without an arm //(gold skulltulas lower than 70)" ],
+		[ 0x0008, "Hyliantula without an arm //(gold skulltulas lower than 80)" ],
+		[ 0x0009, "Hyliantula without an arm //(gold skulltulas lower than 90)" ],
+		[ 0x000A, "Hyliantula without an arm //(gold skulltulas lower than 100)" ],
+		[ 0x000B, "Hyliantula without an arm //(gold skulltulas lower than 110)" ],
+	]
+[[actor]]
+	index = 0x0189
+	name = "Uncursed Skulltula People"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Main Hyliantula //(gold skulltulas lower than 100)" ],
+		[ 0x0001, "Hyliantula without an arm //(gold skulltulas lower than 10)" ],
+		[ 0x0002, "Hyliantula without an arm //(gold skulltulas lower than 20)" ],
+		[ 0x0003, "Hyliantula without an arm //(gold skulltulas lower than 30)" ],
+		[ 0x0004, "Hyliantula without an arm //(gold skulltulas lower than 40)" ],
+		[ 0x0005, "Hyliantula without an arm //(gold skulltulas lower than 50)" ],
+		[ 0x0006, "Hyliantula without an arm //(gold skulltulas lower than 60)" ],
+		[ 0x0007, "Hyliantula without an arm //(gold skulltulas lower than 70)" ],
+		[ 0x0008, "Hyliantula without an arm //(gold skulltulas lower than 80)" ],
+		[ 0x0009, "Hyliantula without an arm //(gold skulltulas lower than 90)" ],
+		[ 0x000A, "Hyliantula without an arm //(gold skulltulas lower than 100)" ],
+		[ 0x000B, "Hyliantula without an arm //(gold skulltulas lower than 110)" ],
+	]
+[[actor]]
+	index = 0x018A
+	name = "Zelda's Lullaby Effect"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Purple wormhole" ],
+		[ 0x0001, "Blue wormhole" ],
+	]
+[[actor]]
+	index = 0x018B
+	name = "Song of Storms Effect"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Regular effects, storm begins" ],
+		[ 0x0001, "Texture-spanning effect only, no storm, music isn't affected, effect does not dissipate" ],
+	]
+[[actor]]
+	index = 0x018C
+	object = 0x0026
+	name = "Stingray"
+	category = "ENEMY"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x018D
+	object = 0x0161
+	name = "Sacred Forest Meadow Water and Gate"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Large flat square floor tile, makes water noises when walking on it" ],
+		[ 0x0001, "Large vertical gate" ],
+		[ 0x0002, "+ Invisible, glitched gate //can still attack or run into it" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x018E
+	object = 0x00F1
+	name = "Stone Platform"
+	category = "BG"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x018F
+	object = 0x016C
+	name = "Pillar after being hit by Iron Knuckle"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Black particles?" ],
+		[ 0x0002, "Round stone thing, explodes as soon as area loads" ],
+	]
+[[actor]]
+	index = 0x0190
+	object = 0x0162
+	name = "Gerudo Fortress wooden gate"
+	category = "BG"
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0191
+	object = 0x0162
+	name = "Gerudo Training Area Gate"
+	category = "BG"
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0192
+	object = 0x0164
+	name = "Green Deku Scrubs"
+	category = "ENEMY"
+	var = [
+		[ 0x1A00, "Scrub on path to Deku Slingshot" ],
+		[ 0x9B00, "231/312 Hint scrub" ],
+		[ 0x9C00, "Final Deku Scrub" ],
+	]
+	[[actor.property]]
+		name = "Puzzle Scrub #"
+		mask = 0x00FF
+[[actor]]
+	index = 0x0193
+	name = "Deku Scrub's/Octorok's Deku Nut/ Rock Attack"
+	category = "PROP"
+[[actor]]
+	index = 0x0194
+	object = 0x0166
+	name = "Broken Drawbridge"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Broken Drawbridge" ],
+		[ 0x0001, "Fences (Hyrule Field)" ],
+	]
+[[actor]]
+	index = 0x0195
+	object = 0x0168
+	name = "Grounded Business Scrub"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Deku Nuts" ],
+		[ 0x0001, "Deku Sticks" ],
+		[ 0x0002, "Piece of Heart" ],
+		[ 0x0003, "Deku Seeds" ],
+		[ 0x0004, "Deku Shield" ],
+		[ 0x0005, "Bombs" ],
+		[ 0x0006, "Deku Seeds" ],
+		[ 0x0007, "Red Potion" ],
+		[ 0x0008, "Green Potion" ],
+		[ 0x0009, "Deku Stick Upgrade" ],
+		[ 0x000A, "Deku Nut Upgrade" ],
+		[ 0x000B, "Never speaks, and Link is sadly very patient..." ],
+		[ 0x000C, "Pocket Egg?" ],
+	]
+[[actor]]
+	index = 0x0196
+	name = "Dampe Game Collectables"
+	category = "PROP"
+[[actor]]
+	index = 0x0197
+	object = 0x0169
+	name = "Gerudo Fighter"
+	category = "ENEMY"
+	[[actor.property]]
+		name = "Switch Flag and Collectible Flag"
+		mask = 0xFF00
+		source = "var"
+	[[actor.property]]
+		name = " Switch Flag to spawn"
+		mask = 0x00FF
+		source = "zrot"
+[[actor]]
+	index = 0x0198
+	name = "Epona's Song Effect"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x0199
+	name = "Saria's Song Effect"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x019A
+	object = 0x016A
+	name = "Child Chasing Cucco in Hyrule Market"
+	category = "NPC"
+	[[actor.property]]
+		name = "Pathway Id"
+		mask = 0x00FF
+[[actor]]
+	index = 0x019B
+	object = 0x016B
+	name = "Dog"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Dirty blond dog" ],
+		[ 0x0001, "Chocolate brown dog (kinda yellowish when in a certain light)" ],
+		[ 0x0002, "Red dog" ],
+		[ 0x0003, "Multicolored, flashing dog" ],
+		[ 0x0004, "Red dog" ],
+		[ 0x0005, "Multicolored, flashing dog" ],
+		[ 0x0006, "Dark dog (black fur)" ],
+		[ 0x0007, "Green dog" ],
+		[ 0x0008, "Red dog" ],
+		[ 0x0009, "Purple dog" ],
+		[ 0x000A, "Red dog" ],
+		[ 0x000B, "Green dog" ],
+		[ 0x000C, "Green dog" ],
+		[ 0x000D, "Black dog" ],
+		[ 0x000E, "Black dog" ],
+		[ 0x000F, "Purple dog" ],
+	]
+	[[actor.property]]
+		name = "Direction"
+		mask = 0x0FF0
+[[actor]]
+	index = 0x019C
+	object = 0x0024
+	name = "Golden Skulltula Token"
+	category = "ITEMACTION"
+	[[actor.property]]
+		name = "Path id (type 3)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x019D
+	name = "Semi-Built Shooting Gallery"
+	category = "BG"
+	var = [
+		[ 0x0000, "Potion Shop Poster" ],
+		[ 0x0001, "Shooting Gallery Poster" ],
+		[ 0x0002, "Bazaar Poster" ],
+		[ 0x0003, "Shooting Gallery (Partially Complete) //Spawns Carpenter Sabooro (Kakariko) during the day" ],
+		[ 0x0004, "Shooting Gallery (Complete)" ],
+	]
+[[actor]]
+	index = 0x019E
+	object = 0x0002
+	name = "Beehive"
+	category = "PROP"
+[[actor]]
+	index = 0x019F
+	object = 0x016F
+	name = "Nayru Fountain Bombable Wall"
+	category = "BG"
+[[actor]]
+	index = 0x01A0
+	object = 0x0170
+	name = "Crate"
+	category = "BG"
+	[[actor.property]]
+		name = "Skulltula variable (Nullable)"
+		mask = 0xFFFF
+		source = "var"
+	[[actor.property]]
+		name = "Collectible Item"
+		mask = 0x00FF
+		source = "xrot"
+	[[actor.property]]
+		name = "Collectible Flag"
+		mask = 0x003F
+		source = "zrot"
+[[actor]]
+	index = 0x01A1
+	name = "Deku Stage Cutscene"
+	category = "PROP"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x01A2
+	object = 0x0171
+	name = "Deku Stage Judge"
+	category = "NPC"
+[[actor]]
+	index = 0x01A3
+	name = "Deku Panel"
+	category = "PROP"
+	var = [
+		[ 0xFFFF, "Default" ],
+	]
+[[actor]]
+	index = 0x01A4
+	object = 0x0111
+	name = "Man in Purple Pants and White Top"
+	category = "NPC"
+[[actor]]
+	index = 0x01A5
+	object = 0x0178
+	name = "Bombchu Bowling Alley Game"
+	category = "PROP"
+[[actor]]
+	index = 0x01A6
+	object = 0x0128
+	name = "Carpenter's Son (Child)"
+	category = "NPC"
+[[actor]]
+	index = 0x01A7
+	object = 0x0179
+	name = "Ganon's Tower Magic Barrier"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Magic Barrier" ],
+		[ 0x0001, "Blue Magic Core //Use with actor 00D2 (Adult Ruto), var 0002" ],
+		[ 0x0002, "Yellow Magic Core //Use with actor 00A6 (Rauru), var 0002" ],
+		[ 0x0003, "Red Magic Core //Use with actor 00A8 (Cutscene Darunia), var 0002" ],
+		[ 0x0004, "Purple Magic Core //Use with actor 00A9 (Impa), var 0002" ],
+		[ 0x0005, "Orange Magic Core //Use with actor 00C3 (Nabooru), var 0002" ],
+		[ 0x0006, "Green Magic Core //Use with actor 00C9 (Cutscene Saria), var 0002" ],
+	]
+[[actor]]
+	index = 0x01A8
+	object = 0x0002
+	name = "Zora's Fountain Bombable Wall"
+	category = "BG"
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+[[actor]]
+	index = 0x01A9
+	object = 0x0002
+	name = "Death Mountain Crater Bombable Wall"
+	category = "BG"
+[[actor]]
+	index = 0x01AB
+	name = "Tower of Rupees"
+	category = "BG"
+[[actor]]
+	index = 0x01AC
+	object = 0x0182
+	name = "Honey and Darling"
+	category = "NPC"
+[[actor]]
+	index = 0x01AD
+	object = 0x0182
+	name = "Haggling Townspeople"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Blue/green textures" ],
+		[ 0x0001, "Green/brown textures" ],
+		[ 0x0002, "Green/red textures" ],
+		[ 0x0003, "Purple/red textures" ],
+		[ 0x0004, "Orange/red textures" ],
+		[ 0x0005, "Purple/black textures" ],
+		[ 0x0006, "Flashing purple/blue textures" ],
+		[ 0x0007, "Flashing purple/cyan/green textures, depends on movement of camera" ],
+		[ 0x0008, "Purple/red textures" ],
+	]
+[[actor]]
+	index = 0x01AE
+	object = 0x00C9
+	name = "Gorons and Biggoron"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Large Goron that does wild rollin’" ],
+		[ 0x0001, "Small Goron that is Darunia’s offspring, rolls around, can talk to while he’s rolling" ],
+		[ 0x0002, "Biggoron" ],
+		[ 0x0003, "Quivering Goron" ],
+		[ 0x0004, "Goron that stands by the bomb flower outside (will start “walking” if you ask him about Bomb Flowers)" ],
+		[ 0x0005, "Small Goron, won’t stop rolling regardless of what you do" ],
+		[ 0x0006, "Goron that stands outside of Dodongo’s Cavern" ],
+		[ 0x0007, "Goron that’s hungry" ],
+		[ 0x0008, "Goron that stands by the altar" ],
+		[ 0x0009, "Goron that talks about torches" ],
+		[ 0x000A, "Goron that hid a Deku Stick" ],
+		[ 0x000B, "Goron that wants you to bring fire back from Darunia’s room" ],
+		[ 0x000C, "Goron that talks about the Great Fairy" ],
+	]
+	[[actor.property]]
+		name = "Pathway Id"
+		mask = 0xFF00
+[[actor]]
+	index = 0x01AF
+	object = 0x0183
+	name = "Wolfos"
+	category = "ENEMY"
+	var = [
+		[ 0x0000, "Normal" ],
+		[ 0x0001, "White Wolfos, mini-boss music starts" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x01B0
+	object = 0x0184
+	name = "Stalchildren"
+	category = "ENEMY"
+[[actor]]
+	index = 0x01B1
+	object = 0x0185
+	name = "Ganon Battle Rubble"
+	category = "PROP"
+	var = [
+		[ 0x0008, "Large block with “sun o’er horizon” emblem on it" ],
+		[ 0x0009, "Wall chunk with some stray stuff sticking out of the top" ],
+		[ 0x000A, "Another wall chunk, mostly horizontal" ],
+		[ 0x000B, "Wall chunk with some stray stuff sticking out of the top" ],
+		[ 0x000C, "Gate/bridge-like metallic object, mostly horizontal" ],
+		[ 0x000D, "Beam or tower remnant" ],
+		[ 0x000E, "Tall wall chunk with some stray stuff sticking out of the top" ],
+		[ 0xFF04, "Ganon's Tower rubble" ],
+		[ 0xFF08, "GT rubble1" ],
+		[ 0xFF09, "GT rubble2" ],
+		[ 0xFF0A, "GT rubble3" ],
+		[ 0xFF0B, "GT rubble4" ],
+		[ 0xFF0C, "GT rubble5" ],
+		[ 0xFF0D, "GT rubble6" ],
+		[ 0xFF0E, "GT rubble7" ],
+	]
+[[actor]]
+	index = 0x01B2
+	object = 0x0186
+	name = "Crumbling Stone"
+	category = "BOSS"
+	var = [
+		[ 0x0000, "Large chunk" ],
+		[ 0x0001, "Medium chunk" ],
+		[ 0x0002, "Small chunk" ],
+	]
+[[actor]]
+	index = 0x01B3
+	object = 0x0179
+	name = "Sinkable Lava Platform"
+	category = "PROP"
+[[actor]]
+	index = 0x01B4
+	object = 0x0179
+	name = "Invisible/Transparent Platforms"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Nothing" ],
+		[ 0x0001, "Glass Block //appears when Switch Flag is set" ],
+		[ 0x0002, "Invisible Timer //See comments" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (Nullable)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x01B5
+	object = 0x0179
+	name = "Web Blocked Light Window"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Web?" ],
+		[ 0x0001, "Unknown" ],
+		[ 0x0002, "Unknown" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x3F00
+[[actor]]
+	index = 0x01B6
+	object = 0x0179
+	name = "2D Stone Wall"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Square Stone" ],
+		[ 0x0001, "Stone Brick" ],
+		[ 0x0002, "Similar to 1, but looks like a different texture" ],
+		[ 0x0003, "+ Graphics glitchy" ],
+	]
+[[actor]]
+	index = 0x01B7
+	object = 0x0179
+	name = "Large Square Ice Block"
+	category = "PROP"
+[[actor]]
+	index = 0x01B8
+	object = 0x0189
+	name = "Poe Collector"
+	category = "NPC"
+[[actor]]
+	index = 0x01B9
+	object = 0x0188
+	name = "Gossip Stone"
+	category = "PROP"
+	var = [
+		[ 0x0000, "This is a Gossip Stone!" ],
+		[ 0x0001, "They say you can swim faster by continuously pressing B." ],
+		[ 0x0002, "They say there is a secret near the lone tree which is not far from the river in the northwest part of Hyrule Field." ],
+		[ 0x0003, "They say that there is a secret on the road that leads to Lake Hylia." ],
+		[ 0x0004, "They say that Biggoron’s Sword is super sharp and will never break." ],
+		[ 0x0005, "They say that Medigoron didn’t really think about his own size, so his store is really cramped." ],
+		[ 0x0006, "They say that Malon set the original record in the obstacle course of Lon Lon Ranch." ],
+		[ 0x0007, "They say that Malon of Lon Lon Ranch hopes a knight in shining armor will come and sweep her off her feet someday." ],
+		[ 0x0008, "They say that Ruto, the Zora princess who is known for her selfish nature, likes a certain boy..." ],
+		[ 0x0009, "They say that players who select the “HOLD” option for “Z TARGETING” are the real “Zelda players!”" ],
+		[ 0x000A, "They say that there is a secret near a tree in Kakariko Village." ],
+		[ 0x000B, "They say that, contrary to her elegant image, Princess Zelda of Hyrule Castle is, in fact, a tomboy!" ],
+		[ 0x000C, "They say that Princess Zelda’s nanny is actually one of the Sheikah, who many thought had died out." ],
+		[ 0x000D, "They say there is a man who can always be found running around in Hyrule Field." ],
+		[ 0x000E, "They say that it is against the rules to use glasses at the Treasure Chest Shop in Hyrule Castle Town Market." ],
+		[ 0x000F, "They say that the chicken lady goes to the Lakeside Laboratory to study how to breed pocket-sized Cuccos." ],
+		[ 0x0010, "They say that Gerudos sometimes come to Hyrule Castle Town to look for boyfriends." ],
+		[ 0x0011, "They say that the thief named Nabooru, who haunts this area, is a Gerudo." ],
+		[ 0x0012, "They say that if you get close to a butterfly while holding a Deku Stick in your hands, something good will happen." ],
+		[ 0x0013, "They say that you may find something new in dungeons that you have already finished." ],
+		[ 0x0014, "They say that Gerudos worship Ganondorf almost like a god." ],
+		[ 0x0015, "They say that there is a secret around the entrance to Gerudo Valley." ],
+		[ 0x0016, "They say that the owl named Kaepora Gaebora is the reincarnation of an ancient Sage." ],
+		[ 0x0017, "They say that strange owl, Kaepora Gaebora, may look big and heavy, but its character is rather lighthearted." ],
+		[ 0x0018, "They say that the horse Ganondorf rides is a solid black Gerudo stallion." ],
+		[ 0x0019, "They say that Ganondorf is not satisfied with ruling only the Gerudo and aims to conquer all of Hyrule!" ],
+		[ 0x001A, "They say that the treasure you can earn in the Gerudo’s Training Ground is not as great as you would expect, given its difficulty!" ],
+		[ 0x001B, "They say that there is a switch that you can activate only by using the Spin Attack." ],
+		[ 0x001C, "They say that it’s possible to find a total of 100 Gold Skulltulas throughout Hyrule." ],
+		[ 0x001D, "They say that when non-fairy folk enter the Lost Woods, they become monsters!" ],
+		[ 0x001E, "They say that the small holes in the ground that you can find all over Hyrule make perfect breeding ground for bugs." ],
+		[ 0x001F, "They say that the Kokiri are always followed by small fairies." ],
+		[ 0x0020, "They say that one Kokiri has left the forest, but he is still alive!" ],
+		[ 0x0021, "0421 (in normal text box)" ],
+	]
+	[[actor.property]]
+		name = "Collectible Flag (Fairy)"
+		mask = 0xFF00
+[[actor]]
+	index = 0x01BA
+	object = 0x0059
+	name = "Bombable Stone Wall"
+	category = "BG"
+[[actor]]
+	index = 0x01BB
+	object = 0x0059
+	name = "Metal Gate"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Vertical" ],
+		[ 0x1000, "Horizontal" ],
+		[ 0x2000, "+ Invalid" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+	[[actor.property]]
+		name = "Timer (Seconds)"
+		mask = 0x0FC0
+[[actor]]
+	index = 0x01BC
+	object = 0x0122
+	name = "Carpenters in Kakariko"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Ichiro //Red/Purple Pants, \"normal\" hair" ],
+		[ 0x0001, "Sabooro //Light-blue Pants" ],
+		[ 0x0002, "Jiro //Green Pants" ],
+		[ 0x0003, "Shiro //Pink/Purple Pants, Two-Spiked Hair" ],
+	]
+	[[actor.property]]
+		name = "Path Id"
+		mask = 0xFF00
+[[actor]]
+	index = 0x01BD
+	object = 0x0178
+	name = "Bombchu Bowling Alley Wall"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Final wall" ],
+		[ 0x0001, "Hole in lower-right" ],
+		[ 0x0002, "Hole at top" ],
+	]
+[[actor]]
+	index = 0x01BE
+	name = "Bombchu Bowling Alley Wall 2"
+	category = "PROP"
+[[actor]]
+	index = 0x01BF
+	object = 0x006D
+	name = "Haunted Wasteland Guiding Poe"
+	category = "BG"
+	[[actor.property]]
+		name = "Path Id"
+		mask = 0xFF00
+[[actor]]
+	index = 0x01C0
+	object = 0x0008
+	name = "Guay"
+	category = "ENEMY"
+[[actor]]
+	index = 0x01C1
+	object = 0x018E
+	name = "Fake Stomping Door"
+	category = "BG"
+	var = [
+		[ 0x0000, "Fake door" ],
+		[ 0x0001, "Debris" ],
+		[ 0x0002, "Debris" ],
+		[ 0x0003, "Debris" ],
+		[ 0x0004, "Debris" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0xFF00
+[[actor]]
+	index = 0x01C2
+	object = 0x016F
+	name = "Refilling Oasis"
+	category = "BG"
+[[actor]]
+	index = 0x01C3
+	object = 0x00AF
+	name = "Lid to the Giant Goron Pot"
+	category = "PROP"
+[[actor]]
+	index = 0x01C4
+	object = 0x00AF
+	name = "Goron Room Door"
+	category = "PROP"
+[[actor]]
+	index = 0x01C5
+	object = 0x00D0
+	name = "Adult Malon (Ranch)"
+	category = "NPC"
+[[actor]]
+	index = 0x01C6
+	object = 0x018B
+	name = "Cow"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Cow" ],
+		[ 0x0001, "Tail only" ],
+	]
+[[actor]]
+	index = 0x01C7
+	object = 0x006B
+	name = "Ice Stalagmite/Stalagtite"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Stalagmite (floor)" ],
+		[ 0x0001, "Stalactite (ceiling) //falls when Link is underneath" ],
+		[ 0x0002, "Regrowing Stalactite (ceiling) //falls when Link is underneath" ],
+	]
+[[actor]]
+	index = 0x01C8
+	object = 0x006B
+	name = "2D Ice Bars"
+	category = "PROP"
+	var = [
+		[ 0xFF00, "vertical, clear flag" ],
+		[ 0x0001, "vertical, switch softlock" ],
+		[ 0xFF02, "horizontal, clear flag" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag (type 1)"
+		mask = 0x3F00
+[[actor]]
+	index = 0x01C9
+	object = 0x0154
+	name = "Scarecrow Song Spot"
+	category = "PROP"
+[[actor]]
+	index = 0x01CA
+	object = 0x0154
+	name = "Bonooru the Scarecrow"
+	category = "NPC"
+[[actor]]
+	index = 0x01CB
+	name = "Song of Time Effect"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Scarecrow song effect?" ],
+		[ 0x0001, "purple" ],
+	]
+[[actor]]
+	index = 0x01CC
+	object = 0x0060
+	name = "Zelda's Path in Ganon Castle Escape?"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x01CD
+	object = 0x004D
+	name = "Circular Piece of Stone Wall"
+	category = "PROP"
+	var = [
+		[ 0x0000, "Circular piece of false stone wall //Visible, invisible with Lens of Truth" ],
+		[ 0x0001, "Square piece of false stone wall //Oriented horizontally" ],
+	]
+[[actor]]
+	index = 0x01CE
+	object = 0x00FE
+	name = "Zora"
+	category = "NPC"
+	var = [
+		[ 0x0000, "Zora //Text ID 4007" ],
+		[ 0x0001, "Zora //Text ID 4008" ],
+		[ 0x0002, "Zora //Text ID 4009" ],
+		[ 0x0003, "Zora //Text ID 400A" ],
+		[ 0x0004, "Zora //Text ID 400B" ],
+		[ 0x0005, "Zora //Text ID 400C" ],
+		[ 0x0006, "Zora //Text ID 400D" ],
+		[ 0x0007, "Zora //Text ID 400E" ],
+		[ 0x0008, "Zora //Text ID 400F" ],
+	]
+	[[actor.property]]
+		name = "Dialog"
+		mask = 0x000F
+[[actor]]
+	index = 0x01CF
+	name = "Skulltula Sprouting from Bean Spot"
+	category = "ITEMACTION"
+[[actor]]
+	index = 0x01D0
+	object = 0x0169
+	name = "Gerudo giving you Membership Card"
+	category = "NPC"
+[[actor]]
+	index = 0x01D1
+	object = 0x0190
+	name = "Time Block"
+	category = "ITEMACTION"
+	var = [
+		[ 0x0000, "Child Visible (Age inverted) Invisible (normal)" ],
+		[ 0x0001, "Adult Visible (Age inverted) Visible (normal)" ],
+	]
+	[[actor.property]]
+		name = "Switch Flag"
+		mask = 0x003F
+		source = "var"
+	[[actor.property]]
+		name = "Song of Time Distance"
+		mask = 0x3800
+		source = "var"
+	[[actor.property]]
+		name = "set switchflag on/off"
+		mask = 0x0400
+		source = "var"
+	[[actor.property]]
+		name = "Size"
+		mask = 0x0100
+		source = "var"
+	[[actor.property]]
+		name = "Visibility"
+		mask = 0x0040
+		source = "var"
+	[[actor.property]]
+		name = "Color"
+		mask = 0x0007
+		source = "zrot"
+[[actor]]
+	index = 0x01D2
+	object = 0x0002
+	name = "Bronze Boulder"
+	category = "PROP"
+[[actor]]
+	index = 0x01D3
+	object = 0x0191
+	name = "Princess Zelda (Child - Cutscene)"
+	category = "NPC"
+[[actor]]
+	index = 0x01D4
+	object = 0x013C
+	name = "Running Man (Adult)"
+	category = "NPC"
+[[actor]]
+	index = 0x01D5
+	object = 0x0003
+	name = "Young Link Silver Block"
+	category = "PROP"
+[[actor]]
+	index = 0x01D6
+	object = 0x0190
+	name = "Time Block Spawning Spot"
+	category = "ITEMACTION"

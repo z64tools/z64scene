@@ -1,4 +1,5 @@
 #include "Editor.h"
+#include "Database.h"
 
 extern DataFile gAppIcon16;
 extern DataFile gAppIcon32;
@@ -61,96 +62,7 @@ static void Editor_UpperHeader(void* pass, void* empty, Split* split) {
     // Scene* scene = &this->scene;
 }
 
-void Editor_Init(Editor* editor) {
-    sEditor = editor;
-    
-    Theme_Init(0);
-    Undo_Init(128);
-    GUI_INITIALIZE(editor, "z64scene", 980, 480, 4, Editor_Update, Editor_Draw, Editor_DropCallback);
-    GeoGrid_Init(&editor->geo, &editor->app, editor);
-    GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrCount(gTaskTable));
-    
-    Cursor_Init(&editor->cursor, &editor->app);
-    Cursor_CreateCursor(CURSOR_ARROW_U, gCursor_ArrowUp.data, 24, 12, 12);
-    Cursor_CreateCursor(CURSOR_ARROW_D, gCursor_ArrowDown.data, 24, 12, 12);
-    Cursor_CreateCursor(CURSOR_ARROW_L, gCursor_ArrowLeft.data, 24, 12, 12);
-    Cursor_CreateCursor(CURSOR_ARROW_R, gCursor_ArrowRight.data, 24, 12, 12);
-    Cursor_CreateCursor(CURSOR_ARROW_H, gCursor_ArrowHorizontal.data, 32, 16, 16);
-    Cursor_CreateCursor(CURSOR_ARROW_V, gCursor_ArrowVertical.data, 32, 16, 16);
-    Cursor_CreateCursor(CURSOR_CROSSHAIR, gCursor_Crosshair.data, 40, 19, 20);
-    Cursor_CreateCursor(CURSOR_EMPTY, gCursor_Empty.data, 16, 0, 0);
-    
-    Rectf32 size = {
-        editor->geo.workRect.x,
-        editor->geo.workRect.y,
-        editor->geo.workRect.w * 0.70,
-        editor->geo.workRect.h
-    };
-    
-    GeoGrid_AddSplit(&editor->geo, &size, TAB_VIEWPORT);
-    
-    size = (Rectf32) {
-        size.w,
-        editor->geo.workRect.y,
-        editor->geo.workRect.w - size.w,
-        editor->geo.workRect.h * 0.35
-    };
-    
-    GeoGrid_AddSplit(&editor->geo, &size, TAB_ROOMLIST);
-    
-    size = (Rectf32) {
-        size.x,
-        editor->geo.workRect.y + size.h,
-        size.w,
-        editor->geo.workRect.h - size.h
-    };
-    
-    GeoGrid_AddSplit(&editor->geo, &size, TAB_SETTINGS);
-    
-    for (var i = 0; i < 5; i++) {
-        Image_LoadMem(&sTexelFile[i], sIconData[i]->data, sIconData[i]->size);
-        sIconImage[i].pixels = sTexelFile[i].data;
-    }
-    
-    glfwSetWindowIcon(editor->app.window, 5, sIconImage);
-    
-    editor->geo.bar[0].headerFunc = Editor_UpperHeader;
-    Scene_Init(&editor->scene);
-    Gizmo_Init(&editor->scene.gizmo, &editor->input, editor->vg);
-    Editor_InitIcons(editor);
-    
-#if 0
-    static FileDialog loadFile;
-    // static FileDialog saveFile;
-    
-    FileDialog_New(&loadFile, &editor->app, "Load File");
-    // FileDialog_New(&saveFile, &editor->app, "Save File");
-#endif
-    
-    char* files[] = {
-        "scene.zscene",
-        "room_0.zroom",
-        "room_1.zroom",
-    };
-    
-    Editor_DropCallback(editor->app.window, 3, files);
-    DisplayList_GatherReferences(&editor->scene);
-}
-
-void Editor_Destroy(Editor* editor) {
-    GeoGrid_Destroy(&editor->geo);
-    VectorGfx_Free(&gVecGfx_EyeOpen);
-    Cursor_Free(&editor->cursor);
-    Undo_Destroy();
-    Gizmo_Free(&editor->scene.gizmo);
-    
-    for (var i = 0; i < 5; i++)
-        Image_Free(&sTexelFile[i]);
-    
-    vfree(editor);
-}
-
-void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
+static void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
     Editor* editor = GET_CONTEXT(window);
     var hasRoom = false;
     var hasScene = false;
@@ -225,6 +137,96 @@ void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
     info("Total: " PRNT_REDD "%.2fms", time_get(11) * 1000);
 }
 
+void Editor_Init(Editor* editor) {
+    sEditor = editor;
+    
+    Theme_Init(0);
+    Undo_Init(128);
+    GUI_INITIALIZE(editor, "z64scene", 980, 480, 4, Editor_Update, Editor_Draw, Editor_DropCallback);
+    GeoGrid_Init(&editor->geo, &editor->app, editor);
+    GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrCount(gTaskTable));
+    
+    Cursor_Init(&editor->cursor, &editor->app);
+    Cursor_CreateCursor(CURSOR_ARROW_U, gCursor_ArrowUp.data, 24, 12, 12);
+    Cursor_CreateCursor(CURSOR_ARROW_D, gCursor_ArrowDown.data, 24, 12, 12);
+    Cursor_CreateCursor(CURSOR_ARROW_L, gCursor_ArrowLeft.data, 24, 12, 12);
+    Cursor_CreateCursor(CURSOR_ARROW_R, gCursor_ArrowRight.data, 24, 12, 12);
+    Cursor_CreateCursor(CURSOR_ARROW_H, gCursor_ArrowHorizontal.data, 32, 16, 16);
+    Cursor_CreateCursor(CURSOR_ARROW_V, gCursor_ArrowVertical.data, 32, 16, 16);
+    Cursor_CreateCursor(CURSOR_CROSSHAIR, gCursor_Crosshair.data, 40, 19, 20);
+    Cursor_CreateCursor(CURSOR_EMPTY, gCursor_Empty.data, 16, 0, 0);
+    
+    Rectf32 size = {
+        editor->geo.workRect.x,
+        editor->geo.workRect.y,
+        editor->geo.workRect.w * 0.70,
+        editor->geo.workRect.h
+    };
+    
+    GeoGrid_AddSplit(&editor->geo, &size, TAB_VIEWPORT);
+    
+    size = (Rectf32) {
+        size.w,
+        editor->geo.workRect.y,
+        editor->geo.workRect.w - size.w,
+        editor->geo.workRect.h * 0.35
+    };
+    
+    GeoGrid_AddSplit(&editor->geo, &size, TAB_ROOMLIST);
+    
+    size = (Rectf32) {
+        size.x,
+        editor->geo.workRect.y + size.h,
+        size.w,
+        editor->geo.workRect.h - size.h
+    };
+    
+    GeoGrid_AddSplit(&editor->geo, &size, TAB_SETTINGS);
+    
+    for (var i = 0; i < 5; i++) {
+        Image_LoadMem(&sTexelFile[i], sIconData[i]->data, sIconData[i]->size);
+        sIconImage[i].pixels = sTexelFile[i].data;
+    }
+    
+    glfwSetWindowIcon(editor->app.window, 5, sIconImage);
+    
+    editor->geo.bar[0].headerFunc = Editor_UpperHeader;
+    Database_Init();
+    Scene_Init(&editor->scene);
+    Gizmo_Init(&editor->gizmo, &editor->input, editor->vg);
+    Editor_InitIcons(editor);
+    
+#if 0
+    static FileDialog loadFile;
+    // static FileDialog saveFile;
+    
+    FileDialog_New(&loadFile, &editor->app, "Load File");
+    // FileDialog_New(&saveFile, &editor->app, "Save File");
+#endif
+    
+    char* files[] = {
+        "../scene.zscene",
+        "../room_0.zroom",
+        "../room_1.zroom",
+    };
+    
+    Editor_DropCallback(editor->app.window, 3, files);
+    DisplayList_GatherReferences(&editor->scene);
+}
+
+void Editor_Destroy(Editor* editor) {
+    GeoGrid_Destroy(&editor->geo);
+    VectorGfx_Free(&gVecGfx_EyeOpen);
+    Cursor_Free(&editor->cursor);
+    Undo_Destroy();
+    Gizmo_Free(&editor->gizmo);
+    
+    for (var i = 0; i < 5; i++)
+        Image_Free(&sTexelFile[i]);
+    
+    vfree(editor);
+}
+
 void Editor_Update(Editor* editor) {
     if (editor->scene.kill)
         Scene_Free(&editor->scene);
@@ -235,7 +237,7 @@ void Editor_Update(Editor* editor) {
     profi_stop(PROFILER_FPS);
     profi_start(PROFILER_FPS);
     
-    Gizmo_Update(&editor->scene.gizmo);
+    Gizmo_Update(&editor->gizmo);
 }
 
 void Editor_Draw(Editor* editor) {

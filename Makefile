@@ -25,31 +25,35 @@ ASSETS         += $(shell find assets/* -maxdepth 0 -type f -name '*.ico')
 SOURCE_O_LINUX += $(foreach f,$(ASSETS:%=%.o),bin/linux/$f)
 SOURCE_O_WIN32 += $(foreach f,$(ASSETS:%=%.o),bin/win32/$f)
 
+DATABASE_SRC     += $(shell find resources/* -maxdepth 0 -type f -name '*.toml')
+DATABASE_O_LINUX  = $(foreach f,$(DATABASE_SRC:resources/%=%), app_linux/database/$f)
+DATABASE_O_WIN32  = $(foreach f,$(DATABASE_SRC:resources/%=%), app_win32/database/$f)
+
 .PHONY: default \
 		win32 \
 		linux
 
 default: linux
 object: $(OBJECT_ZBJ)
-linux: $(OBJECT_ZBJ) $(RELEASE_EXECUTABLE_LINUX)
-win32: $(OBJECT_ZBJ) $(RELEASE_EXECUTABLE_WIN32)
+linux: $(OBJECT_ZBJ) $(RELEASE_EXECUTABLE_LINUX) $(DATABASE_O_LINUX)
+win32: $(OBJECT_ZBJ) $(RELEASE_EXECUTABLE_WIN32) $(DATABASE_O_WIN32)
 
 $(shell mkdir -p bin/ $(foreach dir, \
 	$(dir $(RELEASE_EXECUTABLE_LINUX)) \
 	$(dir $(SOURCE_O_LINUX)) \
+	$(dir $(DATABASE_O_LINUX)) \
 	\
 	$(dir $(RELEASE_EXECUTABLE_WIN32)) \
 	$(dir $(SOURCE_O_WIN32)) \
+	$(dir $(DATABASE_O_WIN32)) \
 	, $(dir)))
 
 include $(PATH_EXTLIB)/ext_lib.mk
 
 clean:
-	rm -f $(RELEASE_EXECUTABLE_LINUX)
-	rm -f $(RELEASE_EXECUTABLE_WIN32)
-	rm -f $(SOURCE_O_LINUX)
-	rm -f $(SOURCE_O_WIN32)
-	rm -f -R bin
+	rm -rf bin
+	rm -rf app_win32
+	rm -rf app_linux
 
 format-z64viewer:
 	@cd z64viewer && ./format.sh
@@ -67,6 +71,9 @@ assets/3D/%.zobj: assets/3D/%.objex
 # # # # # # # # # # # # # # # # # # # #
 # LINUX BUILD                         #
 # # # # # # # # # # # # # # # # # # # #
+
+app_linux/database/%: resources/%
+	@cp $< $@
 
 bin/linux/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	
@@ -86,6 +93,9 @@ $(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_
 # # # # # # # # # # # # # # # # # # # #
 # WIN32 BUILD                         #
 # # # # # # # # # # # # # # # # # # # #
+
+app_win32/database/%: resources/%
+	@cp $< $@
 
 bin/win32/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
 	

@@ -72,59 +72,58 @@ static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
         Element_Color_SetColor(&this->envFogColor, NULL);
     }
     
-    Element_Box(BOX_START); {
-        
-        // Element_Row(NULL, 0.5f, &this->buttonIndoor, 0.5f);
-        // Element_Button_SetValue(&this->buttonIndoor, true, scene->indoorLight);
-        // Element_Checkbox(&this->buttonIndoor);
-        
-        Element_Row(&this->envAmbient, 1.0f);
-        Element_DisplayName(&this->envAmbient, 0.5f);
-        Element_Color(&this->envAmbient);
-        
-        Element_Row(&this->envColA, 1.0f);
-        Element_Row(&this->envColB, 1.0f);
-        Element_DisplayName(&this->envColA, 0.5f);
-        Element_DisplayName(&this->envColB, 0.5f);
-        Element_Color(&this->envColA);
-        Element_Color(&this->envColB);
-        
-        Element_Box(BOX_START);
-        Element_Row(&this->envFogColor, 1.0f);
-        Element_DisplayName(&this->envFogColor, 0.5f);
-        Element_Color(&this->envFogColor);
-        
-        Element_Row(&this->fogNear, 0.5f, &this->fogFar, 0.5f);
-        Element_DisplayName(&this->fogNear, 0.3f);
-        Element_DisplayName(&this->fogFar, 0.25f);
-        
-        if (envSettings) {
-            envSettings->fogNear = Element_Slider(&this->fogNear);
-            envSettings->fogFar = Element_Slider(&this->fogFar);
-        } else {
-            Element_Slider(&this->fogNear);
-            Element_Slider(&this->fogFar);
-        }
-        Element_Box(BOX_END);
-    } Element_Box(BOX_END);
+    // Element_Row(NULL, 0.5f, &this->buttonIndoor, 0.5f);
+    // Element_Button_SetValue(&this->buttonIndoor, true, scene->indoorLight);
+    // Element_Checkbox(&this->buttonIndoor);
     
-    Element_Box(BOX_START); {
-        Element_Row(Element_Text("Render"), 1.0);
-        Element_Row( &this->buttonFPS, 0.5, &this->buttonCulling, 0.5);
-        Element_Row( &this->buttonFog, 0.5, &this->buttonColView, 0.5);
-        
-        Element_Button(&this->buttonFPS);
-        
-        this->buttonFog.icon = &gVecGfx_EyeOpen;
-        Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
-        Scene_SetState(scene, SCENE_DRAW_FOG, Element_Button(&this->buttonFog));
-        
-        Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
-        Scene_SetState(scene, SCENE_DRAW_CULLING, Element_Button(&this->buttonCulling));
-        
-        Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
-        Scene_SetState(scene, SCENE_DRAW_COLLISION, Element_Button(&this->buttonColView));
-    } Element_Box(BOX_END);
+    Element_Row(&this->envAmbient, 1.0f);
+    Element_DisplayName(&this->envAmbient, 0.5f);
+    Element_Color(&this->envAmbient);
+    
+    Element_Row(&this->envColA, 1.0f);
+    Element_Row(&this->envColB, 1.0f);
+    Element_DisplayName(&this->envColA, 0.5f);
+    Element_DisplayName(&this->envColB, 0.5f);
+    Element_Color(&this->envColA);
+    Element_Color(&this->envColB);
+    
+    Element_Box(BOX_START);
+    Element_Row(&this->envFogColor, 1.0f);
+    Element_DisplayName(&this->envFogColor, 0.5f);
+    Element_Color(&this->envFogColor);
+    
+    Element_Row(&this->fogNear, 0.5f, &this->fogFar, 0.5f);
+    Element_DisplayName(&this->fogNear, 0.3f);
+    Element_DisplayName(&this->fogFar, 0.25f);
+    
+    if (envSettings) {
+        envSettings->fogNear = Element_Slider(&this->fogNear);
+        envSettings->fogFar = Element_Slider(&this->fogFar);
+    } else {
+        Element_Slider(&this->fogNear);
+        Element_Slider(&this->fogFar);
+    }
+    Element_Box(BOX_END);
+    
+    Element_Separator(false);
+    
+    Element_Row(Element_Text("Render"), 1.0);
+    Element_Row( &this->buttonFPS, 0.5, &this->buttonCulling, 0.5);
+    Element_Row( &this->buttonFog, 0.5, &this->buttonColView, 0.5);
+    
+    Element_Button(&this->buttonFPS);
+    
+    this->buttonFog.icon = &gVecGfx_EyeOpen;
+    Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
+    Scene_SetState(scene, SCENE_DRAW_FOG, Element_Button(&this->buttonFog));
+    
+    Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
+    Scene_SetState(scene, SCENE_DRAW_CULLING, Element_Button(&this->buttonCulling));
+    
+    Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
+    Scene_SetState(scene, SCENE_DRAW_COLLISION, Element_Button(&this->buttonColView));
+    
+    Element_Separator(false);
     
     Element_Row(&this->killScene, 1.0);
     if (Element_Button(&this->killScene)) {
@@ -139,7 +138,7 @@ static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline void MenuActor_RefreshProperties(MenuActor* this, Actor* actor, bool set) {
+static void MenuActor_RefreshProperties(MenuActor* this, Actor* actor, bool set) {
     if (actor) {
         if (set) {
             actor->gizmo.refresh = true;
@@ -172,6 +171,19 @@ static inline void MenuActor_RefreshProperties(MenuActor* this, Actor* actor, bo
         Element_Textbox_SetText(&this->posY, x_fmt("%d", (int)actor->pos.y));
         Element_Textbox_SetText(&this->posZ, x_fmt("%d", (int)actor->pos.z));
     }
+}
+
+static void MenuActor_SelectActor(Editor* editor, RoomHeader* room, Actor* actor) {
+    Actor_UnselectAll(&editor->scene, room);
+    Gizmo_UnselectAll(&editor->gizmo);
+    
+    if (!actor) return;
+    
+    Actor_Select(&editor->scene, actor);
+    Actor_Focus(&editor->scene, actor);
+    
+    Gizmo_Select(&editor->gizmo, &actor->gizmo, &actor->pos, &actor->rot);
+    Gizmo_Focus(&editor->gizmo, &actor->gizmo);
 }
 
 static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
@@ -251,7 +263,6 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     Element_Condition(&this->posX, actor != NULL);
     Element_Condition(&this->posY, actor != NULL);
     Element_Condition(&this->posZ, actor != NULL);
-    Element_Condition(&this->buttonAdd, actor != NULL);
     Element_Condition(&this->buttonRem, actor != NULL);
     
     Element_DisplayName(&this->index, -1);
@@ -271,17 +282,33 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     set += !!Element_Textbox(&this->posX);
     set += !!Element_Textbox(&this->posY);
     set += !!Element_Textbox(&this->posZ);
-    set += !!Element_Button(&this->buttonAdd);
-    set += !!Element_Button(&this->buttonRem);
+    
+    if (Element_Button(&this->buttonAdd) && !set) {
+        Actor new = { .id = 0x0015 };
+        
+        actor = Arli_Insert(list, list->cur, 1, &new);
+        MenuActor_SelectActor(editor, room, actor);
+        set = false;
+    }
+    
+    if (Element_Button(&this->buttonRem) && !set) {
+        _log("remove");
+        Arli_Remove(list, list->cur, 1);
+        _log("at");
+        actor = Arli_At(list, list->cur);
+        
+        MenuActor_SelectActor(editor, room, actor);
+        set = false;
+    }
     
     if (Element_Combo(&this->actorEntry)) {
+        Actor* actor = Arli_At(list, list->cur);
         
+        MenuActor_SelectActor(editor, room, actor);
     }
     
     MenuActor_RefreshProperties(this, actor, set);
 }
-
-///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 

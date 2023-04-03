@@ -138,8 +138,7 @@ typedef struct Scene {
     
     CollisionMesh colMesh;
     AnimOoT       animOoT;
-    bool  kill;
-    Gizmo gizmo;
+    bool kill;
     
     struct {
         RoomMesh entry[32 * 4];

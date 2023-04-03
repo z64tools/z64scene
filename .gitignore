@@ -30,3 +30,5 @@ ExtLib/
 *.yroom
 *.yscene
 assets/3D/z64convert-cli
+app_win32
+app_linux

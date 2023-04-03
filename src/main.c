@@ -46,6 +46,8 @@ void Main_Install(void) {
 int uni_main(argc, argv) {
     Editor* editor = new(*editor);
     
+    sys_setworkdir(sys_appdir());
+    
     Main_Install();
     
     Editor_Init(editor);

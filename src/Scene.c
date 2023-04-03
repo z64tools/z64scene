@@ -1,6 +1,7 @@
 #include "Editor.h"
 #include "BgCheck.h"
 #include <ext_zip.h>
+#include "Database.h"
 
 #if 1
 typedef struct StructBE {
@@ -550,8 +551,23 @@ static void Scene_SetHeaderNum(Scene* this) {
     vfree(cmdOffset);
 }
 
-void Scene_Init(Scene* this) {
+const char* ActorEntry_ElemName(Arli* this, size_t index) {
+    Actor* actor = Arli_At(this, index);
     
+    return x_fmt("%d: %s", index, Database_Name(actor->id));
+};
+
+const char* ObjectEntry_ElemName(Arli* this, size_t index) {
+    u16* object = Arli_At(this, index);
+    
+    return x_fmt("%04X", *object);
+};
+
+const char* RoomEntry_ElemName(Arli* this, size_t index) {
+    return Arli_At(this, index);
+};
+
+void Scene_Init(Scene* this) {
     for (var i = 0; i < ArrCount(this->room); i++) {
         u32* id = (u32*)&this->room[i];
         
@@ -569,20 +585,8 @@ void Scene_Init(Scene* this) {
             room->objectList = Arli_New(u16);
             Arli_Alloc(&room->objectList, 16);
             
-            nested(const char*, ActorEntry_ElemName, (Arli * this, size_t index)) {
-                Actor* actor = Arli_At(this, index);
-                
-                return x_fmt("%d: 0x%04X", index, actor->id);
-            };
-            
-            nested(const char*, ObjectEntry_ElemName, (Arli * this, size_t index)) {
-                u16* object = Arli_At(this, index);
-                
-                return x_fmt("%04X", *object);
-            };
-            
-            Arli_SetElemNameCallback(&room->actorList, (void*)ActorEntry_ElemName);
-            Arli_SetElemNameCallback(&room->objectList, (void*)ObjectEntry_ElemName);
+            Arli_SetElemNameCallback(&room->actorList, ActorEntry_ElemName);
+            Arli_SetElemNameCallback(&room->objectList, ObjectEntry_ElemName);
         }
     }
     
@@ -606,6 +610,7 @@ void Scene_Init(Scene* this) {
     }
     
     this->ui.roomNameList = Arli_New(char[64]);
+    Arli_SetElemNameCallback(&this->ui.roomNameList, RoomEntry_ElemName);
     Element_Combo_SetArli(&this->ui.roomCombo, &this->ui.roomNameList);
 }
 

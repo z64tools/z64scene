@@ -47,7 +47,7 @@ void Viewport_FocusRoom(Viewport* this, Scene* scene, int id) {
 static void Viewport_CamUpdate(Editor* editor, Viewport* this, Split* split) {
     Input* input = &editor->input;
     Scene* scene = &editor->scene;
-    Gizmo* gizmo = &scene->gizmo;
+    Gizmo* gizmo = &editor->gizmo;
     View3D* view = &this->view;
     
     if (Input_GetMouse(input, CLICK_ANY)->hold && this->holdBlockCamUpdate)
@@ -120,7 +120,7 @@ static void Viewport_GizmoSelection(Editor* editor, Viewport* this, Split* split
     
     if (!split->mouseInSplit || editor->geo.state.blockElemInput)
         return;
-    if (Gizmo_IsBusy(&scene->gizmo))
+    if (Gizmo_IsBusy(&editor->gizmo))
         return;
     if (!Input_SelectClick(input, CLICK_L))
         return;
@@ -150,17 +150,17 @@ static void Viewport_GizmoSelection(Editor* editor, Viewport* this, Split* split
     if (selHit && !selectedActor && Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
         Actor_Unselect(scene, selHit);
         if (scene->curActor) {
-            Gizmo_Focus(&scene->gizmo, &scene->curActor->gizmo);
-            Gizmo_Unselect(&scene->gizmo, &selHit->gizmo);
+            Gizmo_Focus(&editor->gizmo, &scene->curActor->gizmo);
+            Gizmo_Unselect(&editor->gizmo, &selHit->gizmo);
         } else {
-            Gizmo_UnselectAll(&scene->gizmo);
+            Gizmo_UnselectAll(&editor->gizmo);
             Actor_UnselectAll(scene, room);
         }
         
         return;
         
     } else if (!Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
-        Gizmo_UnselectAll(&scene->gizmo);
+        Gizmo_UnselectAll(&editor->gizmo);
         Actor_UnselectAll(scene, room);
     }
     
@@ -171,12 +171,12 @@ static void Viewport_GizmoSelection(Editor* editor, Viewport* this, Split* split
         Actor_Select(scene, selectedActor);
         Actor_Focus(scene, selectedActor);
         
-        Gizmo_Select(&scene->gizmo, &selectedActor->gizmo, &selectedActor->pos, &selectedActor->rot);
-        Gizmo_Focus(&scene->gizmo, &selectedActor->gizmo);
+        Gizmo_Select(&editor->gizmo, &selectedActor->gizmo, &selectedActor->pos, &selectedActor->rot);
+        Gizmo_Focus(&editor->gizmo, &selectedActor->gizmo);
     }
 }
 
-static void Viewport_ShapeSelect_Update(Viewport* this, Split* split, Scene* scene, Input* input) {
+static void Viewport_ShapeSelect_Update(Editor* editor, Viewport* this, Split* split, Scene* scene, Input* input) {
     if (Input_GetMouse(input, CLICK_R)->hold) {
         Vec2f pos = Math_Vec2f_New(UnfoldVec2(split->cursorPos));
         
@@ -228,19 +228,19 @@ static void Viewport_ShapeSelect_Update(Viewport* this, Split* split, Scene* sce
                     switch (this->selMode) {
                         case 1:
                             Actor_Select(scene, a);
-                            Gizmo_Select(&scene->gizmo, &a->gizmo, &a->pos, &a->rot);
+                            Gizmo_Select(&editor->gizmo, &a->gizmo, &a->pos, &a->rot);
                             
                             if (!scene->curActor) {
                                 Actor_Focus(scene, a);
-                                Gizmo_Focus(&scene->gizmo, &a->gizmo);
+                                Gizmo_Focus(&editor->gizmo, &a->gizmo);
                             }
                             break;
                             
                         case -1:
                             Actor_Unselect(scene, a);
                             if (scene->curActor)
-                                Gizmo_Focus(&scene->gizmo, &scene->curActor->gizmo);
-                            Gizmo_Unselect(&scene->gizmo, &a->gizmo);
+                                Gizmo_Focus(&editor->gizmo, &scene->curActor->gizmo);
+                            Gizmo_Unselect(&editor->gizmo, &a->gizmo);
                             break;
                     }
                     
@@ -276,7 +276,7 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
     this->resetCam.align = ALIGN_LEFT;
     // this->view.mode = CAM_MODE_ORBIT;
     
-    Memfile_LoadBin(&this->object, "object.zobj");
+    Memfile_LoadBin(&this->object, "../object.zobj");
     SkelAnime_Init(&this->object, &this->skelAnime, 0x06013990, 0x06015B20);
     this->skelAnime.playSpeed = 1.0f;
 }
@@ -288,7 +288,7 @@ void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
 void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     Cursor* cursor = &editor->input.cursor;
     Scene* scene = &editor->scene;
-    Gizmo* gizmo = &scene->gizmo;
+    Gizmo* gizmo = &editor->gizmo;
     
     Element_Header(split->taskCombo, 98, &this->resetCam, 98);
     Element_Combo(split->taskCombo);
@@ -313,7 +313,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     else
         this->view.far = 12800.0 + 6000;
     
-    Viewport_ShapeSelect_Update(this, split, &editor->scene, &editor->input);
+    Viewport_ShapeSelect_Update(editor, this, split, &editor->scene, &editor->input);
     
     // CursorIcon Wrapping
     if (Input_GetMouse(&editor->input, CLICK_ANY)->press)
@@ -357,7 +357,7 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
     nvgFontFace(vg, "default");
     nvgFontBlur(vg, 1.0f);
     nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-    for (s32 i = 0; i < 2; i++)
+    for (s32 i = 0; i < 6; i++)
         nvgText(vg, 8, 8 + SPLIT_TEXT_H * row, msg, NULL);
     
     nvgFontBlur(vg, 0.0f);
@@ -367,7 +367,7 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
     nvgFontFace(vg, "default");
     nvgFontBlur(vg, 1.0f);
     nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-    for (s32 i = 0; i < 2; i++)
+    for (s32 i = 0; i < 6; i++)
         nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, x_fmt(fmt, val), NULL);
     
     nvgFontBlur(vg, 0.0f);
@@ -431,8 +431,8 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
     Scene_Update(scene, &this->view);
     
     profi_start(2);
-    if (Gizmo_SetActiveContext(&scene->gizmo, &this->view, split)) {
-        Gizmo_UpdateView3D(&scene->gizmo, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
+    if (Gizmo_SetActiveContext(&editor->gizmo, &this->view, split)) {
+        Gizmo_UpdateView3D(&editor->gizmo, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
         Viewport_GizmoSelection(editor, this, split);
     }
     profi_stop(2);
@@ -456,7 +456,7 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
     Scene_Draw(&editor->scene, &this->view);
     profi_stop(0);
     
-    Gizmo_Draw(&scene->gizmo);
+    Gizmo_Draw(&editor->gizmo);
     Viewport_ShapeSelect_Draw(this, editor->vg);
 }
 
