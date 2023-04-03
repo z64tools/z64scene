@@ -8,7 +8,7 @@ typedef struct {
     View3D    view;
     SkelAnime skelAnime;
     Memfile   object;
-    bool      lockCameraAccess;
+    bool      holdBlockCamUpdate;
     
     Vec3f cubePos;
     

@@ -20,15 +20,6 @@ SplitTask gViewportTask = {
 // #                                     #
 // # # # # # # # # # # # # # # # # # # # #
 
-static Gfx* gVOPAHead;
-static Gfx* gVOPADisp;
-static Gfx* gVXLUHead;
-static Gfx* gVXLUDisp;
-static s32 gInstance;
-
-#define POLY_VOPA_DISP gVOPADisp
-#define POLY_VXLU_DISP gVXLUDisp
-
 #if 0
 static void Viewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
     Matrix_Push();
@@ -53,42 +44,39 @@ void Viewport_FocusRoom(Viewport* this, Scene* scene, int id) {
     scene->ui.glowFactor = 0.25f;
 }
 
-static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split) {
+static void Viewport_CamUpdate(Editor* editor, Viewport* this, Split* split) {
     Input* input = &editor->input;
     Scene* scene = &editor->scene;
     Gizmo* gizmo = &scene->gizmo;
     View3D* view = &this->view;
     
-    if (Input_GetMouse(input, CLICK_ANY)->hold && this->lockCameraAccess)
+    if (Input_GetMouse(input, CLICK_ANY)->hold && this->holdBlockCamUpdate)
         return;
-    this->lockCameraAccess = false;
     
-    if (!View_CheckControlKeys(input) && !split->inputAccess)
-        view->cameraControl = false;
-    
-    if (Input_GetKey(input, KEY_LEFT_CONTROL)->hold)
-        view->cameraControl = false;
+    this->holdBlockCamUpdate = 0;
     
     if (Input_GetMouse(input, CLICK_ANY)->press && !split->inputAccess) {
-        view->cameraControl = false;
-        this->lockCameraAccess = true;
+        view->cameraControl = 0;
+        this->holdBlockCamUpdate = true;
         
         return;
     }
     
-    if (!view->cameraControl) {
-        if (split->inputAccess) {
+    if (!view->cameraControl)
+        if (split->inputAccess)
             if (View_CheckControlKeys(input))
                 view->cameraControl = true;
-        }
-    }
-    
-    if (gizmo->lock.state)
-        view->cameraControl = false;
-    
     if (view->isControlled)
         view->cameraControl = true;
     
+    if (!View_CheckControlKeys(input) && !split->inputAccess)
+        view->cameraControl = 0;
+    if (Input_GetKey(input, KEY_LEFT_CONTROL)->hold)
+        view->cameraControl = 0;
+    if (gizmo->lock.state)
+        view->cameraControl = 0;
+    
+    // Raycast
     if (split->mouseInSplit) {
         if (Input_GetKey(input, KEY_KP_DECIMAL)->press)
             Viewport_FocusRoom(this, scene, scene->curRoom);
@@ -121,7 +109,7 @@ static void Viewport_Camera_Update(Editor* editor, Viewport* this, Split* split)
     }
 }
 
-static void Viewport_Actor_Update(Editor* editor, Viewport* this, Split* split) {
+static void Viewport_GizmoSelection(Editor* editor, Viewport* this, Split* split) {
     RayLine ray = View_GetCursorRayLine(&this->view);
     Input* input = &editor->input;
     Actor* selectedActor = NULL;
@@ -170,6 +158,7 @@ static void Viewport_Actor_Update(Editor* editor, Viewport* this, Split* split) 
         }
         
         return;
+        
     } else if (!Input_GetKey(input, KEY_LEFT_SHIFT)->hold) {
         Gizmo_UnselectAll(&scene->gizmo);
         Actor_UnselectAll(scene, room);
@@ -182,8 +171,7 @@ static void Viewport_Actor_Update(Editor* editor, Viewport* this, Split* split) 
         Actor_Select(scene, selectedActor);
         Actor_Focus(scene, selectedActor);
         
-        Gizmo_Select(&scene->gizmo, &selectedActor->gizmo,
-            &selectedActor->pos, &selectedActor->rot);
+        Gizmo_Select(&scene->gizmo, &selectedActor->gizmo, &selectedActor->pos, &selectedActor->rot);
         Gizmo_Focus(&scene->gizmo, &selectedActor->gizmo);
     }
 }
@@ -284,11 +272,6 @@ static void Viewport_ShapeSelect_Draw(Viewport* this, void* vg) {
 void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
     View_Init(&this->view, &editor->input);
     
-    if (gInstance++ == 0) {
-        gVOPAHead = new(Gfx[4096]);
-        gVXLUHead = new(Gfx[4096]);
-    }
-    
     Element_Name(&this->resetCam, "Reset Camera");
     this->resetCam.align = ALIGN_LEFT;
     // this->view.mode = CAM_MODE_ORBIT;
@@ -300,9 +283,6 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
 
 void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
     split->bg.useCustomPaint = false;
-    
-    if (--gInstance == 0)
-        vfree(gVOPAHead, gVXLUHead);
 }
 
 void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
@@ -314,7 +294,6 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     Element_Combo(split->taskCombo);
     
     if (Element_Button(&this->resetCam)) {
-        info("Reset Camera");
         View_MoveTo(&this->view, Math_Vec3f_New(0, 0, 0));
         View_RotTo(&this->view, Math_Vec3s_New(0, 0, 0));
     }
@@ -327,7 +306,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     SceneHeader* header = Scene_GetSceneHeader(scene);
     EnvLightSettings* envSettings = Arli_At(&header->envList, scene->curEnv);
     
-    Viewport_Camera_Update(editor, this, split);
+    Viewport_CamUpdate(editor, this, split);
     
     if (editor->scene.state & SCENE_DRAW_FOG)
         this->view.far = envSettings->fogFar;
@@ -340,7 +319,8 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     if (Input_GetMouse(&editor->input, CLICK_ANY)->press)
         return;
     
-    if ((this->view.cameraControl && editor->input.cursor.clickAny.hold) || gizmo->lock.state) {
+    if ((this->view.cameraControl && editor->input.cursor.clickAny.hold)
+        || (gizmo->lock.state && gizmo->activeView == &this->view)) {
         s16 xMin = split->rect.x;
         s16 xMax = split->rect.x + split->rect.w;
         s16 yMin = split->rect.y;
@@ -448,20 +428,16 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
     Scene* scene = &editor->scene;
     
     Viewport_InitDraw(editor, this, split);
-    
-    gVOPADisp = gVOPAHead;
-    gVXLUDisp = gVXLUHead;
-    
     Scene_Update(scene, &this->view);
     
     profi_start(2);
-    if (split->mouseInSplit) {
-        Gizmo_ViewportUpdate(&scene->gizmo, &this->view, &editor->input, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
-        Viewport_Actor_Update(editor, this, split);
+    if (Gizmo_SetActiveContext(&scene->gizmo, &this->view, split)) {
+        Gizmo_UpdateView3D(&scene->gizmo, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
+        Viewport_GizmoSelection(editor, this, split);
     }
     profi_stop(2);
     
-#if 1
+#if 0
     Matrix_Push(); {
         gxSPSegment(POLY_OPA_DISP++, 0x6, this->object.data);
         gDPSetEnvColor(POLY_OPA_DISP++, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -480,36 +456,8 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
     Scene_Draw(&editor->scene, &this->view);
     profi_stop(0);
     
-    Gizmo_Draw(&scene->gizmo, &this->view, &POLY_VOPA_DISP);
-    
-    gSPEndDisplayList(POLY_VOPA_DISP++);
-    gSPEndDisplayList(POLY_VXLU_DISP++);
-    n64_draw(gVOPAHead);
-    n64_draw(gVXLUHead);
-    
+    Gizmo_Draw(&scene->gizmo);
     Viewport_ShapeSelect_Draw(this, editor->vg);
-    
-    if (scene->gizmo.action) {
-        void* vg = editor->vg;
-        char* txt = x_fmt("%s %.8g along %s",
-                scene->gizmo.action == 1 ? "Move" : "Rotate",
-                scene->gizmo.value,
-                scene->gizmo.lock.x ? "X" : scene->gizmo.lock.y ? "Y" : "Z"
-        );
-        
-        nvgFontSize(vg, SPLIT_TEXT);
-        nvgFontFace(vg, "default");
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-        
-        nvgFontBlur(vg, 1.0f);
-        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgText(vg, 8, split->rect.h - SPLIT_TEXT_H - SPLIT_ELEM_X_PADDING, txt, NULL);
-        
-        nvgFontBlur(vg, 0.0f);
-        nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
-        nvgText(vg, 8, split->rect.h - SPLIT_TEXT_H - SPLIT_ELEM_X_PADDING, txt, NULL);
-    }
-    
 }
 
 char sMsg[32][128];

@@ -94,7 +94,7 @@ static void SkelAnime_InterpFrameTable(s32 limbCount, Vec3s* dst, Vec3s* start, 
 }
 
 void SkelAnime_Update(SkelAnime* this) {
-    if (!FpsLock(20.2))
+    if (!FpsLock(this->time, 20.2))
         return;
     
     AnimationHeader animHeader = *((AnimationHeader*)SEGMENTED_TO_VIRTUAL(this->animation));

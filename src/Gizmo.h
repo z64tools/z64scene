@@ -81,15 +81,29 @@ typedef struct {
     
     GizmoElem* elemHead;
     GizmoElem* activeElem;
+    View3D*    activeView;
+    
+    Input*        input;
+    View3D*       curView;
+    struct Split* curSplit;
+    void* vg;
     
     int refreshNodes;
     int resetTransforms;
     int refreshTransforms;
+    
+    struct Gfx* gfxHead;
+    struct Gfx* gfxDisp;
 } Gizmo;
 
-void Gizmo_Draw(Gizmo* this, View3D* view, struct Gfx** disp);
-void Gizmo_Update(Gizmo* this, Input* input);
-void Gizmo_ViewportUpdate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos);
+void Gizmo_Init(Gizmo* this, Input* input, void* vg);
+void Gizmo_Free(Gizmo* this);
+
+int Gizmo_SetActiveContext(Gizmo* this, View3D* view, struct Split* split);
+
+void Gizmo_Draw(Gizmo* this);
+void Gizmo_Update(Gizmo* this);
+void Gizmo_UpdateView3D(Gizmo* this, Vec3f* rayPos);
 bool Gizmo_IsBusy(Gizmo* this);
 
 void Gizmo_Select(Gizmo* this, GizmoElem* elem, Vec3f* pos, Vec3s* rot);

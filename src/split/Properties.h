@@ -25,15 +25,15 @@ typedef struct {
 
 typedef struct {
     ElContainer objectContainer;
-    ElCombo   actorEntry;
-    ElTextbox index;
-    ElTextbox variable;
-    ElTextbox rotX;
-    ElTextbox rotY;
-    ElTextbox rotZ;
-    ElTextbox posX;
-    ElTextbox posY;
-    ElTextbox posZ;
+    ElCombo     actorEntry;
+    ElTextbox   index;
+    ElTextbox   variable;
+    ElTextbox   rotX;
+    ElTextbox   rotY;
+    ElTextbox   rotZ;
+    ElTextbox   posX;
+    ElTextbox   posY;
+    ElTextbox   posZ;
     
     ElButton buttonAdd;
     ElButton buttonRem;

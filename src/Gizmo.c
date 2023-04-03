@@ -8,15 +8,9 @@ static void Gizmo_Reset(Gizmo* this) {
     this->lock.state = GIZMO_AXIS_ALL_FALSE;
     this->release = true;
     this->action = 0;
+    this->activeView = NULL;
     this->typed[0] = 0;
     this->typing = false;
-}
-
-bool Gizmo_IsBusy(Gizmo* this) {
-    if (this->release || this->lock.state)
-        return true;
-    
-    return false;
 }
 
 static void Gizmo_UpdateMtx(Gizmo* this, View3D* view) {
@@ -41,105 +35,9 @@ static void Gizmo_UpdateMtx(Gizmo* this, View3D* view) {
     
 }
 
-void Gizmo_Draw(Gizmo* this, View3D* view, Gfx** disp) {
-    Vec3f mxo[3] = {
-        /* MXO_R */ { this->mtx.xx, this->mtx.yx, this->mtx.zx },
-        /* MXO_U */ { this->mtx.xy, this->mtx.yy, this->mtx.zy },
-        /* MXO_F */ { this->mtx.xz, this->mtx.yz, this->mtx.zz },
-    };
-    static Vec3f sOffsetMul[] = {
-        { 0, 120, 0 },
-        { 0, 400, 0 },
-    };
-    
-    if (!this->activeElem)
-        return;
-    Gizmo_UpdateMtx(this, view);
-    
-    Vec3f p = Math_Vec3f_ProjectAlong(this->pos, view->currentCamera->eye, view->currentCamera->at);
-    f32 dist = Math_Vec3f_DistXYZ(p, view->currentCamera->eye);
-    f32 s;
-    
-    if (!view->ortho)
-        s = dist / 2000.0f * tanf(DegToRad(view->fovy) / 2.0f);
-    else
-        s = view->currentCamera->dist / 2850.0f;
-    
-    for (s32 i = 0; i < 3; i++) {
-        if (!this->lock.state) {
-            NVGcolor color = nvgHSL(1.0f - (i / 3.0f), 0.75f, 0.62f);
-            
-            gSPSegment((*disp)++, 6, (void*)gGizmo.data);
-            Matrix_Push(); {
-                Matrix_Translate(UnfoldVec3(this->pos), MTXMODE_NEW);
-                Matrix_Scale(s, s, s, MTXMODE_APPLY);
-                Matrix_Mult(&this->mtx, MTXMODE_APPLY);
-                
-                if (i == 2)
-                    Matrix_RotateX_d(90, MTXMODE_APPLY);
-                
-                if (i == 0)
-                    Matrix_RotateZ_d(90, MTXMODE_APPLY);
-                
-                Matrix_MultVec3f(&sOffsetMul[0], &this->cyl[i].start);
-                Matrix_MultVec3f(&sOffsetMul[1], &this->cyl[i].end);
-                
-                Vec3f dir = Math_Vec3f_LineSegDir(this->cyl[i].start, this->cyl[i].end);
-                Vec3f frn = Math_Vec3f_LineSegDir(view->currentCamera->eye, view->currentCamera->at);
-                f32 dot = invertf(fabsf(powf(Math_Vec3f_Dot(dir, frn), 3)));
-                u8 alpha = this->focus.axis[i] ? 0xFF : 0xFF * dot;
-                
-                if (i == 1)
-                    gDPSetEnvColor((*disp)++, UnfoldNVGcolor(color), alpha);
-                
-                if (i == 2)
-                    gDPSetEnvColor((*disp)++, UnfoldNVGcolor(color), alpha);
-                
-                if (i == 0)
-                    gDPSetEnvColor((*disp)++, UnfoldNVGcolor(color), alpha);
-                
-                if (this->focus.axis[i])
-                    gXPSetHighlightColor((*disp)++, 0xFF, 0xFF, 0xFF, 0x40, DODGE);
-                
-                this->cyl[i].r = Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) * 0.02f;
-                
-                gSPMatrix((*disp)++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-                gSPDisplayList((*disp)++, gGizmo_DlGizmo);
-                
-                if (this->focus.axis[i])
-                    gXPClearHighlightColor((*disp)++);
-            } Matrix_Pop();
-        }
-    }
-    
-    if (this->lock.state && this->lock.state != GIZMO_AXIS_ALL_TRUE) {
-        Editor* editor = GetEditor();
-        void* vg = editor->vg;
-        
-        for (s32 i = 0; i < 3; i++) {
-            if (!this->lock.axis[i])
-                continue;
-            
-            Vec3f aI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], 1000000));
-            Vec3f bI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], -1000000));
-            Vec2f aO, bO;
-            
-            View_ClipPointIntoView(view, &aI, Math_Vec3f_Invert(mxo[i]));
-            View_ClipPointIntoView(view, &bI, mxo[i]);
-            aO = View_GetScreenPos(view, aI);
-            bO = View_GetScreenPos(view, bI);
-            
-            nvgBeginPath(vg);
-            nvgStrokeColor(vg, nvgHSLA(1.0f - (i / 3.0f), 0.5f, 0.5f, 255));
-            nvgStrokeWidth(vg, 2.0f);
-            nvgMoveTo(vg, UnfoldVec2(aO));
-            nvgLineTo(vg, UnfoldVec2(bO));
-            nvgStroke(vg);
-        }
-    }
-}
-
-static void Gizmo_Move(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
+static void Gizmo_Move(Gizmo* this, Vec3f* rayPos) {
+    View3D* view = this->curView;
+    Input* input = this->input;
     bool ctrlHold = Input_GetKey(input, KEY_LEFT_CONTROL)->hold;
     Vec3f mxo[3] = {
         /* Right */ { this->mtx.xx, this->mtx.yx, this->mtx.zx },
@@ -204,7 +102,9 @@ static void Gizmo_Move(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
     }
 }
 
-static void Gizmo_Rotate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
+static void Gizmo_Rotate(Gizmo* this, Vec3f* rayPos) {
+    View3D* view = this->curView;
+    Input* input = this->input;
     bool step = Input_GetKey(input, KEY_LEFT_CONTROL)->hold;
     Vec2f sp = View_GetScreenPos(view, this->pos);
     Vec2f mp = Math_Vec2f_New(UnfoldVec2(input->cursor.pos));
@@ -347,10 +247,169 @@ static void Gizmo_UpdateTyped(Gizmo* this, Input* input) {
     }
 }
 
-void Gizmo_Update(Gizmo* this, Input* input) {
-    fornode(elem, this->elemHead) {
-        elem->interact = false;
+static void Gizmo_SetAction(Gizmo* this, GizmoAction action) {
+    this->action = action;
+    this->activeView = this->curView;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void Gizmo_Init(Gizmo* this, Input* input, void* vg) {
+    this->input = input;
+    this->vg = vg;
+    this->gfxHead = new(Gfx[1024]);
+}
+
+void Gizmo_Free(Gizmo* this) {
+    vfree(this->gfxHead);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool Gizmo_IsBusy(Gizmo* this) {
+    if (this->release || this->lock.state)
+        return true;
+    
+    return false;
+}
+
+void Gizmo_Draw(Gizmo* this) {
+    Vec3f mxo[3] = {
+        /* MXO_R */ { this->mtx.xx, this->mtx.yx, this->mtx.zx },
+        /* MXO_U */ { this->mtx.xy, this->mtx.yy, this->mtx.zy },
+        /* MXO_F */ { this->mtx.xz, this->mtx.yz, this->mtx.zz },
+    };
+    static Vec3f sOffsetMul[] = {
+        { 0, 120, 0 },
+        { 0, 400, 0 },
+    };
+    
+    if (!this->activeElem)
+        return;
+    
+    View3D* view = this->curView;
+    Split* split = this->curSplit;
+    void* vg = this->vg;
+    
+    this->gfxDisp = this->gfxHead;
+    
+    Vec3f p = Math_Vec3f_ProjectAlong(this->pos, view->currentCamera->eye, view->currentCamera->at);
+    f32 dist = Math_Vec3f_DistXYZ(p, view->currentCamera->eye);
+    f32 s;
+    
+    if (!view->ortho)
+        s = dist / 2000.0f * tanf(DegToRad(view->fovy) / 2.0f);
+    else
+        s = view->currentCamera->dist / 2850.0f;
+    
+    for (s32 i = 0; i < 3; i++) {
+        if (!this->lock.state) {
+            NVGcolor color = nvgHSL(1.0f - (i / 3.0f), 0.75f, 0.62f);
+            
+            gSPSegment(this->gfxDisp++, 6, (void*)gGizmo.data);
+            Matrix_Push(); {
+                Matrix_Translate(UnfoldVec3(this->pos), MTXMODE_NEW);
+                Matrix_Scale(s, s, s, MTXMODE_APPLY);
+                Matrix_Mult(&this->mtx, MTXMODE_APPLY);
+                
+                if (i == 2)
+                    Matrix_RotateX_d(90, MTXMODE_APPLY);
+                
+                if (i == 0)
+                    Matrix_RotateZ_d(90, MTXMODE_APPLY);
+                
+                Matrix_MultVec3f(&sOffsetMul[0], &this->cyl[i].start);
+                Matrix_MultVec3f(&sOffsetMul[1], &this->cyl[i].end);
+                
+                Vec3f dir = Math_Vec3f_LineSegDir(this->cyl[i].start, this->cyl[i].end);
+                Vec3f frn = Math_Vec3f_LineSegDir(view->currentCamera->eye, view->currentCamera->at);
+                f32 dot = invertf(fabsf(powf(Math_Vec3f_Dot(dir, frn), 3)));
+                u8 alpha = this->focus.axis[i] ? 0xFF : 0xFF * dot;
+                
+                if (i == 1)
+                    gDPSetEnvColor(this->gfxDisp++, UnfoldNVGcolor(color), alpha);
+                
+                if (i == 2)
+                    gDPSetEnvColor(this->gfxDisp++, UnfoldNVGcolor(color), alpha);
+                
+                if (i == 0)
+                    gDPSetEnvColor(this->gfxDisp++, UnfoldNVGcolor(color), alpha);
+                
+                if (this->focus.axis[i])
+                    gXPSetHighlightColor(this->gfxDisp++, 0xFF, 0xFF, 0xFF, 0x40, DODGE);
+                
+                this->cyl[i].r = Math_Vec3f_DistXYZ(this->pos, view->currentCamera->eye) * 0.02f;
+                
+                gSPMatrix(this->gfxDisp++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+                gSPDisplayList(this->gfxDisp++, gGizmo_DlGizmo);
+                
+                if (this->focus.axis[i])
+                    gXPClearHighlightColor(this->gfxDisp++);
+            } Matrix_Pop();
+        }
+    }
+    
+    gSPEndDisplayList(this->gfxDisp++);
+    n64_draw(this->gfxHead);
+    
+    if (this->action && this->activeView == this->curView) {
+        if (this->lock.state && this->lock.state != GIZMO_AXIS_ALL_TRUE) {
+            Editor* editor = GetEditor();
+            void* vg = editor->vg;
+            
+            for (s32 i = 0; i < 3; i++) {
+                if (!this->lock.axis[i])
+                    continue;
+                
+                Vec3f aI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], 1000000));
+                Vec3f bI = Math_Vec3f_Add(this->pos, Math_Vec3f_MulVal(mxo[i], -1000000));
+                Vec2f aO, bO;
+                
+                View_ClipPointIntoView(view, &aI, Math_Vec3f_Invert(mxo[i]));
+                View_ClipPointIntoView(view, &bI, mxo[i]);
+                aO = View_GetScreenPos(view, aI);
+                bO = View_GetScreenPos(view, bI);
+                
+                nvgBeginPath(vg);
+                nvgStrokeColor(vg, nvgHSLA(1.0f - (i / 3.0f), 0.5f, 0.5f, 255));
+                nvgStrokeWidth(vg, 2.0f);
+                nvgMoveTo(vg, UnfoldVec2(aO));
+                nvgLineTo(vg, UnfoldVec2(bO));
+                nvgStroke(vg);
+            }
+        }
         
+        char* txt = x_fmt("%s %.8g along %s",
+                this->action == 1 ? "Move" : "Rotate",
+                this->value,
+                this->lock.x ? "X" : this->lock.y ? "Y" : "Z"
+        );
+        
+        nvgFontSize(vg, SPLIT_TEXT);
+        nvgFontFace(vg, "default");
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+        
+        nvgFontBlur(vg, 1.0f);
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+        nvgText(vg, 8, split->rect.h - SPLIT_TEXT_H - SPLIT_ELEM_X_PADDING, txt, NULL);
+        
+        nvgFontBlur(vg, 0.0f);
+        nvgFillColor(vg, Theme_GetColor(THEME_TEXT, 255, 1.0f));
+        nvgText(vg, 8, split->rect.h - SPLIT_TEXT_H - SPLIT_ELEM_X_PADDING, txt, NULL);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int Gizmo_SetActiveContext(Gizmo* this, View3D* view, Split* split) {
+    this->curView = view;
+    this->curSplit = split;
+    
+    return (split->mouseInSplit || this->activeView == view);
+}
+
+void Gizmo_Update(Gizmo* this) {
+    fornode(elem, this->elemHead) {
         if (elem->refresh) {
             elem->pos = *elem->dpos;
             elem->rot = *elem->drot;
@@ -362,20 +421,22 @@ void Gizmo_Update(Gizmo* this, Input* input) {
         }
     }
     
-    if (this->release == 2)
+    if (this->release == 2) {
         this->release = 0;
-    
-    if (Input_GetMouse(input, CLICK_L)->release)
-        if (this->release == 1)
+        
+    } else if (this->release == 1)
+        if (Input_GetMouse(this->input, CLICK_L)->release)
             this->release = 2;
 }
 
-void Gizmo_ViewportUpdate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos) {
-    void (* gizmoActionFunc[])(Gizmo*, View3D*, Input*, Vec3f*) = {
+void Gizmo_UpdateView3D(Gizmo* this, Vec3f* rayPos) {
+    void (* gizmoActionFunc[])(Gizmo*, Vec3f*) = {
         NULL,
         Gizmo_Move,
         Gizmo_Rotate,
     };
+    View3D* view = this->curView;
+    Input* input = this->input;
     bool alt = Input_GetKey(input, KEY_LEFT_ALT)->hold;
     
     if (!this->activeElem) {
@@ -397,7 +458,7 @@ void Gizmo_ViewportUpdate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos
         } else if (this->action != GIZMO_ACTION_MOVE)
             this->refreshTransforms = true;
         
-        this->action = GIZMO_ACTION_MOVE;
+        Gizmo_SetAction(this, GIZMO_ACTION_MOVE);
         
         if (alt)
             this->resetTransforms = true;
@@ -415,7 +476,7 @@ void Gizmo_ViewportUpdate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos
         
         if (this->action == GIZMO_ACTION_ROTATE)
             this->trackball ^= 1;
-        this->action = GIZMO_ACTION_ROTATE;
+        Gizmo_SetAction(this, GIZMO_ACTION_ROTATE);
         
         if (alt)
             this->resetTransforms = true;
@@ -473,7 +534,7 @@ void Gizmo_ViewportUpdate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos
                 this->focus.axis[i] = true;
                 
                 if (Input_GetMouse(input, CLICK_L)->press) {
-                    this->action = GIZMO_ACTION_MOVE;
+                    Gizmo_SetAction(this, GIZMO_ACTION_MOVE);
                     this->initpos = this->pos;
                     this->lock.axis[i] = true;
                     this->initAction = true;
@@ -500,7 +561,7 @@ void Gizmo_ViewportUpdate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos
                 this->activeElem->rot.z));
     }
     
-    if (!this->action)
+    if (!this->action || this->activeView != view)
         return;
     
     if (Input_GetKey(input, KEY_X)->press) {
@@ -551,18 +612,17 @@ void Gizmo_ViewportUpdate(Gizmo* this, View3D* view, Input* input, Vec3f* rayPos
         else
             Gizmo_ResetTransforms(this);
         
-        Gizmo_UpdateMtx(this, view);
         Gizmo_Reset(this);
         return;
     }
     
     _log("Gizmo Update: %d", this->action);
-    
     if (gizmoActionFunc[this->action])
-        gizmoActionFunc[this->action](this, view, input, rayPos);
-    
+        gizmoActionFunc[this->action](this, rayPos);
     this->initAction = false;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void Gizmo_Focus(Gizmo* this, GizmoElem* elem) {
     if (this->activeElem) this->activeElem->focus = false;

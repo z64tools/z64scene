@@ -116,6 +116,7 @@ void Editor_Init(Editor* editor) {
     
     editor->geo.bar[0].headerFunc = Editor_UpperHeader;
     Scene_Init(&editor->scene);
+    Gizmo_Init(&editor->scene.gizmo, &editor->input, editor->vg);
     Editor_InitIcons(editor);
     
 #if 0
@@ -141,6 +142,7 @@ void Editor_Destroy(Editor* editor) {
     VectorGfx_Free(&gVecGfx_EyeOpen);
     Cursor_Free(&editor->cursor);
     Undo_Destroy();
+    Gizmo_Free(&editor->scene.gizmo);
     
     for (var i = 0; i < 5; i++)
         Image_Free(&sTexelFile[i]);
@@ -233,7 +235,7 @@ void Editor_Update(Editor* editor) {
     profi_stop(PROFILER_FPS);
     profi_start(PROFILER_FPS);
     
-    Gizmo_Update(&editor->scene.gizmo, &editor->input);
+    Gizmo_Update(&editor->scene.gizmo);
 }
 
 void Editor_Draw(Editor* editor) {
