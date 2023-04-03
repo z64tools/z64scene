@@ -16,6 +16,7 @@ RELEASE_EXECUTABLE_WIN32 := app_win32/z64scene.exe
 OBJECT_SRC      = $(shell find assets/3D/* -type f -name '*.objex')
 OBJECT_ZBJ      = $(foreach f,$(OBJECT_SRC:%.objex=%.zobj),$f)
 ASSETS          = $(OBJECT_ZBJ)
+ASSETS         += $(shell find assets/* -type f -name '*.zobj')
 ASSETS         += $(shell find assets/* -maxdepth 0 -type f -name '*.ia16')
 ASSETS         += $(shell find assets/* -maxdepth 0 -type f -name '*.rgba')
 ASSETS         += $(shell find assets/* -maxdepth 0 -type f -name '*.svg')
@@ -29,6 +30,7 @@ SOURCE_O_WIN32 += $(foreach f,$(ASSETS:%=%.o),bin/win32/$f)
 		linux
 
 default: linux
+object: $(OBJECT_ZBJ)
 linux: $(OBJECT_ZBJ) $(RELEASE_EXECUTABLE_LINUX)
 win32: $(OBJECT_ZBJ) $(RELEASE_EXECUTABLE_WIN32)
 
