@@ -407,7 +407,7 @@ int Gizmo_SetActiveContext(Gizmo* this, View3D* view, Split* split) {
     this->curView = view;
     this->curSplit = split;
     
-    return (split->mouseInSplit || this->activeView == view);
+    return (split->cursorInSplit || this->activeView == view);
 }
 
 void Gizmo_Update(Gizmo* this) {

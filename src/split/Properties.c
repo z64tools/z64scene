@@ -5,13 +5,27 @@ void Settings_Destroy(Editor* editor, Properties* this, Split* split);
 void Settings_Update(Editor* editor, Properties* this, Split* split);
 void Settings_Draw(Editor* editor, Properties* this, Split* split);
 
+static void SaveConfig(void* __this, Split* split, Toml* toml, const char* prefix) {
+    Properties* this = __this;
+    
+    Toml_SetVar(toml, x_fmt("%s.properties.tab_index", prefix), "%d", this->subIndex);
+}
+
+static void LoadConfig(void* __this, Split* split, Toml* toml, const char* prefix) {
+    Properties* this = __this;
+    
+    this->subIndex = Toml_GetInt(toml, "%s.properties.tab_index", prefix);
+}
+
 SplitTask gPropertiesTask = {
-    .taskName = "Properties",
-    .init     = (void*)Settings_Init,
-    .destroy  = (void*)Settings_Destroy,
-    .update   = (void*)Settings_Update,
-    .draw     = (void*)Settings_Draw,
-    .size     = sizeof(Properties)
+    .taskName   = "Properties",
+    .init       = (void*)Settings_Init,
+    .destroy    = (void*)Settings_Destroy,
+    .update     = (void*)Settings_Update,
+    .draw       = (void*)Settings_Draw,
+    .saveConfig = SaveConfig,
+    .loadConfig = LoadConfig,
+    .size       = sizeof(Properties)
 };
 
 #define SIDE_BUTTON_SIZE 24
@@ -470,7 +484,7 @@ void Settings_Update(Editor* editor, Properties* this, Split* split) {
     
     sSubMenuParam[this->subIndex].update(editor, GetArg(this, this->subIndex), split);
     
-    if (!split->blockMouse && !editor->geo.state.blockElemInput) {
+    if (!split->blockCursor && !editor->geo.state.blockElemInput) {
         Input* input = &editor->input;
         
         for (int i = 0; i < ArrCount(sSubMenuParam); i++) {

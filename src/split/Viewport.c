@@ -113,7 +113,7 @@ static void Viewport_CamUpdate(Editor* editor, Viewport* this, Split* split) {
         view->cameraControl = 0;
     
     // Raycast
-    if (split->mouseInSplit) {
+    if (split->cursorInSplit) {
         if (Input_GetKey(input, KEY_KP_DECIMAL)->press)
             Viewport_FocusRoom(this, scene, scene->curRoom);
         
@@ -154,7 +154,7 @@ static void Viewport_GizmoSelection(Editor* editor, Viewport* this, Split* split
     Scene* scene = &editor->scene;
     RoomHeader* room = &scene->room[scene->curRoom].header[scene->curHeader];
     
-    if (!split->mouseInSplit || editor->geo.state.blockElemInput)
+    if (!split->cursorInSplit || editor->geo.state.blockElemInput)
         return;
     if (Gizmo_IsBusy(&editor->gizmo))
         return;
@@ -354,7 +354,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     
     Viewport_ShapeSelect_Update(editor, this, split, &editor->scene, &editor->input);
     
-    if (!Gizmo_IsBusy(gizmo) && split->mouseInSplit && !geo->state.blockElemInput) {
+    if (!Gizmo_IsBusy(gizmo) && split->cursorInSplit && !geo->state.blockElemInput) {
         if (Input_GetKey(input, KEY_DELETE)->press) {
             Arli* actorList = &room->actorList;
             int num = actorList->num;
