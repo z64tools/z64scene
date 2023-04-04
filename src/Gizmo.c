@@ -545,6 +545,7 @@ void Gizmo_UpdateView3D(Gizmo* this, Vec3f* rayPos) {
     }
     
     bool moved = 0;
+    
     if (Input_GetKey(input, KEY_KP_0)->press) {
         View_MoveTo(view, this->pos);
         moved = true;
@@ -602,8 +603,10 @@ void Gizmo_UpdateView3D(Gizmo* this, Vec3f* rayPos) {
     bool cancel = Input_GetKey(input, KEY_ESCAPE)->press;
     bool apply =  Input_GetKey(input, KEY_ENTER)->press;
     
-    apply = apply || (!this->pressHold && (Input_GetMouse(input, CLICK_L)->press || Input_GetMouse(input, CLICK_R)->press));
-    apply = apply || (this->pressHold && !Input_GetMouse(input, CLICK_L)->hold);
+    if (this->pressHold)
+        apply |= Input_GetMouse(input, CLICK_L)->release;
+    else
+        apply |= Input_GetMouse(input, CLICK_L)->press || Input_GetMouse(input, CLICK_R)->press;
     
     if (apply || cancel) {
         if (apply)
@@ -611,6 +614,7 @@ void Gizmo_UpdateView3D(Gizmo* this, Vec3f* rayPos) {
         else
             Gizmo_ResetTransforms(this);
         
+        this->pressHold = false;
         Gizmo_Reset(this);
         return;
     }
@@ -618,6 +622,7 @@ void Gizmo_UpdateView3D(Gizmo* this, Vec3f* rayPos) {
     _log("Gizmo Update: %d", this->action);
     if (gizmoActionFunc[this->action])
         gizmoActionFunc[this->action](this, rayPos);
+    
     this->initAction = false;
 }
 

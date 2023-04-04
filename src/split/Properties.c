@@ -186,6 +186,71 @@ static void MenuActor_SelectActor(Editor* editor, RoomHeader* room, Actor* actor
     Gizmo_Focus(&editor->gizmo, &actor->gizmo);
 }
 
+static void MenuActor_Database(MenuActor* this, Actor* actor) {
+    int numProp;
+    DbProperty* propList;
+    
+    if (!actor) return;
+    if (!(numProp = Database_NumPropertyList(actor->id))) return;
+    if (!(propList = Database_PropertyList(actor->id))) return;
+    
+    if (actor->id != this->prevIndex) {
+        this->prevIndex = actor->id;
+        
+        for (int i = 0; i < this->num; i++)
+            vfree(this->list[i].data, this->list[i].element);
+        vfree(this->list);
+        
+        this->num = numProp;
+        PropertyEntry* entry = this->list = new(Element*[this->num]);
+        DbProperty* prop = propList;
+        
+        for (int i = 0; i < numProp; i++, prop++, entry++) {
+            entry->property = prop;
+            
+            if (prop->numDict) {
+                entry->element = new(ElCombo);
+                entry->type = 'comb';
+                entry->list = new(Arli);
+                *entry->list = Arli_New(u8);
+                Element_Combo_SetArli(entry->combo, entry->list);
+            } else {
+                entry->element = new(ElTextbox);
+                entry->type = 'text';
+                Element_Name(entry->textBox, prop->name);
+            }
+        }
+    }
+    
+    if (!this->num)
+        return;
+    
+    Element_Box(BOX_START);
+    
+    PropertyEntry* entry = this->list;
+    for (int i = 0; i < this->num; i++, entry++) {
+        if (!entry->element) continue;
+        
+        DbProperty* prop = entry->property;
+        u16 val = Actor_rmask(actor, prop->source, prop->mask);
+        
+        if (entry->type != 'text') continue;
+        
+        Element_Textbox_SetText(entry->textBox, x_fmt("%04X", val));
+        Element_Row(entry->textBox, 1.0f);
+        Element_DisplayName(entry->textBox, 0.5f);
+        
+        if (Element_Textbox(entry->textBox)) {
+            _log("write");
+            int val = shex(entry->textBox->txt);
+            
+            Actor_wmask(actor, prop->source, val, prop->mask);
+        }
+    }
+    
+    Element_Box(BOX_END);
+}
+
 static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     MenuActor* this = __this;
     RoomHeader* room = Scene_GetRoomHeader(&editor->scene, editor->scene.curRoom);
@@ -205,6 +270,8 @@ static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     this->rotX.align = ALIGN_RIGHT;
     this->rotY.align = ALIGN_RIGHT;
     this->rotZ.align = ALIGN_RIGHT;
+    
+    this->prevIndex = 0xFFFF;
     
     Element_Name(&this->buttonAdd, "New");
     Element_Name(&this->buttonRem, "Del");
@@ -232,7 +299,6 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     
     Element_Row(Element_Text("Object List"), 1.0f);
     Element_Row(&this->objectContainer, 1.0f);
-    _log("a");
     if ((objContIndex = Element_Container(&this->objectContainer)) > -1) {
         u16* obj = Arli_At(&room->objectList, objContIndex);
         
@@ -307,6 +373,7 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
         MenuActor_SelectActor(editor, room, actor);
     }
     
+    MenuActor_Database(this, actor);
     MenuActor_RefreshProperties(this, actor, set);
 }
 
@@ -379,7 +446,7 @@ void Settings_Draw(Editor* editor, Properties* this, Split* split) {
     };
     Rect scissor = r;
     
-    Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_ELEMENT_DARK, 255, 1.25f));
+    Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_ELEMENT_DARK, 255, 1.1f));
     r.x += r.w - 1;
     r.w = 1;
     Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_ELEMENT_LIGHT, 25, 1.25f));

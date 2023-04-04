@@ -3,7 +3,7 @@ ifeq (,$(wildcard settings.mk))
 endif
 include settings.mk
 
-CFLAGS          = -Wall -Wno-switch -Wno-unused-function -DEXTLIB=220 -DNDEBUG -I z64viewer/include/ -I src/
+CFLAGS          = -g3 -Wall -Wno-switch -Wno-unused-function -DEXTLIB=220 -DNDEBUG -I z64viewer/include/ -I src/
 OPT_WIN32      := -Ofast
 OPT_LINUX      := -Ofast
 SOURCE_C        = $(shell find src/* -type f -name '*.c' -not -name 'TEST.c')
@@ -111,5 +111,5 @@ bin/win32/assets/%.o: assets/% $(DataFileCompiler)
 $(RELEASE_EXECUTABLE_WIN32): bin/win32/icon.o bin/win32/info.o $(SOURCE_O_WIN32) $(ExtLib_Win32_O) $(ExtGui_Win32_O) $(Zip_Win32_O) $(Texel_Win32_O) $(ASSETS_O_WIN32) $(Image_Win32_O)
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)] [$(PRNT_PRPL)$(notdir $^)$(PRNT_RSET)]"
 	i686-w64-mingw32.static-gcc -o $@ $^ $(XFLAGS) $(CFLAGS) -D_WIN32 -municode
-	i686-w64-mingw32.static-strip --strip-unneeded $@
+#	i686-w64-mingw32.static-strip --strip-unneeded $@
 

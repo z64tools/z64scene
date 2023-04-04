@@ -90,3 +90,75 @@ void Actor_UnselectAll(Scene* scene, RoomHeader* hdr) {
         actor->state &= ~ACTOR_SELECTED;
     }
 }
+
+u16 Actor_rmask(Actor* this, int source, u16 mask) {
+    u16 val = 0;
+    
+    switch (source) {
+        case 'vari':
+            val = this->param;
+            break;
+        case 'posx':
+            val = this->pos.x;
+            break;
+        case 'posy':
+            val = this->pos.y;
+            break;
+        case 'posz':
+            val = this->pos.z;
+            break;
+        case 'rotx':
+            val = this->rot.x;
+            break;
+        case 'roty':
+            val = this->rot.y;
+            break;
+        case 'rotz':
+            val = this->rot.z;
+            break;
+    }
+    
+    return rmask(val, mask);
+}
+
+void Actor_wmask(Actor* this, int source, u16 value, u16 mask) {
+    u16 val = wmask(value, mask);
+    s16 t;
+    
+    switch (source) {
+        case 'vari':
+            this->param &= ~mask;
+            this->param |= val;
+            break;
+        case 'posx':
+            t = this->pos.x;
+            t &= ~mask;
+            t |= val;
+            this->pos.x = t;
+            break;
+        case 'posy':
+            t = this->pos.y;
+            t &= ~mask;
+            t |= val;
+            this->pos.y = t;
+            break;
+        case 'posz':
+            t = this->pos.z;
+            t &= ~mask;
+            t |= val;
+            this->pos.z = t;
+            break;
+        case 'rotx':
+            this->rot.x &= ~mask;
+            this->rot.x |= val;
+            break;
+        case 'roty':
+            this->rot.y &= ~mask;
+            this->rot.y |= val;
+            break;
+        case 'rotz':
+            this->rot.z &= ~mask;
+            this->rot.z |= val;
+            break;
+    }
+}

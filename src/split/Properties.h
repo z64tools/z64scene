@@ -2,6 +2,7 @@
 #define SETTINGS_H
 
 #include <Editor.h>
+#include "Database.h"
 
 typedef struct {
     ElCheckbox buttonIndoor;
@@ -24,6 +25,22 @@ typedef struct {
 } MenuDebug;
 
 typedef struct {
+    union {
+        Element*   element;
+        ElCombo*   combo; // 'comb'
+        ElTextbox* textBox;    // 'text'
+    };
+    
+    union {
+        void* data;
+        Arli* list;
+    };
+    
+    DbProperty* property;
+    int type;
+} PropertyEntry;
+
+typedef struct {
     ElContainer objectContainer;
     ElCombo     actorEntry;
     ElTextbox   index;
@@ -37,6 +54,10 @@ typedef struct {
     
     ElButton buttonAdd;
     ElButton buttonRem;
+    
+    PropertyEntry* list;
+    u32 num;
+    u16 prevIndex;
 } MenuActor;
 
 typedef struct {

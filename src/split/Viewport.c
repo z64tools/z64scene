@@ -305,6 +305,9 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     
     SceneHeader* header = Scene_GetSceneHeader(scene);
     EnvLightSettings* envSettings = Arli_At(&header->envList, scene->curEnv);
+    Input* input = &editor->input;
+    GeoGrid* geo = &editor->geo;
+    RoomHeader* room = Scene_GetRoomHeader(scene, scene->curRoom);
     
     Viewport_CamUpdate(editor, this, split);
     
@@ -315,12 +318,33 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     
     Viewport_ShapeSelect_Update(editor, this, split, &editor->scene, &editor->input);
     
+    if (!Gizmo_IsBusy(gizmo) && split->mouseInSplit && !geo->state.blockElemInput) {
+        if (Input_GetKey(input, KEY_DELETE)->press) {
+            Arli* actorList = &room->actorList;
+            int num = actorList->num;
+            
+            for (int i = num - 1; i > -1; i--) {
+                Actor* actor = Arli_At(actorList, i);
+                
+                if (actor->state & ACTOR_SELECTED) {
+                    Actor_Unselect(scene, actor);
+                    Gizmo_Unselect(gizmo, &actor->gizmo);
+                    
+                    Arli_Remove(actorList, i, 1);
+                }
+            }
+        }
+        
+        if (Input_GetShortcut(input, KEY_LEFT_CONTROL, KEY_D)) {
+            // TODO duplicate
+        }
+    }
+    
     // CursorIcon Wrapping
-    if (Input_GetMouse(&editor->input, CLICK_ANY)->press)
+    if (Input_GetMouse(input, CLICK_ANY)->press)
         return;
     
-    if ((this->view.cameraControl && editor->input.cursor.clickAny.hold)
-        || (gizmo->lock.state && gizmo->activeView == &this->view)) {
+    if ((this->view.cameraControl && editor->input.cursor.clickAny.hold) || (gizmo->lock.state && gizmo->activeView == &this->view)) {
         s16 xMin = split->rect.x;
         s16 xMax = split->rect.x + split->rect.w;
         s16 yMin = split->rect.y;
@@ -342,9 +366,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     
     Color_Convert2hsl(&hsl, &color);
     
-    split->bg.paint = nvgLinearGradient(editor->vg, 0, 0, 0, split->rect.h,
-            nvgHSL(hsl.h, hsl.s, hsl.l),
-            nvgHSL(hsl.h, hsl.s * 0.75f, hsl.l * 0.75f));
+    split->bg.paint = nvgLinearGradient(editor->vg, 0, 0, 0, split->rect.h, nvgHSL(hsl.h, hsl.s, hsl.l), nvgHSL(hsl.h, hsl.s * 0.75f, hsl.l * 0.75f));
     split->bg.useCustomPaint = true;
 }
 

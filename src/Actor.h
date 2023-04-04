@@ -60,4 +60,7 @@ void Actor_Select(struct Scene* scene, Actor* this);
 void Actor_Unselect(struct Scene* scene, Actor* this);
 void Actor_UnselectAll(struct Scene* scene, struct RoomHeader* hdr);
 
+u16 Actor_rmask(Actor* this, int source, u16 mask);
+void Actor_wmask(Actor* this, int source, u16 value, u16 mask);
+
 #endif
