@@ -33,9 +33,10 @@ static void ParsePropDict(Toml* toml, DbProperty* p, int i, int k) {
     if (!p->numDict) return;
     DbDictionary* de = p->dict = new(DbDictionary[p->numDict]);
     
-    for (int j = 0; j < p->numDict; p++, de++) {
+    for (int j = 0; j < p->numDict; j++, de++) {
         de->val = Toml_GetInt(toml, "actor[%d].property[%d].dict[%d][0]", i, k, j);
         de->text = Toml_GetStr(toml, "actor[%d].property[%d].dict[%d][1]", i, k, j);
+        info("%04X, %s", de->val, de->text);
     }
 }
 
@@ -51,13 +52,13 @@ static void ParseProperty(Toml* toml, Entry* entry, int i) {
             char* text;
             int   value;
         } sourceTbl[] = {
-            { "var",   'vari'   },
-            { "pos_x", 'posx'   },
-            { "pos_y", 'posy'   },
-            { "pos_z", 'posz'   },
-            { "rot_x", 'rotx'   },
-            { "rot_y", 'roty'   },
-            { "rot_z", 'rotz'   },
+            { "var",   DB_VAR   },
+            { "pos_x", DB_POSX  },
+            { "pos_y", DB_POSY  },
+            { "pos_z", DB_POSZ  },
+            { "rot_x", DB_ROTX  },
+            { "rot_y", DB_ROTY  },
+            { "rot_z", DB_ROTZ  },
         };
         
         p->name = Toml_GetStr(toml, "actor[%d].property[%d].name", i, k);

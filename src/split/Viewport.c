@@ -7,13 +7,49 @@ void Viewport_Destroy(Editor* editor, Viewport* this, Split* split);
 void Viewport_Update(Editor* editor, Viewport* this, Split* split);
 void Viewport_Draw(Editor* editor, Viewport* this, Split* split);
 
+static void SaveConfig(void* __this, Split* split, Toml* toml, const char* prefix) {
+    Viewport* this = __this;
+    
+    for (int i = 0; i < 3; i++) {
+        Toml_SetVar(toml, x_fmt("%s.cam[0][%d]", prefix, i), "%g", this->view.currentCamera->eye.axis[i]);
+        Toml_SetVar(toml, x_fmt("%s.cam[1][%d]", prefix, i), "%g", this->view.currentCamera->at.axis[i]);
+        Toml_SetVar(toml, x_fmt("%s.cam[2][%d]", prefix, i), "%g", this->view.currentCamera->up.axis[i]);
+        Toml_SetVar(toml, x_fmt("%s.cam[3][%d]", prefix, i), "%g", this->view.currentCamera->right.axis[i]);
+        Toml_SetVar(toml, x_fmt("%s.cam[4][%d]", prefix, i), "%g", this->view.currentCamera->offset.axis[i]);
+    }
+    Toml_SetVar(toml, x_fmt("%s.cam[5][0]", prefix), "%g", this->view.currentCamera->dist);
+    Toml_SetVar(toml, x_fmt("%s.cam[5][1]", prefix), "%g", this->view.currentCamera->targetDist);
+    Toml_SetVar(toml, x_fmt("%s.cam[5][2]", prefix), "%d", this->view.currentCamera->pitch);
+    Toml_SetVar(toml, x_fmt("%s.cam[5][3]", prefix), "%d", this->view.currentCamera->yaw);
+    Toml_SetVar(toml, x_fmt("%s.cam[5][4]", prefix), "%d", this->view.currentCamera->roll);
+}
+
+static void LoadConfig(void* __this, Split* split, Toml* toml, const char* prefix) {
+    Viewport* this = __this;
+    
+    for (int i = 0; i < 3; i++) {
+        this->view.currentCamera->eye.axis[i] = Toml_GetFloat(toml, "%s.cam[0][%d]", prefix, i);
+        this->view.currentCamera->at.axis[i] = Toml_GetFloat(toml, "%s.cam[1][%d]", prefix, i);
+        this->view.currentCamera->up.axis[i] = Toml_GetFloat(toml, "%s.cam[2][%d]", prefix, i);
+        this->view.currentCamera->right.axis[i] = Toml_GetFloat(toml, "%s.cam[3][%d]", prefix, i);
+        this->view.currentCamera->offset.axis[i] = Toml_GetFloat(toml, "%s.cam[4][%d]", prefix, i);
+    }
+    this->view.currentCamera->dist = Toml_GetFloat(toml, "%s.cam[5][0]", prefix);
+    this->view.currentCamera->targetDist = Toml_GetFloat(toml, "%s.cam[5][1]", prefix);
+    this->view.currentCamera->pitch = Toml_GetInt(toml, "%s.cam[5][2]", prefix);
+    this->view.currentCamera->yaw = Toml_GetInt(toml, "%s.cam[5][3]", prefix);
+    this->view.currentCamera->roll = Toml_GetInt(toml, "%s.cam[5][4]", prefix);
+}
+
 SplitTask gViewportTask = {
-    .taskName = "Viewport",
-    .init     = (void*)Viewport_Init,
-    .destroy  = (void*)Viewport_Destroy,
-    .update   = (void*)Viewport_Update,
-    .draw     = (void*)Viewport_Draw,
-    .size     = sizeof(Viewport)
+    .taskName   = "Viewport",
+    .init       = (void*)Viewport_Init,
+    .destroy    = (void*)Viewport_Destroy,
+    .update     = (void*)Viewport_Update,
+    .draw       = (void*)Viewport_Draw,
+    .saveConfig = SaveConfig,
+    .loadConfig = LoadConfig,
+    .size       = sizeof(Viewport)
 };
 
 // # # # # # # # # # # # # # # # # # # # #
@@ -452,12 +488,10 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
     Viewport_InitDraw(editor, this, split);
     Scene_Update(scene, &this->view);
     
-    profi_start(2);
     if (Gizmo_SetActiveContext(&editor->gizmo, &this->view, split)) {
         Gizmo_UpdateView3D(&editor->gizmo, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
         Viewport_GizmoSelection(editor, this, split);
     }
-    profi_stop(2);
     
 #if 0
     Matrix_Push(); {
@@ -509,7 +543,7 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
     ProfilerText(vg, 0, "FPS:", "%.0f", 1 / profi_get(PROFILER_FPS), 0);
     ProfilerText(vg, 1, "Total:", "%.2fms", profi_get(0xF0) * 1000.0f, 16.0f);
     ProfilerText(vg, 2, "Scene Draw:", "%.2fms", profi_get(0) * 1000.f, 16.0f);
-    ProfilerText(vg, 3, "Gizmo Update:", "%.2fms", profi_get(2) * 1000.f, 16.0f);
+    ProfilerText(vg, 3, "Actor Panel:", "%.2fms", profi_get(2) * 1000.f, 16.0f);
     ProfilerText(vg, 4, "n64:", "%.2fms", profi_get(8) * 1000.f, 16.0f);
     ProfilerText(vg, 5, "Delta:", "%.2f", gDeltaTime, 0);
     

@@ -24,33 +24,38 @@ typedef struct {
     ElSlider fogFar;
 } MenuDebug;
 
+typedef enum {
+    PE_COMBO,
+    PE_TEXT,
+} PropEntType;
+
 typedef struct {
     union {
         Element*   element;
-        ElCombo*   combo; // 'comb'
-        ElTextbox* textBox;    // 'text'
+        ElCombo*   combo;
+        ElTextbox* textBox;
+        ElButton*  el;
     };
     
-    union {
-        void* data;
-        Arli* list;
-    };
-    
+    Arli*       list;
     DbProperty* property;
     int type;
 } PropertyEntry;
 
+PPASSERT(offsetof(PropertyEntry, list) == 0x4);
+
 typedef struct {
     ElContainer objectContainer;
     ElCombo     actorEntry;
-    ElTextbox   index;
-    ElTextbox   variable;
-    ElTextbox   rotX;
-    ElTextbox   rotY;
-    ElTextbox   rotZ;
-    ElTextbox   posX;
-    ElTextbox   posY;
-    ElTextbox   posZ;
+    
+    ElTextbox index;
+    ElTextbox variable;
+    ElTextbox rotX;
+    ElTextbox rotY;
+    ElTextbox rotZ;
+    ElTextbox posX;
+    ElTextbox posY;
+    ElTextbox posZ;
     
     ElButton buttonAdd;
     ElButton buttonRem;

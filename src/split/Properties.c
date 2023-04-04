@@ -186,69 +186,110 @@ static void MenuActor_SelectActor(Editor* editor, RoomHeader* room, Actor* actor
     Gizmo_Focus(&editor->gizmo, &actor->gizmo);
 }
 
-static void MenuActor_Database(MenuActor* this, Actor* actor) {
-    int numProp;
-    DbProperty* propList;
+static const char* GetDictionaryName(Arli* list, size_t index) {
+    DbDictionary* dict = Arli_At(list, index);
     
-    if (!actor) return;
-    if (!(numProp = Database_NumPropertyList(actor->id))) return;
-    if (!(propList = Database_PropertyList(actor->id))) return;
+    if (!dict) return "Unknown";
+    return dict->text;
+}
+
+static int MenuActor_Database(MenuActor* this, Actor* actor) {
+    int numProp;
+    DbProperty* listProp;
+    
+    if (!actor) return false;
+    if (!(numProp = Database_NumPropertyList(actor->id))) return false;
+    if (!(listProp = Database_PropertyList(actor->id))) return false;
     
     if (actor->id != this->prevIndex) {
         this->prevIndex = actor->id;
         
         for (int i = 0; i < this->num; i++)
-            vfree(this->list[i].data, this->list[i].element);
+            vfree(this->list[i].list, this->list[i].element);
         vfree(this->list);
         
         this->num = numProp;
-        PropertyEntry* entry = this->list = new(Element*[this->num]);
-        DbProperty* prop = propList;
+        PropertyEntry* entry = this->list = new(PropertyEntry[this->num]);
+        DbProperty* prop = listProp;
         
-        for (int i = 0; i < numProp; i++, prop++, entry++) {
+        for (int i = 0; i < this->num; i++, prop++, entry++) {
             entry->property = prop;
             
             if (prop->numDict) {
                 entry->element = new(ElCombo);
-                entry->type = 'comb';
-                entry->list = new(Arli);
-                *entry->list = Arli_New(u8);
-                Element_Combo_SetArli(entry->combo, entry->list);
+                entry->type = PE_COMBO;
+                
+                Arli* list = entry->list = new(Arli);
+                *list = Arli_New(DbDictionary);
+                list->begin = (void*)prop->dict;
+                list->max = list->num = prop->numDict;
+                
+                Arli_SetElemNameCallback(list, GetDictionaryName);
+                Element_Combo_SetArli(entry->combo, list);
             } else {
                 entry->element = new(ElTextbox);
-                entry->type = 'text';
-                Element_Name(entry->textBox, prop->name);
+                entry->type = PE_TEXT;
+                entry->textBox->align = ALIGN_RIGHT;
+                entry->textBox->size = pmask(prop->mask);
             }
+            
+            Element_Name(entry->el, prop->name);
         }
     }
     
     if (!this->num)
-        return;
+        return false;
     
     Element_Box(BOX_START);
+    
+    int r = 0;
     
     PropertyEntry* entry = this->list;
     for (int i = 0; i < this->num; i++, entry++) {
         if (!entry->element) continue;
         
         DbProperty* prop = entry->property;
-        u16 val = Actor_rmask(actor, prop->source, prop->mask);
+        u16 val;
+        Arli* list = entry->list;
+        DbDictionary* dict;
         
-        if (entry->type != 'text') continue;
+        Element_Row(entry->el, 1.0f);
+        Element_DisplayName(entry->el, 0.5f);
         
-        Element_Textbox_SetText(entry->textBox, x_fmt("%04X", val));
-        Element_Row(entry->textBox, 1.0f);
-        Element_DisplayName(entry->textBox, 0.5f);
-        
-        if (Element_Textbox(entry->textBox)) {
-            _log("write");
-            int val = shex(entry->textBox->txt);
-            
-            Actor_wmask(actor, prop->source, val, prop->mask);
+        switch (entry->type) {
+            case PE_TEXT:
+                if (Element_Textbox(entry->textBox)) {
+                    r = true;
+                    Actor_wmask(actor, prop->source, shex(entry->textBox->txt), prop->mask);
+                }
+                
+                val = Actor_rmask(actor, prop->source, prop->mask);
+                Element_Textbox_SetText(entry->textBox, x_fmt("%0*X", pmask(prop->mask), val));
+                break;
+                
+            case PE_COMBO:
+                if (Element_Combo(entry->combo)) {
+                    r = true;
+                    dict = Arli_At(list, list->cur);
+                    Actor_wmask(actor, prop->source, dict->val, prop->mask);
+                }
+                
+                val = Actor_rmask(actor, prop->source, prop->mask);
+                Arli_Set(list, list->num + 1); // INVALID
+                dict = prop->dict;
+                for (int k = 0; k < prop->numDict; k++, dict++) {
+                    if (dict->val == val) {
+                        Arli_Set(list, k);
+                        break;
+                    }
+                }
+                break;
         }
     }
     
     Element_Box(BOX_END);
+    
+    return r;
 }
 
 static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
@@ -262,28 +303,29 @@ static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     Actor* actor = Arli_At(&room->actorList, room->actorList.cur);
     MenuActor_RefreshProperties(this, actor, false);
     
-    this->index.align = ALIGN_RIGHT;
-    this->variable.align = ALIGN_RIGHT;
-    this->posX.align = ALIGN_RIGHT;
-    this->posY.align = ALIGN_RIGHT;
-    this->posZ.align = ALIGN_RIGHT;
-    this->rotX.align = ALIGN_RIGHT;
-    this->rotY.align = ALIGN_RIGHT;
-    this->rotZ.align = ALIGN_RIGHT;
+    struct {
+        ElTextbox*  box;
+        const char* name;
+    } boxTbl[] = {
+        { &this->index,    "ID"    },
+        { &this->variable, "Var"   },
+        { &this->posX,     "X"     },
+        { &this->posY,     "Y"     },
+        { &this->posZ,     "Z"     },
+        { &this->rotX,     "X"     },
+        { &this->rotY,     "Y"     },
+        { &this->rotZ,     "Z"     },
+    };
+    
+    for (int i = 0; i < ArrCount(boxTbl); i++)
+        boxTbl[i].box->align = ALIGN_RIGHT,
+        boxTbl[i].box->size = 4,
+        Element_Name(boxTbl[i].box, boxTbl[i].name);
     
     this->prevIndex = 0xFFFF;
     
     Element_Name(&this->buttonAdd, "New");
     Element_Name(&this->buttonRem, "Del");
-    Element_Name(&this->index, "ID");
-    Element_Name(&this->variable, "Var");
-    
-    Element_Name(&this->posX, "X");
-    Element_Name(&this->posY, "Y");
-    Element_Name(&this->posZ, "Z");
-    Element_Name(&this->rotX, "X");
-    Element_Name(&this->rotY, "Y");
-    Element_Name(&this->rotZ, "Z");
 }
 
 static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
@@ -373,8 +415,10 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
         MenuActor_SelectActor(editor, room, actor);
     }
     
-    MenuActor_Database(this, actor);
+    profi_start(2);
     MenuActor_RefreshProperties(this, actor, set);
+    MenuActor_Database(this, actor);
+    profi_stop(2);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

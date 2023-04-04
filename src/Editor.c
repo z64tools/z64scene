@@ -140,9 +140,17 @@ static void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
 void Editor_Init(Editor* editor) {
     sEditor = editor;
     
+    int x = 980;
+    int y = 480;
+    
+    if (Toml_Var(&editor->config, "z64scene.win_res[0]"))
+        x = Toml_GetInt(&editor->config, "z64scene.win_res[0]");
+    if (Toml_Var(&editor->config, "z64scene.win_res[1]"))
+        y = Toml_GetInt(&editor->config, "z64scene.win_res[1]");
+    
     Theme_Init(0);
     Undo_Init(128);
-    GUI_INITIALIZE(editor, "z64scene", 980, 480, 4, Editor_Update, Editor_Draw, Editor_DropCallback);
+    GUI_INITIALIZE(editor, "z64scene", x, y, 4, Editor_Update, Editor_Draw, Editor_DropCallback);
     GeoGrid_Init(&editor->geo, &editor->app, editor);
     GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrCount(gTaskTable));
     
@@ -156,32 +164,34 @@ void Editor_Init(Editor* editor) {
     Cursor_CreateCursor(CURSOR_CROSSHAIR, gCursor_Crosshair.data, 40, 19, 20);
     Cursor_CreateCursor(CURSOR_EMPTY, gCursor_Empty.data, 16, 0, 0);
     
-    Rectf32 size = {
-        editor->geo.workRect.x,
-        editor->geo.workRect.y,
-        editor->geo.workRect.w * 0.70,
-        editor->geo.workRect.h
-    };
-    
-    GeoGrid_AddSplit(&editor->geo, &size, TAB_VIEWPORT);
-    
-    size = (Rectf32) {
-        size.w,
-        editor->geo.workRect.y,
-        editor->geo.workRect.w - size.w,
-        editor->geo.workRect.h * 0.35
-    };
-    
-    GeoGrid_AddSplit(&editor->geo, &size, TAB_ROOMLIST);
-    
-    size = (Rectf32) {
-        size.x,
-        editor->geo.workRect.y + size.h,
-        size.w,
-        editor->geo.workRect.h - size.h
-    };
-    
-    GeoGrid_AddSplit(&editor->geo, &size, TAB_SETTINGS);
+    if (!GeoGrid_LoadLayout(&editor->geo, &editor->config)) {
+        Rectf32 size = {
+            editor->geo.workRect.x,
+            editor->geo.workRect.y,
+            editor->geo.workRect.w * 0.70,
+            editor->geo.workRect.h
+        };
+        
+        GeoGrid_AddSplit(&editor->geo, &size, TAB_VIEWPORT);
+        
+        size = (Rectf32) {
+            size.w,
+            editor->geo.workRect.y,
+            editor->geo.workRect.w - size.w,
+            editor->geo.workRect.h * 0.35
+        };
+        
+        GeoGrid_AddSplit(&editor->geo, &size, TAB_ROOMLIST);
+        
+        size = (Rectf32) {
+            size.x,
+            editor->geo.workRect.y + size.h,
+            size.w,
+            editor->geo.workRect.h - size.h
+        };
+        
+        GeoGrid_AddSplit(&editor->geo, &size, TAB_SETTINGS);
+    }
     
     for (var i = 0; i < 5; i++) {
         Image_LoadMem(&sTexelFile[i], sIconData[i]->data, sIconData[i]->size);
@@ -215,6 +225,10 @@ void Editor_Init(Editor* editor) {
 }
 
 void Editor_Destroy(Editor* editor) {
+    Toml_SetVar(&editor->config, "z64scene.win_res[0]", "%d", editor->app.wdim.x);
+    Toml_SetVar(&editor->config, "z64scene.win_res[1]", "%d", editor->app.wdim.y);
+    
+    GeoGrid_SaveLayout(&editor->geo, &editor->config, editor->fpconfig);
     GeoGrid_Destroy(&editor->geo);
     VectorGfx_Free(&gVecGfx_EyeOpen);
     Cursor_Free(&editor->cursor);

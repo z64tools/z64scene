@@ -91,29 +91,29 @@ void Actor_UnselectAll(Scene* scene, RoomHeader* hdr) {
     }
 }
 
-u16 Actor_rmask(Actor* this, int source, u16 mask) {
+u16 Actor_rmask(Actor* this, DbSource source, u16 mask) {
     u16 val = 0;
     
     switch (source) {
-        case 'vari':
+        case DB_VAR:
             val = this->param;
             break;
-        case 'posx':
+        case DB_POSX:
             val = this->pos.x;
             break;
-        case 'posy':
+        case DB_POSY:
             val = this->pos.y;
             break;
-        case 'posz':
+        case DB_POSZ:
             val = this->pos.z;
             break;
-        case 'rotx':
+        case DB_ROTX:
             val = this->rot.x;
             break;
-        case 'roty':
+        case DB_ROTY:
             val = this->rot.y;
             break;
-        case 'rotz':
+        case DB_ROTZ:
             val = this->rot.z;
             break;
     }
@@ -121,42 +121,42 @@ u16 Actor_rmask(Actor* this, int source, u16 mask) {
     return rmask(val, mask);
 }
 
-void Actor_wmask(Actor* this, int source, u16 value, u16 mask) {
+void Actor_wmask(Actor* this, DbSource source, u16 value, u16 mask) {
     u16 val = wmask(value, mask);
     s16 t;
     
     switch (source) {
-        case 'vari':
+        case DB_VAR:
             this->param &= ~mask;
             this->param |= val;
             break;
-        case 'posx':
+        case DB_POSX:
             t = this->pos.x;
             t &= ~mask;
             t |= val;
             this->pos.x = t;
             break;
-        case 'posy':
+        case DB_POSY:
             t = this->pos.y;
             t &= ~mask;
             t |= val;
             this->pos.y = t;
             break;
-        case 'posz':
+        case DB_POSZ:
             t = this->pos.z;
             t &= ~mask;
             t |= val;
             this->pos.z = t;
             break;
-        case 'rotx':
+        case DB_ROTX:
             this->rot.x &= ~mask;
             this->rot.x |= val;
             break;
-        case 'roty':
+        case DB_ROTY:
             this->rot.y &= ~mask;
             this->rot.y |= val;
             break;
-        case 'rotz':
+        case DB_ROTZ:
             this->rot.z &= ~mask;
             this->rot.z |= val;
             break;

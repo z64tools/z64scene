@@ -2,8 +2,15 @@
 
 extern DataFile gFileIcon;
 
-void Main_Install(void) {
+void Main_Install(Editor* this) {
     const char* appdata = sys_appdata();
+    
+    this->fpconfig = fmt("%s/config.toml", appdata);
+    
+    if (sys_stat(this->fpconfig))
+        Toml_Load(&this->config, this->fpconfig);
+    else
+        this->config = Toml_New();
     
     if (!sys_stat(appdata)) {
         Memfile mem = Memfile_New();
@@ -48,7 +55,7 @@ int uni_main(argc, argv) {
     
     sys_setworkdir(sys_appdir());
     
-    Main_Install();
+    Main_Install(editor);
     
     Editor_Init(editor);
     Interface_Main(&editor->app);

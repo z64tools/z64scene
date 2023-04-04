@@ -3,6 +3,16 @@
 
 #include <ext_type.h>
 
+typedef enum {
+    DB_VAR,
+    DB_POSX,
+    DB_POSY,
+    DB_POSZ,
+    DB_ROTX,
+    DB_ROTY,
+    DB_ROTZ,
+} DbSource;
+
 typedef struct {
     u16 variable;
     const char* text;
