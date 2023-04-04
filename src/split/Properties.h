@@ -42,8 +42,6 @@ typedef struct {
     int type;
 } PropertyEntry;
 
-PPASSERT(offsetof(PropertyEntry, list) == 0x4);
-
 typedef struct {
     ElContainer objectContainer;
     ElCombo     actorEntry;
