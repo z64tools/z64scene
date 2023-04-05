@@ -95,10 +95,10 @@ static void ParseProperty(Toml* toml, Entry* entry, int i) {
 void Database_Init() {
     Toml toml = Toml_New();
     
-    if (!sys_stat("resources/actor_names.toml"))
+    if (!sys_stat("resources/actor_property.toml"))
         return;
     
-    Toml_Load(&toml, "resources/actor_names.toml");
+    Toml_Load(&toml, "resources/actor_property.toml");
     
     int num = Toml_ArrCount(&toml, "actor[]");
     

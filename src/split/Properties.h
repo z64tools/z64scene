@@ -27,14 +27,15 @@ typedef struct {
 typedef enum {
     PE_COMBO,
     PE_TEXT,
+    PE_CHECK,
 } PropEntType;
 
 typedef struct {
     union {
-        Element*   element;
-        ElCombo*   combo;
-        ElTextbox* textBox;
-        ElButton*  el;
+        Element*    element;
+        ElCombo*    combo;
+        ElTextbox*  textBox;
+        ElCheckbox* check;
     };
     
     Arli*       list;
@@ -43,7 +44,7 @@ typedef struct {
 } PropertyEntry;
 
 typedef struct {
-    ElCombo     actorEntry;
+    ElCombo actorEntry;
     
     ElTextbox index;
     ElTextbox variable;
@@ -56,6 +57,7 @@ typedef struct {
     
     ElButton buttonAdd;
     ElButton buttonRem;
+    ElButton refreshDatabase;
     
     PropertyEntry* list;
     u32 num;

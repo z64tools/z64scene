@@ -99,20 +99,7 @@
 	object = 0x000E
 	name = "Treasure Chest"
 	category = "CHEST"
-	variable = [
-		[ 0x0000, "Large" ],
-		[ 0x1000, "Large, Appears, Clear Flag" ],
-		[ 0x2000, "Boss Key’s Chest" ],
-		[ 0x3000, "Large, Falling, Switch Flag" ],
-		[ 0x4000, "Large, Invisible" ],
-		[ 0x5000, "Small" ],
-		[ 0x6000, "Small, Invisible" ],
-		[ 0x7000, "Small, Appears, Clear Flag" ],
-		[ 0x8000, "Small, Falls, Switch Flag" ],
-		[ 0x9000, "Large, Appears, Zelda's Lullaby" ],
-		[ 0xA000, "Large, Appears, Sun's Song Triggered" ],
-		[ 0xB000, "Large, Appears, Switch Flag" ],
-	]
+	
 	[[actor.property]]
 		name = "Switch Flag"
 		mask = 0x003F
@@ -120,11 +107,26 @@
 	[[actor.property]]
 		name = "Chest Flag"
 		mask = 0x001F
-		source = "var"
+	[[actor.property]]
+		name = "Type"
+		mask = 0xF000
+		dict = [
+			[ 0x0, "Large" ],
+			[ 0x3, "Large, Fall, Switch Flag" ],
+			[ 0x1, "Large, Clear Flag" ],
+			[ 0x4, "Large, Invisible" ],
+			[ 0x9, "Large, Zelda's Lullaby" ],
+			[ 0xA, "Large, Sun's Song Triggered" ],
+			[ 0xB, "Large, Switch Flag" ],
+			[ 0x5, "Small" ],
+			[ 0x8, "Small, Falls, Switch Flag" ],
+			[ 0x7, "Small, Clear Flag" ],
+			[ 0x6, "Small, Invisible" ],
+			[ 0x2, "Boss Key Chest" ],
+		]
 	[[actor.property]]
 		name = "Content"
 		mask = 0x0FE0
-		source = "var"
 		dict = [
 			[ 0x0004, "Fairy Bow" ],
 			[ 0x0005, "Fairy Slingshot" ],
@@ -251,13 +253,15 @@
 	object = 0x0009
 	name = "Poe"
 	category = "ENEMY"
-	variable = [
-		[ 0x0000, "Graveyard Poe" ],
-		[ 0x0001, "Graveyard Poe //Leaves a Blue Rupee at its spawn point" ],
-		[ 0x0002, "(006E) Sharp (Composer Brothers)", 0x006E ],
-		[ 0x0003, "(006E) Flat (Composer Brothers)", 0x006E ],
-		[ 0x0004, "Graveyard Poe" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0x000F
+		dict = [
+			[ 0, "Normal" ],
+			[ 1, "Normal (Rupee at Spawn)" ],
+			[ 2, "Sharp", 0x006E ],
+			[ 3, "Flat", 0x006E ],
+		]
 [[actor]]
 	index = 0x000E
 	object = 0x0007
@@ -268,11 +272,14 @@
 	object = 0x0036
 	name = "Webs"
 	category = "BG"
-	variable = [
-		[ 0x0000, "Web-Covered Hole" ],
-		[ 0x1000, "Vertical Web Wall" ],
-		[ 0x2000, "Web-Covered Hole //When burned, web becomes inverse-conical and extends upwards" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0xF000
+		dict = [
+			[ 0, "Web Floor" ],
+			[ 1, "Web Wall" ],
+			[ 2, "Web-Covered Hole" ],
+		]
 	[[actor.property]]
 		name = "Switch Flag (set on destroy)"
 		mask = 0x003F
@@ -292,32 +299,41 @@
 	object = 0x000B
 	name = "Wallmaster"
 	category = "ENEMY"
-	variable = [
-		[ 0x0000, "Unknown //Used in Master Quest" ],
-		[ 0x0001, "Normal" ],
-		[ 0x0002, "Spawn on Switch Flag" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0xF
+		dict = [
+			[ 0, "Unk" ],
+			[ 1, "Default" ],
+			[ 2, "Spawn on Switch Flag" ],
+		]
 [[actor]]
 	index = 0x0012
 	object = 0x000C
 	name = "Dodongo"
 	category = "ENEMY"
-	variable = [
-		[ 0xFFFF, "Default" ],
-		[ 0x0000, "Two-Foot Dodongo //Emits fire and smoke from mouth upon death" ],
-		[ 0x0001, "Two-Foot Dodongo //Doesn't emit fire and smoke from mouth upon death" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0xFFFF
+		dict = [
+			[ 0xFFFF, "Default" ],
+			[ 1, "Emit Fire and Smoke on Death" ],
+			[ 2, "No Fire and Smoke on Death" ],
+		]
 [[actor]]
 	index = 0x0013
 	object = 0x000D
 	name = "Keese"
 	category = "ENEMY"
-	variable = [
-		[ 0x0000, "Fire Keese" ],
-		[ 0x0002, "Aggressive Keese" ],
-		[ 0x0003, "Roosting Keese" ],
-		[ 0x0004, "Ice Keese" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0x000F
+		dict = [
+			[ 0x0002, "Flying" ],
+			[ 0x0003, "Roosting" ],
+			[ 0x0000, "Fire" ],
+			[ 0x0004, "Ice" ],
+		]
 	[[actor.property]]
 		name = "Invisible"
 		mask = 0x8000

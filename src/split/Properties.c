@@ -30,6 +30,11 @@ SplitTask gPropertiesTask = {
 
 #define SIDE_BUTTON_SIZE 24
 
+static void BasicHeader(Split* split) {
+    Element_Header(split->taskCombo, 92);
+    Element_Combo(split->taskCombo);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static void MenuDebug_Init(Editor* editor, void* __this, Split* split) {
@@ -66,6 +71,8 @@ static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
     Scene* scene = &editor->scene;
     SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
     EnvLightSettings* envSettings = Arli_At(&sceneHeader->envList, scene->curEnv);
+    
+    BasicHeader(split);
     
     Element_Condition(&this->buttonIndoor, scene->segment != NULL);
     Element_Condition(&this->killScene, scene->segment != NULL);
@@ -240,13 +247,16 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
                 
                 Arli_SetElemNameCallback(list, GetDictionaryName);
                 Element_Combo_SetArli(entry->combo, list);
+            } else if (pmask(prop->mask) == 1) {
+                entry->element = new(ElCheckbox);
+                entry->type = PE_CHECK;
             } else {
                 entry->element = new(ElTextbox);
                 entry->type = PE_TEXT;
                 entry->textBox->size = pmask(prop->mask);
             }
             
-            Element_Name(entry->el, prop->name);
+            Element_Name(entry->check, prop->name);
         }
     }
     
@@ -266,8 +276,8 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
         Arli* list = entry->list;
         DbDictionary* dict;
         
-        Element_Row(entry->el, 1.0f);
-        Element_DisplayName(entry->el, 0.5f);
+        Element_Row(entry->check, 1.0f);
+        Element_DisplayName(entry->check, 0.5f);
         
         switch (entry->type) {
             case PE_TEXT:
@@ -298,6 +308,12 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
                     }
                 }
                 break;
+                
+            case PE_CHECK:
+                if (Element_Checkbox(entry->check))
+                    Actor_wmask(actor, prop->source, entry->check->element.toggle, prop->mask);
+                
+                entry->check->element.toggle = Actor_rmask(actor, prop->source, prop->mask);
         }
     }
     
@@ -340,6 +356,7 @@ static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     
     Element_Name(&this->buttonAdd, "New");
     Element_Name(&this->buttonRem, "Del");
+    Element_Name(&this->refreshDatabase, "Refresh Database");
 }
 
 static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
@@ -350,6 +367,14 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     Arli* list = this->actorEntry.arlist;
     Actor* actor = Arli_At(list, list->cur);
     int set = 0;
+    
+    Element_Header(split->taskCombo, 92, &this->refreshDatabase, 120);
+    Element_Combo(split->taskCombo);
+    if (Element_Button(&this->refreshDatabase)) {
+        info("Refresh");
+        Database_Refresh();
+        this->prevIndex = 0xFFFF;
+    }
     
     Element_Separator(false);
     
@@ -466,9 +491,6 @@ void Settings_Destroy(Editor* editor, Properties* this, Split* split) {
 }
 
 void Settings_Update(Editor* editor, Properties* this, Split* split) {
-    Element_Header(split->taskCombo, 92);
-    Element_Combo(split->taskCombo);
-    
     Element_RowY(SPLIT_ELEM_X_PADDING * 2);
     Element_ShiftX(SIDE_BUTTON_SIZE);
     

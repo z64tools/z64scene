@@ -37,6 +37,7 @@ default: linux
 object: $(OBJECT_ZBJ)
 linux: $(OBJECT_ZBJ) $(RELEASE_EXECUTABLE_LINUX) $(DATABASE_O_LINUX)
 win32: $(OBJECT_ZBJ) $(RELEASE_EXECUTABLE_WIN32) $(DATABASE_O_WIN32)
+data: $(DATABASE_O_WIN32)
 
 $(shell mkdir -p bin/ $(foreach dir, \
 	$(dir $(RELEASE_EXECUTABLE_LINUX)) \
