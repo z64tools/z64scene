@@ -37,6 +37,9 @@ typedef struct {
 } DbProperty;
 
 void Database_Init();
+void Database_Free();
+void Database_Refresh();
+
 const char* Database_Name(u16 index);
 u16 Database_ObjectIndex(u16 index);
 DbProperty* Database_PropertyList(u16 index);

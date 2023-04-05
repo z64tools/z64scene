@@ -2193,16 +2193,19 @@
 	object = 0x006B
 	name = "Large Red Ice"
 	category = "BG"
-	variable = [
-		[ 0x0000, "Large crystal" ],
-		[ 0x0100, "Smaller crystal" ],
-		[ 0x0200, "Crystal platform" ],
-		[ 0x0300, "Meltable ice sheet" ],
-		[ 0x0400, "Giant crystal" ],
-	]
 	[[actor.property]]
 		name = "Switch Flag (Nullable)"
 		mask = 0x00FF
+	[[actor.property]]
+		name = "Type"
+		mask = 0x0700
+		dict = [
+			[ 0, "Large Crystal" ],
+			[ 1, "Smaller Crystal" ],
+			[ 2, "Crystal Platform" ],
+			[ 3, "Meltable Ice Sheet" ],
+			[ 4, "Giant Crystal" ],
+		]
 [[actor]]
 	index = 0x00F0
 	name = "Blue Flame"
@@ -2245,16 +2248,18 @@
 	object = 0x0069
 	name = "Shadow Temple Truth Spinner"
 	category = "PROP"
-	variable = [
-		[ 0x0000, "Rotatable Bird Statue" ],
-		[ 0x0001, "Circular Trap Door Platform //Opens when wrong skull is chosen" ],
-		[ 0x0002, "Gate //Only blocks one-way" ],
-		[ 0x0003, "Skull Top" ],
-		[ 0x0004, "Glitchy graphics, can’t see object, behaves like the gate" ],
-	]
 	[[actor.property]]
 		name = "Switch Flag"
 		mask = 0x3F00
+	[[actor.property]]
+		name = "Type"
+		mask = 0x0007
+		dict = [
+			[ 0x0000, "Rotatable Bird Statue" ],
+			[ 0x0001, "Circular Trap Door Platform (opens on wrong skull)" ],
+			[ 0x0002, "Gate (one sided collision)" ],
+			[ 0x0003, "Skull Top" ],
+		]
 [[actor]]
 	index = 0x00F8
 	object = 0x00F0

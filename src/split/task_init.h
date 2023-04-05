@@ -7,6 +7,7 @@ typedef enum {
     TAB_SETTINGS,
     TAB_VIEWPORT,
     TAB_ROOMLIST,
+    TAB_OBJECT_LIST,
     
     TAB_EMPTY,
     TAB_MAX,

@@ -26,8 +26,8 @@ SOURCE_O_LINUX += $(foreach f,$(ASSETS:%=%.o),bin/linux/$f)
 SOURCE_O_WIN32 += $(foreach f,$(ASSETS:%=%.o),bin/win32/$f)
 
 DATABASE_SRC     += $(shell find resources/* -maxdepth 0 -type f -name '*.toml')
-DATABASE_O_LINUX  = $(foreach f,$(DATABASE_SRC:resources/%=%), app_linux/database/$f)
-DATABASE_O_WIN32  = $(foreach f,$(DATABASE_SRC:resources/%=%), app_win32/database/$f)
+DATABASE_O_LINUX  = $(foreach f,$(DATABASE_SRC:resources/%=%), app_linux/resources/$f)
+DATABASE_O_WIN32  = $(foreach f,$(DATABASE_SRC:resources/%=%), app_win32/resources/$f)
 
 .PHONY: default \
 		win32 \
@@ -72,7 +72,7 @@ assets/3D/%.zobj: assets/3D/%.objex
 # LINUX BUILD                         #
 # # # # # # # # # # # # # # # # # # # #
 
-app_linux/database/%: resources/%
+app_linux/resources/%: resources/%
 	@cp $< $@
 
 bin/linux/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow
@@ -94,7 +94,7 @@ $(RELEASE_EXECUTABLE_LINUX): $(SOURCE_O_LINUX) $(ExtLib_Linux_O) $(ExtGui_Linux_
 # WIN32 BUILD                         #
 # # # # # # # # # # # # # # # # # # # #
 
-app_win32/database/%: resources/%
+app_win32/resources/%: resources/%
 	@cp $< $@
 
 bin/win32/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflow

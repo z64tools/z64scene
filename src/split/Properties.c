@@ -211,7 +211,7 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
     int numProp;
     DbProperty* listProp;
     
-    if (!actor) return false;
+    if (!actor || !(actor->state & ACTOR_SELECTED)) return false;
     if (!(numProp = Database_NumPropertyList(actor->id))) return false;
     if (!(listProp = Database_PropertyList(actor->id))) return false;
     
@@ -243,7 +243,6 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
             } else {
                 entry->element = new(ElTextbox);
                 entry->type = PE_TEXT;
-                entry->textBox->align = ALIGN_RIGHT;
                 entry->textBox->size = pmask(prop->mask);
             }
             
@@ -289,8 +288,9 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
                 }
                 
                 val = Actor_rmask(actor, prop->source, prop->mask);
-                Arli_Set(list, list->num + 1); // INVALID
+                list->cur = -1; // Invalid Entry
                 dict = prop->dict;
+                
                 for (int k = 0; k < prop->numDict; k++, dict++) {
                     if (dict->val == val) {
                         Arli_Set(list, k);
@@ -311,8 +311,6 @@ static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     RoomHeader* room = Scene_GetRoomHeader(&editor->scene, editor->scene.curRoom);
     
     Element_Combo_SetArli(&this->actorEntry, &room->actorList);
-    Element_Container_SetArli(&this->objectContainer, &room->objectList, 8);
-    this->objectContainer.drag = true;
     
     Actor* actor = Arli_At(&room->actorList, room->actorList.cur);
     MenuActor_RefreshProperties(this, actor, false);
@@ -332,11 +330,13 @@ static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     };
     
     for (int i = 0; i < ArrCount(boxTbl); i++)
-        boxTbl[i].box->align = ALIGN_RIGHT,
         boxTbl[i].box->size = 4,
         Element_Name(boxTbl[i].box, boxTbl[i].name);
     
     this->prevIndex = 0xFFFF;
+    this->actorEntry.showDecID = true;
+    this->buttonAdd.element.colOvrdLight = THEME_NEW;
+    this->buttonRem.element.colOvrdLight = THEME_DELETE;
     
     Element_Name(&this->buttonAdd, "New");
     Element_Name(&this->buttonRem, "Del");
@@ -345,21 +345,11 @@ static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
 static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     MenuActor* this = __this;
     RoomHeader* room = Scene_GetRoomHeader(&editor->scene, editor->scene.curRoom);
+    
+    Element_Combo_SetArli(&this->actorEntry, &room->actorList);
     Arli* list = this->actorEntry.arlist;
     Actor* actor = Arli_At(list, list->cur);
     int set = 0;
-    int objContIndex = 0;
-    
-    Element_Container_SetArli(&this->objectContainer, &room->objectList, 4);
-    Element_Combo_SetArli(&this->actorEntry, &room->actorList);
-    
-    Element_Row(Element_Text("Object List"), 1.0f);
-    Element_Row(&this->objectContainer, 1.0f);
-    if ((objContIndex = Element_Container(&this->objectContainer)) > -1) {
-        u16* obj = Arli_At(&room->objectList, objContIndex);
-        
-        if (obj) *obj = shex(this->objectContainer.textBox.txt);
-    }
     
     Element_Separator(false);
     
@@ -377,15 +367,15 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     Element_Box(BOX_END);
     
     Element_Condition(&this->actorEntry, actor != NULL);
-    Element_Condition(&this->index, actor != NULL);
-    Element_Condition(&this->variable, actor != NULL);
-    Element_Condition(&this->rotX, actor != NULL);
-    Element_Condition(&this->rotY, actor != NULL);
-    Element_Condition(&this->rotZ, actor != NULL);
-    Element_Condition(&this->posX, actor != NULL);
-    Element_Condition(&this->posY, actor != NULL);
-    Element_Condition(&this->posZ, actor != NULL);
-    Element_Condition(&this->buttonRem, actor != NULL);
+    Element_Condition(&this->buttonRem,  actor != NULL && actor->state & ACTOR_SELECTED);
+    Element_Condition(&this->index,      actor != NULL && actor->state & ACTOR_SELECTED);
+    Element_Condition(&this->variable,   actor != NULL && actor->state & ACTOR_SELECTED);
+    Element_Condition(&this->rotX,       actor != NULL && actor->state & ACTOR_SELECTED);
+    Element_Condition(&this->rotY,       actor != NULL && actor->state & ACTOR_SELECTED);
+    Element_Condition(&this->rotZ,       actor != NULL && actor->state & ACTOR_SELECTED);
+    Element_Condition(&this->posX,       actor != NULL && actor->state & ACTOR_SELECTED);
+    Element_Condition(&this->posY,       actor != NULL && actor->state & ACTOR_SELECTED);
+    Element_Condition(&this->posZ,       actor != NULL && actor->state & ACTOR_SELECTED);
     
     Element_DisplayName(&this->index, -1);
     Element_DisplayName(&this->variable, -1);

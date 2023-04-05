@@ -1,6 +1,7 @@
 #include "RoomList.h"
 #include "Properties.h"
 #include "Viewport.h"
+#include "ObjectList.h"
 #include "task_init.h"
 
 static void update_nothing(Editor* e, void* instance, Split* split) {
@@ -21,5 +22,6 @@ SplitTask* gTaskTable[] = {
     [TAB_SETTINGS] = &gPropertiesTask,
     [TAB_VIEWPORT] = &gViewportTask,
     [TAB_ROOMLIST] = &gRoomListTask,
+    [TAB_OBJECT_LIST] = &gObjectListTask,
     [TAB_EMPTY] = &empty
 };

@@ -309,7 +309,6 @@ void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
     View_Init(&this->view, &editor->input);
     
     Element_Name(&this->resetCam, "Reset Camera");
-    this->resetCam.align = ALIGN_LEFT;
     // this->view.mode = CAM_MODE_ORBIT;
     
     Memfile_LoadBin(&this->object, "../object.zobj");

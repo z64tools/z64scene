@@ -149,10 +149,12 @@ void Editor_Init(Editor* editor) {
         y = Toml_GetInt(&editor->config, "z64scene.win_res[1]");
     
     Theme_Init(0);
-    Undo_Init(128);
+    Undo_Init(512);
     GUI_INITIALIZE(editor, "z64scene", x, y, 4, Editor_Update, Editor_Draw, Editor_DropCallback);
     GeoGrid_Init(&editor->geo, &editor->app, editor);
     GeoGrid_TaskTable(&editor->geo, gTaskTable, ArrCount(gTaskTable));
+    
+    glfwSetWindowSizeLimits(editor->app.window, 980, 480, GLFW_DONT_CARE, GLFW_DONT_CARE);
     
     Cursor_Init(&editor->cursor, &editor->app);
     Cursor_CreateCursor(CURSOR_ARROW_U, gCursor_ArrowUp.data, 24, 12, 12);
@@ -234,6 +236,7 @@ void Editor_Destroy(Editor* editor) {
     Cursor_Free(&editor->cursor);
     Undo_Destroy();
     Gizmo_Free(&editor->gizmo);
+    Database_Free();
     
     for (var i = 0; i < 5; i++)
         Image_Free(&sTexelFile[i]);

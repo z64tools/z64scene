@@ -43,7 +43,6 @@ typedef struct {
 } PropertyEntry;
 
 typedef struct {
-    ElContainer objectContainer;
     ElCombo     actorEntry;
     
     ElTextbox index;

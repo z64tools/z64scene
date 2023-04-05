@@ -95,7 +95,10 @@ static void ParseProperty(Toml* toml, Entry* entry, int i) {
 void Database_Init() {
     Toml toml = Toml_New();
     
-    Toml_Load(&toml, "database/actor_names.toml");
+    if (!sys_stat("resources/actor_names.toml"))
+        return;
+    
+    Toml_Load(&toml, "resources/actor_names.toml");
     
     int num = Toml_ArrCount(&toml, "actor[]");
     
@@ -164,42 +167,48 @@ void Database_Free() {
     }
     
     vfree(gDatabaseActor);
+    gDatabaseNum = 0;
+}
+
+void Database_Refresh() {
+    Database_Free();
+    Database_Init();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const char* Database_Name(u16 index) {
-    if (gDatabaseActor[index])
+    if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->name;
     return x_fmt("Unknown 0x%04X", index);
 }
 
 u16 Database_ObjectIndex(u16 index) {
-    if (gDatabaseActor[index])
+    if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->object;
     return 0xFFFF;
 }
 
 DbProperty* Database_PropertyList(u16 index) {
-    if (gDatabaseActor[index])
+    if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->property;
     return NULL;
 }
 
 int Database_NumPropertyList(u16 index) {
-    if (gDatabaseActor[index])
+    if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->numProperty;
     return 0;
 }
 
 DbVariable* Database_VariableList(u16 index) {
-    if (gDatabaseActor[index])
+    if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->variable;
     return NULL;
 }
 
 int Database_NumVariableList(u16 index) {
-    if (gDatabaseActor[index])
+    if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->numVariable;
     return 0;
 }
