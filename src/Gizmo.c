@@ -427,7 +427,7 @@ void Gizmo_Update(Gizmo* this) {
         this->release = 0;
         
     } else if (this->release == 1)
-        if (Input_GetMouse(this->input, CLICK_L)->release)
+        if ( Input_GetCursor(this->input, CLICK_L)->release)
             this->release = 2;
 }
 
@@ -532,7 +532,7 @@ void Gizmo_UpdateView3D(Gizmo* this, Vec3f* rayPos) {
             if (Col3D_LineVsCylinder(&ray, &this->cyl[i], &p)) {
                 this->focus.axis[i] = true;
                 
-                if (Input_GetMouse(input, CLICK_L)->press) {
+                if ( Input_GetCursor(input, CLICK_L)->press) {
                     Gizmo_SetAction(this, GIZMO_ACTION_MOVE);
                     this->initpos = this->pos;
                     this->lock.axis[i] = true;
@@ -604,9 +604,9 @@ void Gizmo_UpdateView3D(Gizmo* this, Vec3f* rayPos) {
     bool apply =  Input_GetKey(input, KEY_ENTER)->press;
     
     if (this->pressHold)
-        apply |= Input_GetMouse(input, CLICK_L)->release;
+        apply |=  Input_GetCursor(input, CLICK_L)->release;
     else
-        apply |= Input_GetMouse(input, CLICK_L)->press || Input_GetMouse(input, CLICK_R)->press;
+        apply |=  Input_GetCursor(input, CLICK_L)->press ||  Input_GetCursor(input, CLICK_R)->press;
     
     if (apply || cancel) {
         if (apply)

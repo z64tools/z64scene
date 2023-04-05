@@ -86,12 +86,12 @@ static void Viewport_CamUpdate(Editor* editor, Viewport* this, Split* split) {
     Gizmo* gizmo = &editor->gizmo;
     View3D* view = &this->view;
     
-    if (Input_GetMouse(input, CLICK_ANY)->hold && this->holdBlockCamUpdate)
+    if ( Input_GetCursor(input, CLICK_ANY)->hold && this->holdBlockCamUpdate)
         return;
     
     this->holdBlockCamUpdate = 0;
     
-    if (Input_GetMouse(input, CLICK_ANY)->press && !split->inputAccess) {
+    if ( Input_GetCursor(input, CLICK_ANY)->press && !split->inputAccess) {
         view->cameraControl = 0;
         this->holdBlockCamUpdate = true;
         
@@ -213,10 +213,10 @@ static void Viewport_GizmoSelection(Editor* editor, Viewport* this, Split* split
 }
 
 static void Viewport_ShapeSelect_Update(Editor* editor, Viewport* this, Split* split, Scene* scene, Input* input) {
-    if (Input_GetMouse(input, CLICK_R)->hold) {
+    if ( Input_GetCursor(input, CLICK_R)->hold) {
         Vec2f pos = Math_Vec2f_New(UnfoldVec2(split->cursorPos));
         
-        if (Input_GetMouse(input, CLICK_R)->press) {
+        if ( Input_GetCursor(input, CLICK_R)->press) {
             this->selID = 0;
             this->selPos[this->selID++] = pos;
             this->selMode = Input_GetKey(input, KEY_LEFT_CONTROL)->hold ? -1 : 1;
@@ -225,7 +225,7 @@ static void Viewport_ShapeSelect_Update(Editor* editor, Viewport* this, Split* s
         if (Math_Vec2f_DistXZ(pos, this->selPos[this->selID - 1]) > 4 && this->selID < 512) {
             this->selPos[this->selID++] = pos;
         }
-    } else if (Input_GetMouse(input, CLICK_R)->release) {
+    } else if ( Input_GetCursor(input, CLICK_R)->release) {
         BoundBox bbx = BoundBox_New2F(this->selPos[0]);
         
         for (var i = 0; i < this->selID; i++)
@@ -376,7 +376,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     }
     
     // CursorIcon Wrapping
-    if (Input_GetMouse(input, CLICK_ANY)->press)
+    if ( Input_GetCursor(input, CLICK_ANY)->press)
         return;
     
     if ((this->view.cameraControl && editor->input.cursor.clickAny.hold) || (gizmo->lock.state && gizmo->activeView == &this->view)) {

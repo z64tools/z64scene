@@ -3,7 +3,7 @@
 extern DataFile gCube;
 #include "../assets/3D/Cube.h"
 
-void Actor_Draw(Actor* this, View3D* view) {
+static void Actor_Draw(Actor* this, View3D* view) {
     Vec3f pos = this->pos;
     Vec3s rot = this->rot;
     
@@ -15,39 +15,46 @@ void Actor_Draw(Actor* this, View3D* view) {
     if (!View_PointInScreen(view, pos))
         return;
     
-    Matrix_Push(); {
-        Matrix_Translate(UnfoldVec3(pos), MTXMODE_APPLY);
-        Matrix_Push(); {
-            Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
-            Matrix_RotateY_s(rot.y, MTXMODE_APPLY);
-            Matrix_RotateX_s(rot.x, MTXMODE_APPLY);
-            Matrix_RotateZ_s(rot.z, MTXMODE_APPLY);
-            
-            gSPSegment(POLY_OPA_DISP++, 6, (void*)gCube.data);
-            gDPSetEnvColor(POLY_OPA_DISP++, 0xF0, 0xF0, 0xF0, 0xFF);
-            
-            gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
-            
-            if (this->state & ACTOR_SELECTED) {
-                gDPSetEnvColor(POLY_OPA_DISP++, 0xC0, 0xC0, 0xC0, 0xFF);
-                if (this->gizmo.focus)
-                    gXPSetHighlightColor(POLY_OPA_DISP++, 0xFF, 0x85, 0x00, 0xC0, DODGE);
-                else
-                    gXPSetHighlightColor(POLY_OPA_DISP++, 0xFF, 0x85, 0x00, 0xC0, MUL);
-            }
-            
-            gSPDisplayList(POLY_OPA_DISP++, gCube_DlCube);
-            
-            if (this->state & ACTOR_SELECTED)
-                gXPClearHighlightColor(POLY_OPA_DISP++);
-            
-        } Matrix_Pop();
-    } Matrix_Pop();
+    Matrix_Translate(UnfoldVec3(pos), MTXMODE_NEW);
+    Matrix_RotateY_s(rot.y, MTXMODE_APPLY);
+    Matrix_RotateX_s(rot.x, MTXMODE_APPLY);
+    Matrix_RotateZ_s(rot.z, MTXMODE_APPLY);
+    Matrix_Scale(0.01, 0.01, 0.01, MTXMODE_APPLY);
+    
+    gSPMatrix(POLY_OPA_DISP++, NewMtx(), G_MTX_MODELVIEW | G_MTX_LOAD);
+    
+    if (this->state & ACTOR_SELECTED) {
+        gDPPipeSync(POLY_OPA_DISP++);
+        gDPSetEnvColor(POLY_OPA_DISP++, 0xC0, 0xC0, 0xC0, 0xFF);
+        if (this->gizmo.focus)
+            gXPSetHighlightColor(POLY_OPA_DISP++, 0xFF, 0x85, 0x00, 0xC0, DODGE);
+        else
+            gXPSetHighlightColor(POLY_OPA_DISP++, 0xFF, 0x85, 0x00, 0xC0, MUL);
+    }
+    
+    gSPDisplayList(POLY_OPA_DISP++, gCube_DlActorEntry + 8);
+    
+    if (this->state & ACTOR_SELECTED) {
+        gDPPipeSync(POLY_OPA_DISP++);
+        gXPClearHighlightColor(POLY_OPA_DISP++);
+        gDPSetEnvColor(POLY_OPA_DISP++, 0xF0, 0xF0, 0xF0, 0xFF);
+    }
+    
 }
 
 void Actor_Draw_RoomHeader(RoomHeader* header, View3D* view) {
-    for (var i = 0; i < header->actorList.num; i++)
-        Actor_Draw(Arli_At(&header->actorList, i), view);
+    gSPSegment(POLY_OPA_DISP++, 6, (void*)gCube.data);
+    gSPDisplayList(POLY_OPA_DISP++, gCube_MtlDefault);
+    gDPSetEnvColor(POLY_OPA_DISP++, 0xF0, 0xF0, 0xF0, 0xFF);
+    
+    Matrix_Push();
+    
+    Actor* actor = Arli_Head(&header->actorList);
+    
+    for (var i = 0; i < header->actorList.num; i++, actor++)
+        Actor_Draw(actor, view);
+    
+    Matrix_Pop();
 }
 
 void Actor_Focus(Scene* scene, Actor* this) {

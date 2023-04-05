@@ -480,7 +480,7 @@ void Settings_Update(Editor* editor, Properties* this, Split* split) {
         for (int i = 0; i < ArrCount(sSubMenuParam); i++) {
             Rect r = GetSubRect(split, i);
             
-            if (Input_GetMouse(input, CLICK_L)->press)
+            if ( Input_GetCursor(input, CLICK_L)->press)
                 if (Split_CursorInRect(split, &r))
                     this->subIndex = i;
         }
