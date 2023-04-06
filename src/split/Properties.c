@@ -217,6 +217,7 @@ static const char* GetDictionaryName(Arli* list, size_t index) {
 static int MenuActor_Database(MenuActor* this, Actor* actor) {
     int numProp;
     DbProperty* listProp;
+    int r = 0;
     
     if (!actor || !(actor->state & ACTOR_SELECTED)) return false;
     if (!(numProp = Database_NumPropertyList(actor->id))) return false;
@@ -263,11 +264,8 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
     if (!this->num)
         return false;
     
-    Element_Box(BOX_START);
-    
-    int r = 0;
-    
     PropertyEntry* entry = this->list;
+    
     for (int i = 0; i < this->num; i++, entry++) {
         if (!entry->element) continue;
         
@@ -316,8 +314,6 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
                 entry->check->element.toggle = Actor_rmask(actor, prop->source, prop->mask);
         }
     }
-    
-    Element_Box(BOX_END);
     
     return r;
 }
@@ -384,41 +380,45 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     
     Element_Row(&this->index, 0.5f, &this->variable, 0.5f);
     
-    Element_Box(BOX_START);
-    Element_Row(Element_Text("Position"), 0.5f, Element_Text("Rotation"), 0.5f);
-    Element_Row(&this->posX, 0.5f, &this->rotX, 0.5f);
-    Element_Row(&this->posY, 0.5f, &this->rotY, 0.5f);
-    Element_Row(&this->posZ, 0.5f, &this->rotZ, 0.5f);
-    Element_Box(BOX_END);
+    if (Element_Box(BOX_START, &this->panelPosRot, "Transforms")) {
+        Element_Row(&this->posX, 0.5f, &this->rotX, 0.5f);
+        Element_Row(&this->posY, 0.5f, &this->rotY, 0.5f);
+        Element_Row(&this->posZ, 0.5f, &this->rotZ, 0.5f);
+        
+        Element_Condition(&this->rotX, actor != NULL && actor->state & ACTOR_SELECTED);
+        Element_Condition(&this->rotY, actor != NULL && actor->state & ACTOR_SELECTED);
+        Element_Condition(&this->rotZ, actor != NULL && actor->state & ACTOR_SELECTED);
+        Element_Condition(&this->posX, actor != NULL && actor->state & ACTOR_SELECTED);
+        Element_Condition(&this->posY, actor != NULL && actor->state & ACTOR_SELECTED);
+        Element_Condition(&this->posZ, actor != NULL && actor->state & ACTOR_SELECTED);
+        
+        Element_DisplayName(&this->posX, -1);
+        Element_DisplayName(&this->posY, -1);
+        Element_DisplayName(&this->posZ, -1);
+        Element_DisplayName(&this->rotX, -1);
+        Element_DisplayName(&this->rotY, -1);
+        Element_DisplayName(&this->rotZ, -1);
+        
+        set += !!Element_Textbox(&this->rotX);
+        set += !!Element_Textbox(&this->rotY);
+        set += !!Element_Textbox(&this->rotZ);
+        set += !!Element_Textbox(&this->posX);
+        set += !!Element_Textbox(&this->posY);
+        set += !!Element_Textbox(&this->posZ);
+        
+    }
+    Element_Box(BOX_END, &this->panelPosRot);
     
     Element_Condition(&this->actorEntry, actor != NULL);
     Element_Condition(&this->buttonRem,  actor != NULL && actor->state & ACTOR_SELECTED);
     Element_Condition(&this->index,      actor != NULL && actor->state & ACTOR_SELECTED);
     Element_Condition(&this->variable,   actor != NULL && actor->state & ACTOR_SELECTED);
-    Element_Condition(&this->rotX,       actor != NULL && actor->state & ACTOR_SELECTED);
-    Element_Condition(&this->rotY,       actor != NULL && actor->state & ACTOR_SELECTED);
-    Element_Condition(&this->rotZ,       actor != NULL && actor->state & ACTOR_SELECTED);
-    Element_Condition(&this->posX,       actor != NULL && actor->state & ACTOR_SELECTED);
-    Element_Condition(&this->posY,       actor != NULL && actor->state & ACTOR_SELECTED);
-    Element_Condition(&this->posZ,       actor != NULL && actor->state & ACTOR_SELECTED);
     
     Element_DisplayName(&this->index, -1);
     Element_DisplayName(&this->variable, -1);
-    Element_DisplayName(&this->posX, -1);
-    Element_DisplayName(&this->posY, -1);
-    Element_DisplayName(&this->posZ, -1);
-    Element_DisplayName(&this->rotX, -1);
-    Element_DisplayName(&this->rotY, -1);
-    Element_DisplayName(&this->rotZ, -1);
     
     set += !!Element_Textbox(&this->index);
     set += !!Element_Textbox(&this->variable);
-    set += !!Element_Textbox(&this->rotX);
-    set += !!Element_Textbox(&this->rotY);
-    set += !!Element_Textbox(&this->rotZ);
-    set += !!Element_Textbox(&this->posX);
-    set += !!Element_Textbox(&this->posY);
-    set += !!Element_Textbox(&this->posZ);
     
     if (Element_Button(&this->buttonAdd) && !set) {
         Actor new = { .id = 0x0015 };
@@ -446,7 +446,10 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     
     profi_start(2);
     MenuActor_RefreshProperties(this, actor, set);
-    MenuActor_Database(this, actor);
+    if (Element_Box(BOX_START, &this->panelProperties, "Properties"))
+        MenuActor_Database(this, actor);
+    Element_Box(BOX_END, &this->panelProperties);
+    
     profi_stop(2);
 }
 
@@ -494,19 +497,19 @@ void Settings_Update(Editor* editor, Properties* this, Split* split) {
     Element_RowY(SPLIT_ELEM_X_PADDING * 2);
     Element_ShiftX(SIDE_BUTTON_SIZE);
     
-    sSubMenuParam[this->subIndex].update(editor, GetArg(this, this->subIndex), split);
-    
     if (!split->blockCursor && !editor->geo.state.blockElemInput) {
         Input* input = &editor->input;
         
         for (int i = 0; i < ArrCount(sSubMenuParam); i++) {
             Rect r = GetSubRect(split, i);
             
-            if ( Input_GetCursor(input, CLICK_L)->press)
+            if (Input_SelectClick(input, CLICK_L))
                 if (Split_CursorInRect(split, &r))
                     this->subIndex = i;
         }
     }
+    
+    sSubMenuParam[this->subIndex].update(editor, GetArg(this, this->subIndex), split);
 }
 
 void Settings_Draw(Editor* editor, Properties* this, Split* split) {

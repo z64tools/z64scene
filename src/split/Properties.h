@@ -62,6 +62,10 @@ typedef struct {
     PropertyEntry* list;
     u32 num;
     u16 prevIndex;
+    
+    ElPanel panelPosRot;
+    ElPanel panelProperties;
+    ElPanel panelTest;
 } MenuActor;
 
 typedef struct {
