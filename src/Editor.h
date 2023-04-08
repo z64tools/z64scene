@@ -12,6 +12,8 @@
 #include "Scene.h"
 
 extern VectorGfx gVecGfx_EyeOpen;
+extern f32 gFpsTime;
+extern f32 gTotalTime;
 
 void SlotMsg(int i, const char* fmt, ...);
 
@@ -20,19 +22,20 @@ typedef enum {
 } TimeSlot;
 
 typedef enum {
-    PROFILER_FPS = 4,
+    PROFILER_FPS = 40,
 } ProfilerSlot;
 
 typedef struct Editor {
-    AppInfo     app;
-    void*       vg;
-    GeoGrid     geo;
-    CursorIcon  cursor;
-    Input       input;
-    Scene       scene;
-    Gizmo       gizmo;
-    Toml        config;
-    const char* fpconfig;
+    AppInfo         app;
+    void*           vg;
+    GeoGrid         geo;
+    CursorIcon      cursor;
+    Input           input;
+    Scene           scene;
+    Gizmo           gizmo;
+    Toml            config;
+    const char*     fpconfig;
+    DatabaseSearch* dataContextMenu;
 } Editor;
 
 void* NewMtx();

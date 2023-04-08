@@ -59,7 +59,7 @@ static void Gizmo_Move(Gizmo* this, Vec3f* rayPos) {
         }
         
     } else {
-        Vec2f gizmoScreenSpace = View_GetScreenPos(view, this->pos);
+        Vec2f gizmoScreenSpace = View_GetLocalScreenPos(view, this->pos);
         Vec2f mv = Math_Vec2f_New(UnfoldVec2(input->cursor.vel));
         RayLine curRay = View_GetRayLine(view,  gizmoScreenSpace);
         RayLine nextRay = View_GetRayLine(view,  Math_Vec2f_Add(gizmoScreenSpace, mv));
@@ -300,7 +300,7 @@ void Gizmo_Draw(Gizmo* this) {
     f32 s;
     
     if (!view->ortho)
-        s = dist / 2000.0f * tanf(DegToRad(view->fovy) / 2.0f);
+        s = dist / 2000.0f * tanf(DegToRad(view->currentCamera->fovy) / 2.0f);
     else
         s = view->currentCamera->dist / 2850.0f;
     
@@ -369,8 +369,8 @@ void Gizmo_Draw(Gizmo* this) {
                 
                 View_ClipPointIntoView(view, &aI, Math_Vec3f_Invert(mxo[i]));
                 View_ClipPointIntoView(view, &bI, mxo[i]);
-                aO = View_GetScreenPos(view, aI);
-                bO = View_GetScreenPos(view, bI);
+                aO = View_GetLocalScreenPos(view, aI);
+                bO = View_GetLocalScreenPos(view, bI);
                 
                 nvgBeginPath(vg);
                 nvgStrokeColor(vg, nvgHSLA(1.0f - (i / 3.0f), 0.5f, 0.5f, 255));

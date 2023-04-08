@@ -56,14 +56,19 @@ typedef struct RoomHeader {
     Arli objectList;
     Arli roomLight;
     
+    bool timeGlobal;
+    u8   timeHour;
+    u8   timeMinute;
+    u8   timeSpeed;
+    
     struct {
         Vec3s dir;
         s16   strength;
     } wind;
     
     struct {
-        u8   behaviour;
-        u8   linkIdleAnim;
+        u8   val1;
+        u8   val2;
         bool lensMode;
         bool disableWarpSongs;
     } behaviour;
@@ -146,6 +151,11 @@ typedef struct Scene {
         Vec3f    rayPos;
         bool     rayHit;
     } mesh;
+    
+    struct {
+        int roomId;
+        int headerId;
+    } next;
 } Scene;
 
 #define Scene_NewEntry(this) & (this).entry[(this).num++]
@@ -158,7 +168,8 @@ void Scene_LoadRoom(Scene* this, const char* file);
 void Scene_Kill(Scene* this);
 void Scene_Free(Scene* this);
 
-void Scene_Update(Scene* this, View3D* view);
+void Scene_Update(Scene* this);
+void Scene_ViewportUpdate(Scene* this, View3D* view);
 void Scene_Draw(Scene* this, View3D* view);
 
 void Scene_CacheBuild(Scene* this);
@@ -172,5 +183,14 @@ void Scene_SetRoom(Scene* this, s32 roomID);
 void Room_Draw(RoomMesh* roomMesh);
 
 Room* Scene_RaycastRoom(Scene* scene, RayLine* ray, Vec3f* out);
+
+#ifndef __clang__
+#define Scene_GetSceneHeader(this)     ({ \
+        _log("Scene_GetSceneHeader");     \
+        Scene_GetSceneHeader(this); })
+#define Scene_GetRoomHeader(this, num) ({ \
+        _log("Scene_GetRoomHeader");      \
+        Scene_GetRoomHeader(this, num); })
+#endif
 
 #endif /* __Z64_SCENE_H__ */

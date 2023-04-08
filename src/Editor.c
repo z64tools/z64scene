@@ -31,9 +31,7 @@ GLFWimage sIconImage[5] = {
     { 256, 256 },
 };
 
-// # # # # # # # # # # # # # # # # # # # #
-// # EDITING                             #
-// # # # # # # # # # # # # # # # # # # # #
+////////////////////////////////////////////////////////////////////////////////
 
 void* NewMtx() {
     return Matrix_ToMtx(n64_graph_alloc(sizeof(Mtx)));
@@ -41,9 +39,7 @@ void* NewMtx() {
 
 static Editor* sEditor;
 
-// # # # # # # # # # # # # # # # # # # # #
-// # EDITOR                              #
-// # # # # # # # # # # # # # # # # # # # #
+////////////////////////////////////////////////////////////////////////////////
 
 VectorGfx gVecGfx_EyeOpen;
 
@@ -87,8 +83,11 @@ static void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
         return;
     
     info("" PRNT_YELW "LOADING: " PRNT_BLUE "%s", item[n]);
-    if (editor->scene.segment)
+    if (editor->scene.segment) {
+        Gizmo_UnselectAll(&editor->gizmo);
+        Actor_UnselectAll(&editor->scene, NULL);
         Scene_Free(&editor->scene);
+    }
     time_start(10);
     Scene_LoadScene(&editor->scene, item[n]);
     info("SceneLoad:  " PRNT_REDD "%.2fms", time_get(10) * 1000);
@@ -216,13 +215,13 @@ void Editor_Init(Editor* editor) {
     // FileDialog_New(&saveFile, &editor->app, "Save File");
 #endif
     
-    char* files[] = {
-        "../scene.zscene",
-        "../room_0.zroom",
-        "../room_1.zroom",
-    };
-    
-    Editor_DropCallback(editor->app.window, 3, files);
+    // char* files[] = {
+    //     "../scene.zscene",
+    //     "../room_0.zroom",
+    //     "../room_1.zroom",
+    // };
+    //
+    // Editor_DropCallback(editor->app.window, 3, files);
     DisplayList_GatherReferences(&editor->scene);
 }
 
@@ -244,19 +243,28 @@ void Editor_Destroy(Editor* editor) {
     vfree(editor);
 }
 
+f32 gFpsTime;
+f32 gTotalTime;
+
 void Editor_Update(Editor* editor) {
+    profi_start(0);
     if (editor->scene.kill)
         Scene_Free(&editor->scene);
+    else
+        Scene_Update(&editor->scene);
     
     Undo_Update(&editor->input);
-    GeoGrid_Update(&editor->geo);
-    Cursor_Update(&editor->cursor);
-    profi_stop(PROFILER_FPS);
-    profi_start(PROFILER_FPS);
+    profi_start(1); GeoGrid_Update(&editor->geo); profi_stop(1);
+    profi_start(2); Cursor_Update(&editor->cursor); profi_stop(2);
+    profi_start(3); Gizmo_Update(&editor->gizmo); profi_stop(3);
     
-    Gizmo_Update(&editor->gizmo);
+    profi_stop(PROFILER_FPS);
+    gFpsTime = profi_get(PROFILER_FPS);
+    profi_start(PROFILER_FPS);
 }
 
 void Editor_Draw(Editor* editor) {
-    GeoGrid_Draw(&editor->geo);
+    profi_start(4); GeoGrid_Draw(&editor->geo); profi_stop(4);
+    profi_stop(0);
+    gTotalTime = profi_get(0);
 }

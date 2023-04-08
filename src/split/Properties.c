@@ -47,12 +47,6 @@ static void MenuDebug_Init(Editor* editor, void* __this, Split* split) {
     Element_Name(&this->envFogColor, "Fog");
     
     Element_Name(&this->buttonIndoor, "Indoor");
-    Element_Name(&this->killScene, "Unload Scene");
-    
-    Element_Name(&this->buttonFPS, "Limit FPS");
-    Element_Name(&this->buttonCulling, "Culling");
-    Element_Name(&this->buttonFog, "Fog");
-    Element_Name(&this->buttonColView, "Collision");
     
     Element_Name(&this->fogFar, "Far");
     Element_Name(&this->fogNear, "Near");
@@ -60,17 +54,23 @@ static void MenuDebug_Init(Editor* editor, void* __this, Split* split) {
     Element_Slider_SetParams(&this->fogNear, 0, 1000, "int");
     Element_Slider_SetParams(&this->fogFar, 100, 32000, "int");
     
-    Element_Button_SetValue(&this->buttonFPS, true, 1);
-    Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
-    Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
-    Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
+    Element_Button_SetProperties(&this->killScene, "Unload Scene", 0, 0);
+    Element_Button_SetProperties(&this->buttonUnused,  "Unused",         true, false);
+    Element_Button_SetProperties(&this->buttonFog,     "Fog",            true, scene->state & SCENE_DRAW_FOG);
+    Element_Button_SetProperties(&this->buttonCulling, "Culling",        true, scene->state & SCENE_DRAW_CULLING);
+    Element_Button_SetProperties(&this->buttonColView, "Collision View", true, scene->state & SCENE_DRAW_COLLISION);
+    this->killScene.align =
+        this->buttonUnused.align =
+        this->buttonFog.align =
+        this->buttonCulling.align =
+        this->buttonColView.align = NVG_ALIGN_CENTER;
 }
 
 static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
     MenuDebug* this = __this;
     Scene* scene = &editor->scene;
     SceneHeader* sceneHeader = Scene_GetSceneHeader(scene);
-    EnvLightSettings* envSettings = Arli_At(&sceneHeader->envList, scene->curEnv);
+    EnvLightSettings* envSettings = sceneHeader ? Arli_At(&sceneHeader->envList, scene->curEnv) : NULL;
     
     BasicHeader(split);
     
@@ -94,60 +94,55 @@ static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
     }
     
     // Element_Row(NULL, 0.5f, &this->buttonIndoor, 0.5f);
-    // Element_Button_SetValue(&this->buttonIndoor, true, scene->indoorLight);
+    // Element_Button_SetProperties(&this->buttonIndoor, true, scene->indoorLight);
     // Element_Checkbox(&this->buttonIndoor);
     
     Element_Row(&this->envAmbient, 1.0f);
-    Element_DisplayName(&this->envAmbient, 0.5f);
     Element_Color(&this->envAmbient);
     
     Element_Row(&this->envColA, 1.0f);
     Element_Row(&this->envColB, 1.0f);
-    Element_DisplayName(&this->envColA, 0.5f);
-    Element_DisplayName(&this->envColB, 0.5f);
     Element_Color(&this->envColA);
     Element_Color(&this->envColB);
     
     Element_Box(BOX_START);
     Element_Row(&this->envFogColor, 1.0f);
-    Element_DisplayName(&this->envFogColor, 0.5f);
     Element_Color(&this->envFogColor);
     
     Element_Row(&this->fogNear, 0.5f, &this->fogFar, 0.5f);
-    Element_DisplayName(&this->fogNear, 0.3f);
-    Element_DisplayName(&this->fogFar, 0.25f);
     
-    if (envSettings) {
-        envSettings->fogNear = Element_Slider(&this->fogNear);
-        envSettings->fogFar = Element_Slider(&this->fogFar);
-    } else {
-        Element_Slider(&this->fogNear);
-        Element_Slider(&this->fogFar);
-    }
+    if (Element_Slider(&this->fogNear))
+        if (envSettings) envSettings->fogNear = Element_Slider_GetValue(&this->fogNear);
+    
+    if (Element_Slider(&this->fogFar))
+        if (envSettings) envSettings->fogFar = Element_Slider_GetValue(&this->fogFar);
+    
     Element_Box(BOX_END);
     
     Element_Separator(false);
     
     Element_Row(Element_Text("Render"), 1.0);
-    Element_Row( &this->buttonFPS, 0.5, &this->buttonCulling, 0.5);
+    Element_Row( &this->buttonUnused, 0.5, &this->buttonCulling, 0.5);
     Element_Row( &this->buttonFog, 0.5, &this->buttonColView, 0.5);
     
-    Element_Button(&this->buttonFPS);
+    Element_Button_SetProperties(&this->buttonFog, NULL, true, scene->state & SCENE_DRAW_FOG);
+    Element_Button_SetProperties(&this->buttonCulling, NULL, true, scene->state & SCENE_DRAW_CULLING);
+    Element_Button_SetProperties(&this->buttonColView, NULL, true, scene->state & SCENE_DRAW_COLLISION);
     
-    this->buttonFog.icon = &gVecGfx_EyeOpen;
-    Element_Button_SetValue(&this->buttonFog, true, scene->state & SCENE_DRAW_FOG);
-    Scene_SetState(scene, SCENE_DRAW_FOG, Element_Button(&this->buttonFog));
-    
-    Element_Button_SetValue(&this->buttonCulling, true, scene->state & SCENE_DRAW_CULLING);
-    Scene_SetState(scene, SCENE_DRAW_CULLING, Element_Button(&this->buttonCulling));
-    
-    Element_Button_SetValue(&this->buttonColView, true, scene->state & SCENE_DRAW_COLLISION);
-    Scene_SetState(scene, SCENE_DRAW_COLLISION, Element_Button(&this->buttonColView));
+    Element_Button(&this->buttonUnused);
+    if (Element_Button(&this->buttonFog))
+        Scene_SetState(scene, SCENE_DRAW_FOG, this->buttonFog.state);
+    if (Element_Button(&this->buttonCulling))
+        Scene_SetState(scene, SCENE_DRAW_CULLING, this->buttonCulling.state);
+    if (Element_Button(&this->buttonColView))
+        Scene_SetState(scene, SCENE_DRAW_COLLISION, this->buttonColView.state);
     
     Element_Separator(false);
     
     Element_Row(&this->killScene, 1.0);
     if (Element_Button(&this->killScene)) {
+        Gizmo_UnselectAll(&editor->gizmo);
+        Actor_UnselectAll(&editor->scene, NULL);
         Scene_Kill(&editor->scene);
         
         Element_Color_SetColor(&this->envAmbient, NULL);
@@ -156,6 +151,8 @@ static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
         Element_Color_SetColor(&this->envFogColor, NULL);
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -248,15 +245,16 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
                 
                 Arli_SetElemNameCallback(list, GetDictionaryName);
                 Element_Combo_SetArli(entry->combo, list);
-            } else if (pmask(prop->mask) == 1) {
+            } else if (smask_bit(prop->mask) == 1) {
                 entry->element = new(ElCheckbox);
                 entry->type = PE_CHECK;
             } else {
                 entry->element = new(ElTextbox);
                 entry->type = PE_TEXT;
-                entry->textBox->size = pmask(prop->mask);
+                entry->textBox->size = smask_byte(prop->mask);
             }
             
+            Element_SetNameLerp(entry->check, 0.5f);
             Element_Name(entry->check, prop->name);
         }
     }
@@ -275,7 +273,6 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
         DbDictionary* dict;
         
         Element_Row(entry->check, 1.0f);
-        Element_DisplayName(entry->check, 0.5f);
         
         switch (entry->type) {
             case PE_TEXT:
@@ -285,7 +282,7 @@ static int MenuActor_Database(MenuActor* this, Actor* actor) {
                 }
                 
                 val = Actor_rmask(actor, prop->source, prop->mask);
-                Element_Textbox_SetText(entry->textBox, x_fmt("%0*X", pmask(prop->mask), val));
+                Element_Textbox_SetText(entry->textBox, x_fmt("%0*X", smask_byte(prop->mask), val));
                 break;
                 
             case PE_COMBO:
@@ -322,9 +319,9 @@ static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     MenuActor* this = __this;
     RoomHeader* room = Scene_GetRoomHeader(&editor->scene, editor->scene.curRoom);
     
-    Element_Combo_SetArli(&this->actorEntry, &room->actorList);
+    Element_Combo_SetArli(&this->actorEntry, room ? &room->actorList : NULL);
     
-    Actor* actor = Arli_At(&room->actorList, room->actorList.cur);
+    Actor* actor = room ? Arli_At(&room->actorList, room->actorList.cur) : NULL;
     MenuActor_RefreshProperties(this, actor, false);
     
     struct {
@@ -350,24 +347,27 @@ static void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     this->buttonAdd.element.colOvrdLight = THEME_NEW;
     this->buttonRem.element.colOvrdLight = THEME_DELETE;
     
-    Element_Name(&this->buttonAdd, "New");
-    Element_Name(&this->buttonRem, "Del");
-    Element_Name(&this->refreshDatabase, "Refresh Database");
+    this->buttonAdd.align = NVG_ALIGN_CENTER;
+    this->buttonRem.align = NVG_ALIGN_CENTER;
+    this->refreshDatabase.align = NVG_ALIGN_CENTER;
+    Element_Button_SetProperties(&this->buttonAdd, "New", 0, 0);
+    Element_Button_SetProperties(&this->buttonRem, "Del", 0, 0);
+    Element_Button_SetProperties(&this->refreshDatabase, "Refresh Database", 0, 0);
 }
 
 static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     MenuActor* this = __this;
+    Input* input = &editor->input;
     RoomHeader* room = Scene_GetRoomHeader(&editor->scene, editor->scene.curRoom);
     
-    Element_Combo_SetArli(&this->actorEntry, &room->actorList);
+    Element_Combo_SetArli(&this->actorEntry, room ? &room->actorList : NULL);
     Arli* list = this->actorEntry.arlist;
-    Actor* actor = Arli_At(list, list->cur);
+    Actor* actor = list ? Arli_At(list, list->cur) : NULL;
     int set = 0;
     
     Element_Header(split->taskCombo, 92, &this->refreshDatabase, 120);
     Element_Combo(split->taskCombo);
     if (Element_Button(&this->refreshDatabase)) {
-        info("Refresh");
         Database_Refresh();
         this->prevIndex = 0xFFFF;
     }
@@ -392,13 +392,6 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
         Element_Condition(&this->posY, actor != NULL && actor->state & ACTOR_SELECTED);
         Element_Condition(&this->posZ, actor != NULL && actor->state & ACTOR_SELECTED);
         
-        Element_DisplayName(&this->posX, -1);
-        Element_DisplayName(&this->posY, -1);
-        Element_DisplayName(&this->posZ, -1);
-        Element_DisplayName(&this->rotX, -1);
-        Element_DisplayName(&this->rotY, -1);
-        Element_DisplayName(&this->rotZ, -1);
-        
         set += !!Element_Textbox(&this->rotX);
         set += !!Element_Textbox(&this->rotY);
         set += !!Element_Textbox(&this->rotZ);
@@ -409,15 +402,40 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     }
     Element_Box(BOX_END, &this->panelPosRot);
     
+    Element_Condition(&this->buttonAdd,  list != NULL);
     Element_Condition(&this->actorEntry, actor != NULL);
     Element_Condition(&this->buttonRem,  actor != NULL && actor->state & ACTOR_SELECTED);
     Element_Condition(&this->index,      actor != NULL && actor->state & ACTOR_SELECTED);
     Element_Condition(&this->variable,   actor != NULL && actor->state & ACTOR_SELECTED);
     
-    Element_DisplayName(&this->index, -1);
-    Element_DisplayName(&this->variable, -1);
+    if (editor->dataContextMenu) {
+        int ret;
+        Element_Disable(&this->index);
+        
+        switch (DatabaseSearch_State(&ret)) {
+            case 1:
+                strcpy(this->index.txt, x_fmt("%04X", ret));
+                set++;
+                break;
+                
+            case -1:
+                DatabaseSearch_Free();
+                break;
+                
+            default:
+                break;
+        }
+    }
     
-    set += !!Element_Textbox(&this->index);
+    if (Element_Textbox(&this->index)) {
+        set++;
+        
+    } else if (Element_Operatable(&this->index)) {
+        info("operatable");
+        if (Input_SelectClick(input, CLICK_R))
+            DatabaseSearch_New(Rect_AddPos(this->index.element.rect, split->dispRect), actor->id);
+    }
+    
     set += !!Element_Textbox(&this->variable);
     
     if (Element_Button(&this->buttonAdd) && !set) {
@@ -444,13 +462,114 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
         MenuActor_SelectActor(editor, room, actor);
     }
     
-    profi_start(2);
     MenuActor_RefreshProperties(this, actor, set);
     if (Element_Box(BOX_START, &this->panelProperties, "Properties"))
         MenuActor_Database(this, actor);
     Element_Box(BOX_END, &this->panelProperties);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static void MenuRoomEnv_Init(Editor* editor, void* __this, Split* split) {
+    MenuRoomEnv* this = __this;
     
-    profi_stop(2);
+    Element_Name(&this->sliderTimeSpeed, "Speed");
+    Element_Name(&this->sliderEcho, "Echo");
+    Element_Name(&this->comboBeha1, "Env 1");
+    Element_Name(&this->comboBeha2, "Env 2");
+    Element_Button_SetProperties(&this->buttonGlTime, "Global Time", true, false);
+    Element_Button_SetProperties(&this->buttonSkybox, "Skybox", true, false);
+    Element_Button_SetProperties(&this->buttonSunMoon, "Sun & Moon", true, false);
+    
+    this->textboxHour.size = 2;
+    this->textboxMin.size = 2;
+    this->buttonGlTime.align = NVG_ALIGN_CENTER;
+    this->textboxMin.align = NVG_ALIGN_LEFT;
+    this->buttonSkybox.align = NVG_ALIGN_CENTER;
+    this->buttonSunMoon.align = NVG_ALIGN_CENTER;
+    
+    Element_Slider_SetParams(&this->sliderTimeSpeed, 0, 0xFE, "int");
+    Element_Slider_SetParams(&this->sliderEcho, 0, 0xFF, "int");
+    
+    Element_Combo_SetArli(&this->comboBeha1, &this->behaviour1);
+    Element_Combo_SetArli(&this->comboBeha2, &this->behaviour2);
+    
+    Element_SetNameLerp(&this->sliderTimeSpeed, 0.25f);
+    Element_SetNameLerp(&this->sliderEcho, 0.25f);
+    Element_SetNameLerp(&this->comboBeha1, 0.25f);
+    Element_SetNameLerp(&this->comboBeha2, 0.25f);
+}
+
+static void MenuRoomEnv_Update(Editor* editor, void* __this, Split* split) {
+    MenuRoomEnv* this = __this;
+    RoomHeader* room = Scene_GetRoomHeader(&editor->scene, editor->scene.curRoom);
+    
+    BasicHeader(split);
+    
+    if (Element_Box(BOX_START, &this->panelTime, "Time")) {
+        Element_Row(&this->textboxHour, 0.25f, &this->textboxMin, 0.25f, &this->buttonGlTime, 0.5f);
+        Element_Row(&this->sliderTimeSpeed, 1.0f);
+        
+        Element_Condition(&this->buttonGlTime,  room != NULL);
+        
+        if (room) {
+            Element_Button_SetProperties(&this->buttonGlTime, NULL, true, room->timeGlobal);
+            Element_Textbox_SetText(&this->textboxHour, x_fmt("%d", room->timeHour));
+            Element_Textbox_SetText(&this->textboxMin, x_fmt("%d", room->timeMinute));
+            Element_Slider_SetValue(&this->sliderTimeSpeed, room->timeSpeed);
+        }
+        
+        if (Element_Button(&this->buttonGlTime))
+            room->timeGlobal = this->buttonGlTime.state;
+        
+        Element_Condition(&this->textboxHour,     room != NULL && !room->timeGlobal);
+        Element_Condition(&this->textboxMin,      room != NULL && !room->timeGlobal);
+        Element_Condition(&this->sliderTimeSpeed, room != NULL);
+        
+        if (Element_Textbox(&this->textboxHour))
+            room->timeHour = clamp(sint(this->textboxHour.txt), 0, 24);
+        if (Element_Textbox(&this->textboxMin))
+            room->timeMinute = clamp(sint(this->textboxMin.txt), 0, 59);
+        if (Element_Slider(&this->sliderTimeSpeed))
+            room->timeSpeed = Element_Slider_GetValue(&this->sliderTimeSpeed);
+        
+    }
+    Element_Box(BOX_END, &this->panelTime);
+    
+    if (Element_Box(BOX_START, &this->panelEnvironment, "Environment")) {
+        Element_Row(&this->buttonSkybox, 0.5f, &this->buttonSunMoon, 0.5f);
+        Element_Row(&this->comboBeha1, 1.0f);
+        Element_Row(&this->comboBeha2, 1.0f);
+        Element_Row(&this->sliderEcho, 1.0f);
+        
+        if (room) {
+            Element_Button_SetProperties(&this->buttonSkybox, NULL, true, !room->skyBox.disableSky);
+            Element_Button_SetProperties(&this->buttonSunMoon, NULL, true, !room->skyBox.disableSunMoon);
+            Element_Slider_SetValue(&this->sliderEcho, room->echo);
+            
+            Arli_Set(&this->behaviour1, room->behaviour.val1);
+            Arli_Set(&this->behaviour2, room->behaviour.val2);
+        }
+        
+        Element_Condition(&this->comboBeha1,    room != NULL);
+        Element_Condition(&this->comboBeha2,    room != NULL);
+        Element_Condition(&this->buttonSkybox,  room != NULL);
+        Element_Condition(&this->buttonSunMoon, room != NULL);
+        Element_Condition(&this->sliderEcho,    room != NULL);
+        
+        if (Element_Button(&this->buttonSkybox))
+            room->skyBox.disableSky = !this->buttonSkybox.state;
+        if (Element_Button(&this->buttonSunMoon))
+            room->skyBox.disableSunMoon = !this->buttonSunMoon.state;
+        if (Element_Slider(&this->sliderEcho))
+            room->echo = Element_Slider_GetValue(&this->sliderEcho);
+        
+        if (Element_Combo(&this->comboBeha1))
+            room->behaviour.val1 = this->behaviour1.cur;
+        if (Element_Combo(&this->comboBeha2))
+            room->behaviour.val2 = this->behaviour2.cur;
+    }
+    Element_Box(BOX_END, &this->panelEnvironment);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -462,8 +581,9 @@ static struct {
     char* name;
 } sSubMenuParam[] = {
     //crustify
-    { MenuDebug_Init, MenuDebug_Update, offsetof(Properties, menuDebug), "D" },
-    { MenuActor_Init, MenuActor_Update, offsetof(Properties, menuActor), "A" },
+    { MenuDebug_Init,   MenuDebug_Update,   offsetof(Properties, menuDebug),   "D" },
+    { MenuActor_Init,   MenuActor_Update,   offsetof(Properties, menuActor),   "A" },
+    { MenuRoomEnv_Init, MenuRoomEnv_Update, offsetof(Properties, menuRoomEnv), "R" },
     //uncrustify
 };
 
@@ -484,13 +604,56 @@ static Rect GetSubRect(Split* split, int index) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static const char* GetBehaviourName(Arli* this, size_t index) {
+    const char* text = Arli_At(this, index);
+    
+    if (!text) return "Unknown";
+    return text;
+}
+
+const char sBehaviourNames[][24] = {
+    "Overworld",
+    "Dungeon",
+    "House",
+    "Unk (Dither?)",
+    "Unk (Horse Cam?)",
+    "Boss Room",
+    
+    "Default",
+    "Cold",
+    "Hot",
+    "Hot (Timer)",
+    "Comfy",
+};
+
 void Settings_Init(Editor* editor, Properties* this, Split* split) {
+    this->menuRoomEnv.behaviour1 = Arli_New(char[24]);
+    this->menuRoomEnv.behaviour2 = Arli_New(char[24]);
+    
+    Arli_Add(&this->menuRoomEnv.behaviour1, sBehaviourNames[0]);
+    Arli_Add(&this->menuRoomEnv.behaviour1, sBehaviourNames[1]);
+    Arli_Add(&this->menuRoomEnv.behaviour1, sBehaviourNames[2]);
+    Arli_Add(&this->menuRoomEnv.behaviour1, sBehaviourNames[3]);
+    Arli_Add(&this->menuRoomEnv.behaviour1, sBehaviourNames[4]);
+    Arli_Add(&this->menuRoomEnv.behaviour1, sBehaviourNames[5]);
+    
+    Arli_Add(&this->menuRoomEnv.behaviour2, sBehaviourNames[6]);
+    Arli_Add(&this->menuRoomEnv.behaviour2, sBehaviourNames[7]);
+    Arli_Add(&this->menuRoomEnv.behaviour2, sBehaviourNames[8]);
+    Arli_Add(&this->menuRoomEnv.behaviour2, sBehaviourNames[9]);
+    Arli_Add(&this->menuRoomEnv.behaviour2, sBehaviourNames[10]);
+    
+    Arli_SetElemNameCallback(&this->menuRoomEnv.behaviour1, GetBehaviourName);
+    Arli_SetElemNameCallback(&this->menuRoomEnv.behaviour2, GetBehaviourName);
+    
     for (int i = 0; i < ArrCount(sSubMenuParam); i++)
         if (sSubMenuParam[i].init)
             sSubMenuParam[i].init(editor, GetArg(this, i), split);
 }
 
 void Settings_Destroy(Editor* editor, Properties* this, Split* split) {
+    Arli_Free(&this->menuRoomEnv.behaviour1);
+    Arli_Free(&this->menuRoomEnv.behaviour2);
 }
 
 void Settings_Update(Editor* editor, Properties* this, Split* split) {

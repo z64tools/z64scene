@@ -52,9 +52,7 @@ SplitTask gViewportTask = {
     .size       = sizeof(Viewport)
 };
 
-// # # # # # # # # # # # # # # # # # # # #
-// #                                     #
-// # # # # # # # # # # # # # # # # # # # #
+////////////////////////////////////////////////////////////////////////////////
 
 #if 0
 static void Viewport_DrawSpot(Vec3f pos, f32 scale, NVGcolor color) {
@@ -77,7 +75,6 @@ void Viewport_FocusRoom(Viewport* this, Scene* scene, int id) {
     View_MoveTo(&this->view, room->mesh->center);
     View_ZoomTo(&this->view, room->mesh->size);
     View_RotTo(&this->view, Math_Vec3s_New(DegToBin(45), yaw, 0));
-    scene->ui.glowFactor = 0.25f;
 }
 
 static void Viewport_CamUpdate(Editor* editor, Viewport* this, Split* split) {
@@ -86,12 +83,12 @@ static void Viewport_CamUpdate(Editor* editor, Viewport* this, Split* split) {
     Gizmo* gizmo = &editor->gizmo;
     View3D* view = &this->view;
     
-    if ( Input_GetCursor(input, CLICK_ANY)->hold && this->holdBlockCamUpdate)
+    if (Input_GetCursor(input, CLICK_ANY)->hold && this->holdBlockCamUpdate)
         return;
     
     this->holdBlockCamUpdate = 0;
     
-    if ( Input_GetCursor(input, CLICK_ANY)->press && !split->inputAccess) {
+    if (Input_GetCursor(input, CLICK_ANY)->press && !split->inputAccess) {
         view->cameraControl = 0;
         this->holdBlockCamUpdate = true;
         
@@ -107,8 +104,8 @@ static void Viewport_CamUpdate(Editor* editor, Viewport* this, Split* split) {
     
     if (!View_CheckControlKeys(input) && !split->inputAccess)
         view->cameraControl = 0;
-    if (Input_GetKey(input, KEY_LEFT_CONTROL)->hold)
-        view->cameraControl = 0;
+    // if (Input_GetKey(input, KEY_LEFT_CONTROL)->hold)
+    //     view->cameraControl = 0;
     if (gizmo->lock.state)
         view->cameraControl = 0;
     
@@ -137,10 +134,8 @@ static void Viewport_CamUpdate(Editor* editor, Viewport* this, Split* split) {
             RayLine ray = View_GetCursorRayLine(&this->view);
             Room* room = Scene_RaycastRoom(&editor->scene, &ray, NULL);
             
-            if (room) {
+            if (room)
                 Scene_SetRoom(&editor->scene, room->id);
-                Viewport_FocusRoom(this, scene, room->id);
-            }
         }
     }
 }
@@ -250,7 +245,7 @@ static void Viewport_ShapeSelect_Update(Editor* editor, Viewport* this, Split* s
                     break;
             }
             
-            sp = View_GetScreenPos(&this->view, a->pos);
+            sp = View_GetLocalScreenPos(&this->view, a->pos);
             
             if (Math_Vec2f_PointInShape(sp, this->selPos, this->selID)) {
                 RayLine ray = View_GetRayLine(&this->view, sp);
@@ -301,19 +296,23 @@ static void Viewport_ShapeSelect_Draw(Viewport* this, void* vg) {
     }
 }
 
-// # # # # # # # # # # # # # # # # # # # #
-// #                                     #
-// # # # # # # # # # # # # # # # # # # # #
+////////////////////////////////////////////////////////////////////////////////
 
 void Viewport_Init(Editor* editor, Viewport* this, Split* split) {
     View_Init(&this->view, &editor->input);
     
-    Element_Name(&this->resetCam, "Reset Camera");
+    Element_Button_SetProperties(&this->buttonResetCam, "Reset Camera", 0, 0);
+    Element_Button_SetProperties(&this->buttonViewSmooth, "Smooth", true, !this->view.noSmooth);
+    Element_Slider_SetParams(&this->sliderCamFov, 5, 175, "f32");
+    Element_Name(&this->sliderCamFov, "FOV");
+    this->sliderCamFov.isInt = true;
+    this->buttonViewSmooth.align = NVG_ALIGN_CENTER;
+    
     // this->view.mode = CAM_MODE_ORBIT;
     
-    Memfile_LoadBin(&this->object, "../object.zobj");
-    SkelAnime_Init(&this->object, &this->skelAnime, 0x06013990, 0x06015B20);
-    this->skelAnime.playSpeed = 1.0f;
+    // Memfile_LoadBin(&this->object, "../object.zobj");
+    // SkelAnime_Init(&this->object, &this->skelAnime, 0x06013990, 0x06015B20);
+    // this->skelAnime.playSpeed = 1.0f;
 }
 
 void Viewport_Destroy(Editor* editor, Viewport* this, Split* split) {
@@ -325,12 +324,21 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     Scene* scene = &editor->scene;
     Gizmo* gizmo = &editor->gizmo;
     
-    Element_Header(split->taskCombo, 98, &this->resetCam, 98);
+    Element_Header(split->taskCombo, 98, &this->buttonResetCam, 98, &this->sliderCamFov, 112, &this->buttonViewSmooth, 98);
     Element_Combo(split->taskCombo);
     
-    if (Element_Button(&this->resetCam)) {
+    if (Element_Slider(&this->sliderCamFov))
+        this->view.currentCamera->fovyTarget = Element_Slider_GetValue(&this->sliderCamFov);
+    else
+        Element_Slider_SetValue(&this->sliderCamFov, this->view.currentCamera->fovyTarget);
+    
+    if (Element_Button(&this->buttonViewSmooth))
+        this->view.noSmooth = !this->buttonViewSmooth.state;
+    
+    if (Element_Button(&this->buttonResetCam)) {
         View_MoveTo(&this->view, Math_Vec3f_New(0, 0, 0));
         View_RotTo(&this->view, Math_Vec3s_New(0, 0, 0));
+        this->view.currentCamera->targetDist = 100.0f;
     }
     
     if (editor->scene.segment == NULL) {
@@ -405,9 +413,7 @@ void Viewport_Update(Editor* editor, Viewport* this, Split* split) {
     split->bg.useCustomPaint = true;
 }
 
-// # # # # # # # # # # # # # # # # # # # #
-// #                                     #
-// # # # # # # # # # # # # # # # # # # # #
+////////////////////////////////////////////////////////////////////////////////
 
 static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f32 val, f32 dangerValue) {
     nvgFontSize(vg, SPLIT_TEXT + 2);
@@ -485,7 +491,7 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
     Scene* scene = &editor->scene;
     
     Viewport_InitDraw(editor, this, split);
-    Scene_Update(scene, &this->view);
+    Scene_ViewportUpdate(scene, &this->view);
     
     if (Gizmo_SetActiveContext(&editor->gizmo, &this->view, split)) {
         Gizmo_UpdateView3D(&editor->gizmo, scene->mesh.rayHit ? &scene->mesh.rayPos : NULL);
@@ -507,9 +513,7 @@ static void Viewport_Draw_Scene(Editor* editor, Viewport* this, Split* split) {
     } Matrix_Pop();
 #endif
     
-    profi_start(0);
     Scene_Draw(&editor->scene, &this->view);
-    profi_stop(0);
     
     Gizmo_Draw(&editor->gizmo);
     Viewport_ShapeSelect_Draw(this, editor->vg);
@@ -539,12 +543,9 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
     nvgFontSize(vg, 15);
     nvgTextLetterSpacing(vg, 0.0f);
     
-    ProfilerText(vg, 0, "FPS:", "%.0f", 1 / profi_get(PROFILER_FPS), 0);
-    ProfilerText(vg, 1, "Total:", "%.2fms", profi_get(0xF0) * 1000.0f, 16.0f);
-    ProfilerText(vg, 2, "Scene Draw:", "%.2fms", profi_get(0) * 1000.f, 16.0f);
-    ProfilerText(vg, 3, "Actor Panel:", "%.2fms", profi_get(2) * 1000.f, 16.0f);
-    ProfilerText(vg, 4, "n64:", "%.2fms", profi_get(8) * 1000.f, 16.0f);
-    ProfilerText(vg, 5, "Delta:", "%.2f", gDeltaTime, 0);
+    ProfilerText(vg, 0, "FPS:", "%.0f", 1 / gFpsTime, 0);
+    ProfilerText(vg, 1, "Total:", "%.2fms", gTotalTime * 1000.0f, 16.0f);
+    ProfilerText(vg, 2, "Delta:", "%.2f", gDeltaTime, 0);
     
     for (int i = 0; i < ArrCount(sMsg); i++) {
         if (sMsg[i][0]) {
@@ -553,14 +554,14 @@ void Viewport_Draw(Editor* editor, Viewport* this, Split* split) {
             nvgFontBlur(vg, 1.0f);
             nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
             for (s32 i = 0; i < 2; i++)
-                nvgText(vg, 8, 8 + SPLIT_TEXT_H * (6 + i), sMsg[i], NULL);
+                nvgText(vg, 8, 8 + SPLIT_TEXT_H * (3 + i), sMsg[i], NULL);
             
             nvgFontBlur(vg, 0.0f);
             if (sMsgState[i])
                 nvgFillColor(vg, nvgRGBA(255, 255, 255, 225));
             else
                 nvgFillColor(vg, nvgRGBA(80, 80, 80, 225));
-            nvgText(vg, 8, 8 + SPLIT_TEXT_H * (6 + i), sMsg[i], NULL);
+            nvgText(vg, 8, 8 + SPLIT_TEXT_H * (3 + i), sMsg[i], NULL);
             
             sMsgState[i] = false;
         }

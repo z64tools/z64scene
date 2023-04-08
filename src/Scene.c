@@ -612,6 +612,8 @@ void Scene_Init(Scene* this) {
     this->ui.roomNameList = Arli_New(char[64]);
     Arli_SetElemNameCallback(&this->ui.roomNameList, RoomEntry_ElemName);
     Element_Combo_SetArli(&this->ui.roomCombo, &this->ui.roomNameList);
+    
+    this->next.roomId = this->next.headerId = -1;
 }
 
 static void* Scene_ExObj_GetHeader(Memfile* file) {
@@ -794,7 +796,20 @@ static void Scene_Light(Scene* this) {
     Light_SetDirLight(l2n, env->light2Color);
 }
 
-void Scene_Update(Scene* this, View3D* view) {
+void Scene_Update(Scene* this) {
+    if (this->next.roomId > -1) {
+        this->curRoom = this->next.roomId;
+        this->ui.glowFactor = 0.25f;
+        this->next.roomId = -1;
+    }
+    
+    if (this->next.headerId > -1) {
+        this->curHeader = this->next.headerId;
+        this->next.headerId = -1;
+    }
+}
+
+void Scene_ViewportUpdate(Scene* this, View3D* view) {
     RayLine r = View_GetCursorRayLine(view);
     
     this->mesh.rayHit = Scene_RaycastRoom(this, &r, &this->mesh.rayPos);
@@ -924,14 +939,6 @@ void Scene_CacheBuild(Scene* this) {
     n64_set_triangleCallbackFunc(0, 0);
 }
 
-SceneHeader* Scene_GetSceneHeader(Scene* this) {
-    return &this->header[this->curHeader];
-}
-
-RoomHeader* Scene_GetRoomHeader(Scene* this, u8 num) {
-    return &this->room[num].header[this->curHeader];
-}
-
 void Scene_SetState(Scene* this, SceneState state, bool set) {
     if (set)
         this->state |= state;
@@ -941,7 +948,7 @@ void Scene_SetState(Scene* this, SceneState state, bool set) {
 
 void Scene_SetRoom(Scene* this, s32 roomID) {
     Arli_Set(&this->ui.roomNameList, roomID);
-    this->curRoom = roomID;
+    this->next.roomId = roomID;
 }
 
 // # # # # # # # # # # # # # # # # # # # #
@@ -1088,8 +1095,8 @@ static void Scene_Cmd07_SpecialFiles(Scene* scene, RoomHeader* room, SceneCmd* c
 }
 
 static void Scene_Cmd08_RoomBehaviour(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    room->behaviour.behaviour = cmd->roomBehavior.gpFlag1;
-    room->behaviour.linkIdleAnim = cmd->roomBehavior.gpFlag2 & 0xFF;
+    room->behaviour.val1 = cmd->roomBehavior.gpFlag1;
+    room->behaviour.val2 = cmd->roomBehavior.gpFlag2 & 0xFF;
     room->behaviour.lensMode = (cmd->roomBehavior.gpFlag2 >> 8) & 1;
     room->behaviour.disableWarpSongs = (cmd->roomBehavior.gpFlag2 >> 0xA) & 1;
 }
@@ -1167,40 +1174,15 @@ static void Scene_Cmd0F_EnvList(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
 }
 
 static void Scene_Cmd10_Time(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
-    // if ((cmd->timeSettings.hour != 0xFF) && (cmd->timeSettings.min != 0xFF)) {
-    //  gSaveContext.skyboxTime = gSaveContext.dayTime =
-    //      ((cmd->timeSettings.hour + (cmd->timeSettings.min / 60.0f)) * 60.0f) / ((f32)(24 * 60) / 0x10000);
-    // }
-    //
-    // if (cmd->timeSettings.unk_06 != 0xFF) {
-    //  play->envCtx.sceneTimeSpeed = cmd->timeSettings.unk_06;
-    // } else {
-    //  play->envCtx.sceneTimeSpeed = 0;
-    // }
-    //
-    // if (gSaveContext.sunsSongState == SUNSSONG_INACTIVE) {
-    //  gTimeSpeed = play->envCtx.sceneTimeSpeed;
-    // }
-    //
-    // play->envCtx.sunPos.x = -(Math_SinS(((void)0, gSaveContext.dayTime) - CLOCK_TIME(12, 0)) * 120.0f) * 25.0f;
-    // play->envCtx.sunPos.y = (Math_CosS(((void)0, gSaveContext.dayTime) - CLOCK_TIME(12, 0)) * 120.0f) * 25.0f;
-    // play->envCtx.sunPos.z = (Math_CosS(((void)0, gSaveContext.dayTime) - CLOCK_TIME(12, 0)) * 20.0f) * 25.0f;
-    //
-    // if (((play->envCtx.sceneTimeSpeed == 0) && (gSaveContext.cutsceneIndex < 0xFFF0)) ||
-    //  (gSaveContext.entranceIndex == ENTR_SPOT06_8)) {
-    //  gSaveContext.skyboxTime = ((void)0, gSaveContext.dayTime);
-    //
-    //  if ((gSaveContext.skyboxTime > CLOCK_TIME(4, 0)) && (gSaveContext.skyboxTime < CLOCK_TIME(6, 30))) {
-    //      gSaveContext.skyboxTime = CLOCK_TIME(5, 0) + 1;
-    //  } else if ((gSaveContext.skyboxTime >= CLOCK_TIME(6, 30)) && (gSaveContext.skyboxTime <= CLOCK_TIME(8, 0))) {
-    //      gSaveContext.skyboxTime = CLOCK_TIME(8, 0) + 1;
-    //  } else if ((gSaveContext.skyboxTime >= CLOCK_TIME(16, 0)) && (gSaveContext.skyboxTime <= CLOCK_TIME(17, 0))) {
-    //      gSaveContext.skyboxTime = CLOCK_TIME(17, 0) + 1;
-    //  } else if ((gSaveContext.skyboxTime >= CLOCK_TIME(18, 0) + 1) &&
-    //      (gSaveContext.skyboxTime <= CLOCK_TIME(19, 0))) {
-    //      gSaveContext.skyboxTime = CLOCK_TIME(19, 0) + 1;
-    //  }
-    // }
+    SCmdTimeSettings* this = (void*)cmd;
+    
+    if ( (room->timeGlobal = (this->hour == 0xFF && this->min == 0xFF)) )
+        room->timeHour = room->timeMinute = 0;
+    else
+        room->timeHour = this->hour,
+        room->timeMinute = this->min;
+    
+    room->timeSpeed = (this->unk_06 != 0xFF) ? this->unk_06 : 0;
 }
 
 static void Scene_Cmd11_Skybox(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
@@ -1256,4 +1238,23 @@ static void Scene_Cmd17_Cutscene(Scene* scene, RoomHeader* room, SceneCmd* cmd) 
 static void Scene_Cmd19_Misc(Scene* scene, RoomHeader* room, SceneCmd* cmd) {
     scene->header[scene->curHeader].camType = cmd->miscSettings.cameraMovement;
     scene->header[scene->curHeader].area = cmd->miscSettings.area;
+}
+
+#undef Scene_GetSceneHeader
+#undef Scene_GetRoomHeader
+
+SceneHeader* Scene_GetSceneHeader(Scene* this) {
+    if (!this->segment) return NULL;
+    
+    return &this->header[this->curHeader];
+}
+
+RoomHeader* Scene_GetRoomHeader(Scene* this, u8 num) {
+    if (!this->segment) return NULL;
+    
+    Room* room = &this->room[num];
+    
+    if (!room->segment) return NULL;
+    
+    return &room->header[this->curHeader];
 }

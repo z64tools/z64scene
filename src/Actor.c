@@ -90,11 +90,25 @@ void Actor_Unselect(Scene* scene, Actor* this) {
 
 void Actor_UnselectAll(Scene* scene, RoomHeader* hdr) {
     scene->curActor = NULL;
+    
     memset(scene->prevActor, 0, sizeof(scene->prevActor));
-    for (var i = 0; i < hdr->actorList.num; i++) {
-        Actor* actor = Arli_At(&hdr->actorList, i);
-        
-        actor->state &= ~ACTOR_SELECTED;
+    
+    if (hdr) {
+        for (var i = 0; i < hdr->actorList.num; i++) {
+            Actor* actor = Arli_At(&hdr->actorList, i);
+            
+            actor->state &= ~ACTOR_SELECTED;
+        }
+    } else {
+        for (var ir = 0; ir < scene->numRoom; ir++) {
+            Room* room = &scene->room[ir];
+            
+            for (var ih = 0; ih < scene->numHeader; ih++) {
+                RoomHeader* roomHeader = &room->header[ih];
+                
+                Actor_UnselectAll(scene, roomHeader);
+            }
+        }
     }
 }
 

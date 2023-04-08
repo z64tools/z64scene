@@ -12,7 +12,9 @@ typedef struct {
     
     Vec3f cubePos;
     
-    ElButton resetCam;
+    ElSlider sliderCamFov;
+    ElButton buttonResetCam;
+    ElButton buttonViewSmooth;
     
     s32   selMode;
     Vec2f selPos[512];

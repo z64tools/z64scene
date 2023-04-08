@@ -1,5 +1,5 @@
 #include "Database.h"
-#include <ext_lib.h>
+#include "Editor.h"
 
 typedef struct {
     u16 index;
@@ -137,8 +137,6 @@ void Database_Init() {
     Toml_Free(&toml);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 void Database_Free() {
     _log("Free");
     
@@ -173,6 +171,152 @@ void Database_Free() {
 void Database_Refresh() {
     Database_Free();
     Database_Init();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct DatabaseSearch {
+    GeoGrid   geo;
+    Split     split;
+    ElTextbox textboxSearch;
+    
+    Entry* entryList;
+    int    numEntry;
+    int    initList;
+    int    change;
+    int    current;
+    int    init;
+} DatabaseSearch;
+
+static void DatabaseSearch_Init(GeoGrid* __no_no, ContextMenu* contextMenu) {
+    DatabaseSearch* this = contextMenu->prop;
+    
+    GeoGrid_Init(&this->geo, &GetEditor()->app, NULL);
+    
+    this->textboxSearch.clearIcon = true;
+    this->textboxSearch.align = NVG_ALIGN_LEFT;
+    this->entryList = new(Entry[gDatabaseNum]);
+    
+    contextMenu->rect.w = 128 + 64;
+    contextMenu->rect.h = SPLIT_ELEM_X_PADDING * 3 + SPLIT_TEXT_H * 17;
+}
+
+static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
+    DatabaseSearch* this = contextMenu->prop;
+    GeoGrid* geo = &this->geo;
+    void* vg = geo->vg;
+    Input* input = geo->input;
+    
+    DummySplit_Push(geo, &this->split, contextMenu->rect);
+    
+    this->textboxSearch.element.rect = contextMenu->rect;
+    this->textboxSearch.element.rect.h = SPLIT_TEXT_H;
+    this->textboxSearch.element.rect.x += SPLIT_ELEM_X_PADDING;
+    this->textboxSearch.element.rect.y += SPLIT_ELEM_X_PADDING;
+    this->textboxSearch.element.rect.w -= SPLIT_ELEM_X_PADDING * 2;
+    
+    Element_Textbox(&this->textboxSearch);
+    
+    if (!this->init) {
+        Element_SetActiveTextbox(&this->geo, &this->split, &this->textboxSearch);
+        this->init = true;
+    }
+    
+    if (this->textboxSearch.modified || !this->initList) {
+        bool textMatch = strlen(this->textboxSearch.txt) ? true : false;
+        
+        this->initList = true;
+        this->numEntry = 0;
+        
+        for (int i = 0; i < gDatabaseNum; i++) {
+            if (!gDatabaseActor[i])
+                continue;
+            
+            if (!textMatch) {
+                this->entryList[this->numEntry++] = *gDatabaseActor[i];
+            } else {
+                if (stristr(gDatabaseActor[i]->name, this->textboxSearch.txt))
+                    this->entryList[this->numEntry++] = *gDatabaseActor[i];
+            }
+        }
+        
+        ScrollBar_Init(&contextMenu->scroll, this->numEntry, SPLIT_TEXT_H);
+    }
+    
+    Rect mainr = contextMenu->rect;
+    
+    mainr.x += SPLIT_ELEM_X_PADDING;
+    mainr.w -= SPLIT_ELEM_X_PADDING * 2;
+    mainr.y += SPLIT_ELEM_X_PADDING * 2 + SPLIT_TEXT_H;
+    mainr.h = contextMenu->rect.h - SPLIT_ELEM_X_PADDING * 3 - SPLIT_TEXT_H;
+    
+    Gfx_DrawRounderOutline(vg, mainr, Theme_GetColor(THEME_ELEMENT_LIGHT, 255, 1.0f));
+    Gfx_DrawRounderRect(vg, mainr, Theme_GetColor(THEME_ELEMENT_DARK, 255, 1.0f));
+    
+    ScrollBar_Update(&contextMenu->scroll, input, input->cursor.pos, mainr);
+    
+    nvgScissor(vg, UnfoldRect(mainr));
+    for (int i = 0; i < this->numEntry; i++) {
+        Rect r = ScrollBar_GetRect(&contextMenu->scroll, i);
+        Entry* entry = &this->entryList[i];
+        
+        if (!IsBetween(r.y, mainr.y - r.h, mainr.y + mainr.h))
+            continue;
+        
+        if (Rect_PointIntersect(&r, UnfoldVec2(input->cursor.pos))) {
+            if (Input_GetCursor(input, CLICK_L)->dual && entry->index == this->current)
+                contextMenu->state.setCondition = true;
+            else if (Input_SelectClick(input, CLICK_L))
+                this->current = this->change = entry->index;
+        }
+        
+        Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_ELEMENT_BASE, 80, 1.0f));
+        if (entry->index == this->current)
+            Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_PRIM, 200, 1.0f));
+        Gfx_Text(vg, r, NVG_ALIGN_LEFT, Theme_GetColor(THEME_TEXT, 255, 1.0f), x_fmt("%04X: %s", entry->index, entry->name));
+    }
+    nvgResetScissor(vg);
+    
+    ScrollBar_Draw(&contextMenu->scroll, vg);
+    
+    DummySplit_Pop(geo, &this->split);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DatabaseSearch_New(Rect rect, u16 id) {
+    Editor* editor = GetEditor();
+    
+    editor->dataContextMenu = new(DatabaseSearch);
+    editor->dataContextMenu->change = -1;
+    editor->dataContextMenu->current = id;
+    ContextMenu_Custom(&editor->geo, editor->dataContextMenu, NULL, DatabaseSearch_Init, DatabaseSearch_Draw, NULL, rect);
+}
+
+int DatabaseSearch_State(int* ret) {
+    Editor* editor = GetEditor();
+    GeoGrid* geo = &editor->geo;
+    DatabaseSearch* this = editor->dataContextMenu;
+    
+    if (geo->dropMenu.prop != this)
+        return -1;
+    if (this->change > -1) {
+        *ret = this->change;
+        this->change = -1;
+        
+        return 1;
+    }
+    return 9;
+}
+
+void DatabaseSearch_Free() {
+    Editor* editor = GetEditor();
+    DatabaseSearch* this = editor->dataContextMenu;
+    
+    info("clear");
+    Element_ClearActiveTextbox(&this->geo);
+    vfree(this->geo.elemState, this->entryList, editor->dataContextMenu);
+    editor->dataContextMenu = NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

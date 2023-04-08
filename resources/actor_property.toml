@@ -353,7 +353,7 @@
 	category = "ITEMACTION"
 	[[actor.property]]
 		name = "Type"
-		mask = 0x3F00
+		mask = 0x00FF
 		dict = [
 			[ 0x0000, "Green Rupee" ],
 			[ 0x0001, "Blue Rupee" ],
@@ -430,12 +430,14 @@
 	object = 0x0016
 	name = "Tektite"
 	category = "ENEMY"
-	variable = [
-		[ 0xFFFF, "Red Tektite" ],
-		[ 0xFFFE, "Blue Tektite" ],
-		[ 0x0000, "Normal Tektite" ],
-		[ 0x0004, "Dies Instantly" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0xFFFF
+		dict = [
+			[ 0x0000, "Normal" ],
+			[ 0xFFFF, "Red" ],
+			[ 0xFFFE, "Blue" ],
+		]
 [[actor]]
 	index = 0x001C
 	object = 0x0017
@@ -446,11 +448,14 @@
 	object = 0x0018
 	name = "Peahat"
 	category = "ENEMY"
-	variable = [
-		[ 0x0000, "Flying Peahat" ],
-		[ 0x0001, "Peahat Larva" ],
-		[ 0xFFFF, "Burrowed Peahat" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0xFFFF
+		variable = [
+			[ 0xFFFF, "Burrowed" ],
+			[ 0x0000, "Flying" ],
+			[ 0x0001, "Larva" ],
+		]
 [[actor]]
 	index = 0x001E
 	object = 0x0002
@@ -460,11 +465,14 @@
 	index = 0x0020
 	name = "Bug"
 	category = "ITEMACTION"
-	variable = [
-		[ 0x0000, "Large Bug" ],
-		[ 0x0002, "Three Small Bugs" ],
-		[ 0x0003, "Small Bug" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0xFFFF
+		dict = [
+			[ 0x0000, "Large Bug" ],
+			[ 0x0002, "Three Small Bugs" ],
+			[ 0x0003, "Small Bug" ],
+		]
 [[actor]]
 	index = 0x0021
 	name = "Fish"
@@ -1509,13 +1517,17 @@
 [[actor]]
 	index = 0x0095
 	object = 0x0024
-	name = "Skullwalltula/Golden Skulltula"
+	name = "Skulltula"
 	category = "NPC"
-	variable = [
-		[ 0x0000, "Skullwalltula" ],
-		[ 0x8000, "Gold Skulltula, Always Spawns" ],
-		[ 0xA000, "Gold Skulltula, Spawns at night" ],
-	]
+	
+	[[actor.property]]
+		name = "Type"
+		mask = 0xE000
+		dict = [
+			[ 0, "Walltula" ],
+			[ 4, "Gold" ],
+			[ 5, "Gold, Night" ],
+		]
 	[[actor.property]]
 		name = "Location"
 		mask = 0x1F00
@@ -2470,8 +2482,42 @@
 		name = "Collectible Flag"
 		mask = 0x7E00
 	[[actor.property]]
-		name = "Collectible Var"
+		name = "Item"
 		mask = 0x00FF
+		dict = [
+			[ 0x0000, "Green Rupee" ],
+			[ 0x0001, "Blue Rupee" ],
+			[ 0x0002, "Red Rupee" ],
+			[ 0x0013, "Giant Orange Rupee" ],
+			[ 0x0014, "Large Purple Rupee" ],
+			
+			[ 0x0011, "Small Key" ],
+			[ 0x0003, "Recovery Heart" ],
+			[ 0x0006, "Heart Piece" ],
+			
+			[ 0x0005, "Arrow 1" ],
+			[ 0x0008, "Seeds 5 / Arrows 5" ],
+			[ 0x0010, "Seeds 5 / Arrows 5" ],
+			[ 0x0009, "Seeds 5 / Arrows 10" ],
+			[ 0x000A, "Seeds 5 / Arrows 30" ],
+			
+			[ 0x0004, "Bomb" ],
+			[ 0x000B, "Bombs (5)" ],
+			[ 0x0019, "Bombs (5)" ],
+			
+			[ 0x000C, "Deku Nut" ],
+			[ 0x000D, "Deku Stick" ],
+			
+			[ 0x000F, "Small Magic Jar" ],
+			[ 0x000E, "Large Magic Jar" ],
+			
+			[ 0x0012, "Flexible Drop" ],
+			[ 0x0015, "Deku Shield" ],
+			[ 0x0016, "Hylian Shield" ],
+			[ 0x0017, "Zora Tunic" ],
+			[ 0x0018, "Goron Tunic" ],
+			[ 0x001A, "Invisible Item" ],
+		]
 [[actor]]
 	index = 0x0112
 	name = "Invisible Collectable"
@@ -2638,10 +2684,13 @@
 	object = 0x0114
 	name = "Freezard"
 	category = "ENEMY"
-	variable = [
-		[ 0x0000, "Immobile" ],
-		[ 0xFFFF, "Mobile //Hidden When Spawned" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0xFFFF
+		dict = [
+			[ 0x0000, "Stationary" ],
+			[ 0xFFFF, "Mobile" ],
+		]
 [[actor]]
 	index = 0x0122
 	object = 0x0089
@@ -3092,22 +3141,24 @@
 	object = 0x0131
 	name = "Kaepora Gaebora"
 	category = "NPC"
-	variable = [
-		[ 0x0000, "Does nothing" ],
-		[ 0x0040, "Outside of Kokiri Forest exit, auto talks" ],
-		[ 0x0080, "Near Hyrule Castle, auto talks" ],
-		[ 0x00C0, "In front of Kakariko Village, auto talks" ],
-		[ 0x0100, "Between Lake Hylia and Gerudo Valley, auto talks" ],
-		[ 0x0140, "In front of Lake Hylia, auto talks" ],
-		[ 0x0180, "Nothing" ],
-		[ 0x01C0, "Lake Hylia, manual talk, talon grab shortcut" ],
-		[ 0x0200, "Death Mountain summit, manual talk, talon grab shortcut" ],
-		[ 0x0240, "Death Mountain summit, manual talk, talon grab shortcut" ],
-		[ 0x0280, "Desert Colossus, auto talks" ],
-		[ 0x02C0, "Lost Woods, before meeting Saria, auto talks" ],
-		[ 0x0300, "Lost Woods, after meeting Saria, auto talks" ],
-		[ 0x0340, "Outside of Kokiri Forest exit, auto talks, Head position alternates?" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0x0FC0
+		dict = [
+			[ 0x00, "Default" ],
+			[ 0x01, "Outside Kokiri" ],
+			[ 0x02, "Hyrule Castle" ],
+			[ 0x03, "Kakariko" ],
+			[ 0x04, "Hylia Gerudo" ],
+			[ 0x05, "Lake Hylia" ],
+			[ 0x06, "Zora River" ],
+			[ 0x07, "Hylia Shortcut" ],
+			[ 0x08, "Death Mountain" ],
+			[ 0x09, "Death Mountain" ],
+			[ 0x0A, "Desert Colossus" ],
+			[ 0x0B, "Lost Woods Pre-Saria" ],
+			[ 0x0C, "Lost Woods Post-Saria" ],
+		]
 	[[actor.property]]
 		name = "Switch Flag"
 		mask = 0x003F
@@ -3116,10 +3167,13 @@
 	object = 0x0002
 	name = "Rock"
 	category = "PROP"
-	variable = [
-		[ 0x0000, "Small rock, random drops" ],
-		[ 0x0001, "Large light-gray rock, can't pick up as Young Link, no drop" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0x000F
+		dict = [
+			[ 0x0000, "Small, Drops Item" ],
+			[ 0x0001, "Large, Heavy" ],
+		]
 	[[actor.property]]
 		name = "Switch Flag (High Bits)"
 		mask = 0xF000
@@ -3956,10 +4010,13 @@
 	object = 0x0183
 	name = "Wolfos"
 	category = "ENEMY"
-	variable = [
-		[ 0x0000, "Normal" ],
-		[ 0x0001, "White Wolfos, mini-boss music starts" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0x00FF
+		dict = [
+			[ 0, "Normal" ],
+			[ 1, "White" ],
+		]
 	[[actor.property]]
 		name = "Switch Flag (Nullable)"
 		mask = 0xFF00
@@ -4207,23 +4264,29 @@
 	object = 0x006B
 	name = "Ice Stalagmite/Stalagtite"
 	category = "PROP"
-	variable = [
-		[ 0x0000, "Stalagmite (floor)" ],
-		[ 0x0001, "Stalactite (ceiling) //falls when Link is underneath" ],
-		[ 0x0002, "Regrowing Stalactite (ceiling) //falls when Link is underneath" ],
-	]
+	[[actor.property]]
+		name = "Type"
+		mask = 0xFFFF
+		dict = [
+			[ 0x0000, "Stalagmite (floor)" ],
+			[ 0x0001, "Stalactite (ceiling)" ],
+			[ 0x0002, "Respawning (ceiling)" ],
+		]
 [[actor]]
 	index = 0x01C8
 	object = 0x006B
-	name = "2D Ice Bars"
+	name = "Ice Gate"
 	category = "PROP"
-	variable = [
-		[ 0xFF00, "vertical, clear flag" ],
-		[ 0x0001, "vertical, switch softlock" ],
-		[ 0xFF02, "horizontal, clear flag" ],
-	]
 	[[actor.property]]
-		name = "Switch Flag (type 1)"
+		name = "Type"
+		mask = 0x00FF
+		dict = [
+			[ 0, "Vertical, Clear" ],
+			[ 1, "Vertical, Switch" ],
+			[ 2, "Horizontal, Clear" ],
+		]
+	[[actor.property]]
+		name = "Switch Flag"
 		mask = 0x3F00
 [[actor]]
 	index = 0x01C9

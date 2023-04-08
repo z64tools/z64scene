@@ -7,7 +7,7 @@
 typedef struct {
     ElCheckbox buttonIndoor;
     
-    ElButton buttonFPS;
+    ElButton buttonUnused;
     ElButton buttonCulling;
     
     ElButton buttonFog;
@@ -69,9 +69,30 @@ typedef struct {
 } MenuActor;
 
 typedef struct {
-    int       subIndex;
-    MenuDebug menuDebug;
-    MenuActor menuActor;
+    ElTextbox textboxHour;
+    ElTextbox textboxMin;
+    ElButton  buttonGlTime;
+    ElSlider  sliderTimeSpeed;
+    
+    ElPanel panelTime;
+    
+    ElButton buttonSkybox;
+    ElButton buttonSunMoon;
+    ElSlider sliderEcho;
+    ElCombo  comboBeha1;
+    ElCombo  comboBeha2;
+    
+    ElPanel panelEnvironment;
+    
+    Arli behaviour1;
+    Arli behaviour2;
+} MenuRoomEnv;
+
+typedef struct {
+    int         subIndex;
+    MenuDebug   menuDebug;
+    MenuActor   menuActor;
+    MenuRoomEnv menuRoomEnv;
 } Properties;
 
 extern SplitTask gPropertiesTask;

@@ -1,7 +1,7 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
-#include <ext_type.h>
+#include <ext_geogrid.h>
 
 typedef enum {
     DB_VAR,
@@ -36,6 +36,10 @@ typedef struct {
     int numDict;
 } DbProperty;
 
+struct AppInfo;
+typedef struct DatabaseSearch
+    DatabaseSearch;
+
 void Database_Init();
 void Database_Free();
 void Database_Refresh();
@@ -46,5 +50,9 @@ DbProperty* Database_PropertyList(u16 index);
 int Database_NumPropertyList(u16 index);
 DbVariable* Database_VariableList(u16 index);
 int Database_NumVariableList(u16 index);
+
+void DatabaseSearch_New(Rect rect, u16 index);
+int DatabaseSearch_State(int* ret);
+void DatabaseSearch_Free();
 
 #endif
