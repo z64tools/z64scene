@@ -111,7 +111,7 @@ static int ActorPropertiesPanel(MenuActor* this, Actor* actor) {
     return r;
 }
 
-static void ReadProperties(MenuActor* this, Actor* actor, bool set) {
+static void ReadProperties(MenuActor* this, RoomHeader* room, Actor* actor, bool set) {
     if (actor) {
         if (set) {
             actor->gizmo.refresh = true;
@@ -133,6 +133,19 @@ static void ReadProperties(MenuActor* this, Actor* actor, bool set) {
             actor->pos.x = sint(this->posX.txt);
             actor->pos.y = sint(this->posY.txt);
             actor->pos.z = sint(this->posZ.txt);
+            
+            if (this->buttonSelected.state && room) {
+                Actor* a = Arli_Head(&room->actorList);
+                Actor* aend = a + room->actorList.num;
+                
+                for (; a < aend; a++) {
+                    if (a == actor) continue;
+                    if (!(a->state & ACTOR_SELECTED)) continue;
+                    
+                    a->id = actor->id;
+                    a->param = actor->param;
+                }
+            }
         }
         
         Element_Textbox_SetText(&this->index, x_fmt("%04X", actor->id));
@@ -153,20 +166,20 @@ void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     Element_Combo_SetArli(&this->actorEntry, room ? &room->actorList : NULL);
     
     Actor* actor = room ? Arli_At(&room->actorList, room->actorList.cur) : NULL;
-    ReadProperties(this, actor, false);
+    ReadProperties(this, room, actor, false);
     
     struct {
         ElTextbox*  box;
         const char* name;
     } boxTbl[] = {
-        { &this->index,    "ID"    },
-        { &this->variable, "Var"   },
-        { &this->posX,     "X"     },
-        { &this->posY,     "Y"     },
-        { &this->posZ,     "Z"     },
-        { &this->rotX,     "X"     },
-        { &this->rotY,     "Y"     },
-        { &this->rotZ,     "Z"     },
+        { &this->index,    "Index    "    },
+        { &this->variable, "Variable "    },
+        { &this->posX,     "X"            },
+        { &this->posY,     "Y"            },
+        { &this->posZ,     "Z"            },
+        { &this->rotX,     "X"            },
+        { &this->rotY,     "Y"            },
+        { &this->rotZ,     "Z"            },
     };
     
     for (int i = 0; i < ArrCount(boxTbl); i++)
@@ -180,7 +193,9 @@ void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     
     this->buttonAdd.align = NVG_ALIGN_CENTER;
     this->buttonRem.align = NVG_ALIGN_CENTER;
+    this->buttonSelected.align = NVG_ALIGN_CENTER;
     this->refreshDatabase.align = NVG_ALIGN_CENTER;
+    Element_Button_SetProperties(&this->buttonSelected, "Group Edit", true, 0);
     Element_Button_SetProperties(&this->buttonAdd, "New", 0, 0);
     Element_Button_SetProperties(&this->buttonRem, "Del", 0, 0);
     Element_Button_SetProperties(&this->refreshDatabase, "Refresh Properties", 0, 0);
@@ -203,14 +218,13 @@ void MenuActor_Update(Editor* editor, void* __this, Split* split) {
         this->prevIndex = 0xFFFF;
     }
     
-    Element_Separator(false);
-    
     Element_Row(&this->actorEntry, 1.0f);
+    Element_Row(&this->buttonSelected, 1.0f);
     Element_Row(&this->buttonAdd, 0.5f, &this->buttonRem, 0.5f);
     
     Element_Separator(false);
-    
     Element_Row(&this->index, 0.5f, &this->variable, 0.5f);
+    Element_Separator(false);
     
     if (Element_Box(BOX_START, &this->panelPosRot, "Transforms")) {
         Element_Row(&this->posX, 0.5f, &this->rotX, 0.5f);
@@ -286,13 +300,15 @@ void MenuActor_Update(Editor* editor, void* __this, Split* split) {
         set = false;
     }
     
+    Element_Button(&this->buttonSelected);
+    
     if (Element_Combo(&this->actorEntry)) {
         Actor* actor = Arli_At(list, list->cur);
         
         SelectActor(editor, room, actor);
     }
     
-    ReadProperties(this, actor, set);
+    ReadProperties(this, room, actor, set);
     if (Element_Box(BOX_START, &this->panelProperties, "Properties"))
         ActorPropertiesPanel(this, actor);
     Element_Box(BOX_END, &this->panelProperties);

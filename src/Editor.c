@@ -56,13 +56,14 @@ Editor* GetEditor(void) {
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
-    ElCombo fileMenu;
-    ElCombo optionsMenu;
-} Header;
-
-typedef struct {
     
 } FileDialog;
+
+typedef struct {
+    ElCombo    fileMenu;
+    ElCombo    optionsMenu;
+    FileDialog fileDialog;
+} Header;
 
 static void FileDialog_Init(GeoGrid* geo, ContextMenu* context) {
     context->state.offsetOriginRect = false;

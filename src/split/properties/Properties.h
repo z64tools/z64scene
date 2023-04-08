@@ -55,6 +55,7 @@ typedef struct {
     ElTextbox posY;
     ElTextbox posZ;
     
+    ElButton buttonSelected;
     ElButton buttonAdd;
     ElButton buttonRem;
     ElButton refreshDatabase;

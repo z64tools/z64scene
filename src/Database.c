@@ -245,8 +245,8 @@ void Database_Free() {
         for (int k = 0; k < entry->numDict; k++, dict++)
             vfree(dict->text);
         vfree(entry->name, entry->dict);
+        memset(&entry->arli, 0, sizeof(Arli));
     }
-    memset(sSceneEntry, 0, sizeof(sSceneEntry));
     
     vfree(gDatabaseActor);
     gDatabaseNum = 0;

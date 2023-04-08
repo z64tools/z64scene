@@ -2850,18 +2850,24 @@
 	object = 0x011F
 	name = "Rolling Boulder"
 	category = "PROP"
-	variable = [
-		[ 0x0000, "Follows path, disappears, reappears at first waypoint //simulates falling into a hole" ],
-		[ 0x0100, "Follows path, breaks into pieces, reappears at first waypoint //As in adult Death Mountain Trail" ],
-		[ 0x0200, "Follows path, treating it as a closed loop" ],
-		[ 0x0300, "Follows path, halts, reverses, repeat //As in Fire Temple boulder maze" ],
-	]
 	[[actor.property]]
-		name = "Path Id"
+		name = "Loop Type"
+		mask = 0x0300
+		variable = [
+			[ 0, "Disappear" ],
+			[ 1, "Break" ],
+			[ 2, "Closed Loop" ],
+			[ 3, "Ping-Pong" ],
+		]
+	[[actor.property]]
+		name = "Path ID"
 		mask = 0x00FF
 		source = "var"
 	[[actor.property]]
-		name = " Behavior after colliding"
+		name = "Shadow"
+		mask = 0x0400
+	[[actor.property]]
+		name = "Hit Behaviour"
 		mask = 0x0001
 		source = "rot_z"
 [[actor]]
