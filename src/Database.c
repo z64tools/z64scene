@@ -11,12 +11,12 @@ typedef struct {
     
     DbProperty* property;
     int numProperty;
-} Entry;
+} ActorPropertyEntry;
 
-Entry** gDatabaseActor;
+ActorPropertyEntry** gDatabaseActor;
 int gDatabaseNum;
 
-static void ParseVariable(Toml* toml, Entry* entry, int i) {
+static void ActorPropEnt_ParseVariable(Toml* toml, ActorPropertyEntry* entry, int i) {
     entry->numVariable = Toml_ArrCount(toml, "actor[%d].variable", i);
     if (!entry->numVariable) return;
     
@@ -28,7 +28,7 @@ static void ParseVariable(Toml* toml, Entry* entry, int i) {
     }
 }
 
-static void ParsePropDict(Toml* toml, DbProperty* p, int i, int k) {
+static void ActorPropEnt_ParsePropDict(Toml* toml, DbProperty* p, int i, int k) {
     p->numDict = Toml_ArrCount(toml, "actor[%d].property[%d].dict", i, k);
     if (!p->numDict) return;
     DbDictionary* de = p->dict = new(DbDictionary[p->numDict]);
@@ -40,7 +40,7 @@ static void ParsePropDict(Toml* toml, DbProperty* p, int i, int k) {
     }
 }
 
-static void ParseProperty(Toml* toml, Entry* entry, int i) {
+static void ActorPropEnt_ParseProperty(Toml* toml, ActorPropertyEntry* entry, int i) {
     entry->numProperty = Toml_ArrCount(toml, "actor[%d].property", i);
     if (!entry->numProperty) return;
     
@@ -86,7 +86,44 @@ static void ParseProperty(Toml* toml, Entry* entry, int i) {
                 p->source = sourceTbl[j].value;
         vfree(src);
         
-        ParsePropDict(toml, p, i, k);
+        ActorPropEnt_ParsePropDict(toml, p, i, k);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct {
+    struct {
+        DbDictionary* dict;
+        int num;
+    } behaviour1;
+    
+    struct {
+        DbDictionary* dict;
+        int num;
+    } behaviour2;
+} ScenePropertyEntry;
+
+ScenePropertyEntry gDatabaseScene;
+
+static void ScenePropEnt_Parse(Toml* toml) {
+    int num;
+    DbDictionary* dict;
+    
+    num = gDatabaseScene.behaviour1.num = Toml_ArrCount(toml, "behaviour1.options");
+    dict = gDatabaseScene.behaviour1.dict = new(DbDictionary[num]);
+    
+    for (int i = 0; i < num; i++, dict++) {
+        dict->val = Toml_GetInt(toml, "behaviour1.options[%d][0]", i);
+        dict->text = Toml_GetStr(toml, "behaviour1.options[%d][1]", i);
+    }
+    
+    num = gDatabaseScene.behaviour2.num = Toml_ArrCount(toml, "behaviour2.options");
+    dict = gDatabaseScene.behaviour2.dict = new(DbDictionary[num]);
+    
+    for (int i = 0; i < num; i++, dict++) {
+        dict->val = Toml_GetInt(toml, "behaviour2.options[%d][0]", i);
+        dict->text = Toml_GetStr(toml, "behaviour2.options[%d][1]", i);
     }
 }
 
@@ -94,54 +131,61 @@ static void ParseProperty(Toml* toml, Entry* entry, int i) {
 
 void Database_Init() {
     Toml toml = Toml_New();
+    const char* actor_property_toml = "resources/actor_property.toml";
+    const char* scene_property_toml = "resources/scene_property.toml";
     
-    if (!sys_stat("resources/actor_property.toml"))
-        return;
-    
-    Toml_Load(&toml, "resources/actor_property.toml");
-    
-    int num = Toml_ArrCount(&toml, "actor[]");
-    
-    for (int i = 0; i < num; i++) {
-        int index = Toml_GetInt(&toml, "actor[%d].index", i);
+    if (sys_stat(actor_property_toml)) {
+        Toml_Load(&toml, actor_property_toml);
         
-        gDatabaseNum = Max(gDatabaseNum, index);
+        int num = Toml_ArrCount(&toml, "actor[]");
+        
+        for (int i = 0; i < num; i++) {
+            int index = Toml_GetInt(&toml, "actor[%d].index", i);
+            
+            gDatabaseNum = Max(gDatabaseNum, index);
+        }
+        
+        gDatabaseActor = new(ActorPropertyEntry[gDatabaseNum]);
+        
+        for (int i = 0; i < num; i++) {
+            ActorPropertyEntry* entry = new(ActorPropertyEntry);
+            
+            entry->index = Toml_GetInt(&toml, "actor[%d].index", i);
+            entry->name = Toml_GetStr(&toml, "actor[%d].name", i);
+            entry->object = 0xFFFF;
+            
+            _log(
+                "[[" PRNT_BLUE "actor" PRNT_RSET "]]\n"
+                "\tindex = 0x%04X\n"
+                "\tname = \"%s\"\n",
+                entry->index, entry->name);
+            
+            if (Toml_Var(&toml, "actor[%d].object", i))
+                entry->object = Toml_GetInt(&toml, "actor[%d].object", i);
+            
+            _log("actor[%d].variable", i);
+            ActorPropEnt_ParseVariable(&toml, entry, i);
+            _log("actor[%d].property", i);
+            ActorPropEnt_ParseProperty(&toml, entry, i);
+            
+            gDatabaseActor[entry->index] = entry;
+        }
+        
+        Toml_Free(&toml);
     }
     
-    gDatabaseActor = new(Entry[gDatabaseNum]);
-    
-    for (int i = 0; i < num; i++) {
-        Entry* entry = new(Entry);
-        
-        entry->index = Toml_GetInt(&toml, "actor[%d].index", i);
-        entry->name = Toml_GetStr(&toml, "actor[%d].name", i);
-        entry->object = 0xFFFF;
-        
-        _log(
-            "[[" PRNT_BLUE "actor" PRNT_RSET "]]\n"
-            "\tindex = 0x%04X\n"
-            "\tname = \"%s\"\n",
-            entry->index, entry->name);
-        
-        if (Toml_Var(&toml, "actor[%d].object", i))
-            entry->object = Toml_GetInt(&toml, "actor[%d].object", i);
-        
-        _log("actor[%d].variable", i);
-        ParseVariable(&toml, entry, i);
-        _log("actor[%d].property", i);
-        ParseProperty(&toml, entry, i);
-        
-        gDatabaseActor[entry->index] = entry;
+    if (sys_stat(scene_property_toml)) {
+        Toml_Load(&toml, scene_property_toml);
+        ScenePropEnt_Parse(&toml);
+        Toml_Free(&toml);
     }
-    
-    Toml_Free(&toml);
 }
 
 void Database_Free() {
     _log("Free");
     
     for (int i = 0; i < gDatabaseNum; i++) {
-        Entry* e = gDatabaseActor[i];
+        ActorPropertyEntry* e = gDatabaseActor[i];
         
         if (!e) continue;
         
@@ -180,12 +224,11 @@ typedef struct DatabaseSearch {
     Split     split;
     ElTextbox textboxSearch;
     
-    Entry* entryList;
-    int    numEntry;
-    int    initList;
-    int    change;
-    int    current;
-    int    init;
+    ActorPropertyEntry* entryList;
+    int numEntry;
+    int change;
+    int current;
+    int init;
 } DatabaseSearch;
 
 static void DatabaseSearch_Init(GeoGrid* __no_no, ContextMenu* contextMenu) {
@@ -195,10 +238,11 @@ static void DatabaseSearch_Init(GeoGrid* __no_no, ContextMenu* contextMenu) {
     
     this->textboxSearch.clearIcon = true;
     this->textboxSearch.align = NVG_ALIGN_LEFT;
-    this->entryList = new(Entry[gDatabaseNum]);
+    this->entryList = new(ActorPropertyEntry[gDatabaseNum]);
     
     contextMenu->rect.w = 128 + 64;
     contextMenu->rect.h = SPLIT_ELEM_X_PADDING * 3 + SPLIT_TEXT_H * 17;
+    info("wish: %d", SPLIT_TEXT_H * 16);
 }
 
 static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
@@ -206,6 +250,7 @@ static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
     GeoGrid* geo = &this->geo;
     void* vg = geo->vg;
     Input* input = geo->input;
+    int focusSlot = -1;
     
     DummySplit_Push(geo, &this->split, contextMenu->rect);
     
@@ -217,15 +262,10 @@ static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
     
     Element_Textbox(&this->textboxSearch);
     
-    if (!this->init) {
-        Element_SetActiveTextbox(&this->geo, &this->split, &this->textboxSearch);
-        this->init = true;
-    }
-    
-    if (this->textboxSearch.modified || !this->initList) {
+    if (this->textboxSearch.modified || !this->init) {
         bool textMatch = strlen(this->textboxSearch.txt) ? true : false;
         
-        this->initList = true;
+        focusSlot = 0;
         this->numEntry = 0;
         
         for (int i = 0; i < gDatabaseNum; i++) {
@@ -238,6 +278,9 @@ static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
                 if (stristr(gDatabaseActor[i]->name, this->textboxSearch.txt))
                     this->entryList[this->numEntry++] = *gDatabaseActor[i];
             }
+            
+            if (!this->init && this->current == this->entryList[this->numEntry - 1].index)
+                focusSlot = this->numEntry - 1;
         }
         
         ScrollBar_Init(&contextMenu->scroll, this->numEntry, SPLIT_TEXT_H);
@@ -253,12 +296,13 @@ static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
     Gfx_DrawRounderOutline(vg, mainr, Theme_GetColor(THEME_ELEMENT_LIGHT, 255, 1.0f));
     Gfx_DrawRounderRect(vg, mainr, Theme_GetColor(THEME_ELEMENT_DARK, 255, 1.0f));
     
+    ScrollBar_FocusSlot(&contextMenu->scroll, focusSlot);
     ScrollBar_Update(&contextMenu->scroll, input, input->cursor.pos, mainr);
     
     nvgScissor(vg, UnfoldRect(mainr));
     for (int i = 0; i < this->numEntry; i++) {
         Rect r = ScrollBar_GetRect(&contextMenu->scroll, i);
-        Entry* entry = &this->entryList[i];
+        ActorPropertyEntry* entry = &this->entryList[i];
         
         if (!IsBetween(r.y, mainr.y - r.h, mainr.y + mainr.h))
             continue;
@@ -273,13 +317,14 @@ static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
         Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_ELEMENT_BASE, 80, 1.0f));
         if (entry->index == this->current)
             Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_PRIM, 200, 1.0f));
-        Gfx_Text(vg, r, NVG_ALIGN_LEFT, Theme_GetColor(THEME_TEXT, 255, 1.0f), x_fmt("%04X: %s", entry->index, entry->name));
+        Gfx_Text(vg, r, NVG_ALIGN_LEFT, Theme_GetColor(THEME_TEXT, 255, 1.0f), entry->name);
     }
     nvgResetScissor(vg);
     
     ScrollBar_Draw(&contextMenu->scroll, vg);
     
     DummySplit_Pop(geo, &this->split);
+    this->init = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -313,7 +358,6 @@ void DatabaseSearch_Free() {
     Editor* editor = GetEditor();
     DatabaseSearch* this = editor->dataContextMenu;
     
-    info("clear");
     Element_ClearActiveTextbox(&this->geo);
     vfree(this->geo.elemState, this->entryList, editor->dataContextMenu);
     editor->dataContextMenu = NULL;

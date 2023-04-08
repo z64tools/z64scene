@@ -98,4 +98,6 @@ typedef struct {
 
 extern SplitTask gPropertiesTask;
 
+void Properties_BasicHeader(Split* split);
+
 #endif

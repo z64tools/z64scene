@@ -1,0 +1,17 @@
+[behaviour1]
+	name = "Env 1"
+	options = [
+		[ 0, "Overworld" ],
+		[ 1, "Dungeon"   ],
+		[ 2, "House"     ],
+		[ 5, "Boss Room" ],
+	]
+[behaviour2]
+	name = "Env 2"
+	options = [
+		[ 0, "Default"     ],
+		[ 1, "Cold"        ],
+		[ 2, "Hot"         ],
+		[ 3, "Hot (Timer)" ],
+		[ 4, "Comfy"       ],
+	]

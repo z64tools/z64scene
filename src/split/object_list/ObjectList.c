@@ -1,5 +1,4 @@
 #include "ObjectList.h"
-#include "Viewport.h"
 
 void ObjectList_Init(Editor* editor, ObjectList* this, Split* split);
 void ObjectList_Update(Editor* editor, ObjectList* this, Split* split);
