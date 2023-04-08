@@ -1,7 +1,7 @@
-#include "RoomList.h"
-#include "Properties.h"
-#include "Viewport.h"
-#include "ObjectList.h"
+#include "room_list/RoomList.h"
+#include "properties/Properties.h"
+#include "viewport/Viewport.h"
+#include "object_list/ObjectList.h"
 #include "task_init.h"
 
 static void update_nothing(Editor* e, void* instance, Split* split) {

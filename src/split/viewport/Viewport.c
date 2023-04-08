@@ -130,7 +130,7 @@ static void Viewport_CamUpdate(Editor* editor, Viewport* this, Split* split) {
                 View_MoveTo(&this->view, o);
         }
         
-        if (Input_SelectClick(input, CLICK_M) && Input_GetKey(input, KEY_LEFT_CONTROL)->hold) {
+        if (Input_GetCursor(input, CLICK_L)->dual) {
             RayLine ray = View_GetCursorRayLine(&this->view);
             Room* room = Scene_RaycastRoom(&editor->scene, &ray, NULL);
             

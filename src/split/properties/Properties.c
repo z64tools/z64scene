@@ -374,7 +374,8 @@ static void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     
     Element_Separator(false);
     
-    Element_Row(&this->actorEntry, 0.5f, &this->buttonAdd, 0.25f, &this->buttonRem, 0.25f);
+    Element_Row(&this->actorEntry, 1.0f);
+    Element_Row(&this->buttonAdd, 0.5f, &this->buttonRem, 0.5f);
     
     Element_Separator(false);
     
@@ -591,13 +592,16 @@ static void* GetArg(void* ptr, int index) {
     return ((u8*)ptr) + sSubMenuParam[index].offset;
 }
 
-static Rect GetSubRect(Split* split, int index) {
+static Rect GetSubRect(Split* split, int index, int side) {
     Rect r;
     
     r.x = SPLIT_ELEM_X_PADDING / 2;
     r.y = SPLIT_ELEM_X_PADDING + (SIDE_BUTTON_SIZE + SPLIT_ELEM_X_PADDING) * index;
     r.w = SIDE_BUTTON_SIZE;
     r.h = SIDE_BUTTON_SIZE;
+    
+    if (side < 0)
+        return Rect_FlipHori(r, split->dispRect);
     
     return r;
 }
@@ -657,14 +661,18 @@ void Settings_Destroy(Editor* editor, Properties* this, Split* split) {
 }
 
 void Settings_Update(Editor* editor, Properties* this, Split* split) {
+    int xSplit = RectW(split->rect) - split->rect.w / 2;
+    
+    this->side = (xSplit < (editor->app.wdim.x / 2) ? -1 : 1);
+    
     Element_RowY(SPLIT_ELEM_X_PADDING * 2);
-    Element_ShiftX(SIDE_BUTTON_SIZE);
+    Element_ShiftX(SIDE_BUTTON_SIZE * this->side);
     
     if (!split->blockCursor && !editor->geo.state.blockElemInput) {
         Input* input = &editor->input;
         
         for (int i = 0; i < ArrCount(sSubMenuParam); i++) {
-            Rect r = GetSubRect(split, i);
+            Rect r = GetSubRect(split, i, this->side);
             
             if (Input_SelectClick(input, CLICK_L))
                 if (Split_CursorInRect(split, &r))
@@ -680,6 +688,9 @@ void Settings_Draw(Editor* editor, Properties* this, Split* split) {
     Rect r = {
         0, 0, SIDE_BUTTON_SIZE + SPLIT_ELEM_X_PADDING, split->dispRect.h
     };
+    
+    if (this->side < 0)
+        r = Rect_FlipHori(r, split->dispRect);
     Rect scissor = r;
     
     Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_ELEMENT_DARK, 255, 1.1f));
@@ -692,18 +703,16 @@ void Settings_Draw(Editor* editor, Properties* this, Split* split) {
         Rect r;
         NVGcolor col = Theme_GetColor(THEME_TEXT, 255, 1.0f);
         
-        tr = r = GetSubRect(split, i);
+        tr = r = GetSubRect(split, i, this->side);
         tr.x += SPLIT_ELEM_X_PADDING / 2;
         
         if (this->subIndex == i) {
-            r.w += SPLIT_ELEM_X_PADDING / 2;
+            r = Rect_WidenTo(r, (SPLIT_CTXM_DIST / 2) * this->side);
             nvgScissor(vg, UnfoldRect(scissor));
-            r.w += SPLIT_ELEM_X_PADDING;
+            r = Rect_WidenTo(r, SPLIT_CTXM_DIST * this->side);
             Gfx_DrawRounderOutline(vg, r, Theme_GetColor(THEME_ELEMENT_LIGHT, 25, 1.0f));
             Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_BASE, 255, 1.0f));
             nvgResetScissor(vg);
-            
-            r.w -= SPLIT_ELEM_X_PADDING;
             
             col = Theme_GetColor(THEME_PRIM, 255, 1.0f);
         }

@@ -90,6 +90,7 @@ typedef struct {
 
 typedef struct {
     int         subIndex;
+    int         side;
     MenuDebug   menuDebug;
     MenuActor   menuActor;
     MenuRoomEnv menuRoomEnv;
