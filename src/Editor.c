@@ -234,6 +234,7 @@ void Editor_Destroy(Editor* editor) {
     VectorGfx_Free(&gVecGfx_EyeOpen);
     Cursor_Free(&editor->cursor);
     Undo_Destroy();
+    Scene_Free(&editor->scene);
     Gizmo_Free(&editor->gizmo);
     Database_Free();
     
