@@ -87,6 +87,7 @@ static void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
         Gizmo_UnselectAll(&editor->gizmo);
         Actor_UnselectAll(&editor->scene, NULL);
         Scene_Free(&editor->scene);
+        Scene_Init(&editor->scene);
     }
     time_start(10);
     Scene_LoadScene(&editor->scene, item[n]);
@@ -249,9 +250,10 @@ f32 gTotalTime;
 
 void Editor_Update(Editor* editor) {
     profi_start(0);
-    if (editor->scene.kill)
+    if (editor->scene.kill) {
         Scene_Free(&editor->scene);
-    else
+        Scene_Init(&editor->scene);
+    } else
         Scene_Update(&editor->scene);
     
     Undo_Update(&editor->input);

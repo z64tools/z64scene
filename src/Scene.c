@@ -753,7 +753,6 @@ void Scene_Free(Scene* this) {
     
     memset(this, 0, sizeof(*this));
     n64_clearCache();
-    Scene_Init(this);
 }
 
 static void Scene_Light(Scene* this) {
