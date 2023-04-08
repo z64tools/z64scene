@@ -554,7 +554,7 @@ static void Scene_SetHeaderNum(Scene* this) {
 const char* ActorEntry_ElemName(Arli* this, size_t index) {
     Actor* actor = Arli_At(this, index);
     
-    return Database_Name(actor->id);
+    return ActorDatabase_Name(actor->id);
 };
 
 const char* ObjectEntry_ElemName(Arli* this, size_t index) {

@@ -16,6 +16,15 @@ typedef struct {
 ActorPropertyEntry** gDatabaseActor;
 int gDatabaseNum;
 
+////////////////////////////////////////////////////////////////////////////////
+
+static void FreeDbDict(DbDictionary* this, int num) {
+    for (int i = 0; i < num; i++, this++)
+        vfree(this->text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void ActorPropEnt_ParseVariable(Toml* toml, ActorPropertyEntry* entry, int i) {
     entry->numVariable = Toml_ArrCount(toml, "actor[%d].variable", i);
     if (!entry->numVariable) return;
@@ -29,13 +38,13 @@ static void ActorPropEnt_ParseVariable(Toml* toml, ActorPropertyEntry* entry, in
 }
 
 static void ActorPropEnt_ParsePropDict(Toml* toml, DbProperty* p, int i, int k) {
-    p->numDict = Toml_ArrCount(toml, "actor[%d].property[%d].dict", i, k);
+    p->numDict = Toml_ArrCount(toml, "actor[%d].property[%d].variable", i, k);
     if (!p->numDict) return;
     DbDictionary* de = p->dict = new(DbDictionary[p->numDict]);
     
     for (int j = 0; j < p->numDict; j++, de++) {
-        de->val = Toml_GetInt(toml, "actor[%d].property[%d].dict[%d][0]", i, k, j);
-        de->text = Toml_GetStr(toml, "actor[%d].property[%d].dict[%d][1]", i, k, j);
+        de->val = Toml_GetInt(toml, "actor[%d].property[%d].variable[%d][0]", i, k, j);
+        de->text = Toml_GetStr(toml, "actor[%d].property[%d].variable[%d][1]", i, k, j);
         info("%04X, %s", de->val, de->text);
     }
 }
@@ -93,45 +102,42 @@ static void ActorPropEnt_ParseProperty(Toml* toml, ActorPropertyEntry* entry, in
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
-    struct {
-        DbDictionary* dict;
-        int num;
-    } behaviour1;
-    
-    struct {
-        DbDictionary* dict;
-        int num;
-    } behaviour2;
+    const char*   expected;
+    const char*   name;
+    DbDictionary* dict;
+    int  numDict;
+    Arli arli;
 } ScenePropertyEntry;
 
-ScenePropertyEntry gDatabaseScene;
-
-static void ScenePropEnt_Parse(Toml* toml) {
-    int num;
-    DbDictionary* dict;
-    
-    num = gDatabaseScene.behaviour1.num = Toml_ArrCount(toml, "behaviour1.options");
-    dict = gDatabaseScene.behaviour1.dict = new(DbDictionary[num]);
-    
-    for (int i = 0; i < num; i++, dict++) {
-        dict->val = Toml_GetInt(toml, "behaviour1.options[%d][0]", i);
-        dict->text = Toml_GetStr(toml, "behaviour1.options[%d][1]", i);
-    }
-    
-    num = gDatabaseScene.behaviour2.num = Toml_ArrCount(toml, "behaviour2.options");
-    dict = gDatabaseScene.behaviour2.dict = new(DbDictionary[num]);
-    
-    for (int i = 0; i < num; i++, dict++) {
-        dict->val = Toml_GetInt(toml, "behaviour2.options[%d][0]", i);
-        dict->text = Toml_GetStr(toml, "behaviour2.options[%d][1]", i);
-    }
-}
+ScenePropertyEntry sSceneEntry[MENUDATA_MAX] = {
+    [MENUDATA_FILE].expected       = "file",
+    [MENUDATA_OPTIONS].expected    = "options",
+    [MENUDATA_BEHAVIOR_1].expected = "behaviour1",
+    [MENUDATA_BEHAVIOR_2].expected = "behaviour2",
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void FreeDbDict(DbDictionary* this, int num) {
-    for (int i = 0; i < num; i++, this++)
-        vfree(this->text);
+const char* DbDictionary_GetArliIndex(Arli* arli, size_t index) {
+    DbDictionary* dict = Arli_At(arli, index);
+    
+    _log("get index: %d", index);
+    if (!dict) return "Unknown";
+    return dict->text;
+}
+
+void DbDictionary_SetArliIndex(Arli* arli, size_t index) {
+    DbDictionary* dict = Arli_Head(arli);
+    DbDictionary* end = dict + arli->num;
+    
+    arli->cur = -1;
+    
+    for (; dict < end; dict++) {
+        if (dict->val == index) {
+            arli->cur = Arli_IndexOf(arli, dict);
+            return;
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,6 +146,9 @@ void Database_Init() {
     Toml toml = Toml_New();
     const char* actor_property_toml = "resources/actor_property.toml";
     const char* scene_property_toml = "resources/scene_property.toml";
+    
+    if (!sys_stat(scene_property_toml))
+        errr("Missing Resource: %s", scene_property_toml);
     
     if (sys_stat(actor_property_toml)) {
         Toml_Load(&toml, actor_property_toml);
@@ -181,11 +190,29 @@ void Database_Init() {
         Toml_Free(&toml);
     }
     
-    if (sys_stat(scene_property_toml)) {
-        Toml_Load(&toml, scene_property_toml);
-        ScenePropEnt_Parse(&toml);
-        Toml_Free(&toml);
+    ScenePropertyEntry* entry = sSceneEntry;
+    Toml_Load(&toml, scene_property_toml);
+    
+    for (int i = 0; i < ArrCount(sSceneEntry); i++, entry++) {
+        entry->name = Toml_GetStr(&toml, "%s.name", entry->expected);
+        entry->numDict = Toml_ArrCount(&toml, "%s.variable", entry->expected);
+        entry->arli = Arli_New(DbDictionary);
+        
+        DbDictionary* dict = entry->dict = new(DbDictionary[entry->numDict]);
+        
+        entry->arli.num = entry->numDict;
+        entry->arli.begin = (void*)dict;
+        entry->arli.elemSize = sizeof(DbDictionary);
+        
+        Arli_SetElemNameCallback(&entry->arli, DbDictionary_GetArliIndex);
+        
+        for (int k = 0; k < entry->numDict; k++, dict++) {
+            dict->val = Toml_GetInt(&toml, "%s.variable[%d][0]", entry->expected, k);
+            dict->text = Toml_GetStr(&toml, "%s.variable[%d][1]", entry->expected, k);
+        }
     }
+    
+    Toml_Free(&toml);
 }
 
 void Database_Free() {
@@ -211,10 +238,16 @@ void Database_Free() {
         vfree(e->name, e->variable, e->property, e);
     }
     
-    FreeDbDict(gDatabaseScene.behaviour1.dict, gDatabaseScene.behaviour1.num);
-    FreeDbDict(gDatabaseScene.behaviour2.dict, gDatabaseScene.behaviour2.num);
-    vfree(gDatabaseScene.behaviour1.dict);
-    vfree(gDatabaseScene.behaviour2.dict);
+    ScenePropertyEntry* entry = sSceneEntry;
+    for (int i = 0; i < ArrCount(sSceneEntry); i++, entry++) {
+        DbDictionary* dict = entry->dict;
+        
+        for (int k = 0; k < entry->numDict; k++, dict++)
+            vfree(dict->text);
+        vfree(entry->name, entry->dict);
+    }
+    memset(sSceneEntry, 0, sizeof(sSceneEntry));
+    
     vfree(gDatabaseActor);
     gDatabaseNum = 0;
 }
@@ -226,7 +259,7 @@ void Database_Refresh() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct DatabaseSearch {
+typedef struct ActorSearchContextMenu {
     GeoGrid   geo;
     Split     split;
     ElTextbox textboxSearch;
@@ -236,10 +269,10 @@ typedef struct DatabaseSearch {
     int change;
     int current;
     int init;
-} DatabaseSearch;
+} ActorSearchContextMenu;
 
-static void DatabaseSearch_Init(GeoGrid* __no_no, ContextMenu* contextMenu) {
-    DatabaseSearch* this = contextMenu->prop;
+static void ActorSearchContextMenu_Init(GeoGrid* __no_no, ContextMenu* contextMenu) {
+    ActorSearchContextMenu* this = contextMenu->udata;
     
     GeoGrid_Init(&this->geo, &GetEditor()->app, NULL);
     
@@ -249,11 +282,10 @@ static void DatabaseSearch_Init(GeoGrid* __no_no, ContextMenu* contextMenu) {
     
     contextMenu->rect.w = 128 + 64;
     contextMenu->rect.h = SPLIT_ELEM_X_PADDING * 3 + SPLIT_TEXT_H * 17;
-    info("wish: %d", SPLIT_TEXT_H * 16);
 }
 
-static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
-    DatabaseSearch* this = contextMenu->prop;
+static void ActorSearchContextMenu_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
+    ActorSearchContextMenu* this = contextMenu->udata;
     GeoGrid* geo = &this->geo;
     void* vg = geo->vg;
     Input* input = geo->input;
@@ -304,7 +336,7 @@ static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
     Gfx_DrawRounderRect(vg, mainr, Theme_GetColor(THEME_ELEMENT_DARK, 255, 1.0f));
     
     ScrollBar_FocusSlot(&contextMenu->scroll, focusSlot);
-    ScrollBar_Update(&contextMenu->scroll, input, input->cursor.pos, mainr);
+    int busy = ScrollBar_Update(&contextMenu->scroll, input, input->cursor.pos, mainr);
     
     nvgScissor(vg, UnfoldRect(mainr));
     for (int i = 0; i < this->numEntry; i++) {
@@ -314,7 +346,7 @@ static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
         if (!IsBetween(r.y, mainr.y - r.h, mainr.y + mainr.h))
             continue;
         
-        if (Rect_PointIntersect(&r, UnfoldVec2(input->cursor.pos))) {
+        if (!busy && Rect_PointIntersect(&r, UnfoldVec2(input->cursor.pos))) {
             if (Input_GetCursor(input, CLICK_L)->dual && entry->index == this->current)
                 contextMenu->state.setCondition = true;
             else if (Input_SelectClick(input, CLICK_L))
@@ -336,23 +368,23 @@ static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void DatabaseSearch_New(Rect rect, u16 id) {
+void ActorSearchContextMenu_New(Rect rect, u16 id) {
     Editor* editor = GetEditor();
     
     if (!gDatabaseNum) return;
     
-    editor->dataContextMenu = new(DatabaseSearch);
-    editor->dataContextMenu->change = -1;
-    editor->dataContextMenu->current = id;
-    ContextMenu_Custom(&editor->geo, editor->dataContextMenu, NULL, DatabaseSearch_Init, DatabaseSearch_Draw, NULL, rect);
+    editor->searchMenu = new(ActorSearchContextMenu);
+    editor->searchMenu->change = -1;
+    editor->searchMenu->current = id;
+    ContextMenu_Custom(&editor->geo, editor->searchMenu, NULL, ActorSearchContextMenu_Init, ActorSearchContextMenu_Draw, NULL, rect);
 }
 
-int DatabaseSearch_State(int* ret) {
+int ActorSearchContextMenu_State(int* ret) {
     Editor* editor = GetEditor();
     GeoGrid* geo = &editor->geo;
-    DatabaseSearch* this = editor->dataContextMenu;
+    ActorSearchContextMenu* this = editor->searchMenu;
     
-    if (geo->dropMenu.prop != this)
+    if (geo->dropMenu.udata != this)
         return -1;
     if (this->change > -1) {
         *ret = this->change;
@@ -363,48 +395,59 @@ int DatabaseSearch_State(int* ret) {
     return 9;
 }
 
-void DatabaseSearch_Free() {
+void ActorSearchContextMenu_Free() {
     Editor* editor = GetEditor();
-    DatabaseSearch* this = editor->dataContextMenu;
+    ActorSearchContextMenu* this = editor->searchMenu;
     
     Element_ClearActiveTextbox(&this->geo);
-    vfree(this->geo.elemState, this->entryList, editor->dataContextMenu);
-    editor->dataContextMenu = NULL;
+    vfree(this->geo.elemState, this->entryList, editor->searchMenu);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const char* Database_Name(u16 index) {
+Arli* SceneDatabase_GetList(ContextDatabase type) {
+    _assert(type < MENUDATA_MAX);
+    return &sSceneEntry[type].arli;
+}
+
+const char* SceneDatabase_GetName(ContextDatabase type) {
+    _assert(type < MENUDATA_MAX);
+    return sSceneEntry[type].name;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const char* ActorDatabase_Name(u16 index) {
     if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->name;
     return x_fmt("Unknown 0x%04X", index);
 }
 
-u16 Database_ObjectIndex(u16 index) {
+u16 ActorDatabase_ObjectID(u16 index) {
     if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->object;
     return 0xFFFF;
 }
 
-DbProperty* Database_PropertyList(u16 index) {
+DbProperty* ActorDatabase_Properties(u16 index) {
     if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->property;
     return NULL;
 }
 
-int Database_NumPropertyList(u16 index) {
+int ActorDatabase_NumProperties(u16 index) {
     if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->numProperty;
     return 0;
 }
 
-DbVariable* Database_VariableList(u16 index) {
+DbVariable* ActorDatabase_Variables(u16 index) {
     if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->variable;
     return NULL;
 }
 
-int Database_NumVariableList(u16 index) {
+int ActorDatabase_NumVariables(u16 index) {
     if (index < gDatabaseNum && gDatabaseActor[index])
         return gDatabaseActor[index]->numVariable;
     return 0;

@@ -26,16 +26,17 @@ typedef enum {
 } ProfilerSlot;
 
 typedef struct Editor {
-    AppInfo         app;
-    void*           vg;
-    GeoGrid         geo;
-    CursorIcon      cursor;
-    Input           input;
-    Scene           scene;
-    Gizmo           gizmo;
-    Toml            config;
-    const char*     fpconfig;
-    DatabaseSearch* dataContextMenu;
+    AppInfo     app;
+    void*       vg;
+    GeoGrid     geo;
+    CursorIcon  cursor;
+    Input       input;
+    Scene       scene;
+    Gizmo       gizmo;
+    Toml        config;
+    const char* fpconfig;
+    ActorSearchContextMenu* searchMenu;
+    void* head[2];
 } Editor;
 
 void* NewMtx();

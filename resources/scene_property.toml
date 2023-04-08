@@ -1,6 +1,20 @@
+[file]
+	name = "File"
+	variable = [
+		[ 0, "Open" ],
+		[ 1, "Save" ],
+		[ 2, "Save As" ],
+		[ 3, "Export" ],
+	]
+[options]
+	name = "Options"
+	variable = [
+		[ 0, "Yes" ],
+		[ 1, "No" ],
+	]
 [behaviour1]
 	name = "Env 1"
-	options = [
+	variable = [
 		[ 0, "Overworld" ],
 		[ 1, "Dungeon"   ],
 		[ 2, "House"     ],
@@ -8,7 +22,7 @@
 	]
 [behaviour2]
 	name = "Env 2"
-	options = [
+	variable = [
 		[ 0, "Default"     ],
 		[ 1, "Cold"        ],
 		[ 2, "Hot"         ],

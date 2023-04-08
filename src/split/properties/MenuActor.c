@@ -15,21 +15,14 @@ static void SelectActor(Editor* editor, RoomHeader* room, Actor* actor) {
     Gizmo_Focus(&editor->gizmo, &actor->gizmo);
 }
 
-static const char* Arli_DictionaryName(Arli* list, size_t index) {
-    DbDictionary* dict = Arli_At(list, index);
-    
-    if (!dict) return "Unknown";
-    return dict->text;
-}
-
 static int ActorPropertiesPanel(MenuActor* this, Actor* actor) {
     int numProp;
     DbProperty* listProp;
     int r = 0;
     
     if (!actor || !(actor->state & ACTOR_SELECTED)) return false;
-    if (!(numProp = Database_NumPropertyList(actor->id))) return false;
-    if (!(listProp = Database_PropertyList(actor->id))) return false;
+    if (!(numProp = ActorDatabase_NumProperties(actor->id))) return false;
+    if (!(listProp = ActorDatabase_Properties(actor->id))) return false;
     
     if (actor->id != this->prevIndex) {
         this->prevIndex = actor->id;
@@ -54,7 +47,7 @@ static int ActorPropertiesPanel(MenuActor* this, Actor* actor) {
                 list->begin = (void*)prop->dict;
                 list->max = list->num = prop->numDict;
                 
-                Arli_SetElemNameCallback(list, Arli_DictionaryName);
+                Arli_SetElemNameCallback(list, DbDictionary_GetArliIndex);
                 Element_Combo_SetArli(entry->combo, list);
             } else if (smask_bit(prop->mask) == 1) {
                 entry->element = new(ElCheckbox);
@@ -104,15 +97,7 @@ static int ActorPropertiesPanel(MenuActor* this, Actor* actor) {
                 }
                 
                 val = Actor_rmask(actor, prop->source, prop->mask);
-                list->cur = -1; // Invalid Entry
-                dict = prop->dict;
-                
-                for (int k = 0; k < prop->numDict; k++, dict++) {
-                    if (dict->val == val) {
-                        Arli_Set(list, k);
-                        break;
-                    }
-                }
+                DbDictionary_SetArliIndex(list, val);
                 break;
                 
             case PE_CHECK:
@@ -198,7 +183,7 @@ void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     this->refreshDatabase.align = NVG_ALIGN_CENTER;
     Element_Button_SetProperties(&this->buttonAdd, "New", 0, 0);
     Element_Button_SetProperties(&this->buttonRem, "Del", 0, 0);
-    Element_Button_SetProperties(&this->refreshDatabase, "Refresh ActorPropertiesPanel", 0, 0);
+    Element_Button_SetProperties(&this->refreshDatabase, "Refresh Properties", 0, 0);
 }
 
 void MenuActor_Update(Editor* editor, void* __this, Split* split) {
@@ -255,18 +240,18 @@ void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     Element_Condition(&this->index,      actor != NULL && actor->state & ACTOR_SELECTED);
     Element_Condition(&this->variable,   actor != NULL && actor->state & ACTOR_SELECTED);
     
-    if (editor->dataContextMenu) {
+    if (editor->searchMenu) {
         int ret;
         Element_Disable(&this->index);
         
-        switch (DatabaseSearch_State(&ret)) {
+        switch (ActorSearchContextMenu_State(&ret)) {
             case 1:
                 strcpy(this->index.txt, x_fmt("%04X", ret));
                 set++;
                 break;
                 
             case -1:
-                DatabaseSearch_Free();
+                ActorSearchContextMenu_Free();
                 break;
                 
             default:
@@ -279,7 +264,7 @@ void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     
     else if (Element_Operatable(&this->index))
         if (Input_SelectClick(input, CLICK_R))
-            DatabaseSearch_New(Rect_AddPos(this->index.element.rect, split->dispRect), actor->id);
+            ActorSearchContextMenu_New(Rect_AddPos(this->index.element.rect, split->dispRect), actor->id);
     
     set += !!Element_Textbox(&this->variable);
     

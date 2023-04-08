@@ -110,7 +110,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0xF000
-		dict = [
+		variable = [
 			[ 0x0, "Large" ],
 			[ 0x3, "Large, Fall, Switch Flag" ],
 			[ 0x1, "Large, Clear Flag" ],
@@ -127,7 +127,11 @@
 	[[actor.property]]
 		name = "Content"
 		mask = 0x0FE0
-		dict = [
+		variable = [
+			[ 0x003F, "Boss Key" ],
+			[ 0x0040, "Compass" ],
+			[ 0x0041, "Map" ],
+			[ 0x0042, "Small Key" ],
 			[ 0x0004, "Fairy Bow" ],
 			[ 0x0005, "Fairy Slingshot" ],
 			[ 0x0006, "Boomerang" ],
@@ -144,10 +148,6 @@
 			[ 0x005C, "Din’s Fire" ],
 			[ 0x005D, "Farore’s Wind" ],
 			[ 0x005E, "Nayru’s Love" ],
-			[ 0x003F, "DUNGEON Boss Key" ],
-			[ 0x0040, "DUNGEON Compass" ],
-			[ 0x0041, "DUNGEON Map" ],
-			[ 0x0042, "DUNGEON Small Key" ],
 			[ 0x005B, "Gold Skulltula Token" ],
 			[ 0x003E, "Piece of Heart" ],
 			[ 0x003D, "Heart Container" ],
@@ -256,7 +256,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0x000F
-		dict = [
+		variable = [
 			[ 0, "Normal" ],
 			[ 1, "Normal (Rupee at Spawn)" ],
 			[ 2, "Sharp", 0x006E ],
@@ -275,7 +275,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0xF000
-		dict = [
+		variable = [
 			[ 0, "Web Floor" ],
 			[ 1, "Web Wall" ],
 			[ 2, "Web-Covered Hole" ],
@@ -302,7 +302,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0xF
-		dict = [
+		variable = [
 			[ 0, "Unk" ],
 			[ 1, "Default" ],
 			[ 2, "Spawn on Switch Flag" ],
@@ -315,7 +315,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0xFFFF
-		dict = [
+		variable = [
 			[ 0xFFFF, "Default" ],
 			[ 1, "Emit Fire and Smoke on Death" ],
 			[ 2, "No Fire and Smoke on Death" ],
@@ -328,7 +328,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0x000F
-		dict = [
+		variable = [
 			[ 0x0002, "Flying" ],
 			[ 0x0003, "Roosting" ],
 			[ 0x0000, "Fire" ],
@@ -354,7 +354,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0x00FF
-		dict = [
+		variable = [
 			[ 0x0000, "Green Rupee" ],
 			[ 0x0001, "Blue Rupee" ],
 			[ 0x0002, "Red Rupee" ],
@@ -406,7 +406,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0x000F
-		dict = [
+		variable = [
 			[ 2, "Healing Fairy" ],
 			[ 7, "Large Healing Fairy" ],
 			[ 4, "Group of Healing Fairies" ],
@@ -433,7 +433,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0xFFFF
-		dict = [
+		variable = [
 			[ 0x0000, "Normal" ],
 			[ 0xFFFF, "Red" ],
 			[ 0xFFFE, "Blue" ],
@@ -468,7 +468,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0xFFFF
-		dict = [
+		variable = [
 			[ 0x0000, "Large Bug" ],
 			[ 0x0002, "Three Small Bugs" ],
 			[ 0x0003, "Small Bug" ],
@@ -1523,7 +1523,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0xE000
-		dict = [
+		variable = [
 			[ 0, "Walltula" ],
 			[ 4, "Gold" ],
 			[ 5, "Gold, Night" ],
@@ -2239,7 +2239,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0x0700
-		dict = [
+		variable = [
 			[ 0, "Large Crystal" ],
 			[ 1, "Smaller Crystal" ],
 			[ 2, "Crystal Platform" ],
@@ -2294,7 +2294,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0x0007
-		dict = [
+		variable = [
 			[ 0x0000, "Rotatable Bird Statue" ],
 			[ 0x0001, "Circular Trap Door Platform (opens on wrong skull)" ],
 			[ 0x0002, "Gate (one sided collision)" ],
@@ -2484,7 +2484,7 @@
 	[[actor.property]]
 		name = "Item"
 		mask = 0x00FF
-		dict = [
+		variable = [
 			[ 0x0000, "Green Rupee" ],
 			[ 0x0001, "Blue Rupee" ],
 			[ 0x0002, "Red Rupee" ],
@@ -2687,7 +2687,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0xFFFF
-		dict = [
+		variable = [
 			[ 0x0000, "Stationary" ],
 			[ 0xFFFF, "Mobile" ],
 		]
@@ -3144,7 +3144,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0x0FC0
-		dict = [
+		variable = [
 			[ 0x00, "Default" ],
 			[ 0x01, "Outside Kokiri" ],
 			[ 0x02, "Hyrule Castle" ],
@@ -3170,7 +3170,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0x000F
-		dict = [
+		variable = [
 			[ 0x0000, "Small, Drops Item" ],
 			[ 0x0001, "Large, Heavy" ],
 		]
@@ -4013,7 +4013,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0x00FF
-		dict = [
+		variable = [
 			[ 0, "Normal" ],
 			[ 1, "White" ],
 		]
@@ -4267,7 +4267,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0xFFFF
-		dict = [
+		variable = [
 			[ 0x0000, "Stalagmite (floor)" ],
 			[ 0x0001, "Stalactite (ceiling)" ],
 			[ 0x0002, "Respawning (ceiling)" ],
@@ -4280,7 +4280,7 @@
 	[[actor.property]]
 		name = "Type"
 		mask = 0x00FF
-		dict = [
+		variable = [
 			[ 0, "Vertical, Clear" ],
 			[ 1, "Vertical, Switch" ],
 			[ 2, "Horizontal, Clear" ],

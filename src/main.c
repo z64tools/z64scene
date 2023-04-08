@@ -54,7 +54,6 @@ int uni_main(argc, argv) {
     Editor* editor = new(Editor);
     
     sys_setworkdir(sys_appdir());
-    info("Work Directory: %s", sys_appdir());
     
     Main_Install(editor);
     

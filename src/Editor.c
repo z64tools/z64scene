@@ -53,10 +53,58 @@ Editor* GetEditor(void) {
     return sEditor;
 }
 
-static void Editor_UpperHeader(void* pass, void* empty, Split* split) {
-    // Editor* this = pass;
-    // Scene* scene = &this->scene;
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct {
+    ElCombo fileMenu;
+    ElCombo optionsMenu;
+} Header;
+
+typedef struct {
+    
+} FileDialog;
+
+static void FileDialog_Init(GeoGrid* geo, ContextMenu* context) {
+    context->state.offsetOriginRect = false;
+    context->state.widthAdjustment = false;
 }
+
+static void FileDialog_Draw(GeoGrid* geo, ContextMenu* context) {
+    Header* this = context->udata;
+}
+
+static void Header_Init(Header* this, Editor* editor) {
+    Element_Combo_SetArli(&this->fileMenu, SceneDatabase_GetList(MENUDATA_FILE));
+    this->fileMenu.menu = SceneDatabase_GetName(MENUDATA_FILE);
+    this->fileMenu.align = NVG_ALIGN_CENTER;
+    
+    Element_Combo_SetArli(&this->optionsMenu, SceneDatabase_GetList(MENUDATA_OPTIONS));
+    this->optionsMenu.menu = SceneDatabase_GetName(MENUDATA_OPTIONS);
+    this->optionsMenu.align = NVG_ALIGN_CENTER;
+}
+
+static void Header_Update(void* pass, void* ____null____, Split* split) {
+    Editor* editor = pass;
+    Header* this = editor->head[0];
+    
+    Element_Header(NULL, 8, &this->fileMenu, 64, &this->optionsMenu, 64);
+    
+    if (Element_Combo(&this->fileMenu)) {
+        switch (this->fileMenu.arlist->cur) {
+            case 0:
+                Rect r = { 0, 0, UnfoldVec2(editor->app.wdim) };
+                
+                ContextMenu_Custom(&editor->geo, this, NULL, FileDialog_Init, FileDialog_Draw, NULL, r);
+                
+                break;
+        }
+    }
+    
+    if (Element_Combo(&this->optionsMenu)) {
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 static void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
     Editor* editor = GET_CONTEXT(window);
@@ -202,28 +250,16 @@ void Editor_Init(Editor* editor) {
     
     glfwSetWindowIcon(editor->app.window, 5, sIconImage);
     
-    editor->geo.bar[0].headerFunc = Editor_UpperHeader;
     Database_Init();
     Scene_Init(&editor->scene);
     Gizmo_Init(&editor->gizmo, &editor->input, editor->vg);
     Editor_InitIcons(editor);
     
-#if 0
-    static FileDialog loadFile;
-    // static FileDialog saveFile;
-    
-    FileDialog_New(&loadFile, &editor->app, "Load File");
-    // FileDialog_New(&saveFile, &editor->app, "Save File");
-#endif
-    
-    // char* files[] = {
-    //     "../scene.zscene",
-    //     "../room_0.zroom",
-    //     "../room_1.zroom",
-    // };
-    //
-    // Editor_DropCallback(editor->app.window, 3, files);
     DisplayList_GatherReferences(&editor->scene);
+    
+    editor->head[0] = new(Header);
+    editor->geo.bar[0].headerFunc = Header_Update;
+    Header_Init(editor->head[0], editor);
 }
 
 void Editor_Destroy(Editor* editor) {
@@ -242,7 +278,7 @@ void Editor_Destroy(Editor* editor) {
     for (var i = 0; i < 5; i++)
         Image_Free(&sTexelFile[i]);
     
-    vfree(editor);
+    vfree(editor->head[0], editor->head[1], editor);
 }
 
 f32 gFpsTime;
