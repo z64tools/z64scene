@@ -12,25 +12,24 @@ void Main_Install(Editor* this) {
     else
         this->config = Toml_New();
     
-    if (!sys_stat(appdata)) {
+    if (!sys_stat(x_fmt("%s/file_icon.ico", appdata))) {
         Memfile mem = Memfile_New();
-        char reg[1024] = {};
-        wchar wreg[1024] = {};
         
-        sys_mkdir("%s/", appdata);
         Memfile_LoadMem(&mem, gFileIcon.data, gFileIcon.size);
         Memfile_SaveBin(&mem, x_fmt("%s/file_icon.ico", appdata));
         
+#if 0
+        char reg[1024] = {};
+        wchar wreg[1024] = {};
         mem = Memfile_New();
         snprintf(reg, 1024,
-            "Windows Registry Editor Version 5.00"      "\x0D\n"
-            ""                                          "\x0D\n"
-            "[HKEY_CLASSES_ROOT\\.zsp]"                 "\x0D\n"
-            "@=\"Zelda Scene Package\""                 "\x0D\n"
-            ""                                          "\x0D\n"
-            "[HKEY_CLASSES_ROOT\\.zsp\\DefaultIcon]"    "\x0D\n"
-            "@=\"%s\\\\z64scene\\\\file_icon.ico\""     "\x0D\n",
-            "%AppData%"
+            "Windows Registry Editor Version 5.00"           "\x0D\n"
+            ""                                               "\x0D\n"
+            "[HKEY_CLASSES_ROOT\\.zsp]"                      "\x0D\n"
+            "@=\"Zelda Scene Package\""                      "\x0D\n"
+            ""                                               "\x0D\n"
+            "[HKEY_CLASSES_ROOT\\.zsp\\DefaultIcon]"         "\x0D\n"
+            "@=\"%%AppData%%\\\\z64scene\\\\file_icon.ico\"" "\x0D\n"
         );
         
         strto16(wreg, reg);
@@ -47,6 +46,7 @@ void Main_Install(Editor* this) {
         
         system(x_fmt("%s/file_icon.reg", appdata));
         cli_hide();
+#endif
     }
 }
 

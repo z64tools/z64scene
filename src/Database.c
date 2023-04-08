@@ -129,6 +129,13 @@ static void ScenePropEnt_Parse(Toml* toml) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void FreeDbDict(DbDictionary* this, int num) {
+    for (int i = 0; i < num; i++, this++)
+        vfree(this->text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void Database_Init() {
     Toml toml = Toml_New();
     const char* actor_property_toml = "resources/actor_property.toml";
@@ -197,18 +204,19 @@ void Database_Free() {
         DbProperty* prop = e->property;
         
         for (int j = 0; j < e->numProperty; j++, prop++) {
-            DbDictionary* dict = prop->dict;
-            
-            for (int k = 0; k < prop->numDict; k++, dict++)
-                vfree(dict->text);
-            
+            FreeDbDict(prop->dict, prop->numDict);
             vfree(prop->name, prop->dict);
         }
         
         vfree(e->name, e->variable, e->property, e);
     }
     
+    FreeDbDict(gDatabaseScene.behaviour1.dict, gDatabaseScene.behaviour1.num);
+    FreeDbDict(gDatabaseScene.behaviour2.dict, gDatabaseScene.behaviour2.num);
+    vfree(gDatabaseScene.behaviour1.dict);
+    vfree(gDatabaseScene.behaviour2.dict);
     vfree(gDatabaseActor);
+    
     gDatabaseNum = 0;
 }
 

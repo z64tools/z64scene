@@ -728,6 +728,25 @@ void Scene_Free(Scene* this) {
         vfree(mesh->segment, mesh->disp.opa, mesh->disp.xlu, mesh->name);
     }
     
+    for (var k = 0; k < ArrCount(this->room[0].header); k++) {
+        SceneHeader* scene = &this->header[k];
+        
+        Arli_Free(&scene->spawnList);
+        Arli_Free(&scene->pathList);
+        Arli_Free(&scene->transitionList);
+        Arli_Free(&scene->envList);
+        Arli_Free(&scene->exitList);
+        
+        for (var i = 0; i < ArrCount(this->room); i++) {
+            Room* room = &this->room[i];
+            RoomHeader* header = &room->header[k];
+            
+            Arli_Free(&header->actorList);
+            Arli_Free(&header->objectList);
+            Arli_Free(&header->roomLight);
+        }
+    }
+    
     CollisionMesh_Free(&this->colMesh);
     vfree(this->segment);
     Arli_Free(&this->ui.roomNameList);
