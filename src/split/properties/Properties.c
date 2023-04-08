@@ -115,7 +115,7 @@ static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
     
     Element_Separator(false);
     
-    Element_Row(Element_Text("Render"), 1.0f);
+    // Element_Row(Element_Text("Render"), 1.0f);
     Element_Row( &this->buttonUnused, 0.5f, &this->buttonCulling, 0.5f);
     Element_Row( &this->buttonFog, 0.5f, &this->buttonColView, 0.5f);
     
