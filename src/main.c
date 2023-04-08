@@ -5,7 +5,7 @@ extern DataFile gFileIcon;
 void Main_Install(Editor* this) {
     const char* appdata = sys_appdata();
     
-    this->fpconfig = fmt("%s/config.toml", appdata);
+    this->fpconfig = qxf(fmt("%s/config.toml", appdata));
     
     if (sys_stat(this->fpconfig))
         Toml_Load(&this->config, this->fpconfig);
