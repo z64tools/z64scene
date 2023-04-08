@@ -5,18 +5,18 @@ extern DataFile gFileIcon;
 void Main_Install(Editor* this) {
     const char* appdata = sys_appdata();
     
-    this->fpconfig = qxf(fmt("%s/config.toml", appdata));
+    this->fpconfig = qxf(fmt("%sconfig.toml", appdata));
     
     if (sys_stat(this->fpconfig))
         Toml_Load(&this->config, this->fpconfig);
     else
         this->config = Toml_New();
     
-    if (!sys_stat(x_fmt("%s/file_icon.ico", appdata))) {
+    if (!sys_stat(x_fmt("%sfile_icon.ico", appdata))) {
         Memfile mem = Memfile_New();
         
         Memfile_LoadMem(&mem, gFileIcon.data, gFileIcon.size);
-        Memfile_SaveBin(&mem, x_fmt("%s/file_icon.ico", appdata));
+        Memfile_SaveBin(&mem, x_fmt("%sfile_icon.ico", appdata));
         
 #if 0
         char reg[1024] = {};
@@ -36,7 +36,7 @@ void Main_Install(Editor* this) {
         Memfile_Write(&mem, "\xFF\xFE", 2);
         Memfile_Write(&mem, wreg, strwlen(wreg) * 2);
         
-        Memfile_SaveBin(&mem, x_fmt("%s/file_icon.reg", appdata));
+        Memfile_SaveBin(&mem, x_fmt("%sfile_icon.reg", appdata));
         Memfile_Free(&mem);
         
         cli_show();
@@ -44,16 +44,17 @@ void Main_Install(Editor* this) {
         info("Press enter to continue.");
         cli_getc();
         
-        system(x_fmt("%s/file_icon.reg", appdata));
+        system(x_fmt("%sfile_icon.reg", appdata));
         cli_hide();
 #endif
     }
 }
 
 int uni_main(argc, argv) {
-    Editor* editor = new(*editor);
+    Editor* editor = new(Editor);
     
     sys_setworkdir(sys_appdir());
+    info("Work Directory: %s", sys_appdir());
     
     Main_Install(editor);
     

@@ -216,7 +216,6 @@ void Database_Free() {
     vfree(gDatabaseScene.behaviour1.dict);
     vfree(gDatabaseScene.behaviour2.dict);
     vfree(gDatabaseActor);
-    
     gDatabaseNum = 0;
 }
 
@@ -339,6 +338,8 @@ static void DatabaseSearch_Draw(GeoGrid* __no_no, ContextMenu* contextMenu) {
 
 void DatabaseSearch_New(Rect rect, u16 id) {
     Editor* editor = GetEditor();
+    
+    if (!gDatabaseNum) return;
     
     editor->dataContextMenu = new(DatabaseSearch);
     editor->dataContextMenu->change = -1;

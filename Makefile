@@ -3,9 +3,7 @@ ifeq (,$(wildcard settings.mk))
 endif
 include settings.mk
 
-CFLAGS          = -g3 -Wall -Wno-switch -Wno-unused-function -DEXTLIB=220 -DNDEBUG -I z64viewer/include/ -I src/
-OPT_WIN32      := -Ofast
-OPT_LINUX      := -Ofast
+CFLAGS          = -Os -g -Wall -Wno-switch -Wno-unused-function -DEXTLIB=220 -DNDEBUG -I z64viewer/include/ -I src/
 SOURCE_C        = $(shell find src/* -type f -name '*.c' -not -name 'TEST.c')
 SOURCE_C       += $(shell find z64viewer/src/* -type f -name '*.c')
 SOURCE_O_LINUX  = $(foreach f,$(SOURCE_C:.c=.o),bin/linux/$f)
@@ -80,7 +78,7 @@ bin/linux/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflo
 	
 bin/linux/%.o: %.c
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)]"
-	@gcc -c -o $@ $< $(OPT_LINUX) $(CFLAGS)
+	@gcc -c -o $@ $< $(CFLAGS)
 	$(GD_LINUX)
 	
 bin/linux/assets/%.o: assets/% $(DataFileCompiler)
@@ -102,7 +100,7 @@ bin/win32/z64viewer/%.o: CFLAGS += -Wno-unused-variable -Wno-shift-count-overflo
 	
 bin/win32/%.o: %.c
 	@echo "$(PRNT_RSET)[$(PRNT_PRPL)$(notdir $@)$(PRNT_RSET)]"
-	@i686-w64-mingw32.static-gcc -c -o $@ $< $(OPT_WIN32) $(CFLAGS) -D_WIN32 -municode
+	@i686-w64-mingw32.static-gcc -c -o $@ $< $(CFLAGS) -D_WIN32 -municode
 	$(GD_WIN32)
 	
 bin/win32/assets/%.o: assets/% $(DataFileCompiler)

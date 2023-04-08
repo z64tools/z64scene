@@ -91,10 +91,6 @@ static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
         Element_Color_SetColor(&this->envFogColor, NULL);
     }
     
-    // Element_Row(NULL, 0.5f, &this->buttonIndoor, 0.5f);
-    // Element_Button_SetProperties(&this->buttonIndoor, true, scene->indoorLight);
-    // Element_Checkbox(&this->buttonIndoor);
-    
     Element_Row(&this->envAmbient, 1.0f);
     Element_Color(&this->envAmbient);
     
@@ -119,9 +115,9 @@ static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
     
     Element_Separator(false);
     
-    Element_Row(Element_Text("Render"), 1.0);
-    Element_Row( &this->buttonUnused, 0.5, &this->buttonCulling, 0.5);
-    Element_Row( &this->buttonFog, 0.5, &this->buttonColView, 0.5);
+    Element_Row(Element_Text("Render"), 1.0f);
+    Element_Row( &this->buttonUnused, 0.5f, &this->buttonCulling, 0.5f);
+    Element_Row( &this->buttonFog, 0.5f, &this->buttonColView, 0.5f);
     
     Element_Button_SetProperties(&this->buttonFog, NULL, true, scene->state & SCENE_DRAW_FOG);
     Element_Button_SetProperties(&this->buttonCulling, NULL, true, scene->state & SCENE_DRAW_CULLING);
@@ -137,7 +133,7 @@ static void MenuDebug_Update(Editor* editor, void* __this, Split* split) {
     
     Element_Separator(false);
     
-    Element_Row(&this->killScene, 1.0);
+    Element_Row(&this->killScene, 1.0f);
     if (Element_Button(&this->killScene)) {
         Gizmo_UnselectAll(&editor->gizmo);
         Actor_UnselectAll(&editor->scene, NULL);
