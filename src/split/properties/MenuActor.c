@@ -90,7 +90,7 @@ static int ActorPropertiesPanel(MenuActor* this, Actor* actor) {
                 break;
                 
             case PE_COMBO:
-                if (Element_Combo(entry->combo)) {
+                if (Element_Combo(entry->combo) > -1) {
                     r = true;
                     dict = Arli_At(list, list->cur);
                     Actor_wmask(actor, prop->source, dict->val, prop->mask);
@@ -198,7 +198,7 @@ void MenuActor_Init(Editor* editor, void* __this, Split* split) {
     Element_Button_SetProperties(&this->buttonSelected, "Group Edit", true, 0);
     Element_Button_SetProperties(&this->buttonAdd, "New", 0, 0);
     Element_Button_SetProperties(&this->buttonRem, "Del", 0, 0);
-    Element_Button_SetProperties(&this->refreshDatabase, "Refresh Properties", 0, 0);
+    Element_Button_SetProperties(&this->refreshDatabase, "Refresh", 0, 0);
 }
 
 void MenuActor_Update(Editor* editor, void* __this, Split* split) {
@@ -207,24 +207,22 @@ void MenuActor_Update(Editor* editor, void* __this, Split* split) {
     RoomHeader* room = Scene_GetRoomHeader(&editor->scene, editor->scene.curRoom);
     
     Element_Combo_SetArli(&this->actorEntry, room ? &room->actorList : NULL);
-    Arli* list = this->actorEntry.arlist;
+    Arli* list = this->actorEntry.list;
     Actor* actor = list ? Arli_At(list, list->cur) : NULL;
     int set = 0;
     
-    Element_Header(split->taskCombo, 92, &this->refreshDatabase, 120);
+    Element_Header(split->taskCombo, 92, &this->refreshDatabase, 78, &this->buttonSelected, 92);
     Element_Combo(split->taskCombo);
+    Element_Button(&this->buttonSelected);
     if (Element_Button(&this->refreshDatabase)) {
         Database_Refresh();
         this->prevIndex = 0xFFFF;
     }
     
     Element_Row(&this->actorEntry, 1.0f);
-    Element_Row(&this->buttonSelected, 1.0f);
     Element_Row(&this->buttonAdd, 0.5f, &this->buttonRem, 0.5f);
     
-    Element_Separator(false);
     Element_Row(&this->index, 0.5f, &this->variable, 0.5f);
-    Element_Separator(false);
     
     if (Element_Box(BOX_START, &this->panelPosRot, "Transforms")) {
         Element_Row(&this->posX, 0.5f, &this->rotX, 0.5f);
@@ -300,9 +298,7 @@ void MenuActor_Update(Editor* editor, void* __this, Split* split) {
         set = false;
     }
     
-    Element_Button(&this->buttonSelected);
-    
-    if (Element_Combo(&this->actorEntry)) {
+    if (Element_Combo(&this->actorEntry) > -1) {
         Actor* actor = Arli_At(list, list->cur);
         
         SelectActor(editor, room, actor);

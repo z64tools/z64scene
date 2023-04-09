@@ -57,8 +57,259 @@ Editor* GetEditor(void) {
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
-
+    GeoGrid grid;
+    Split*  split[4];
+    char*   path;
+    
+    struct SidePanel {
+        ElPanel     panel;
+        ElContainer container;
+        Arli list;
+    } volumes, bookmarks;
+    
+    struct SearchPanel {
+        ElTextbox path;
+        ElTextbox search;
+    } search;
+    
+    struct ConfirmPanel {
+        ElTextbox textbox;
+        ElButton  confirm, cancel;
+    } confirm;
+    
+    enum FileDialogAction {
+        FILE_DIALOG_OPEN_FILE,
+        FILE_DIALOG_SAVE_FILE,
+        FILE_DIALOG_FOLDER,
+        FILE_DIALOG_MAX,
+    } action;
 } FileDialog;
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void FileDialog_SidePanel(FileDialog* this, ContextMenu* context, Rect mainRect, void* vg) {
+    struct SidePanel* volumes = &this->volumes;
+    struct SidePanel* bookmarks = &this->bookmarks;
+    
+    Gfx_DrawRounderRect(vg, mainRect, Theme_GetColor(THEME_BASE, 255, 1.0f));
+    
+    if (Element_Box(BOX_START, &volumes->panel, "Volumes")) {
+        Element_Row(&volumes->container, 1.0f);
+        
+        Element_Container(&volumes->container);
+    }
+    Element_Box(BOX_END, &volumes->panel);
+    
+    if (Element_Box(BOX_START, &bookmarks->panel, "Bookmarks")) {
+        Element_Row(&bookmarks->container, 1.0f);
+        
+        Element_Container(&bookmarks->container);
+    }
+    Element_Box(BOX_END, &bookmarks->panel);
+}
+
+static void FileDialog_FilePanel(FileDialog* this, ContextMenu* context, Rect mainRect, void* vg) {
+    
+}
+
+static void FileDialog_SearchPanel(FileDialog* this, ContextMenu* context, Rect mainRect, void* vg) {
+    struct SearchPanel* search = &this->search;
+    
+    Element_Row(&search->path, 0.75f, &search->search, 0.25f);
+    Element_Textbox(&search->path);
+    Element_Textbox(&search->search);
+}
+
+static void FileDialog_BottomPanel(FileDialog* this, ContextMenu* context, Rect mainRect, void* vg) {
+    struct ConfirmPanel* confirm = &this->confirm;
+    
+    Element_Row(&confirm->textbox, 0.60f, &confirm->confirm, 0.20f, &confirm->cancel, 0.20f);
+    Element_Textbox(&confirm->textbox);
+    
+    if (Element_Button(&confirm->confirm))
+        context->state.setCondition = 1;
+    
+    if (Element_Button(&confirm->cancel))
+        context->state.setCondition = -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline Toml* FileDialog_OpenToml() {
+    const char* file = x_fmt("%sfile_dialog.toml", sys_appdata());
+    static Toml toml;
+    
+    toml = Toml_New();
+    
+    if (sys_stat(file))
+        Toml_Load(&toml, file);
+    
+    return &toml;
+}
+
+static inline void FileDialog_SaveToml(Toml* toml) {
+    const char* file = x_fmt("%sfile_dialog.toml", sys_appdata());
+    
+    Toml_Save(toml, file);
+}
+
+static void FileDialog_LoadConfig(FileDialog* this) {
+    Toml* toml = FileDialog_OpenToml();
+    
+    for (char i = 'A'; i <= 'Z'; i++) {
+        char volume[128] = {};
+        
+        xl_snprintf(volume, 128, "%c:/", i);
+        
+        if (sys_isdir(volume)) {
+            xl_snprintf(volume, 128, "%s (%c:)", sys_volumename(volume), i);
+            
+            Arli_Add(&this->volumes.list, volume);
+            info("%s", volume);
+        }
+    }
+    
+    char msg[][128] = {
+        "Master of Time",
+        "The Sealed Palace",
+        "The Missing Link",
+        "Nimpize Adventure",
+    };
+    
+    for (int i = 0; i < ArrCount(msg); i++)
+        Arli_Add(&this->bookmarks.list, msg[i]);
+    
+    Toml_Free(toml);
+}
+
+static void FileDialog_SaveConfig(FileDialog* this) {
+    Toml* toml = FileDialog_OpenToml();
+    
+    FileDialog_SaveToml(toml);
+    Toml_Free(toml);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void FileDialog_Init(GeoGrid* mainGrid, ContextMenu* context) {
+    FileDialog* this = context->udata;
+    struct SidePanel* volumes = &this->volumes;
+    struct SidePanel* bookmarks = &this->bookmarks;
+    struct SearchPanel* search = &this->search;
+    struct ConfirmPanel* confirm = &this->confirm;
+    
+    for (int i = 0; i < ArrCount(this->split); i++)
+        this->split[i] = new(Split);
+    this->path = new(char[128]);
+    
+    volumes->list = Arli_New(char[64]);
+    bookmarks->list = Arli_New(char[64]);
+    Arli_SetElemNameCallback(&volumes->list, Arli_StringCallback);
+    Arli_SetElemNameCallback(&bookmarks->list, Arli_StringCallback);
+    
+    this->action = (int)context->element;
+    context->state.offsetOriginRect = false;
+    context->state.widthAdjustment = false;
+    context->state.distanceCheck = false;
+    context->state.maximize = true;
+    mainGrid->state.cullSplits = 1;
+    
+    GeoGrid_Init(&this->grid, &GetEditor()->app, NULL);
+    
+    const char* message[FILE_DIALOG_MAX] = {
+        [FILE_DIALOG_OPEN_FILE] = "Open",
+        [FILE_DIALOG_SAVE_FILE] = "Save",
+        [FILE_DIALOG_FOLDER] = "Select",
+    };
+    
+    Element_Button_SetProperties(&confirm->confirm, message[this->action], false, false);
+    Element_Button_SetProperties(&confirm->cancel, "Cancel", false, false);
+    Element_Container_SetArli(&volumes->container, &volumes->list, 5);
+    Element_Container_SetArli(&bookmarks->container, &bookmarks->list, 5);
+    volumes->container.align = NVG_ALIGN_LEFT;
+    volumes->container.controller = true;
+    volumes->container.stretch = true;
+    bookmarks->container.align = NVG_ALIGN_LEFT;
+    bookmarks->container.controller = true;
+    bookmarks->container.stretch = true;
+    
+    search->path.align = NVG_ALIGN_LEFT;
+    search->search.align = NVG_ALIGN_LEFT;
+    confirm->textbox.align = NVG_ALIGN_LEFT;
+    confirm->confirm.align = confirm->cancel.align = NVG_ALIGN_CENTER;
+    confirm->confirm.element.colOvrdBase = THEME_PRIM;
+    
+    FileDialog_LoadConfig(this);
+}
+
+static void FileDialog_Destroy(GeoGrid* mainGrid, ContextMenu* context) {
+    FileDialog* this = context->udata;
+    struct SidePanel* volumes = &this->volumes;
+    struct SidePanel* bookmarks = &this->bookmarks;
+    
+    // struct SearchPanel* search = &this->search;
+    // struct ConfirmPanel* confirm = &this->confirm;
+    
+    mainGrid->state.cullSplits = false;
+    FileDialog_SaveConfig(this);
+    
+    Arli_Free(&volumes->list);
+    Arli_Free(&bookmarks->list);
+    
+    vfree(this->path);
+    for (int i = 0; i < ArrCount(this->split); i++)
+        vfree(this->split[i]);
+}
+
+static void FileDialog_Draw(GeoGrid* mainGrid, ContextMenu* context) {
+    FileDialog* this = context->udata;
+    void* vg = mainGrid->vg;
+    Rect r;
+    int sliceA = context->rect.w * 0.25f;
+    int sliceB = context->rect.w - sliceA;
+    int height = SPLIT_TEXT_H + SPLIT_ELEM_X_PADDING * 4;
+    
+    r = Rect_ShrinkX(context->rect, -sliceB);
+    _log("FileDialow: SidePanel");
+    DummySplit_Push(&this->grid, this->split[0], r); {
+        r.w--;
+        Gfx_DrawRounderOutline(vg, r, Theme_GetColor(THEME_BASE, 255, 1.5f));
+        
+        FileDialog_SidePanel(this, context, this->split[0]->rect, vg);
+    } DummySplit_Pop(&this->grid, this->split[0]);
+    
+    r = Rect_ShrinkX(context->rect, sliceA);
+    r = Rect_ShrinkY(r, (context->rect.h - height));
+    _log("FileDialow: SearchPanel");
+    DummySplit_Push(&this->grid, this->split[1], r); {
+        r.h--;
+        Gfx_DrawRounderOutline(vg, r, Theme_GetColor(THEME_BASE, 255, 1.5f));
+        
+        FileDialog_SearchPanel(this, context, this->split[1]->rect, vg);
+    } DummySplit_Pop(&this->grid, this->split[1]);
+    
+    r = Rect_ShrinkX(context->rect, sliceA);
+    r = Rect_ShrinkY(r, -height);
+    r = Rect_ShrinkY(r, height);
+    _log("FileDialow: FilePanel");
+    DummySplit_Push(&this->grid, this->split[2], r); {
+        r.h--;
+        Gfx_DrawRounderOutline(vg, r, Theme_GetColor(THEME_BASE, 255, 1.5f));
+        
+        FileDialog_FilePanel(this, context, this->split[2]->rect, vg);
+    } DummySplit_Pop(&this->grid, this->split[2]);
+    
+    r = Rect_ShrinkX(context->rect, sliceA);
+    r = Rect_ShrinkY(r, -(context->rect.h - height));
+    _log("FileDialow: BottomPanel");
+    DummySplit_Push(&this->grid, this->split[3], r); {
+        Gfx_DrawRounderOutline(vg, r, Theme_GetColor(THEME_BASE, 255, 1.5f));
+        
+        FileDialog_BottomPanel(this, context, this->split[3]->rect, vg);
+    } DummySplit_Pop(&this->grid, this->split[3]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
     ElCombo    fileMenu;
@@ -66,43 +317,37 @@ typedef struct {
     FileDialog fileDialog;
 } Header;
 
-static void FileDialog_Init(GeoGrid* geo, ContextMenu* context) {
-    context->state.offsetOriginRect = false;
-    context->state.widthAdjustment = false;
-}
-
-static void FileDialog_Draw(GeoGrid* geo, ContextMenu* context) {
-    Header* this = context->udata;
-}
-
 static void Header_Init(Header* this, Editor* editor) {
     Element_Combo_SetArli(&this->fileMenu, SceneDatabase_GetList(MENUDATA_FILE));
-    this->fileMenu.menu = SceneDatabase_GetName(MENUDATA_FILE);
     this->fileMenu.align = NVG_ALIGN_CENTER;
 
     Element_Combo_SetArli(&this->optionsMenu, SceneDatabase_GetList(MENUDATA_OPTIONS));
-    this->optionsMenu.menu = SceneDatabase_GetName(MENUDATA_OPTIONS);
     this->optionsMenu.align = NVG_ALIGN_CENTER;
+    
 }
 
 static void Header_Update(void* pass, void* ____null____, Split* split) {
     Editor* editor = pass;
     Header* this = editor->head[0];
-
+    Rect r = { 0, 0, UnfoldVec2(editor->app.wdim) };
+    
+    this->fileMenu.title = SceneDatabase_GetName(MENUDATA_FILE);
+    this->optionsMenu.title = SceneDatabase_GetName(MENUDATA_OPTIONS);
     Element_Header(NULL, 8, &this->fileMenu, 64, &this->optionsMenu, 64);
-
-    if (Element_Combo(&this->fileMenu)) {
-        switch (this->fileMenu.arlist->cur) {
-            case 0:
-                Rect r = { 0, 0, UnfoldVec2(editor->app.wdim) };
-
-                ContextMenu_Custom(&editor->geo, this, NULL, FileDialog_Init, FileDialog_Draw, NULL, r);
-
-                break;
-        }
+    
+    switch (Element_Combo(&this->fileMenu)) {
+        case 0:
+            ContextMenu_Custom(&editor->geo, &this->fileDialog, (void*)FILE_DIALOG_OPEN_FILE, FileDialog_Init, FileDialog_Draw, FileDialog_Destroy, r);
+            break;
+        case 1:
+            ContextMenu_Custom(&editor->geo, &this->fileDialog, (void*)FILE_DIALOG_SAVE_FILE, FileDialog_Init, FileDialog_Draw, FileDialog_Destroy, r);
+            break;
+        case 2:
+            ContextMenu_Custom(&editor->geo, &this->fileDialog, (void*)FILE_DIALOG_SAVE_FILE, FileDialog_Init, FileDialog_Draw, FileDialog_Destroy, r);
+            break;
     }
-
-    if (Element_Combo(&this->optionsMenu)) {
+    
+    if (Element_Combo(&this->optionsMenu) > -1) {
     }
 }
 
@@ -270,6 +515,14 @@ void Editor_Init(Editor* editor) {
     editor->head[0] = new(Header);
     editor->geo.bar[0].headerFunc = Header_Update;
     Header_Init(editor->head[0], editor);
+    
+    char* items[] = {
+        "../room_0.zroom",
+        "../room_1.zroom",
+        "../scene.zscene",
+    };
+    
+    Editor_DropCallback(editor->app.window, 3, items);
 }
 
 void Editor_Destroy(Editor* editor) {
