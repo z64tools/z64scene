@@ -11,23 +11,26 @@ SplitTask gRoomListTask = {
 };
 
 void RoomList_Init(Editor* editor, RoomList* this, Split* split) {
-    Element_Container_SetArli(&this->list, &editor->scene.ui.roomNameList, 32);
+    Element_Container_SetArli(&this->list, &editor->scene.ui.roomNameList, 2);
     this->list.showHexID = true;
 }
 
 void RoomList_Update(Editor* editor, RoomList* this, Split* split) {
     Scene* scene = &editor->scene;
     
-    this->list.element.heightAdd = (split->dispRect.h - SPLIT_ELEM_Y_PADDING * 2) - SPLIT_TEXT_H;
     split->scroll.offset = split->scroll.voffset = 0;
     
     Element_Header(split->taskCombo, 92);
     Element_Combo(split->taskCombo);
-    Element_Row(&this->list, 1.0f);
     
     Element_Condition(&this->list, scene->segment != NULL);
     
     int index;
+    
+    this->list.element.rect =
+        Rect_SubPos(
+        Rect_Scale(split->rect, -SPLIT_ELEM_X_PADDING * 2, -SPLIT_ELEM_X_PADDING * 2),
+        split->rect);
     
     if ( (index = Element_Container(&this->list)) > -1) {
         info("next: %d", index);

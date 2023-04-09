@@ -289,9 +289,9 @@ void Properties_Draw(Editor* editor, Properties* this, Split* split) {
         tr.x += SPLIT_ELEM_X_PADDING / 2;
         
         if (this->subIndex == i) {
-            r = Rect_WidenTo(r, (SPLIT_CTXM_DIST / 2) * this->side);
+            r = Rect_ExpandX(r, (SPLIT_CTXM_DIST / 2) * this->side);
             nvgScissor(vg, UnfoldRect(scissor));
-            r = Rect_WidenTo(r, SPLIT_CTXM_DIST * this->side);
+            r = Rect_ExpandX(r, SPLIT_CTXM_DIST * this->side);
             Gfx_DrawRounderOutline(vg, r, Theme_GetColor(THEME_ELEMENT_LIGHT, 25, 1.0f));
             Gfx_DrawRounderRect(vg, r, Theme_GetColor(THEME_BASE, 255, 1.0f));
             nvgResetScissor(vg);

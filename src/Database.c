@@ -38,15 +38,29 @@ static void ActorPropEnt_ParseVariable(Toml* toml, ActorPropertyEntry* entry, in
 }
 
 static void ActorPropEnt_ParsePropDict(Toml* toml, DbProperty* p, int i, int k) {
+    const char* table = NULL;
+    
     p->numDict = Toml_ArrCount(toml, "actor[%d].property[%d].variable", i, k);
-    if (!p->numDict) return;
+    
+    if (!p->numDict) {
+        if (!Toml_Var(toml, "actor[%d].property[%d].variable", i, k))
+            return;
+        
+        table = Toml_GetStr(toml, "actor[%d].property[%d].variable", i, k);
+        if (!(p->numDict = Toml_ArrCount(toml, table)))
+            goto bail_out;
+    } else
+        table = fmt("actor[%d].property[%d].variable", i, k);
+    
     DbDictionary* de = p->dict = new(DbDictionary[p->numDict]);
     
     for (int j = 0; j < p->numDict; j++, de++) {
-        de->val = Toml_GetInt(toml, "actor[%d].property[%d].variable[%d][0]", i, k, j);
-        de->text = Toml_GetStr(toml, "actor[%d].property[%d].variable[%d][1]", i, k, j);
-        info("%04X, %s", de->val, de->text);
+        de->val = Toml_GetInt(toml, "%s[%d][0]", table, j);
+        de->text = Toml_GetStr(toml, "%s[%d][1]", table, j);
     }
+    
+bail_out:
+    vfree(table);
 }
 
 static void ActorPropEnt_ParseProperty(Toml* toml, ActorPropertyEntry* entry, int i) {
@@ -102,18 +116,19 @@ static void ActorPropEnt_ParseProperty(Toml* toml, ActorPropertyEntry* entry, in
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
-    const char*   expected;
     const char*   name;
     DbDictionary* dict;
     int  numDict;
     Arli arli;
 } ScenePropertyEntry;
 
-ScenePropertyEntry sSceneEntry[MENUDATA_MAX] = {
-    [MENUDATA_FILE].expected       = "file",
-    [MENUDATA_OPTIONS].expected    = "options",
-    [MENUDATA_BEHAVIOR_1].expected = "behaviour1",
-    [MENUDATA_BEHAVIOR_2].expected = "behaviour2",
+ScenePropertyEntry sSceneEntry[MENUDATA_MAX];
+
+const char* sExpected[MENUDATA_MAX] = {
+    [MENUDATA_FILE] = "file",
+    [MENUDATA_OPTIONS] = "options",
+    [MENUDATA_BEHAVIOR_1] = "behaviour1",
+    [MENUDATA_BEHAVIOR_2] = "behaviour2",
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -194,8 +209,8 @@ void Database_Init() {
     Toml_Load(&toml, scene_property_toml);
     
     for (int i = 0; i < ArrCount(sSceneEntry); i++, entry++) {
-        entry->name = Toml_GetStr(&toml, "%s.name", entry->expected);
-        entry->numDict = Toml_ArrCount(&toml, "%s.variable", entry->expected);
+        entry->name = Toml_GetStr(&toml, "%s.name", sExpected[i]);
+        entry->numDict = Toml_ArrCount(&toml, "%s.variable", sExpected[i]);
         entry->arli = Arli_New(DbDictionary);
         
         DbDictionary* dict = entry->dict = new(DbDictionary[entry->numDict]);
@@ -207,8 +222,8 @@ void Database_Init() {
         Arli_SetElemNameCallback(&entry->arli, DbDictionary_GetArliIndex);
         
         for (int k = 0; k < entry->numDict; k++, dict++) {
-            dict->val = Toml_GetInt(&toml, "%s.variable[%d][0]", entry->expected, k);
-            dict->text = Toml_GetStr(&toml, "%s.variable[%d][1]", entry->expected, k);
+            dict->val = Toml_GetInt(&toml, "%s.variable[%d][0]", sExpected[i], k);
+            dict->text = Toml_GetStr(&toml, "%s.variable[%d][1]", sExpected[i], k);
         }
     }
     
@@ -245,7 +260,7 @@ void Database_Free() {
         for (int k = 0; k < entry->numDict; k++, dict++)
             vfree(dict->text);
         vfree(entry->name, entry->dict);
-        memset(&entry->arli, 0, sizeof(Arli));
+        memset(entry, 0, sizeof(*entry));
     }
     
     vfree(gDatabaseActor);
@@ -327,16 +342,15 @@ static void ActorSearchContextMenu_Draw(GeoGrid* __no_no, ContextMenu* contextMe
     
     Rect mainr = contextMenu->rect;
     
-    mainr.x += SPLIT_ELEM_X_PADDING;
-    mainr.w -= SPLIT_ELEM_X_PADDING * 2;
-    mainr.y += SPLIT_ELEM_X_PADDING * 2 + SPLIT_TEXT_H;
-    mainr.h = contextMenu->rect.h - SPLIT_ELEM_X_PADDING * 3 - SPLIT_TEXT_H;
+    mainr = Rect_Scale(mainr, -SPLIT_ELEM_X_PADDING, -SPLIT_ELEM_X_PADDING);
+    mainr = Rect_ShrinkY(mainr, (SPLIT_TEXT_H + SPLIT_ELEM_X_PADDING) * 2);
+    mainr = Rect_Translate(mainr, 0, SPLIT_TEXT_H + SPLIT_ELEM_X_PADDING);
     
     Gfx_DrawRounderOutline(vg, mainr, Theme_GetColor(THEME_ELEMENT_LIGHT, 255, 1.0f));
     Gfx_DrawRounderRect(vg, mainr, Theme_GetColor(THEME_ELEMENT_DARK, 255, 1.0f));
     
-    ScrollBar_FocusSlot(&contextMenu->scroll, focusSlot);
-    int busy = ScrollBar_Update(&contextMenu->scroll, input, input->cursor.pos, mainr);
+    ScrollBar_FocusSlot(&contextMenu->scroll, focusSlot, false);
+    int busy = ScrollBar_Update(&contextMenu->scroll, input, input->cursor.pos, mainr, mainr);
     
     nvgScissor(vg, UnfoldRect(mainr));
     for (int i = 0; i < this->numEntry; i++) {
@@ -384,7 +398,7 @@ int ActorSearchContextMenu_State(int* ret) {
     GeoGrid* geo = &editor->geo;
     ActorSearchContextMenu* this = editor->searchMenu;
     
-    if (geo->dropMenu.udata != this)
+    if (geo->contextMenu.udata != this)
         return -1;
     if (this->change > -1) {
         *ret = this->change;

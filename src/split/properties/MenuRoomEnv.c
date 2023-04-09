@@ -96,9 +96,9 @@ void MenuRoomEnv_Update(Editor* editor, void* __this, Split* split) {
         if (Element_Slider(&this->sliderEcho))
             room->echo = Element_Slider_GetValue(&this->sliderEcho);
         
-        if (Element_Combo(&this->comboBeha1))
+        if (Element_Combo(&this->comboBeha1) > -1)
             room->behaviour.val1 = this->behaviour1.cur;
-        if (Element_Combo(&this->comboBeha2))
+        if (Element_Combo(&this->comboBeha2) > -1)
             room->behaviour.val2 = this->behaviour2.cur;
     }
     Element_Box(BOX_END, &this->panelEnvironment);
