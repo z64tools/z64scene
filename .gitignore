@@ -32,3 +32,7 @@ ExtLib/
 assets/3D/z64convert-cli
 app_win32
 app_linux
+
+# IDEs
+.idea
+.vscode
