@@ -36,3 +36,4 @@ app_linux
 # IDEs
 .idea
 .vscode
+cmake-*

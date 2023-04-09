@@ -1,5 +1,6 @@
 #include "Editor.h"
 #include "Database.h"
+#include "Filesystem.h"
 
 extern DataFile gAppIcon16;
 extern DataFile gAppIcon32;
@@ -45,7 +46,7 @@ VectorGfx gVecGfx_EyeOpen;
 
 static void Editor_InitIcons(Editor* editor) {
     extern DataFile gIcon_EyeOpen;
-    
+
     VectorGfx_New(&gVecGfx_EyeOpen, gIcon_EyeOpen.data, 10.0f);
 }
 
@@ -56,7 +57,7 @@ Editor* GetEditor(void) {
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
-    
+
 } FileDialog;
 
 typedef struct {
@@ -78,7 +79,7 @@ static void Header_Init(Header* this, Editor* editor) {
     Element_Combo_SetArli(&this->fileMenu, SceneDatabase_GetList(MENUDATA_FILE));
     this->fileMenu.menu = SceneDatabase_GetName(MENUDATA_FILE);
     this->fileMenu.align = NVG_ALIGN_CENTER;
-    
+
     Element_Combo_SetArli(&this->optionsMenu, SceneDatabase_GetList(MENUDATA_OPTIONS));
     this->optionsMenu.menu = SceneDatabase_GetName(MENUDATA_OPTIONS);
     this->optionsMenu.align = NVG_ALIGN_CENTER;
@@ -87,73 +88,82 @@ static void Header_Init(Header* this, Editor* editor) {
 static void Header_Update(void* pass, void* ____null____, Split* split) {
     Editor* editor = pass;
     Header* this = editor->head[0];
-    
+
     Element_Header(NULL, 8, &this->fileMenu, 64, &this->optionsMenu, 64);
-    
+
     if (Element_Combo(&this->fileMenu)) {
         switch (this->fileMenu.arlist->cur) {
             case 0:
                 Rect r = { 0, 0, UnfoldVec2(editor->app.wdim) };
-                
+
                 ContextMenu_Custom(&editor->geo, this, NULL, FileDialog_Init, FileDialog_Draw, NULL, r);
-                
+
                 break;
         }
     }
-    
+
     if (Element_Combo(&this->optionsMenu)) {
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void Editor_DropCallback_HandleFileArg(char* file, List* roomList, char** currentSceneFile) {
+    if (striend(file, ".zroom") || striend(file, ".zmap")) {
+        List_Add(roomList, file);
+    } else if (striend(file, ".zscene")) {
+        vfree(*currentSceneFile);
+        *currentSceneFile = strdup(file);
+    }
+}
+
 static void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
     Editor* editor = GET_CONTEXT(window);
-    var hasRoom = false;
-    var hasScene = false;
-    var n = -1;
+    
+    // Scene & Rooms to load 
+    char* currentSceneFile = NULL;
     List roomList = List_New();
-    
+
     time_start(11);
-    
+
+    // Check args for single scenes/rooms or directories to scan
     for (var i = 0; i < count; i++) {
         char* file = item[i];
-        
-        if (striend(file, ".zroom") || striend(file, ".zmap"))
-            hasRoom = true;
-        
-        if (striend(file, ".zscene")) {
-            hasScene = true;
-            n = i;
+
+        if(FsIsDirectory(file)) {
+            var scanResult = FsScanDir(file);
+            for(int i=0; i<scanResult.count; ++i) {
+                Editor_DropCallback_HandleFileArg(scanResult.fileNames[i], &roomList, &currentSceneFile);
+            }
+            FsScanDir_Free(scanResult);
+        } else {
+            Editor_DropCallback_HandleFileArg(file, &roomList, &currentSceneFile);
         }
     }
     
-    if (!hasRoom || !hasScene)
+    if (roomList.num == 0 || !currentSceneFile) {
+        vfree(currentSceneFile);
+        List_Free(&roomList);
         return;
+    }
+
+    List_Sort(&roomList);
     
-    info("" PRNT_YELW "LOADING: " PRNT_BLUE "%s", item[n]);
+    info("" PRNT_YELW "LOADING: " PRNT_BLUE "%s", currentSceneFile);
     if (editor->scene.segment) {
         Gizmo_UnselectAll(&editor->gizmo);
         Actor_UnselectAll(&editor->scene, NULL);
         Scene_Free(&editor->scene);
         Scene_Init(&editor->scene);
     }
+
     time_start(10);
-    Scene_LoadScene(&editor->scene, item[n]);
+    Scene_LoadScene(&editor->scene, currentSceneFile);
+    vfree(currentSceneFile);
+
     info("SceneLoad:  " PRNT_REDD "%.2fms", time_get(10) * 1000);
     
-    if (editor->scene.segment) {
-        List_Alloc(&roomList, count);
-        
-        for (var i = 0; i < count; i++) {
-            char* file = item[i];
-            
-            if (striend(file, ".zroom") || striend(file, ".zmap"))
-                List_Add(&roomList, file);
-        }
-        
-        List_Sort(&roomList);
-        
+    if (editor->scene.segment) {    
         for (int i = 0; i < roomList.num; i++) {
             char* file = roomList.item[i];
             
@@ -161,9 +171,8 @@ static void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
             Scene_LoadRoom(&editor->scene, file);
             info("RoomLoad:   " PRNT_REDD "%.2fms" PRNT_RSET " [%s]", time_get(10) * 1000, file);
         }
-        
-        List_Free(&roomList);
     }
+    List_Free(&roomList);
     
     time_start(10);
     Scene_CacheBuild(&editor->scene);
