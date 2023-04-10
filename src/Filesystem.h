@@ -32,4 +32,12 @@ void FsScanDir_Free(struct FsScanDirResult scanResult);
  */
 bool FsIsDirectory(const char* path);
 
+/**
+ * Checks if a given File exists
+ *
+ * @param path
+ * @return true if it exists
+ */
+bool FsFileExists(const char* path);
+
 #endif

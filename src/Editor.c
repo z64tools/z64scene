@@ -375,6 +375,9 @@ static void Editor_DropCallback(GLFWwindow* window, s32 count, char* item[]) {
     for (var i = 0; i < count; i++) {
         char* file = item[i];
 
+        if(!FsFileExists(file))
+          continue;
+
         if(FsIsDirectory(file)) {
             var scanResult = FsScanDir(file);
             for(int i=0; i<scanResult.count; ++i) {

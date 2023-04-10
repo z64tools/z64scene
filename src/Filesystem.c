@@ -55,3 +55,8 @@ bool FsIsDirectory(const char* path)
     stat(path, &pathStat);
     return S_ISDIR(pathStat.st_mode);
 }
+
+bool FsFileExists(const char* path)
+{
+  return access(path, F_OK) == 0;
+}
