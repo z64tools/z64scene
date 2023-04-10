@@ -441,32 +441,32 @@ static void ProfilerText(void* vg, s32 row, const char* msg, const char* fmt, f3
     nvgText(vg, 8 + 120, 8 + SPLIT_TEXT_H * row, x_fmt(fmt, val), NULL);
 }
 
+static bool Viewport_N64CullingCallback(void* userData, const n64_cullingCallbackData * vtx, u32 numVtx) {
+    View3D* view = userData;
+
+    if (view->ortho)
+        return false;
+
+    for (s32 i = 0; i < numVtx; i++, vtx++) {
+        if (!View_PointInScreen(userData, Math_Vec3f_New(vtx->x, vtx->y, vtx->z)))
+            continue;
+
+        return false;
+    }
+
+    return true;
+}
+
 static void Viewport_InitDraw(Editor* editor, Viewport* this, Split* split) {
     n64_graph_init();
     n64_set_culling(editor->scene.state & SCENE_DRAW_CULLING);
     
     View_Update(&this->view, &editor->input, split);
-    
-    nested(bool, N64_CullingCallback, (void* userData, const n64_cullingCallbackData * vtx, u32 numVtx)) {
-        View3D* view = userData;
-        
-        if (view->ortho)
-            return false;
-        
-        for (s32 i = 0; i < numVtx; i++, vtx++) {
-            if (!View_PointInScreen(userData, Math_Vec3f_New(vtx->x, vtx->y, vtx->z)))
-                continue;
-            
-            return false;
-        }
-        
-        return true;
-    };
-    
+
     n64_setMatrix_model(&this->view.modelMtx);
     n64_setMatrix_view(&this->view.viewMtx);
     n64_setMatrix_projection(&this->view.projMtx);
-    n64_set_cullingCallbackFunc(&this->view, (void*)N64_CullingCallback);
+    n64_set_cullingCallbackFunc(&this->view, Viewport_N64CullingCallback);
 }
 
 static void Viewport_Draw_NoFile(Editor* editor, Viewport* this, Split* split) {
