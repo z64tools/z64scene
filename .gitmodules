@@ -1,0 +1,6 @@
+[submodule "z64viewer"]
+	path = z64viewer
+	url = https://github.com/z64me/z64viewer
+[submodule "src/dlcopy"]
+	path = src/dlcopy
+	url = https://github.com/Thar0/dlcopy.git

@@ -1,0 +1,192 @@
+[file]
+	name = "File"
+	variable = [
+		[ 0, "#Open" ],
+		[ 1, "#Save" ],
+		[ 2, "Save #As..." ],
+		[ 3, "#Import Scene" ],
+		[ 4, "E#xport Scene" ],
+		[ 5, "Open #z64rom Project" ],
+	]
+
+[options]
+	name = "Options"
+	variable = [
+		[ 0, "Yes" ],
+		[ 1, "No" ],
+	]
+
+[room]
+	title_time  = "Room Time"
+	title_env   = "Room Environments"
+	title_light = "Lighting"
+	global      = "Global"
+	time_speed  = "Speed"
+	echo        = "Echo"
+	skybox      = "Skybox"
+	sunmoon     = "Sun/Moon"
+	
+	[room.behaviour1]
+		name = "Type"
+		variable = [
+			[ 0, "Overworld" ],
+			[ 1, "Dungeon"   ],
+			[ 2, "House"     ],
+			# [ 3, "Forest"],
+			# [ 4, "Town"],
+			[ 5, "Boss Room" ],
+		]
+	[room.behaviour2]
+		name = "Env"
+		variable = [
+			[ 0, "Normal"      ],
+			[ 1, "Cold"        ],
+			[ 2, "Hot"         ],
+			[ 3, "Hot (Timer)" ],
+			[ 4, "Comfy"       ],
+			# [ 5, "Mild"        ],
+			# [ 6, "Cool"        ],
+		]
+
+[sound_spec]
+	name = "Sound Space"
+	variable = [
+		[ 5,  "Room Small"     ],
+		[ 6,  "Room Medium"    ],
+		[ 3,  "Hall Medium"    ],
+		[ 4,  "Hall Large"     ],
+		[ 0,  "Outdoor Small"  ],
+  		[ 1,  "Outdoor Medium" ],
+  		[ 2,  "Outdoor Large"  ],
+  		[ 7,  "Forest"         ],
+		[ 9,  "Canyon"         ],
+  		[ 8,  "Outdoor Medium" ],
+  		[ 10, "Title Screen"   ],
+	]
+[music]
+	name = "Music"
+	variable = [
+		[ 0x00, "Nothing"                       ],
+		[ 0x01, "Nothing"                       ],
+		[ 0x7F, "Night Ambient"                 ],
+		
+		[ 0x1A, "Enemy"                         ],
+		[ 0x38, "Mini-Boss"                     ],
+		
+		[ 0x1B, "Boss"                          ],
+		[ 0x6B, "Boss Fire"                     ],
+		[ 0x64, "Boss Ganondorf"                ],
+		[ 0x65, "Boss Ganon"                    ],
+		
+		[ 0x18, "Dungeon 1 (DC)"                ],
+		[ 0x1C, "Dungeon 2 (Grotto)"            ],
+		[ 0x26, "Jabu-Jabu's Belly"             ],
+		[ 0x2C, "Forest Temple"                 ],
+		[ 0x58, "Ice Cavern"                    ],
+		[ 0x5C, "Water Temple"                  ],
+		[ 0x2A, "Fire Temple"                   ],
+		[ 0x5B, "Shadow Temple"                 ],
+		[ 0x3F, "Spirit Temple"                 ],
+		[ 0x3A, "Temple of Time"                ],
+		
+		[ 0x63, "Ganon's Castle: Dungeon"       ],
+		[ 0x2E, "Ganon's Castle: Organs"        ],
+		[ 0x62, "Ganon's Castle: Fall"          ],
+		
+		[ 0x1E, "Opening Theme"                 ],
+		[ 0x56, "Chamber of the Sages"          ],
+		[ 0x4D, "Goddesses Theme"               ],
+		[ 0x5D, "Goddesses Outro"               ],
+		[ 0x28, "Fairy Fountain 1"              ],
+		[ 0x57, "Fairy Fountain 2"              ],
+		
+		[ 0x1F, "House"                         ],
+		[ 0x4C, "Windmill"                      ],
+		
+		[ 0x1D, "Market"                        ],
+		[ 0x55, "Shop"                          ],
+		[ 0x60, "Shop Medicine"                 ],
+		[ 0x27, "Kakariko Village (Guitar)"     ],
+		[ 0x19, "Kakariko Village (Strings)"    ],
+		[ 0x3C, "Kokiri Forest"                 ],
+		[ 0x30, "Goron City"                    ],
+		[ 0x50, "Zora Domain"                   ],
+		[ 0x5F, "Gerudo Valley"                 ],
+		[ 0x2F, "Lon Lon Ranch"                 ],
+		[ 0x2D, "Castle Courtyard"              ],
+		[ 0x3E, "Lost Woods"                    ],
+		[ 0x31, "Hyrule Field"                  ],
+		
+		[ 0x4A, "Navi's Theme"                  ],
+		[ 0x4B, "Deku Tree's Theme"             ],
+		[ 0x29, "Zelda's Theme 1 (Ocarina)"     ],
+		[ 0x52, "Zelda's Theme 2 (Strings)"     ],
+		[ 0x4F, "Sheik's Theme"                 ],
+		[ 0x5A, "Kaebora Gaebora's Theme"       ],
+		[ 0x42, "Ingo's Theme"                  ],
+		[ 0x54, "Ganondorf's Theme"             ],
+		[ 0x61, "Kotake and Koume Theme"        ],
+		
+		[ 0x40, "Mini-Game: Horse"              ],
+		[ 0x41, "Mini-Game: Horse Outro"        ],
+		[ 0x4E, "Mini-Game: Shooting"           ],
+		[ 0x6C, "Mini-Game: Collect"            ],
+		
+		[ 0x21, "Jingle: Defeat Boss"           ],
+		[ 0x20, "Jingle: Game Over"             ],
+		[ 0x2B, "Jingle: Chest Open"            ],
+		[ 0x22, "Jingle: Get Item"              ],
+		[ 0x39, "Jingle: Get Heart Piece"       ],
+		[ 0x24, "Jingle: Get Power Up"          ],
+		[ 0x3B, "Jingle: Get Epona"             ],
+		[ 0x3D, "Jingle: Get Song"              ],
+		[ 0x32, "Jingle: Get Jewel"             ],
+		[ 0x43, "Jingle: Get Medallion"         ],
+		[ 0x51, "Jingle: Meet"                  ],
+		[ 0x23, "Jingle: Ganondorf"             ],
+		[ 0x53, "Jingle: Time Travel"           ],
+		[ 0x59, "Jingle: Door of Time"          ],
+		[ 0x5E, "Jingle: Sages Unite"           ],
+		
+		[ 0x44, "Song: Saria's Song"                  ],
+		[ 0x45, "Song: Epona's Song"                  ],
+		[ 0x46, "Song: Zelda's Lullaby"               ],
+		[ 0x47, "Song: Sun Song"                      ],
+		[ 0x49, "Song: Song of Storms"                ],
+		[ 0x48, "Song: Song of Time"                  ],
+		[ 0x66, "Song: Song of Time (Zelda)"          ],
+		
+		[ 0x25, "Warp: Minuet of Forest"              ],
+		[ 0x33, "Warp: Bolero of Fire"                ],
+		[ 0x34, "Warp: Minuet of Forest"              ],
+		[ 0x35, "Warp: Serenade of Water"             ],
+		[ 0x36, "Warp: Requiem of Spirit"             ],
+		[ 0x37, "Warp: Nocturne of Shadow"            ],
+		
+		[ 0x67, "Credits 1"                     ],
+		[ 0x68, "Credits 2"                     ],
+		[ 0x69, "Credits 3"                     ],
+		[ 0x6A, "Credits 4"                     ],
+		
+		[ 0x02, "Hyrule Field: Start, Morning"       ],
+		[ 0x03, "Hyrule Field: Start, Immidiate"     ],
+		[ 0x04, "Hyrule Field: Grandiose"            ],
+		[ 0x05, "Hyrule Field: Grandiose Run"        ],
+		[ 0x07, "Hyrule Field: Transition to Chill"  ],
+		[ 0x08, "Hyrule Field: Chill"                ],
+		[ 0x09, "Hyrule Field: Transition to ?"      ],
+		[ 0x0A, "Hyrule Field: Chill"                ],
+		[ 0x0B, "Hyrule Field: Grandiose Chill"      ],
+		[ 0x0C, "Hyrule Field: Rising"               ],
+		[ 0x0D, "Hyrule Field: Slower Rise"          ],
+		[ 0x0E, "Hyrule Field: Idle"                 ],
+		[ 0x0F, "Hyrule Field: Transition to Danger" ],
+		[ 0x10, "Hyrule Field: Danger 0"             ],
+		[ 0x11, "Hyrule Field: Danger 1"             ],
+		[ 0x12, "Hyrule Field: Danger 2"             ],
+		[ 0x13, "Hyrule Field: Danger 3"             ],
+		[ 0x14, "Hyrule Field: Evening 0"            ],
+		[ 0x15, "Hyrule Field: Evening 1"            ],
+		[ 0x16, "Hyrule Field: Evening 2"            ],
+		[ 0x17, "Hyrule Field: Evening 0?"           ],
+	]
